@@ -25,6 +25,7 @@
             --font-title: "Cinzel", "IM Fell English", "Garamond", serif;
             --font-ui: "Spectral", "Garamond", "Georgia", serif;
             --font-mono: "Fira Mono", "Consolas", monospace;
+            --font-emoji: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif;
         }
         body {
             font-family: var(--font-ui);
@@ -116,6 +117,7 @@
             box-shadow: 0 0 20px var(--ui-glow);
             transform: translateY(-3px);
         }
+        .emoji-font { font-family: var(--font-emoji); }
         .skill-slot-pick {
             width: 48px; height: 48px;
             background: rgba(30,25,20,0.9);
@@ -130,6 +132,10 @@
         .skill-slot-pick.selected {
             border-color: var(--accent-strong);
             box-shadow: 0 0 10px var(--ui-glow);
+        }
+        .skill-slot-pick.swap-from {
+            border-color: #66ccff;
+            box-shadow: 0 0 10px rgba(102,204,255,0.7);
         }
         .skill-pick-item {
             width: 70px;
@@ -328,7 +334,7 @@
             transform: translateY(-5px);
             box-shadow: 0 5px 25px rgba(218,165,32,0.3);
         }
-        .class-icon { font-size: 48px; margin-bottom: 10px; }
+        .class-icon { font-size: 48px; margin-bottom: 10px; font-family: var(--font-emoji); }
         .class-name { font-size: 24px; color: #daa520; font-weight: bold; letter-spacing: 4px; font-family: var(--font-title); }
         .class-eng { font-size: 11px; color: #886633; letter-spacing: 3px; margin-bottom: 12px; }
         .class-desc { font-size: 12px; color: #999; line-height: 1.6; margin-bottom: 12px; min-height: 60px; }
@@ -414,6 +420,7 @@
         }
         .setting-row:last-child { border-bottom: none; }
         .setting-label { color: var(--text); font-size: 12px; }
+        .setting-actions { display: flex; gap: 6px; align-items: center; }
         .toggle-btn {
             background: #3a2716;
             color: var(--accent-strong);
@@ -426,6 +433,31 @@
         .toggle-btn.off {
             color: #b68a5d;
             opacity: 0.8;
+        }
+        #titleSaveMenu {
+            margin-top: 20px;
+            padding: 12px 16px;
+            border: 1px solid #5a4a3a;
+            border-radius: 6px;
+            background: linear-gradient(180deg, rgba(25,15,6,0.8), rgba(12,6,2,0.8));
+            box-shadow: 0 0 20px rgba(0,0,0,0.35);
+        }
+        .title-save-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(90,74,58,0.4);
+        }
+        .title-save-row:last-child { border-bottom: none; }
+        .title-save-info {
+            font-size: 11px;
+            color: #b08a60;
+        }
+        .title-save-actions {
+            display: flex;
+            gap: 6px;
         }
     </style>
 </head>
@@ -459,8 +491,13 @@
                 </div>
             </div>
         </div>
-        <div id="titleStartText" class="start-text" style="margin-top:40px">― Enter / クリックして開始 ―</div>
-    
+        <div id="titleStartText" class="start-text" style="margin-top:30px">― Enter / クリックで選択スロット開始 ―</div>
+        <div id="titleSaveMenu">
+            <div style="text-align:center;color:#ddb27a;font-size:12px;margin-bottom:6px;letter-spacing:2px">セーブスロット</div>
+            <div id="titleSaveContent"></div>
+        </div>
+    </div>
+
     <!-- Promotion Overlay -->
     <div id="promotionOverlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);z-index:2000;justify-content:center;align-items:center">
         <div id="promotionContent" style="background:linear-gradient(180deg,rgba(30,15,5,0.98),rgba(15,8,2,0.98));border:2px solid #daa520;padding:25px;max-width:600px;width:90%;border-radius:6px;box-shadow:0 0 40px rgba(218,165,32,0.3)"></div>
@@ -469,8 +506,6 @@
     <!-- Skill Select Overlay -->
     <div id="skillSelectOverlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.8);z-index:1500;justify-content:center;align-items:center">
         <div id="skillSelectContent" style="background:linear-gradient(180deg,rgba(20,12,5,0.98),rgba(10,6,2,0.98));border:2px solid #8b7355;padding:20px;max-width:500px;width:90%;border-radius:6px;box-shadow:0 0 30px rgba(0,0,0,0.5);max-height:80vh;overflow-y:auto"></div>
-    </div>
-
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -491,8 +526,11 @@
         <p>Enter / クリックで復活...</p>
     </div>
     <div id="controls-help">
-        左クリック:移動/攻撃 | 右クリック:スキル | 1~6:スキル選択 | I:インベントリ | C:ステータス | Space:アイテム拾う
+        左クリック:移動/攻撃 | 右クリック:スキル | 1~6:スキル選択 | R:スキル編集 | E:階段 | I:インベントリ | C:ステータス | Space:アイテム拾う
     </div>
+    <button id="skillEditBtn" class="toggle-btn" tabindex="-1" style="position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:300;opacity:0.9">
+        スキル編集 (R)
+    </button>
 
     <div id="helpOverlay" class="ui-panel" style="top:50%;left:50%;transform:translate(-50%,-50%);width:500px;max-height:80vh;display:none">
         <div class="panel-header">📖 操作ガイド (H で閉じる)</div>
@@ -506,6 +544,8 @@
             <div><span style="color:#ffd700">Cキー</span> ─ ステータス画面開閉</div>
             <div><span style="color:#ffd700">Hキー</span> ─ このヘルプ画面の開閉</div>
             <div><span style="color:#ffd700">Oキー</span> ─ 設定画面の開閉</div>
+            <div><span style="color:#ffd700">Rキー</span> ─ スキルショートカット編集</div>
+            <div><span style="color:#ffd700">Eキー</span> ─ 階段を降りる</div>
             <div><span style="color:#ffd700">Esc</span> ─ 一時停止</div>
             <div style="color:#daa520;font-weight:bold;margin:12px 0 4px">スキル (1~6キーで選択)</div>
             <div><span style="color:#ffd700">1</span> ─ 🔥 ファイアボール (15MP) ─ 炎の弾を発射</div>
@@ -518,6 +558,7 @@
             <div style="color:#999;font-size:12px">・敵を全滅させると階段が使える</div>
             <div style="color:#999;font-size:12px">・深い階層ほど強敵と良いアイテムが出現</div>
             <div style="color:#999;font-size:12px">・装備のレアリティ: <span style="color:#ccc">コモン</span> < <span style="color:#68f">マジック</span> < <span style="color:#fd4">レア</span> < <span style="color:#f80">レジェンダリー</span> < <span style="color:#0d6">ユニーク</span></div>
+            <div id="helpDynamic"></div>
         </div>
     </div>
 
@@ -562,26 +603,37 @@
         };
         let loaded = 0;
         const total = Object.keys(sheets).length;
-        for (const [key, src] of Object.entries(sheets)) {
+        function onAllLoaded() {
+            spritesLoaded = true;
+            console.log('All sprites loaded:', Object.keys(SPRITES).join(', '));
+            try {
+                if (typeof generateTileTextures === 'function') {
+                    generateTileTextures();
+                    tileTexturesReady = true;
+                    console.log('Tile textures regenerated with sprites');
+                }
+            } catch(e) { console.warn('Sprite texture override deferred:', e); }
+        }
+        function loadOne(key, src, retries) {
             const img = new Image();
             img.onload = () => {
                 SPRITES[key] = img;
-                if (++loaded === total) {
-                    spritesLoaded = true;
-                    console.log('All sprites loaded successfully');
-                    // Re-generate tile textures now that sprites are loaded
-                    try {
-                        if (typeof tileTexturesReady !== 'undefined' && tileTexturesReady && typeof generateTileTextures === 'function') {
-                            tileTexturesReady = false;
-                            generateTileTextures();
-                            tileTexturesReady = true;
-                            console.log('Tile textures regenerated with sprites');
-                        }
-                    } catch(e) { console.warn('Sprite texture override deferred:', e); }
+                console.log('Sprite loaded:', key, img.width + 'x' + img.height);
+                if (++loaded === total) onAllLoaded();
+            };
+            img.onerror = () => {
+                if (retries > 0) {
+                    console.warn('Sprite retry:', src, 'remaining:', retries);
+                    setTimeout(() => loadOne(key, src, retries - 1), 500);
+                } else {
+                    console.warn('Sprite FAIL:', src);
+                    if (++loaded === total) onAllLoaded();
                 }
             };
-            img.onerror = () => { console.warn('Sprite fail:', src); if (++loaded === total) spritesLoaded = true; };
-            img.src = src;
+            img.src = src + '?v=' + Date.now();
+        }
+        for (const [key, src] of Object.entries(sheets)) {
+            loadOne(key, src, 3);
         }
     }
     loadSprites();
@@ -1037,6 +1089,7 @@
     // --- Constants ---
     const TILE = 40;
     const MAP_W = 60, MAP_H = 60;
+    const MAX_PARTICLES = 500; // パーティクル数の上限
     let W = window.innerWidth, H = window.innerHeight;
 
     // --- Canvas Setup ---
@@ -1059,6 +1112,8 @@
     const DOM = {
         titleScreen: document.getElementById('titleScreen'),
         titleStartText: document.getElementById('titleStartText'),
+        titleSaveMenu: document.getElementById('titleSaveMenu'),
+        titleSaveContent: document.getElementById('titleSaveContent'),
         classSelect: document.getElementById('classSelect'),
         statsPanel: document.getElementById('statsPanel'),
         statsContent: document.getElementById('statsContent'),
@@ -1071,6 +1126,7 @@
         helpOverlay: document.getElementById('helpOverlay'),
         skillTreePanel: document.getElementById('skillTreePanel'),
         skillTreeContent: document.getElementById('skillTreeContent'),
+        skillEditBtn: document.getElementById('skillEditBtn'),
         promotionOverlay: document.getElementById('promotionOverlay'),
         promotionContent: document.getElementById('promotionContent'),
         skillSelectOverlay: document.getElementById('skillSelectOverlay'),
@@ -1092,7 +1148,11 @@
         dead: false,
         paused: false,
         autoPickup: false,
-        autoPickupRarity: 'normal'
+        autoPickupRarity: 'normal',
+        dungeonSeed: 0,
+        saveSlot: 1,
+        spawnTimer: 0, // 敵リスポーンタイマー
+        spawnInterval: 8 // 8秒ごとに敵を追加出現
     };
 
     const SETTINGS = {
@@ -1116,15 +1176,71 @@
     function saveSettings() {
         try { localStorage.setItem('diablo_settings', JSON.stringify(SETTINGS)); } catch (e) { /* ignore */ }
     }
+    const SAVE_SLOT_COUNT = 3;
+    const SAVE_SLOT_KEY = 'diablo_save_slot';
+    function getSaveKey(slot) { return `diablo_save_${slot}`; }
+    function initSaveSlot() {
+        try {
+            const raw = localStorage.getItem(SAVE_SLOT_KEY);
+            const slot = parseInt(raw, 10);
+            if (slot >= 1 && slot <= SAVE_SLOT_COUNT) G.saveSlot = slot;
+        } catch (e) { /* ignore */ }
+    }
+    window.setSaveSlot = function(slot) {
+        if (slot < 1 || slot > SAVE_SLOT_COUNT) return;
+        G.saveSlot = slot;
+        try { localStorage.setItem(SAVE_SLOT_KEY, String(slot)); } catch (e) { /* ignore */ }
+        renderSettingsUI();
+        renderTitleSaveMenu();
+    };
+    function getSaveMeta(slot) {
+        try {
+            const raw = localStorage.getItem(getSaveKey(slot));
+            if (!raw) return null;
+            const save = JSON.parse(raw);
+            if (!save || !save.player) return null;
+            return {
+                timestamp: save.timestamp || 0,
+                level: save.player.level || 1,
+                floor: save.floor || 1,
+                className: save.player.className || save.playerClass || '不明'
+            };
+        } catch (e) { return null; }
+    }
+    function hasSaveData(slot) {
+        try { return !!localStorage.getItem(getSaveKey(slot)); } catch (e) { return false; }
+    }
+    function hasAnySaveData() {
+        for (let i = 1; i <= SAVE_SLOT_COUNT; i++) {
+            if (hasSaveData(i)) return true;
+        }
+        return false;
+    }
     loadSettings();
+    initSaveSlot();
+    renderTitleSaveMenu();
+
+    // --- Seeded PRNG (mulberry32) for dungeon reproducibility ---
+    let _seedState = 0;
+    let _useSeededRng = false;
+    function mulberry32() {
+        let t = (_seedState += 0x6D2B79F5);
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+    function seedRng(seed) { _seedState = seed | 0; _useSeededRng = true; }
+    function unseedRng() { _useSeededRng = false; }
+    function _rng() { return _useSeededRng ? mulberry32() : Math.random(); }
 
     // --- Utility ---
-    const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
-    const randf = (a, b) => Math.random() * (b - a) + a;
+    const rand = (a, b) => Math.floor(_rng() * (b - a + 1)) + a;
+    const randf = (a, b) => _rng() * (b - a) + a;
     const dist = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1);
     const lerp = (a, b, t) => a + (b - a) * t;
     const clamp = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
     const FONT_UI = '"Spectral", "Garamond", "Georgia", serif';
+    const FONT_EMOJI = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif';
     const FONT_TITLE = '"Cinzel", "IM Fell English", "Garamond", serif';
 
     // --- Log System ---
@@ -1188,6 +1304,10 @@
     const particles = [];
     function emitParticles(x, y, color, count, speed = 80, life = 0.5, size = 3, grav = 150) {
         if (SETTINGS.reducedParticles) count = Math.max(1, Math.floor(count * 0.55));
+        // パーティクル数上限チェック
+        const availableSlots = MAX_PARTICLES - particles.length;
+        if (availableSlots <= 0) return; // 上限に達したら生成しない
+        count = Math.min(count, availableSlots); // 上限を超えないように調整
         for (let i = 0; i < count; i++) {
             const a = randf(0, Math.PI * 2);
             const s = randf(20, speed);
@@ -1548,14 +1668,14 @@
             // Generate rooms with varied sizes
             for (let i = 0; i < roomCount * 3 && this.rooms.length < roomCount; i++) {
                 // Varied room shapes
-                const shapeRoll = Math.random();
+                const shapeRoll = _rng();
                 let w, h;
                 if (shapeRoll < 0.4) {
                     // Normal room
                     w = rand(4, 9); h = rand(4, 7);
                 } else if (shapeRoll < 0.7) {
                     // Long corridor room
-                    if (Math.random() < 0.5) { w = rand(8, 14); h = rand(3, 4); }
+                    if (_rng() < 0.5) { w = rand(8, 14); h = rand(3, 4); }
                     else { w = rand(3, 4); h = rand(8, 14); }
                 } else if (shapeRoll < 0.9) {
                     // Large room
@@ -1584,7 +1704,7 @@
                         // Cut corners for organic feel
                         const isCorner = (xx === rx && yy === ry) || (xx === rx + w - 1 && yy === ry) ||
                                         (xx === rx && yy === ry + h - 1) || (xx === rx + w - 1 && yy === ry + h - 1);
-                        if (isCorner && Math.random() < 0.4) continue;
+                        if (isCorner && _rng() < 0.4) continue;
                         this.set(xx, yy, 1);
                     }
                 }
@@ -1612,29 +1732,29 @@
                 let cx = a.cx, cy = a.cy;
 
                 // Randomly choose horizontal-first or vertical-first
-                if (Math.random() < 0.5) {
+                if (_rng() < 0.5) {
                     // Horizontal then vertical
                     while (cx !== b.cx) {
                         this.set(cx, cy, 1);
                         // Widen corridor occasionally
-                        if (Math.random() < 0.3) this.set(cx, cy + 1, 1);
+                        if (_rng() < 0.3) this.set(cx, cy + 1, 1);
                         cx += cx < b.cx ? 1 : -1;
                     }
                     while (cy !== b.cy) {
                         this.set(cx, cy, 1);
-                        if (Math.random() < 0.3) this.set(cx + 1, cy, 1);
+                        if (_rng() < 0.3) this.set(cx + 1, cy, 1);
                         cy += cy < b.cy ? 1 : -1;
                     }
                 } else {
                     // Vertical then horizontal
                     while (cy !== b.cy) {
                         this.set(cx, cy, 1);
-                        if (Math.random() < 0.3) this.set(cx + 1, cy, 1);
+                        if (_rng() < 0.3) this.set(cx + 1, cy, 1);
                         cy += cy < b.cy ? 1 : -1;
                     }
                     while (cx !== b.cx) {
                         this.set(cx, cy, 1);
-                        if (Math.random() < 0.3) this.set(cx, cy + 1, 1);
+                        if (_rng() < 0.3) this.set(cx, cy + 1, 1);
                         cx += cx < b.cx ? 1 : -1;
                     }
                 }
@@ -1651,9 +1771,9 @@
                 // Slightly drunk walk for organic corridors
                 while (cx !== b.cx || cy !== b.cy) {
                     this.set(cx, cy, 1);
-                    if (Math.random() < 0.15 && cx !== b.cx && cy !== b.cy) {
+                    if (_rng() < 0.15 && cx !== b.cx && cy !== b.cy) {
                         // Random wobble
-                        if (Math.random() < 0.5) cx += cx < b.cx ? 1 : -1;
+                        if (_rng() < 0.5) cx += cx < b.cx ? 1 : -1;
                         else cy += cy < b.cy ? 1 : -1;
                     } else {
                         // Move toward target
@@ -1682,7 +1802,7 @@
             for (let i = 1; i < this.rooms.length; i++) {
                 const r = this.rooms[i];
                 if (r === farthestRoom) continue;
-                if (Math.random() < 0.3) {
+                if (_rng() < 0.3) {
                     const cx = r.x + rand(1, r.w - 2);
                     const cy = r.y + rand(1, r.h - 2);
                     if (this.get(cx, cy) === 1) this.set(cx, cy, 3);
@@ -1691,7 +1811,7 @@
 
             // Scatter some random floor decorations (pillars = unwalkable in floor)
             for (const r of this.rooms) {
-                if (r.w >= 7 && r.h >= 6 && Math.random() < 0.4) {
+                if (r.w >= 7 && r.h >= 6 && _rng() < 0.4) {
                     // Add pillars to big rooms
                     const px1 = r.x + 2, py1 = r.y + 2;
                     const px2 = r.x + r.w - 3, py2 = r.y + r.h - 3;
@@ -1977,327 +2097,387 @@
     // ========== CLASS DEFINITIONS ==========
     const CLASS_DEFS = {
         warrior: {
-            name: 'バーバリアン', icon: '⚔', engName: 'BARBARIAN', tier: 0,
+            name: 'バーバリアン',
+            icon: '⚔',
+            engName: 'Barbarian',
+            tier: 0,
             sprite: 'knight',
-            baseStr: 20, baseDex: 10, baseVit: 20, baseInt: 5,
+            baseStr: 20,
+            baseDex: 10,
+            baseVit: 20,
+            baseInt: 5,
             branches: ['コンバットスキル', 'ウォークライ', 'マスタリー'],
             promotions: ['paladin', 'berserker'],
             skills: [
-                { id: 'w_bash', name: 'バッシュ', icon: '💥', mp: 8, cd: 0.8, branch: 0,
-                  desc: '強打で敵を怯ませダメージ', prereq: null,
-                  effect: 'melee_burst', baseMult: [1.8, 2.4, 3.2], range: 60 },
-                { id: 'w_doubleswing', name: 'ダブルスイング', icon: '⚔', mp: 18, cd: 2.0, branch: 0,
-                  desc: '二刀で同時に斬りつける', prereq: 'w_bash',
-                  effect: 'whirlwind', baseMult: [1.4, 2.0, 2.8], range: 80 },
-                { id: 'w_whirlwind', name: 'ワールウィンド', icon: '🌀', mp: 30, cd: 3.0, branch: 0,
-                  desc: '回転しながら周囲の全敵を斬り裂く', prereq: 'w_doubleswing',
-                  effect: 'whirlwind', baseMult: [1.6, 2.2, 3.5], range: 120 },
-                { id: 'w_howl', name: 'ハウル', icon: '📯', mp: 12, cd: 5.0, branch: 1,
-                  desc: '雄叫びで周囲の敵を怯ませる', prereq: null,
-                  effect: 'stun_aoe', duration: [1.5, 2.0, 3.0], range: 130 },
-                { id: 'w_shout', name: 'シャウト', icon: '🛡', mp: 20, cd: 8.0, branch: 1,
-                  desc: '咆哮で防御力を上昇', prereq: 'w_howl',
-                  effect: 'buff_defense', duration: [6, 8, 12], reduction: [0.4, 0.5, 0.65] },
-                { id: 'w_battleorders', name: 'バトルオーダー', icon: '⚜', mp: 35, cd: 15.0, branch: 1,
-                  desc: 'HP/MPの最大値を一時的に上昇', prereq: 'w_shout',
-                  effect: 'battle_orders', duration: [10, 15, 20], bonus: [0.2, 0.35, 0.5] },
-                { id: 'w_leap', name: 'リープアタック', icon: '🦘', mp: 15, cd: 4.0, branch: 2,
-                  desc: '跳躍して着地時に周囲にダメージ', prereq: null,
-                  effect: 'charge', baseMult: [2.0, 2.8, 4.0], range: 220 },
-                { id: 'w_ironskin', name: 'アイアンスキン', icon: '🔰', mp: 25, cd: 12.0, branch: 2,
-                  desc: '鉄の肌で防御力を大幅上昇', prereq: 'w_leap',
-                  effect: 'buff_defense', duration: [8, 10, 14], reduction: [0.5, 0.6, 0.75] },
-                { id: 'w_berserk', name: 'バーサーク', icon: '👹', mp: 35, cd: 12.0, branch: 2,
-                  desc: '狂気の力で攻撃力2倍。被ダメ増加', prereq: 'w_ironskin',
-                  effect: 'buff_berserk', duration: [8, 10, 14] }
+                // Branch 0: コンバットスキル
+                { id: 'w_bash', name: 'バッシュ', icon: '💥', mp: 8, cd: 0.8, branch: 0, desc: 'Single target burst', prereq: null, effect: 'melee_burst', baseMult: [1.8, 2.1, 2.5, 3.0, 3.6], range: 60 },
+                { id: 'w_doubleswing', name: 'ダブルスイング', icon: '⚔', mp: 14, cd: 1.5, branch: 0, desc: 'Whirlwind attack', prereq: 'w_bash', effect: 'whirlwind', baseMult: [1.4, 1.8, 2.2, 2.8, 3.4], range: 80 },
+                { id: 'w_stun', name: 'スタン', icon: '🔨', mp: 12, cd: 2.0, branch: 0, desc: 'Stun AoE', prereq: 'w_bash', effect: 'stun_aoe', duration: [1.2, 1.6, 2.0, 2.5, 3.0], range: 70 },
+                { id: 'w_concentrate', name: 'コンセントレイト', icon: '🎯', mp: 18, cd: 2.0, branch: 0, desc: 'Focused burst', prereq: 'w_doubleswing', effect: 'melee_burst', baseMult: [2.2, 2.8, 3.5, 4.2, 5.0], range: 55 },
+                { id: 'w_whirlwind', name: 'ワールウィンド', icon: '🌀', mp: 30, cd: 3.0, branch: 0, desc: 'Spinning attack', prereq: 'w_concentrate', effect: 'whirlwind', baseMult: [1.6, 2.0, 2.6, 3.2, 4.0], range: 120 },
+                { id: 'w_cleave', name: 'クリーブ', icon: '🪓', mp: 35, cd: 4.0, branch: 0, desc: 'Large cleave', prereq: 'w_whirlwind', effect: 'whirlwind', baseMult: [2.0, 2.6, 3.2, 4.0, 5.0], range: 140 },
+                { id: 'w_warfrenzy', name: 'ウォーフレンジー', icon: '😤', mp: 42, cd: 8.0, branch: 0, desc: 'Attack buff', prereq: 'w_cleave', effect: 'buff_frenzy', duration: [6, 8, 10, 12, 15], atkBonus: [0.4, 0.5, 0.6, 0.8, 1.0], spdBonus: [0.2, 0.3, 0.4, 0.5, 0.6] },
+                { id: 'w_furyslash', name: 'フューリースラッシュ', icon: '💀', mp: 55, cd: 10.0, branch: 0, desc: 'Execute attack', prereq: 'w_warfrenzy', effect: 'execute', baseMult: [4.0, 5.0, 6.5, 8.0, 10.0], threshold: [0.4, 0.5, 0.55, 0.6, 0.7], range: 70 },
+                // Branch 1: ウォークライ
+                { id: 'w_howl', name: 'ハウル', icon: '📯', mp: 10, cd: 4.0, branch: 1, desc: 'Stun shout', prereq: null, effect: 'stun_aoe', duration: [1.2, 1.6, 2.0, 2.5, 3.0], range: 120 },
+                { id: 'w_taunt', name: 'タウント', icon: '😡', mp: 12, cd: 5.0, branch: 1, desc: 'Debuff defense', prereq: 'w_howl', effect: 'debuff_defense', duration: [3, 4, 5, 6, 8], reduction: [0.2, 0.3, 0.4, 0.5, 0.6], range: 130 },
+                { id: 'w_shout', name: 'シャウト', icon: '🛡', mp: 18, cd: 6.0, branch: 1, desc: 'Defense buff', prereq: 'w_howl', effect: 'buff_defense', duration: [5, 7, 9, 11, 14], reduction: [0.3, 0.4, 0.5, 0.6, 0.7] },
+                { id: 'w_finditem', name: 'ファインドアイテム', icon: '💎', mp: 15, cd: 8.0, branch: 1, desc: 'Crit boost', prereq: 'w_taunt', effect: 'buff_crit', duration: [5, 7, 9, 12, 15], bonus: [10, 15, 20, 30, 40] },
+                { id: 'w_battleorders', name: 'バトルオーダー', icon: '⚜', mp: 35, cd: 12.0, branch: 1, desc: 'Battle orders', prereq: 'w_shout', effect: 'battle_orders', duration: [8, 12, 15, 18, 22], bonus: [0.15, 0.2, 0.3, 0.4, 0.5] },
+                { id: 'w_grimward', name: 'グリムウォード', icon: '☠', mp: 40, cd: 10.0, branch: 1, desc: 'Stun shout', prereq: 'w_battleorders', effect: 'stun_aoe', duration: [2.0, 2.5, 3.0, 3.5, 4.5], range: 160 },
+                { id: 'w_warcrylv2', name: 'ウォークライII', icon: '📣', mp: 48, cd: 12.0, branch: 1, desc: 'Enhanced stun', prereq: 'w_grimward', effect: 'stun_aoe', duration: [2.5, 3.0, 3.5, 4.0, 5.0], range: 180 },
+                { id: 'w_naturalorder', name: 'ナチュラルオーダー', icon: '⚜', mp: 55, cd: 18.0, branch: 1, desc: 'Ultimate orders', prereq: 'w_warcrylv2', effect: 'battle_orders', duration: [12, 16, 20, 25, 30], bonus: [0.25, 0.35, 0.45, 0.55, 0.7] },
+                // Branch 2: マスタリー
+                { id: 'w_leap', name: 'リープアタック', icon: '🦘', mp: 12, cd: 3.0, branch: 2, desc: 'Leap charge', prereq: null, effect: 'charge', baseMult: [1.8, 2.2, 2.8, 3.5, 4.2], range: 200 },
+                { id: 'w_stomp', name: 'ストンプ', icon: '👢', mp: 15, cd: 4.0, branch: 2, desc: 'Ground slam', prereq: 'w_leap', effect: 'ground_slam', baseMult: [1.5, 2.0, 2.5, 3.0, 3.8], range: 100, slow: [0.5, 0.45, 0.4, 0.35, 0.3] },
+                { id: 'w_ironskin', name: 'アイアンスキン', icon: '🔰', mp: 22, cd: 10.0, branch: 2, desc: 'Defense buff', prereq: 'w_leap', effect: 'buff_defense', duration: [6, 8, 10, 12, 15], reduction: [0.4, 0.5, 0.55, 0.6, 0.7] },
+                { id: 'w_naturalres', name: 'ナチュラルレジスタンス', icon: '💪', mp: 25, cd: 12.0, branch: 2, desc: 'Defense boost', prereq: 'w_ironskin', effect: 'buff_defense', duration: [8, 10, 12, 14, 18], reduction: [0.45, 0.55, 0.6, 0.65, 0.75] },
+                { id: 'w_berserk', name: 'バーサーク', icon: '👹', mp: 35, cd: 10.0, branch: 2, desc: 'Berserk mode', prereq: 'w_naturalres', effect: 'buff_berserk', duration: [6, 8, 10, 12, 16] },
+                { id: 'w_increasedspeed', name: 'インクリースドスピード', icon: '💨', mp: 28, cd: 10.0, branch: 2, desc: 'Speed boost', prereq: 'w_stomp', effect: 'buff_speed', duration: [6, 8, 10, 12, 15], bonus: [0.3, 0.4, 0.5, 0.6, 0.8] },
+                { id: 'w_swordmastery', name: 'ソードマスタリー', icon: '⚔', mp: 35, cd: 12.0, branch: 2, desc: 'Attack speed', prereq: 'w_increasedspeed', effect: 'buff_atkspd', duration: [6, 8, 10, 12, 16], bonus: [0.4, 0.5, 0.6, 0.8, 1.0] },
+                { id: 'w_ironfist', name: 'アイアンフィスト', icon: '🤜', mp: 55, cd: 12.0, branch: 2, desc: 'Ultimate punch', prereq: 'w_swordmastery', effect: 'melee_burst', baseMult: [5.0, 6.5, 8.0, 10.0, 13.0], range: 65 }
             ]
         },
         rogue: {
-            name: 'アマゾン', icon: '🏹', engName: 'AMAZON', tier: 0,
+            name: 'アマゾン',
+            icon: '🏹',
+            engName: 'Rogue',
+            tier: 0,
             sprite: 'rogueChar',
-            baseStr: 10, baseDex: 20, baseVit: 15, baseInt: 10,
+            baseStr: 10,
+            baseDex: 20,
+            baseVit: 15,
+            baseInt: 10,
             branches: ['弓スキル', 'ジャベリン', 'パッシブ'],
             promotions: ['assassin', 'ranger'],
             skills: [
-                { id: 'r_firearrow', name: 'ファイアアロー', icon: '🔥', mp: 8, cd: 0.8, branch: 0,
-                  desc: '炎を纏った矢を放つ', prereq: null,
-                  effect: 'projectile_fire', baseMult: [1.6, 2.2, 3.0], speed: 400 },
-                { id: 'r_multishot', name: 'マルチプルショット', icon: '🌟', mp: 22, cd: 2.5, branch: 0,
-                  desc: '扇状に複数の矢を同時発射', prereq: 'r_firearrow',
-                  effect: 'multi_shot', arrows: [3, 5, 7], baseMult: [1.0, 1.4, 1.8] },
-                { id: 'r_strafe', name: 'ストレイフ', icon: '🎯', mp: 35, cd: 5.0, branch: 0,
-                  desc: '周囲の全敵に矢を連射', prereq: 'r_multishot',
-                  effect: 'arrow_rain', baseMult: [2.0, 3.0, 4.5], range: 100 },
-                { id: 'r_jab', name: 'ジャブ', icon: '🔱', mp: 10, cd: 1.0, branch: 1,
-                  desc: '槍で素早く突く', prereq: null,
-                  effect: 'melee_burst', baseMult: [1.8, 2.4, 3.2], range: 55 },
-                { id: 'r_powerstrike', name: 'パワーストライク', icon: '⚡', mp: 18, cd: 3.0, branch: 1,
-                  desc: '雷を纏った強力な突き', prereq: 'r_jab',
-                  effect: 'melee_burst', baseMult: [2.5, 3.5, 5.0], range: 60 },
-                { id: 'r_ltfury', name: 'ライトニングフューリー', icon: '🌩', mp: 40, cd: 6.0, branch: 1,
-                  desc: '雷のジャベリンが敵間で連鎖', prereq: 'r_powerstrike',
-                  effect: 'chain_lightning', bounces: [3, 4, 6], baseMult: [2.0, 3.0, 4.5] },
-                { id: 'r_innersight', name: 'インナーサイト', icon: '👁', mp: 15, cd: 8.0, branch: 2,
-                  desc: '敵の防御力を低下させる', prereq: null,
-                  effect: 'debuff_defense', duration: [4, 6, 8], reduction: [0.3, 0.45, 0.6], range: 150 },
-                { id: 'r_critstrike', name: 'クリティカルストライク', icon: '💎', mp: 18, cd: 10.0, branch: 2,
-                  desc: 'クリティカル率を大幅上昇', prereq: 'r_innersight',
-                  effect: 'buff_crit', duration: [6, 8, 12], bonus: [20, 35, 50] },
-                { id: 'r_valkyrie', name: 'ヴァルキリー', icon: '🛡', mp: 45, cd: 20.0, branch: 2,
-                  desc: '戦乙女を召喚し共に戦う', prereq: 'r_critstrike',
-                  effect: 'summon_minion', duration: [12, 18, 25], minionHP: [200, 350, 500], minionDmg: [15, 25, 40] }
+                // Branch 0: 弓スキル
+                { id: 'r_firearrow', name: 'ファイアアロー', icon: '🔥', mp: 8, cd: 0.8, branch: 0, desc: 'Fire arrow', prereq: null, effect: 'projectile_fire', baseMult: [1.6, 1.9, 2.2, 2.6, 3.2], speed: 400 },
+                { id: 'r_coldarrow', name: 'コールドアロー', icon: '❄', mp: 10, cd: 1.2, branch: 0, desc: 'Cold arrow', prereq: 'r_firearrow', effect: 'projectile_fire', baseMult: [1.4, 1.7, 2.0, 2.4, 3.0], speed: 380 },
+                { id: 'r_multishot', name: 'マルチプルショット', icon: '🌟', mp: 22, cd: 2.5, branch: 0, desc: 'Multi arrows', prereq: 'r_coldarrow', effect: 'multi_shot', arrows: [3, 4, 5, 6, 8], baseMult: [1.0, 1.3, 1.6, 2.0, 2.5] },
+                { id: 'r_guidedarrow', name: 'ガイデッドアロー', icon: '🎯', mp: 18, cd: 1.5, branch: 0, desc: 'Guided shot', prereq: 'r_firearrow', effect: 'projectile_fire', baseMult: [2.2, 2.8, 3.5, 4.2, 5.0], speed: 500 },
+                { id: 'r_strafe', name: 'ストレイフ', icon: '🏹', mp: 35, cd: 5.0, branch: 0, desc: 'Arrow barrage', prereq: 'r_multishot', effect: 'arrow_rain', baseMult: [2.0, 2.6, 3.2, 4.0, 5.0], range: 100 },
+                { id: 'r_immolation', name: 'イモレーションアロー', icon: '🔥', mp: 40, cd: 6.0, branch: 0, desc: 'Fire rain', prereq: 'r_strafe', effect: 'arrow_rain', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 110 },
+                { id: 'r_freezingarrow', name: 'フリージングアロー', icon: '🧊', mp: 45, cd: 7.0, branch: 0, desc: 'Freeze arrows', prereq: 'r_immolation', effect: 'frost_nova', baseMult: [2.0, 2.8, 3.5, 4.5, 6.0], freeze: [2, 3, 4, 5, 6] },
+                { id: 'r_magicarrow', name: 'マジックアロー', icon: '✨', mp: 55, cd: 8.0, branch: 0, desc: 'Magic arrow', prereq: 'r_freezingarrow', effect: 'projectile_fire', baseMult: [4.0, 5.0, 6.5, 8.0, 10.0], speed: 550 },
+                // Branch 1: ジャベリン
+                { id: 'r_jab', name: 'ジャブ', icon: '🔱', mp: 8, cd: 1.0, branch: 1, desc: 'Quick jab', prereq: null, effect: 'melee_burst', baseMult: [1.8, 2.1, 2.5, 3.0, 3.6], range: 55 },
+                { id: 'r_poisonjav', name: 'ポイズンジャベリン', icon: '☠', mp: 14, cd: 3.0, branch: 1, desc: 'Poison javelin', prereq: 'r_jab', effect: 'buff_poison', duration: [4, 5, 6, 8, 10], dps: [5, 8, 12, 18, 25] },
+                { id: 'r_powerstrike', name: 'パワーストライク', icon: '⚡', mp: 18, cd: 2.5, branch: 1, desc: 'Power strike', prereq: 'r_jab', effect: 'melee_burst', baseMult: [2.5, 3.0, 3.8, 4.5, 5.5], range: 60 },
+                { id: 'r_chargedstrike', name: 'チャージドストライク', icon: '🌩', mp: 25, cd: 3.0, branch: 1, desc: 'Chain lightning', prereq: 'r_powerstrike', effect: 'chain_lightning', bounces: [2, 3, 4, 5, 6], baseMult: [1.8, 2.2, 2.8, 3.5, 4.5] },
+                { id: 'r_plaguejav', name: 'プレイグジャベリン', icon: '💚', mp: 30, cd: 5.0, branch: 1, desc: 'Plague javelin', prereq: 'r_poisonjav', effect: 'consecrate', baseMult: [0.6, 0.8, 1.0, 1.3, 1.6], range: 90, duration: [4, 5, 6, 8, 10] },
+                { id: 'r_fend', name: 'フェンド', icon: '🔱', mp: 35, cd: 4.0, branch: 1, desc: 'Spinning attack', prereq: 'r_chargedstrike', effect: 'whirlwind', baseMult: [1.6, 2.0, 2.5, 3.2, 4.0], range: 85 },
+                { id: 'r_ltfury', name: 'ライトニングフューリー', icon: '🌩', mp: 45, cd: 6.0, branch: 1, desc: 'Lightning fury', prereq: 'r_fend', effect: 'chain_lightning', bounces: [3, 4, 5, 6, 8], baseMult: [2.0, 2.8, 3.5, 4.5, 6.0] },
+                { id: 'r_lightningstrike', name: 'ライトニングストライク', icon: '⚡', mp: 55, cd: 8.0, branch: 1, desc: 'Lightning strike', prereq: 'r_ltfury', effect: 'melee_burst', baseMult: [4.0, 5.5, 7.0, 9.0, 12.0], range: 65 },
+                // Branch 2: パッシブ
+                { id: 'r_innersight', name: 'インナーサイト', icon: '👁', mp: 12, cd: 6.0, branch: 2, desc: 'Debuff armor', prereq: null, effect: 'debuff_defense', duration: [4, 5, 6, 8, 10], reduction: [0.2, 0.3, 0.4, 0.5, 0.6], range: 150 },
+                { id: 'r_slowmissiles', name: 'スローミサイル', icon: '🕸', mp: 15, cd: 6.0, branch: 2, desc: 'Slow aura', prereq: 'r_innersight', effect: 'stun_aoe', duration: [1.5, 2.0, 2.5, 3.0, 4.0], range: 130 },
+                { id: 'r_dodge', name: 'ドッジ', icon: '💨', mp: 18, cd: 10.0, branch: 2, desc: 'Dodge chance', prereq: 'r_innersight', effect: 'buff_dodge', duration: [5, 7, 9, 12, 15], chance: [30, 40, 50, 60, 75] },
+                { id: 'r_avoid', name: 'アヴォイド', icon: '🌀', mp: 22, cd: 10.0, branch: 2, desc: 'Avoid attacks', prereq: 'r_dodge', effect: 'buff_dodge', duration: [6, 8, 10, 13, 16], chance: [35, 45, 55, 65, 80] },
+                { id: 'r_critstrike', name: 'クリティカルストライク', icon: '💎', mp: 20, cd: 10.0, branch: 2, desc: 'Crit boost', prereq: 'r_slowmissiles', effect: 'buff_crit', duration: [5, 7, 9, 12, 15], bonus: [15, 22, 30, 40, 55] },
+                { id: 'r_evade', name: 'イヴェイド', icon: '🌊', mp: 28, cd: 12.0, branch: 2, desc: 'Evasion', prereq: 'r_avoid', effect: 'buff_speed', duration: [5, 7, 9, 12, 15], bonus: [0.3, 0.4, 0.5, 0.6, 0.8] },
+                { id: 'r_penetrate', name: 'ペネトレイト', icon: '🎯', mp: 30, cd: 12.0, branch: 2, desc: 'Pierce armor', prereq: 'r_critstrike', effect: 'buff_crit', duration: [6, 8, 10, 14, 18], bonus: [20, 30, 40, 55, 70] },
+                { id: 'r_valkyrie', name: 'ヴァルキリー', icon: '🛡', mp: 55, cd: 20.0, branch: 2, desc: 'Summon valkyrie', prereq: 'r_penetrate', effect: 'summon_minion', duration: [10, 14, 18, 22, 28], minionHP: [150, 250, 350, 500, 700], minionDmg: [12, 20, 30, 42, 60] }
             ]
         },
         sorcerer: {
-            name: 'ソーサレス', icon: '🔮', engName: 'SORCERESS', tier: 0,
+            name: 'ソーサレス',
+            icon: '✨',
+            engName: 'Sorcerer',
+            tier: 0,
             sprite: 'wizardM',
-            baseStr: 5, baseDex: 10, baseVit: 10, baseInt: 25,
+            baseStr: 5,
+            baseDex: 10,
+            baseVit: 10,
+            baseInt: 25,
             branches: ['ファイアスペル', 'ライトニング', 'コールドスペル'],
             promotions: ['pyromancer', 'cryomancer'],
             skills: [
-                { id: 's_firebolt', name: 'ファイアボルト', icon: '🔥', mp: 8, cd: 0.6, branch: 0,
-                  desc: '炎の弾を発射する', prereq: null,
-                  effect: 'projectile_fire', baseMult: [1.6, 2.2, 3.0], speed: 350 },
-                { id: 's_fireball', name: 'ファイアボール', icon: '☀', mp: 18, cd: 1.5, branch: 0,
-                  desc: '爆発する大きな火球', prereq: 's_firebolt',
-                  effect: 'projectile_fire', baseMult: [2.5, 3.5, 5.0], speed: 320 },
-                { id: 's_meteor', name: 'メテオ', icon: '☄', mp: 50, cd: 8.0, branch: 0,
-                  desc: '天から巨大隕石を降らせ大ダメージ', prereq: 's_fireball',
-                  effect: 'meteor', baseMult: [3.5, 5.0, 7.0], range: 110 },
-                { id: 's_chargedbolt', name: 'チャージドボルト', icon: '⚡', mp: 10, cd: 1.0, branch: 1,
-                  desc: '複数の稲妻を放射状に放つ', prereq: null,
-                  effect: 'multi_shot', arrows: [3, 4, 6], baseMult: [1.2, 1.6, 2.2] },
-                { id: 's_lightning', name: 'ライトニング', icon: '🌩', mp: 22, cd: 2.0, branch: 1,
-                  desc: '強力な直線の稲妻', prereq: 's_chargedbolt',
-                  effect: 'chain_lightning', bounces: [2, 3, 5], baseMult: [1.8, 2.5, 3.5] },
-                { id: 's_teleport', name: 'テレポート', icon: '✨', mp: 18, cd: 2.5, branch: 1,
-                  desc: '指定地点に瞬間移動', prereq: 's_chargedbolt',
-                  effect: 'teleport', range: [200, 280, 380] },
-                { id: 's_icebolt', name: 'アイスボルト', icon: '🔷', mp: 8, cd: 0.8, branch: 2,
-                  desc: '氷の弾を撃ち出す', prereq: null,
-                  effect: 'projectile_fire', baseMult: [1.4, 2.0, 2.8], speed: 380 },
-                { id: 's_frostnova', name: 'フロストノヴァ', icon: '❄', mp: 20, cd: 4.0, branch: 2,
-                  desc: '冷気の衝撃波で周囲の敵を凍結', prereq: 's_icebolt',
-                  effect: 'frost_nova', baseMult: [0.8, 1.2, 1.8], freeze: [2, 3, 5] },
-                { id: 's_blizzard', name: 'ブリザード', icon: '🌨', mp: 45, cd: 7.0, branch: 2,
-                  desc: '範囲に氷の嵐を降らせ持続ダメージ', prereq: 's_frostnova',
-                  effect: 'arrow_rain', baseMult: [2.5, 3.5, 5.0], range: 120 }
+                // Branch 0: ファイアスペル
+                { id: 's_firebolt', name: 'ファイアボルト', icon: '🔥', mp: 6, cd: 0.5, branch: 0, desc: 'Fire bolt', prereq: null, effect: 'projectile_fire', baseMult: [1.4, 1.7, 2.0, 2.4, 3.0], speed: 350 },
+                { id: 's_warmth', name: 'ウォームス', icon: '🌡', mp: 12, cd: 10.0, branch: 0, desc: 'Warmth aura', prereq: 's_firebolt', effect: 'buff_aura', duration: [8, 10, 12, 15, 20], regen: [3, 5, 8, 12, 16], reduction: [0.1, 0.15, 0.2, 0.25, 0.3] },
+                { id: 's_fireball', name: 'ファイアボール', icon: '☀', mp: 18, cd: 1.5, branch: 0, desc: 'Fireball', prereq: 's_firebolt', effect: 'projectile_fire', baseMult: [2.2, 2.8, 3.5, 4.2, 5.5], speed: 320 },
+                { id: 's_firewall', name: 'ファイアウォール', icon: '🧱', mp: 25, cd: 5.0, branch: 0, desc: 'Wall of fire', prereq: 's_fireball', effect: 'consecrate', baseMult: [0.6, 0.8, 1.0, 1.3, 1.6], range: 80, duration: [3, 4, 5, 6, 8] },
+                { id: 's_enchant', name: 'エンチャント', icon: '✨', mp: 28, cd: 12.0, branch: 0, desc: 'Fire enchant', prereq: 's_warmth', effect: 'buff_berserk', duration: [6, 8, 10, 12, 16] },
+                { id: 's_meteor', name: 'メテオ', icon: '☄', mp: 45, cd: 8.0, branch: 0, desc: 'Meteor strike', prereq: 's_firewall', effect: 'meteor', baseMult: [3.0, 4.0, 5.0, 6.5, 8.5], range: 110 },
+                { id: 's_hydra', name: 'ヒドラ', icon: '🐍', mp: 50, cd: 8.0, branch: 0, desc: 'Hydra spell', prereq: 's_enchant', effect: 'consecrate', baseMult: [0.8, 1.0, 1.3, 1.6, 2.0], range: 100, duration: [5, 7, 9, 12, 15] },
+                { id: 's_firemastery', name: 'ファイアマスタリー', icon: '🔥', mp: 55, cd: 15.0, branch: 0, desc: 'Fire mastery', prereq: 's_meteor', effect: 'buff_atkspd', duration: [8, 10, 12, 15, 20], bonus: [0.4, 0.5, 0.6, 0.8, 1.0] },
+                // Branch 1: ライトニング
+                { id: 's_chargedbolt', name: 'チャージドボルト', icon: '⚡', mp: 8, cd: 1.0, branch: 1, desc: 'Charged bolts', prereq: null, effect: 'multi_shot', arrows: [3, 3, 4, 5, 6], baseMult: [1.0, 1.3, 1.6, 2.0, 2.5] },
+                { id: 's_staticfield', name: 'スタティックフィールド', icon: '🔵', mp: 14, cd: 4.0, branch: 1, desc: 'Static field', prereq: 's_chargedbolt', effect: 'debuff_defense', duration: [3, 4, 5, 6, 8], reduction: [0.2, 0.3, 0.35, 0.4, 0.5], range: 120 },
+                { id: 's_teleport', name: 'テレポート', icon: '🌀', mp: 16, cd: 2.5, branch: 1, desc: 'Teleport', prereq: 's_chargedbolt', effect: 'teleport', range: [180, 220, 260, 320, 400] },
+                { id: 's_lightning', name: 'ライトニング', icon: '🌩', mp: 22, cd: 2.0, branch: 1, desc: 'Lightning', prereq: 's_staticfield', effect: 'chain_lightning', bounces: [2, 3, 3, 4, 5], baseMult: [1.6, 2.0, 2.5, 3.2, 4.2] },
+                { id: 's_nova', name: 'ノヴァ', icon: '💫', mp: 30, cd: 4.0, branch: 1, desc: 'Nova burst', prereq: 's_lightning', effect: 'frost_nova', baseMult: [1.5, 2.0, 2.5, 3.2, 4.0], freeze: [1, 1, 2, 2, 3] },
+                { id: 's_energyshield', name: 'エナジーシールド', icon: '🔷', mp: 35, cd: 12.0, branch: 1, desc: 'Energy shield', prereq: 's_teleport', effect: 'mana_shield', duration: [5, 7, 9, 12, 16], absorb: [0.4, 0.5, 0.6, 0.7, 0.8] },
+                { id: 's_ltgmastery', name: 'ライトニングマスタリー', icon: '⚡', mp: 40, cd: 12.0, branch: 1, desc: 'Lightning mastery', prereq: 's_nova', effect: 'buff_atkspd', duration: [6, 8, 10, 14, 18], bonus: [0.3, 0.4, 0.5, 0.6, 0.8] },
+                { id: 's_thunderstorm', name: 'サンダーストーム', icon: '⛈', mp: 55, cd: 10.0, branch: 1, desc: 'Thunder storm', prereq: 's_ltgmastery', effect: 'consecrate', baseMult: [1.0, 1.4, 1.8, 2.4, 3.2], range: 120, duration: [6, 8, 10, 13, 16] },
+                // Branch 2: コールドスペル
+                { id: 's_icebolt', name: 'アイスボルト', icon: '🔷', mp: 6, cd: 0.8, branch: 2, desc: 'Ice bolt', prereq: null, effect: 'projectile_fire', baseMult: [1.2, 1.5, 1.8, 2.2, 2.8], speed: 380 },
+                { id: 's_frozenarmor', name: 'フローズンアーマー', icon: '🛡', mp: 15, cd: 10.0, branch: 2, desc: 'Frozen armor', prereq: 's_icebolt', effect: 'buff_defense', duration: [6, 8, 10, 12, 16], reduction: [0.3, 0.4, 0.45, 0.5, 0.6] },
+                { id: 's_frostnova', name: 'フロストノヴァ', icon: '❄', mp: 18, cd: 4.0, branch: 2, desc: 'Frost nova', prereq: 's_icebolt', effect: 'frost_nova', baseMult: [0.8, 1.0, 1.4, 1.8, 2.4], freeze: [2, 2, 3, 4, 5] },
+                { id: 's_glacialspike', name: 'グレイシャルスパイク', icon: '🧊', mp: 22, cd: 3.0, branch: 2, desc: 'Glacial spike', prereq: 's_frostnova', effect: 'frost_nova', baseMult: [1.5, 2.0, 2.5, 3.2, 4.0], freeze: [2, 3, 3, 4, 5] },
+                { id: 's_shiverarmor', name: 'シヴァーアーマー', icon: '🪞', mp: 25, cd: 8.0, branch: 2, desc: 'Shiver armor', prereq: 's_frozenarmor', effect: 'buff_counter', duration: [5, 7, 9, 11, 14], reflect: [0.3, 0.4, 0.5, 0.6, 0.8] },
+                { id: 's_blizzard', name: 'ブリザード', icon: '🌨', mp: 40, cd: 7.0, branch: 2, desc: 'Blizzard', prereq: 's_glacialspike', effect: 'arrow_rain', baseMult: [2.2, 2.8, 3.5, 4.5, 6.0], range: 120 },
+                { id: 's_coldmastery', name: 'コールドマスタリー', icon: '🥶', mp: 35, cd: 10.0, branch: 2, desc: 'Cold mastery', prereq: 's_blizzard', effect: 'debuff_defense', duration: [4, 6, 8, 10, 13], reduction: [0.3, 0.4, 0.5, 0.6, 0.7], range: 140 },
+                { id: 's_frozenorb', name: 'フローズンオーブ', icon: '🌐', mp: 55, cd: 8.0, branch: 2, desc: 'Frozen orb', prereq: 's_coldmastery', effect: 'frozen_orb', baseMult: [2.5, 3.5, 4.5, 6.0, 8.0], speed: 200, shardCount: [5, 6, 8, 10, 12] }
             ]
         },
         paladin: {
-            name: 'パラディン', icon: '⛨', engName: 'PALADIN', tier: 1,
-            sprite: 'paladin', baseClass: 'warrior',
-            baseStr: 22, baseDex: 10, baseVit: 25, baseInt: 8,
+            name: 'パラディン',
+            icon: '✝',
+            engName: 'Paladin',
+            tier: 1,
+            baseClass: 'warrior',
+            sprite: 'paladin',
+            baseStr: 22,
+            baseDex: 10,
+            baseVit: 25,
+            baseInt: 8,
             branches: ['コンバット', 'オフェンスオーラ', 'ディフェンスオーラ'],
             promotions: [],
             skills: [
-                { id: 'p_smite', name: 'スマイト', icon: '✝', mp: 12, cd: 1.0, branch: 0,
-                  desc: '盾で打ち据え敵を怯ませる', prereq: null,
-                  effect: 'melee_burst', baseMult: [2.0, 2.8, 3.8], range: 60 },
-                { id: 'p_zeal', name: 'ジール', icon: '⚔', mp: 22, cd: 6.0, branch: 0,
-                  desc: '聖なる情熱で攻撃速度を大幅上昇', prereq: 'p_smite',
-                  effect: 'buff_atkspd', duration: [5, 7, 10], bonus: [0.5, 0.8, 1.2] },
-                { id: 'p_blessedhammer', name: 'ブレスドハンマー', icon: '🔨', mp: 35, cd: 4.0, branch: 0,
-                  desc: '聖なるハンマーが螺旋状に飛び範囲ダメージ', prereq: 'p_zeal',
-                  effect: 'holy_burst', baseMult: [2.5, 3.5, 5.0], range: 140 },
-                { id: 'p_might', name: 'マイト', icon: '💪', mp: 20, cd: 10.0, branch: 1,
-                  desc: '攻撃力を大幅上昇するオーラ', prereq: null,
-                  effect: 'buff_berserk', duration: [8, 12, 16] },
-                { id: 'p_holyfire', name: 'ホーリーファイア', icon: '🔥', mp: 28, cd: 6.0, branch: 1,
-                  desc: '聖なる炎で足元を焼き尽くす', prereq: 'p_might',
-                  effect: 'consecrate', baseMult: [0.6, 1.0, 1.5], range: 100, duration: [4, 6, 8] },
-                { id: 'p_fanaticism', name: 'ファナティシズム', icon: '🔱', mp: 40, cd: 15.0, branch: 1,
-                  desc: '攻撃速度・移動速度・ダメージを全て上昇', prereq: 'p_holyfire',
-                  effect: 'buff_frenzy', duration: [8, 12, 16], atkBonus: [0.5, 0.7, 1.0], spdBonus: [0.3, 0.5, 0.7] },
-                { id: 'p_prayer', name: 'プレイヤー', icon: '💚', mp: 25, cd: 10.0, branch: 2,
-                  desc: '祈りでHPを大幅回復', prereq: null,
-                  effect: 'self_heal_pct', pct: [0.25, 0.35, 0.50] },
-                { id: 'p_defiance', name: 'ディファイアンス', icon: '🛡', mp: 22, cd: 8.0, branch: 2,
-                  desc: '防御力を大幅上昇するオーラ', prereq: 'p_prayer',
-                  effect: 'buff_defense', duration: [6, 8, 12], reduction: [0.5, 0.6, 0.75] },
-                { id: 'p_salvation', name: 'サルベーション', icon: '✨', mp: 45, cd: 20.0, branch: 2,
-                  desc: '全属性耐性とHP回復の究極オーラ', prereq: 'p_defiance',
-                  effect: 'buff_aura', duration: [10, 15, 20], regen: [5, 10, 15], reduction: [0.3, 0.4, 0.5] }
+                // Branch 0: コンバット
+                { id: 'p_sacrifice', name: 'サクリファイス', icon: '💉', mp: 8, cd: 1.0, branch: 0, desc: 'Sacrifice', prereq: null, effect: 'melee_burst', baseMult: [2.0, 2.5, 3.0, 3.8, 4.5], range: 55 },
+                { id: 'p_smite', name: 'スマイト', icon: '✝', mp: 12, cd: 1.5, branch: 0, desc: 'Smite', prereq: 'p_sacrifice', effect: 'melee_burst', baseMult: [2.2, 2.8, 3.5, 4.2, 5.0], range: 60 },
+                { id: 'p_charge', name: 'チャージ', icon: '🐎', mp: 15, cd: 3.0, branch: 0, desc: 'Charge', prereq: 'p_sacrifice', effect: 'charge', baseMult: [2.0, 2.5, 3.2, 4.0, 5.0], range: 250 },
+                { id: 'p_zeal', name: 'ジール', icon: '⚔', mp: 22, cd: 6.0, branch: 0, desc: 'Zeal', prereq: 'p_smite', effect: 'buff_atkspd', duration: [4, 6, 8, 10, 13], bonus: [0.4, 0.5, 0.6, 0.8, 1.0] },
+                { id: 'p_vengeance', name: 'ヴェンジェンス', icon: '🗡', mp: 28, cd: 3.0, branch: 0, desc: 'Vengeance', prereq: 'p_zeal', effect: 'melee_burst', baseMult: [3.0, 3.8, 4.5, 5.5, 7.0], range: 60 },
+                { id: 'p_conversion', name: 'コンバージョン', icon: '🙏', mp: 35, cd: 8.0, branch: 0, desc: 'Conversion heal', prereq: 'p_vengeance', effect: 'self_heal_pct', pct: [0.15, 0.2, 0.25, 0.3, 0.4] },
+                { id: 'p_blessedhammer', name: 'ブレスドハンマー', icon: '🔨', mp: 42, cd: 4.0, branch: 0, desc: 'Blessed hammer', prereq: 'p_conversion', effect: 'holy_burst', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 140 },
+                { id: 'p_fistofheavens', name: 'フィストオブヘヴン', icon: '🌟', mp: 55, cd: 8.0, branch: 0, desc: 'Fist of heavens', prereq: 'p_blessedhammer', effect: 'meteor', baseMult: [4.0, 5.0, 6.5, 8.0, 10.5], range: 130 },
+                // Branch 1: オフェンスオーラ
+                { id: 'p_might', name: 'マイト', icon: '💪', mp: 12, cd: 8.0, branch: 1, desc: 'Might aura', prereq: null, effect: 'buff_berserk', duration: [6, 8, 10, 12, 16] },
+                { id: 'p_holyfire', name: 'ホーリーファイア', icon: '🔥', mp: 18, cd: 6.0, branch: 1, desc: 'Holy fire', prereq: 'p_might', effect: 'consecrate', baseMult: [0.5, 0.7, 0.9, 1.2, 1.5], range: 90, duration: [3, 4, 5, 6, 8] },
+                { id: 'p_thorns', name: 'ソーンズ', icon: '🌹', mp: 20, cd: 8.0, branch: 1, desc: 'Thorns aura', prereq: 'p_might', effect: 'buff_counter', duration: [5, 7, 9, 11, 14], reflect: [0.3, 0.4, 0.5, 0.6, 0.8] },
+                { id: 'p_holyshock', name: 'ホーリーショック', icon: '⚡', mp: 25, cd: 5.0, branch: 1, desc: 'Holy shock', prereq: 'p_holyfire', effect: 'chain_lightning', bounces: [2, 3, 3, 4, 5], baseMult: [1.5, 2.0, 2.5, 3.2, 4.0] },
+                { id: 'p_sanctuary', name: 'サンクチュアリ', icon: '🏛', mp: 30, cd: 6.0, branch: 1, desc: 'Sanctuary', prereq: 'p_holyshock', effect: 'holy_burst', baseMult: [1.8, 2.2, 2.8, 3.5, 4.5], range: 120 },
+                { id: 'p_conviction', name: 'コンヴィクション', icon: '👁', mp: 35, cd: 10.0, branch: 1, desc: 'Conviction', prereq: 'p_sanctuary', effect: 'debuff_defense', duration: [5, 7, 9, 12, 15], reduction: [0.3, 0.4, 0.5, 0.6, 0.7], range: 160 },
+                { id: 'p_fanaticism', name: 'ファナティシズム', icon: '🔱', mp: 42, cd: 12.0, branch: 1, desc: 'Fanaticism', prereq: 'p_conviction', effect: 'buff_frenzy', duration: [6, 8, 10, 13, 16], atkBonus: [0.4, 0.5, 0.6, 0.8, 1.0], spdBonus: [0.2, 0.3, 0.4, 0.5, 0.6] },
+                { id: 'p_holyfreeze', name: 'ホーリーフリーズ', icon: '❄', mp: 50, cd: 8.0, branch: 1, desc: 'Holy freeze', prereq: 'p_fanaticism', effect: 'frost_nova', baseMult: [2.0, 2.8, 3.5, 4.5, 6.0], freeze: [2, 3, 4, 5, 6] },
+                // Branch 2: ディフェンスオーラ
+                { id: 'p_prayer', name: 'プレイヤー', icon: '💚', mp: 12, cd: 8.0, branch: 2, desc: 'Prayer', prereq: null, effect: 'self_heal_pct', pct: [0.15, 0.2, 0.25, 0.3, 0.4] },
+                { id: 'p_cleansing', name: 'クレンジング', icon: '💧', mp: 15, cd: 8.0, branch: 2, desc: 'Cleansing', prereq: 'p_prayer', effect: 'self_heal_pct', pct: [0.18, 0.22, 0.28, 0.35, 0.45] },
+                { id: 'p_defiance', name: 'ディファイアンス', icon: '🛡', mp: 18, cd: 8.0, branch: 2, desc: 'Defiance', prereq: 'p_prayer', effect: 'buff_defense', duration: [5, 7, 9, 12, 15], reduction: [0.35, 0.45, 0.55, 0.6, 0.7] },
+                { id: 'p_vigor', name: 'ヴィガー', icon: '🏃', mp: 20, cd: 10.0, branch: 2, desc: 'Vigor', prereq: 'p_cleansing', effect: 'buff_speed', duration: [6, 8, 10, 12, 16], bonus: [0.3, 0.4, 0.5, 0.6, 0.8] },
+                { id: 'p_meditation', name: 'メディテーション', icon: '🧘', mp: 25, cd: 10.0, branch: 2, desc: 'Meditation', prereq: 'p_vigor', effect: 'buff_aura', duration: [6, 8, 10, 14, 18], regen: [4, 6, 8, 12, 16], reduction: [0.15, 0.2, 0.25, 0.3, 0.4] },
+                { id: 'p_redemption', name: 'リデンプション', icon: '🌟', mp: 30, cd: 12.0, branch: 2, desc: 'Redemption', prereq: 'p_meditation', effect: 'self_heal_pct', pct: [0.25, 0.3, 0.35, 0.4, 0.5] },
+                { id: 'p_resist', name: 'レジスト', icon: '🔰', mp: 35, cd: 12.0, branch: 2, desc: 'Resist', prereq: 'p_defiance', effect: 'buff_defense', duration: [8, 10, 12, 16, 20], reduction: [0.5, 0.55, 0.6, 0.7, 0.8] },
+                { id: 'p_salvation', name: 'サルベーション', icon: '✨', mp: 50, cd: 18.0, branch: 2, desc: 'Salvation', prereq: 'p_resist', effect: 'buff_aura', duration: [10, 12, 15, 20, 25], regen: [5, 8, 12, 16, 22], reduction: [0.3, 0.35, 0.4, 0.5, 0.6] }
             ]
         },
         berserker: {
-            name: 'バーサーカー', icon: '🪓', engName: 'BERSERKER', tier: 1,
-            sprite: 'berserker', baseClass: 'warrior',
-            baseStr: 28, baseDex: 12, baseVit: 18, baseInt: 3,
+            name: 'バーサーカー',
+            icon: '⚔',
+            engName: 'Berserker',
+            tier: 1,
+            baseClass: 'warrior',
+            sprite: 'berserker',
+            baseStr: 28,
+            baseDex: 12,
+            baseVit: 18,
+            baseInt: 3,
             branches: ['フレンジー', 'ウォークライ', 'マスタリー'],
             promotions: [],
             skills: [
-                { id: 'b_frenzy', name: 'フレンジー', icon: '😤', mp: 20, cd: 8.0, branch: 0,
-                  desc: '攻撃と移動速度が爆発的に上昇', prereq: null,
-                  effect: 'buff_frenzy', duration: [6, 8, 12], atkBonus: [0.5, 0.7, 1.0], spdBonus: [0.3, 0.5, 0.7] },
-                { id: 'b_concentrate', name: 'コンセントレイト', icon: '🎯', mp: 14, cd: 1.5, branch: 0,
-                  desc: '集中した強力な一撃', prereq: 'b_frenzy',
-                  effect: 'melee_burst', baseMult: [2.5, 3.5, 5.0], range: 60 },
-                { id: 'b_whirlwind', name: 'ワールウィンド', icon: '🌀', mp: 35, cd: 3.0, branch: 0,
-                  desc: '全てを巻き込む超旋風', prereq: 'b_concentrate',
-                  effect: 'whirlwind', baseMult: [2.0, 3.0, 4.5], range: 150 },
-                { id: 'b_warcry', name: 'ウォークライ', icon: '📯', mp: 22, cd: 6.0, branch: 1,
-                  desc: '咆哮で周囲の全敵をスタン', prereq: null,
-                  effect: 'stun_aoe', duration: [2.0, 3.0, 4.0], range: 140 },
-                { id: 'b_battlecmd', name: 'バトルコマンド', icon: '🎖', mp: 25, cd: 10.0, branch: 1,
-                  desc: '攻撃速度を大幅上昇する号令', prereq: 'b_warcry',
-                  effect: 'buff_atkspd', duration: [6, 8, 12], bonus: [0.5, 0.7, 1.0] },
-                { id: 'b_battleorders', name: 'バトルオーダー', icon: '⚜', mp: 40, cd: 18.0, branch: 1,
-                  desc: 'HP/MP最大値を大幅上昇', prereq: 'b_battlecmd',
-                  effect: 'battle_orders', duration: [12, 18, 25], bonus: [0.3, 0.45, 0.6] },
-                { id: 'b_leap', name: 'リープアタック', icon: '🦘', mp: 16, cd: 3.5, branch: 2,
-                  desc: '跳躍して敵陣に飛び込む', prereq: null,
-                  effect: 'charge', baseMult: [2.2, 3.0, 4.2], range: 230 },
-                { id: 'b_natres', name: 'ナチュラルレジスタンス', icon: '🛡', mp: 28, cd: 12.0, branch: 2,
-                  desc: '強靭な肉体で全ダメージ軽減', prereq: 'b_leap',
-                  effect: 'buff_defense', duration: [8, 12, 16], reduction: [0.5, 0.6, 0.75] },
-                { id: 'b_berserk', name: 'バーサーク', icon: '💀', mp: 40, cd: 10.0, branch: 2,
-                  desc: '防御を捨て圧倒的攻撃力。低HP敵に特効', prereq: 'b_natres',
-                  effect: 'execute', baseMult: [4.0, 6.0, 9.0], threshold: [0.5, 0.6, 0.7], range: 70 }
+                // Branch 0: フレンジー
+                { id: 'b_frenzy', name: 'フレンジー', icon: '😤', mp: 14, cd: 6.0, branch: 0, desc: 'Frenzy mode', prereq: null, effect: 'buff_frenzy', duration: [5, 7, 9, 11, 14], atkBonus: [0.4, 0.5, 0.6, 0.7, 0.9], spdBonus: [0.2, 0.3, 0.4, 0.5, 0.6] },
+                { id: 'b_bash', name: 'バッシュ', icon: '💥', mp: 10, cd: 1.0, branch: 0, desc: 'Bash', prereq: 'b_frenzy', effect: 'melee_burst', baseMult: [2.0, 2.5, 3.0, 3.8, 4.5], range: 60 },
+                { id: 'b_doubleswing', name: 'ダブルスイング', icon: '⚔', mp: 16, cd: 1.5, branch: 0, desc: 'Double swing', prereq: 'b_bash', effect: 'whirlwind', baseMult: [1.6, 2.0, 2.5, 3.0, 3.8], range: 85 },
+                { id: 'b_concentrate', name: 'コンセントレイト', icon: '🎯', mp: 20, cd: 2.0, branch: 0, desc: 'Concentrate', prereq: 'b_doubleswing', effect: 'melee_burst', baseMult: [2.8, 3.5, 4.2, 5.0, 6.5], range: 55 },
+                { id: 'b_whirlwind', name: 'ワールウィンド', icon: '🌀', mp: 35, cd: 3.0, branch: 0, desc: 'Whirlwind', prereq: 'b_concentrate', effect: 'whirlwind', baseMult: [2.0, 2.5, 3.2, 4.0, 5.5], range: 150 },
+                { id: 'b_cleave', name: 'クリーブ', icon: '🪓', mp: 38, cd: 4.0, branch: 0, desc: 'Cleave', prereq: 'b_whirlwind', effect: 'whirlwind', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 160 },
+                { id: 'b_warfrenzy', name: 'ウォーフレンジー', icon: '🔥', mp: 45, cd: 8.0, branch: 0, desc: 'War frenzy', prereq: 'b_cleave', effect: 'buff_frenzy', duration: [8, 10, 12, 15, 18], atkBonus: [0.6, 0.7, 0.8, 1.0, 1.2], spdBonus: [0.3, 0.4, 0.5, 0.6, 0.8] },
+                { id: 'b_executioner', name: 'エクセキューショナー', icon: '💀', mp: 55, cd: 10.0, branch: 0, desc: 'Executioner', prereq: 'b_warfrenzy', effect: 'execute', baseMult: [5.0, 6.5, 8.0, 10.0, 13.0], threshold: [0.5, 0.55, 0.6, 0.65, 0.75], range: 70 },
+                // Branch 1: ウォークライ
+                { id: 'b_warcry', name: 'ウォークライ', icon: '📯', mp: 14, cd: 5.0, branch: 1, desc: 'War cry', prereq: null, effect: 'stun_aoe', duration: [1.5, 2.0, 2.5, 3.0, 3.5], range: 130 },
+                { id: 'b_taunt', name: 'タウント', icon: '😡', mp: 12, cd: 5.0, branch: 1, desc: 'Taunt', prereq: 'b_warcry', effect: 'debuff_defense', duration: [3, 4, 5, 6, 8], reduction: [0.25, 0.35, 0.45, 0.55, 0.65], range: 140 },
+                { id: 'b_howl', name: 'ハウル', icon: '📣', mp: 16, cd: 6.0, branch: 1, desc: 'Howl', prereq: 'b_warcry', effect: 'stun_aoe', duration: [1.8, 2.2, 2.8, 3.5, 4.0], range: 150 },
+                { id: 'b_findpotion', name: 'ファインドポーション', icon: '🧪', mp: 15, cd: 8.0, branch: 1, desc: 'Find potion', prereq: 'b_taunt', effect: 'self_heal_pct', pct: [0.15, 0.2, 0.25, 0.3, 0.4] },
+                { id: 'b_battlecmd', name: 'バトルコマンド', icon: '🎖', mp: 25, cd: 10.0, branch: 1, desc: 'Battle command', prereq: 'b_howl', effect: 'buff_atkspd', duration: [5, 7, 9, 12, 15], bonus: [0.4, 0.5, 0.6, 0.8, 1.0] },
+                { id: 'b_battleorders', name: 'バトルオーダー', icon: '⚜', mp: 40, cd: 15.0, branch: 1, desc: 'Battle orders', prereq: 'b_battlecmd', effect: 'battle_orders', duration: [10, 14, 18, 22, 28], bonus: [0.2, 0.3, 0.4, 0.5, 0.6] },
+                { id: 'b_grimward', name: 'グリムウォード', icon: '☠', mp: 45, cd: 10.0, branch: 1, desc: 'Grim ward', prereq: 'b_battleorders', effect: 'stun_aoe', duration: [2.5, 3.0, 3.5, 4.0, 5.0], range: 170 },
+                { id: 'b_battlecommand2', name: 'バトルコマンドII', icon: '🏆', mp: 55, cd: 18.0, branch: 1, desc: 'Battle command 2', prereq: 'b_grimward', effect: 'battle_orders', duration: [12, 16, 20, 25, 32], bonus: [0.3, 0.4, 0.5, 0.6, 0.75] },
+                // Branch 2: マスタリー
+                { id: 'b_leap', name: 'リープアタック', icon: '🦘', mp: 14, cd: 3.0, branch: 2, desc: 'Leap', prereq: null, effect: 'charge', baseMult: [2.0, 2.5, 3.0, 3.8, 4.5], range: 220 },
+                { id: 'b_stomp', name: 'ストンプ', icon: '👢', mp: 16, cd: 4.0, branch: 2, desc: 'Stomp', prereq: 'b_leap', effect: 'ground_slam', baseMult: [1.8, 2.2, 2.8, 3.5, 4.2], range: 110, slow: [0.5, 0.45, 0.4, 0.35, 0.3] },
+                { id: 'b_ironskin', name: 'アイアンスキン', icon: '🔰', mp: 20, cd: 10.0, branch: 2, desc: 'Iron skin', prereq: 'b_leap', effect: 'buff_defense', duration: [6, 8, 10, 12, 16], reduction: [0.4, 0.5, 0.55, 0.6, 0.7] },
+                { id: 'b_increasedspeed', name: 'インクリースドスピード', icon: '💨', mp: 22, cd: 10.0, branch: 2, desc: 'Increased speed', prereq: 'b_stomp', effect: 'buff_speed', duration: [6, 8, 10, 12, 16], bonus: [0.35, 0.45, 0.55, 0.65, 0.8] },
+                { id: 'b_natres', name: 'ナチュラルレジスタンス', icon: '💪', mp: 28, cd: 12.0, branch: 2, desc: 'Natural resistance', prereq: 'b_ironskin', effect: 'buff_defense', duration: [8, 10, 12, 15, 18], reduction: [0.45, 0.55, 0.6, 0.7, 0.8] },
+                { id: 'b_swordmastery', name: 'ソードマスタリー', icon: '⚔', mp: 30, cd: 12.0, branch: 2, desc: 'Sword mastery', prereq: 'b_increasedspeed', effect: 'buff_atkspd', duration: [6, 8, 10, 13, 16], bonus: [0.45, 0.55, 0.65, 0.8, 1.0] },
+                { id: 'b_berserk', name: 'バーサーク', icon: '👹', mp: 40, cd: 8.0, branch: 2, desc: 'Berserk', prereq: 'b_natres', effect: 'buff_berserk', duration: [6, 8, 10, 13, 16] },
+                { id: 'b_ironfist', name: 'アイアンフィスト', icon: '🤜', mp: 55, cd: 10.0, branch: 2, desc: 'Iron fist', prereq: 'b_berserk', effect: 'execute', baseMult: [4.5, 6.0, 7.5, 9.5, 12.0], threshold: [0.45, 0.5, 0.55, 0.6, 0.7], range: 65 }
             ]
         },
         assassin: {
-            name: 'アサシン', icon: '🗡', engName: 'ASSASSIN', tier: 1,
-            sprite: 'assassin', baseClass: 'rogue',
-            baseStr: 14, baseDex: 26, baseVit: 12, baseInt: 12,
+            name: 'アサシン',
+            icon: '🗡',
+            engName: 'Assassin',
+            tier: 1,
+            baseClass: 'rogue',
+            sprite: 'assassin',
+            baseStr: 14,
+            baseDex: 26,
+            baseVit: 12,
+            baseInt: 12,
             branches: ['マーシャルアーツ', 'シャドウ', 'トラップ'],
             promotions: [],
             skills: [
-                { id: 'a_tigerstrike', name: 'タイガーストライク', icon: '🐯', mp: 10, cd: 1.0, branch: 0,
-                  desc: '気を溜めた強力な打撃', prereq: null,
-                  effect: 'melee_burst', baseMult: [2.2, 3.0, 4.2], range: 55 },
-                { id: 'a_dragontalon', name: 'ドラゴンタロン', icon: '🐉', mp: 20, cd: 2.5, branch: 0,
-                  desc: '瞬間移動して背後から急所攻撃', prereq: 'a_tigerstrike',
-                  effect: 'shadow_strike', baseMult: [3.0, 4.5, 6.5] },
-                { id: 'a_phoenixstrike', name: 'フェニックスストライク', icon: '🔥', mp: 40, cd: 8.0, branch: 0,
-                  desc: '炎・氷・雷が同時に炸裂する究極打撃', prereq: 'a_dragontalon',
-                  effect: 'execute', baseMult: [5.0, 7.0, 10.0], threshold: [1.0, 1.0, 1.0], range: 80 },
-                { id: 'a_burstspeed', name: 'バーストオブスピード', icon: '💨', mp: 15, cd: 10.0, branch: 1,
-                  desc: '移動速度と攻撃速度を上昇', prereq: null,
-                  effect: 'buff_speed', duration: [6, 8, 12], bonus: [0.5, 0.7, 1.0] },
-                { id: 'a_cloak', name: 'クロークオブシャドウ', icon: '🌑', mp: 22, cd: 12.0, branch: 1,
-                  desc: '影に包まれ敵の命中率低下', prereq: 'a_burstspeed',
-                  effect: 'smoke_screen', duration: [4, 6, 8], range: 120, evade: [40, 55, 70] },
-                { id: 'a_venom', name: 'ヴェノム', icon: '☠', mp: 28, cd: 10.0, branch: 1,
-                  desc: '武器に猛毒を塗り持続ダメージ付与', prereq: 'a_cloak',
-                  effect: 'buff_poison', duration: [8, 12, 16], dps: [10, 18, 28] },
-                { id: 'a_fireblast', name: 'ファイアブラスト', icon: '💣', mp: 12, cd: 3.5, branch: 2,
-                  desc: '爆発する罠を設置', prereq: null,
-                  effect: 'place_trap', baseMult: [2.0, 3.0, 4.5] },
-                { id: 'a_ltgsentry', name: 'ライトニングセントリー', icon: '⚡', mp: 25, cd: 5.0, branch: 2,
-                  desc: '雷撃を放つ自動砲台を設置', prereq: 'a_fireblast',
-                  effect: 'consecrate', baseMult: [0.8, 1.2, 1.8], range: 90, duration: [5, 7, 10] },
-                { id: 'a_deathsentry', name: 'デスセントリー', icon: '💀', mp: 40, cd: 10.0, branch: 2,
-                  desc: '周囲の死体を爆発させ範囲大ダメージ', prereq: 'a_ltgsentry',
-                  effect: 'arrow_rain', baseMult: [3.0, 4.5, 6.5], range: 120 }
+                // Branch 0: マーシャルアーツ
+                { id: 'a_tigerstrike', name: 'タイガーストライク', icon: '🐯', mp: 8, cd: 1.0, branch: 0, desc: 'Tiger strike', prereq: null, effect: 'melee_burst', baseMult: [2.0, 2.5, 3.0, 3.6, 4.5], range: 55 },
+                { id: 'a_cobrastrike', name: 'コブラストライク', icon: '🐍', mp: 12, cd: 1.5, branch: 0, desc: 'Cobra strike', prereq: 'a_tigerstrike', effect: 'melee_burst', baseMult: [2.2, 2.8, 3.4, 4.0, 5.0], range: 55 },
+                { id: 'a_fistsoffire', name: 'フィスツオブファイア', icon: '🔥', mp: 16, cd: 2.0, branch: 0, desc: 'Fists of fire', prereq: 'a_cobrastrike', effect: 'melee_burst', baseMult: [2.5, 3.0, 3.8, 4.5, 5.5], range: 60 },
+                { id: 'a_dragontalon', name: 'ドラゴンタロン', icon: '🐉', mp: 22, cd: 2.5, branch: 0, desc: 'Dragon talon', prereq: 'a_fistsoffire', effect: 'shadow_strike', baseMult: [3.0, 3.8, 4.5, 5.5, 7.0] },
+                { id: 'a_bladesofice', name: 'ブレイズオブアイス', icon: '❄', mp: 28, cd: 3.0, branch: 0, desc: 'Blades of ice', prereq: 'a_dragontalon', effect: 'frost_nova', baseMult: [1.5, 2.0, 2.5, 3.2, 4.0], freeze: [2, 2, 3, 3, 4] },
+                { id: 'a_clawsofthunder', name: 'クロウズオブサンダー', icon: '⚡', mp: 35, cd: 4.0, branch: 0, desc: 'Claws of thunder', prereq: 'a_bladesofice', effect: 'chain_lightning', bounces: [2, 3, 4, 5, 6], baseMult: [1.8, 2.2, 2.8, 3.5, 4.5] },
+                { id: 'a_bladesentinel', name: 'ブレードセンチネル', icon: '🗡', mp: 42, cd: 6.0, branch: 0, desc: 'Blade sentinel', prereq: 'a_clawsofthunder', effect: 'arrow_rain', baseMult: [2.0, 2.5, 3.2, 4.0, 5.5], range: 100 },
+                { id: 'a_phoenixstrike', name: 'フェニックスストライク', icon: '🔥', mp: 55, cd: 8.0, branch: 0, desc: 'Phoenix strike', prereq: 'a_bladesentinel', effect: 'execute', baseMult: [5.0, 6.5, 8.0, 10.0, 13.0], threshold: [1.0, 1.0, 1.0, 1.0, 1.0], range: 80 },
+                // Branch 1: シャドウ
+                { id: 'a_burstspeed', name: 'バーストオブスピード', icon: '💨', mp: 12, cd: 8.0, branch: 1, desc: 'Burst speed', prereq: null, effect: 'buff_speed', duration: [5, 7, 9, 12, 15], bonus: [0.3, 0.4, 0.5, 0.6, 0.8] },
+                { id: 'a_fade', name: 'フェード', icon: '🌑', mp: 15, cd: 10.0, branch: 1, desc: 'Fade', prereq: 'a_burstspeed', effect: 'buff_defense', duration: [6, 8, 10, 12, 16], reduction: [0.3, 0.4, 0.5, 0.55, 0.65] },
+                { id: 'a_cloak', name: 'クロークオブシャドウ', icon: '🌑', mp: 20, cd: 12.0, branch: 1, desc: 'Cloak of shadow', prereq: 'a_burstspeed', effect: 'smoke_screen', duration: [3, 4, 5, 6, 8], range: 110, evade: [30, 40, 50, 60, 75] },
+                { id: 'a_weaponblock', name: 'ウェポンブロック', icon: '🛡', mp: 18, cd: 8.0, branch: 1, desc: 'Weapon block', prereq: 'a_fade', effect: 'buff_dodge', duration: [5, 7, 9, 12, 15], chance: [25, 35, 45, 55, 70] },
+                { id: 'a_mindblast', name: 'マインドブラスト', icon: '🧠', mp: 25, cd: 5.0, branch: 1, desc: 'Mind blast', prereq: 'a_cloak', effect: 'stun_aoe', duration: [1.5, 2.0, 2.5, 3.0, 4.0], range: 120 },
+                { id: 'a_venom', name: 'ヴェノム', icon: '☠', mp: 28, cd: 10.0, branch: 1, desc: 'Venom', prereq: 'a_mindblast', effect: 'buff_poison', duration: [6, 8, 10, 13, 16], dps: [8, 12, 18, 25, 35] },
+                { id: 'a_shadowwarrior', name: 'シャドウウォリアー', icon: '👤', mp: 40, cd: 15.0, branch: 1, desc: 'Shadow warrior', prereq: 'a_weaponblock', effect: 'summon_minion', duration: [10, 14, 18, 22, 28], minionHP: [120, 200, 300, 420, 600], minionDmg: [10, 15, 22, 30, 42] },
+                { id: 'a_shadowmaster', name: 'シャドウマスター', icon: '👥', mp: 55, cd: 20.0, branch: 1, desc: 'Shadow master', prereq: 'a_shadowwarrior', effect: 'summon_minion', duration: [12, 16, 20, 25, 32], minionHP: [200, 320, 450, 600, 850], minionDmg: [15, 22, 32, 45, 65] },
+                // Branch 2: トラップ
+                { id: 'a_fireblast', name: 'ファイアブラスト', icon: '💣', mp: 10, cd: 3.0, branch: 2, desc: 'Fire blast', prereq: null, effect: 'place_trap', baseMult: [1.8, 2.2, 2.8, 3.5, 4.2] },
+                { id: 'a_wakeoffire', name: 'ウェイクオブファイア', icon: '🔥', mp: 16, cd: 4.0, branch: 2, desc: 'Wake of fire', prereq: 'a_fireblast', effect: 'consecrate', baseMult: [0.6, 0.8, 1.0, 1.3, 1.6], range: 80, duration: [3, 4, 5, 6, 8] },
+                { id: 'a_ltgsentry', name: 'ライトニングセントリー', icon: '⚡', mp: 22, cd: 5.0, branch: 2, desc: 'Lightning sentry', prereq: 'a_fireblast', effect: 'consecrate', baseMult: [0.7, 0.9, 1.2, 1.5, 2.0], range: 90, duration: [4, 5, 6, 8, 10] },
+                { id: 'a_bladefury', name: 'ブレードフューリー', icon: '🌀', mp: 25, cd: 3.0, branch: 2, desc: 'Blade fury', prereq: 'a_wakeoffire', effect: 'multi_shot', arrows: [3, 4, 5, 6, 8], baseMult: [1.0, 1.3, 1.6, 2.0, 2.5] },
+                { id: 'a_wakeofinferno', name: 'ウェイクオブインフェルノ', icon: '🌋', mp: 30, cd: 6.0, branch: 2, desc: 'Wake of inferno', prereq: 'a_ltgsentry', effect: 'consecrate', baseMult: [0.8, 1.0, 1.3, 1.6, 2.2], range: 100, duration: [4, 5, 7, 8, 10] },
+                { id: 'a_chargedboltsentry', name: 'チャージドボルトセントリー', icon: '🔵', mp: 35, cd: 6.0, branch: 2, desc: 'Charged bolt sentry', prereq: 'a_wakeofinferno', effect: 'multi_shot', arrows: [4, 5, 6, 7, 9], baseMult: [1.2, 1.5, 1.8, 2.2, 2.8] },
+                { id: 'a_deathsentry', name: 'デスセントリー', icon: '💀', mp: 42, cd: 8.0, branch: 2, desc: 'Death sentry', prereq: 'a_chargedboltsentry', effect: 'arrow_rain', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 120 },
+                { id: 'a_bladeshield', name: 'ブレードシールド', icon: '🛡', mp: 55, cd: 12.0, branch: 2, desc: 'Blade shield', prereq: 'a_deathsentry', effect: 'buff_counter', duration: [6, 8, 10, 13, 16], reflect: [0.4, 0.5, 0.6, 0.8, 1.0] }
             ]
         },
         ranger: {
-            name: 'レンジャー', icon: '🏹', engName: 'RANGER', tier: 1,
-            sprite: 'rangerCls', baseClass: 'rogue',
-            baseStr: 12, baseDex: 24, baseVit: 16, baseInt: 12,
+            name: 'レンジャー',
+            icon: '🏹',
+            engName: 'Ranger',
+            tier: 1,
+            baseClass: 'rogue',
+            sprite: 'rangerCls',
+            baseStr: 12,
+            baseDex: 24,
+            baseVit: 16,
+            baseInt: 12,
             branches: ['アーチェリー', 'スピアスキル', 'パッシブ'],
             promotions: [],
             skills: [
-                { id: 'rg_guided', name: 'ガイデッドアロー', icon: '🎯', mp: 12, cd: 0.8, branch: 0,
-                  desc: '必中の追尾矢を放つ', prereq: null,
-                  effect: 'projectile_fire', baseMult: [2.0, 2.8, 4.0], speed: 500 },
-                { id: 'rg_strafe', name: 'ストレイフ', icon: '🏹', mp: 25, cd: 2.5, branch: 0,
-                  desc: '高速で連射し周囲を射抜く', prereq: 'rg_guided',
-                  effect: 'multi_shot', arrows: [4, 6, 9], baseMult: [1.2, 1.6, 2.2] },
-                { id: 'rg_immolation', name: 'イモレーションアロー', icon: '🔥', mp: 40, cd: 6.0, branch: 0,
-                  desc: '着弾地を炎上させる矢', prereq: 'rg_strafe',
-                  effect: 'arrow_rain', baseMult: [2.5, 3.5, 5.5], range: 100 },
-                { id: 'rg_chargedstrike', name: 'チャージドストライク', icon: '⚡', mp: 14, cd: 2.0, branch: 1,
-                  desc: '雷を纏った槍で突く', prereq: null,
-                  effect: 'melee_burst', baseMult: [2.2, 3.2, 4.5], range: 60 },
-                { id: 'rg_fend', name: 'フェンド', icon: '🔱', mp: 22, cd: 4.0, branch: 1,
-                  desc: '槍を振り回し周囲を薙ぎ払う', prereq: 'rg_chargedstrike',
-                  effect: 'whirlwind', baseMult: [1.8, 2.5, 3.5], range: 90 },
-                { id: 'rg_ltfury', name: 'ライトニングフューリー', icon: '🌩', mp: 45, cd: 7.0, branch: 1,
-                  desc: '雷のジャベリンが複数の敵を連鎖攻撃', prereq: 'rg_fend',
-                  effect: 'chain_lightning', bounces: [3, 5, 7], baseMult: [2.5, 3.5, 5.0] },
-                { id: 'rg_penetrate', name: 'ペネトレイト', icon: '💎', mp: 18, cd: 12.0, branch: 2,
-                  desc: 'クリティカル率を大幅上昇', prereq: null,
-                  effect: 'buff_crit', duration: [6, 8, 12], bonus: [25, 35, 50] },
-                { id: 'rg_slowmissiles', name: 'スローミサイル', icon: '🕸', mp: 20, cd: 6.0, branch: 2,
-                  desc: '範囲内の敵を減速', prereq: 'rg_penetrate',
-                  effect: 'stun_aoe', duration: [2.0, 3.0, 4.0], range: 120 },
-                { id: 'rg_decoy', name: 'デコイ', icon: '👤', mp: 30, cd: 15.0, branch: 2,
-                  desc: '分身を生成して敵を攪乱', prereq: 'rg_slowmissiles',
-                  effect: 'buff_dodge', duration: [5, 8, 12], chance: [50, 65, 80] }
+                // Branch 0: アーチェリー
+                { id: 'rg_guided', name: 'ガイデッドアロー', icon: '🎯', mp: 10, cd: 0.8, branch: 0, desc: 'Guided arrow', prereq: null, effect: 'projectile_fire', baseMult: [1.8, 2.2, 2.6, 3.2, 4.0], speed: 500 },
+                { id: 'rg_coldarrow', name: 'コールドアロー', icon: '❄', mp: 12, cd: 1.2, branch: 0, desc: 'Cold arrow', prereq: 'rg_guided', effect: 'projectile_fire', baseMult: [1.6, 2.0, 2.4, 3.0, 3.8], speed: 420 },
+                { id: 'rg_multishot', name: 'マルチプルショット', icon: '🌟', mp: 20, cd: 2.0, branch: 0, desc: 'Multi shot', prereq: 'rg_guided', effect: 'multi_shot', arrows: [3, 4, 5, 6, 8], baseMult: [1.0, 1.3, 1.6, 2.0, 2.5] },
+                { id: 'rg_strafe', name: 'ストレイフ', icon: '🏹', mp: 25, cd: 2.5, branch: 0, desc: 'Strafe', prereq: 'rg_multishot', effect: 'multi_shot', arrows: [4, 5, 6, 8, 10], baseMult: [1.2, 1.5, 1.8, 2.2, 2.8] },
+                { id: 'rg_explodingarrow', name: 'エクスプローディングアロー', icon: '💥', mp: 28, cd: 4.0, branch: 0, desc: 'Exploding arrow', prereq: 'rg_coldarrow', effect: 'arrow_rain', baseMult: [2.0, 2.5, 3.2, 4.0, 5.0], range: 90 },
+                { id: 'rg_immolation', name: 'イモレーションアロー', icon: '🔥', mp: 35, cd: 6.0, branch: 0, desc: 'Immolation', prereq: 'rg_explodingarrow', effect: 'arrow_rain', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 100 },
+                { id: 'rg_freezingarrow', name: 'フリージングアロー', icon: '🧊', mp: 42, cd: 6.0, branch: 0, desc: 'Freezing arrow', prereq: 'rg_immolation', effect: 'frost_nova', baseMult: [2.0, 2.5, 3.2, 4.0, 5.5], freeze: [2, 3, 3, 4, 5] },
+                { id: 'rg_magicarrow', name: 'マジックアロー', icon: '✨', mp: 55, cd: 8.0, branch: 0, desc: 'Magic arrow', prereq: 'rg_freezingarrow', effect: 'projectile_fire', baseMult: [4.0, 5.0, 6.5, 8.0, 10.5], speed: 550 },
+                // Branch 1: スピアスキル
+                { id: 'rg_jab', name: 'ジャブ', icon: '🔱', mp: 8, cd: 1.0, branch: 1, desc: 'Jab', prereq: null, effect: 'melee_burst', baseMult: [1.8, 2.2, 2.6, 3.2, 4.0], range: 58 },
+                { id: 'rg_chargedstrike', name: 'チャージドストライク', icon: '⚡', mp: 14, cd: 2.0, branch: 1, desc: 'Charged strike', prereq: 'rg_jab', effect: 'melee_burst', baseMult: [2.0, 2.5, 3.2, 4.0, 5.0], range: 60 },
+                { id: 'rg_powerstrike', name: 'パワーストライク', icon: '💪', mp: 18, cd: 2.5, branch: 1, desc: 'Power strike', prereq: 'rg_chargedstrike', effect: 'melee_burst', baseMult: [2.5, 3.0, 3.8, 4.5, 5.8], range: 62 },
+                { id: 'rg_fend', name: 'フェンド', icon: '🔱', mp: 22, cd: 3.5, branch: 1, desc: 'Fend', prereq: 'rg_powerstrike', effect: 'whirlwind', baseMult: [1.6, 2.0, 2.5, 3.2, 4.0], range: 85 },
+                { id: 'rg_poisonjav', name: 'ポイズンジャベリン', icon: '☠', mp: 25, cd: 4.0, branch: 1, desc: 'Poison javelin', prereq: 'rg_fend', effect: 'buff_poison', duration: [4, 5, 6, 8, 10], dps: [6, 10, 15, 22, 30] },
+                { id: 'rg_plaguejav', name: 'プレイグジャベリン', icon: '💚', mp: 30, cd: 5.0, branch: 1, desc: 'Plague javelin', prereq: 'rg_poisonjav', effect: 'consecrate', baseMult: [0.6, 0.8, 1.0, 1.3, 1.6], range: 90, duration: [4, 5, 6, 8, 10] },
+                { id: 'rg_ltfury', name: 'ライトニングフューリー', icon: '🌩', mp: 42, cd: 6.0, branch: 1, desc: 'Lightning fury', prereq: 'rg_plaguejav', effect: 'chain_lightning', bounces: [3, 4, 5, 6, 8], baseMult: [2.0, 2.5, 3.2, 4.0, 5.5] },
+                { id: 'rg_lightningstrike', name: 'ライトニングストライク', icon: '⚡', mp: 55, cd: 8.0, branch: 1, desc: 'Lightning strike', prereq: 'rg_ltfury', effect: 'chain_lightning', bounces: [4, 5, 6, 7, 9], baseMult: [2.8, 3.5, 4.5, 5.5, 7.5] },
+                // Branch 2: パッシブ
+                { id: 'rg_penetrate', name: 'ペネトレイト', icon: '🎯', mp: 12, cd: 10.0, branch: 2, desc: 'Penetrate', prereq: null, effect: 'buff_crit', duration: [5, 7, 9, 12, 15], bonus: [15, 22, 30, 40, 55] },
+                { id: 'rg_dodge', name: 'ドッジ', icon: '💨', mp: 15, cd: 10.0, branch: 2, desc: 'Dodge', prereq: 'rg_penetrate', effect: 'buff_dodge', duration: [5, 7, 9, 12, 15], chance: [25, 35, 45, 55, 70] },
+                { id: 'rg_avoid', name: 'アヴォイド', icon: '🌀', mp: 18, cd: 10.0, branch: 2, desc: 'Avoid', prereq: 'rg_dodge', effect: 'buff_dodge', duration: [6, 8, 10, 13, 16], chance: [30, 40, 50, 60, 75] },
+                { id: 'rg_evade', name: 'イヴェイド', icon: '🌊', mp: 22, cd: 10.0, branch: 2, desc: 'Evade', prereq: 'rg_avoid', effect: 'buff_speed', duration: [5, 7, 9, 12, 16], bonus: [0.3, 0.4, 0.5, 0.6, 0.8] },
+                { id: 'rg_slowmissiles', name: 'スローミサイル', icon: '🕸', mp: 20, cd: 6.0, branch: 2, desc: 'Slow missiles', prereq: 'rg_penetrate', effect: 'stun_aoe', duration: [1.5, 2.0, 2.5, 3.0, 4.0], range: 120 },
+                { id: 'rg_critmastery', name: 'クリティカルマスタリー', icon: '⚔', mp: 30, cd: 12.0, branch: 2, desc: 'Crit mastery', prereq: 'rg_evade', effect: 'buff_crit', duration: [6, 8, 10, 14, 18], bonus: [25, 35, 45, 60, 80] },
+                { id: 'rg_pierce', name: 'ピアース', icon: '🏹', mp: 35, cd: 10.0, branch: 2, desc: 'Pierce', prereq: 'rg_slowmissiles', effect: 'buff_atkspd', duration: [6, 8, 10, 12, 16], bonus: [0.4, 0.5, 0.6, 0.8, 1.0] },
+                { id: 'rg_decoy', name: 'デコイ', icon: '👤', mp: 50, cd: 15.0, branch: 2, desc: 'Decoy', prereq: 'rg_critmastery', effect: 'summon_minion', duration: [8, 12, 16, 20, 25], minionHP: [100, 160, 240, 340, 480], minionDmg: [8, 12, 18, 25, 35] }
             ]
         },
         pyromancer: {
-            name: 'ファイアソーサレス', icon: '🔥', engName: 'FIRE SORCERESS', tier: 1,
-            sprite: 'pyromancer', baseClass: 'sorcerer',
-            baseStr: 5, baseDex: 10, baseVit: 12, baseInt: 30,
+            name: 'ファイアソーサレス',
+            icon: '🔥',
+            engName: 'Pyromancer',
+            tier: 1,
+            baseClass: 'sorcerer',
+            sprite: 'pyromancer',
+            baseStr: 5,
+            baseDex: 10,
+            baseVit: 12,
+            baseInt: 30,
             branches: ['ファイアスペル', 'エンチャント', 'インフェルノ'],
             promotions: [],
             skills: [
-                { id: 'py_fireball', name: 'ファイアボール', icon: '☀', mp: 14, cd: 0.6, branch: 0,
-                  desc: '強化された火球を発射', prereq: null,
-                  effect: 'projectile_fire', baseMult: [2.5, 3.5, 5.0], speed: 380 },
-                { id: 'py_firewall', name: 'ファイアウォール', icon: '🧱', mp: 28, cd: 5.0, branch: 0,
-                  desc: '炎の壁を展開し通過する敵にダメージ', prereq: 'py_fireball',
-                  effect: 'consecrate', baseMult: [0.8, 1.2, 1.8], range: 80, duration: [4, 6, 8] },
-                { id: 'py_meteor', name: 'メテオ', icon: '☄', mp: 55, cd: 8.0, branch: 0,
-                  desc: '天から巨大隕石を落とし壊滅的ダメージ', prereq: 'py_firewall',
-                  effect: 'meteor', baseMult: [4.5, 6.5, 9.0], range: 130 },
-                { id: 'py_enchant', name: 'エンチャント', icon: '✨', mp: 20, cd: 12.0, branch: 1,
-                  desc: '武器に炎の力を付与し攻撃力上昇', prereq: null,
-                  effect: 'buff_berserk', duration: [8, 12, 16] },
-                { id: 'py_hydra', name: 'ヒドラ', icon: '🐍', mp: 35, cd: 8.0, branch: 1,
-                  desc: '火炎を吐く多頭竜を設置', prereq: 'py_enchant',
-                  effect: 'consecrate', baseMult: [1.0, 1.5, 2.2], range: 100, duration: [5, 8, 12] },
-                { id: 'py_firemastery', name: 'ファイアマスタリー', icon: '🔥', mp: 30, cd: 15.0, branch: 1,
-                  desc: '全ての炎ダメージを大幅強化', prereq: 'py_hydra',
-                  effect: 'buff_atkspd', duration: [8, 12, 16], bonus: [0.5, 0.7, 1.0] },
-                { id: 'py_inferno', name: 'インフェルノ', icon: '🌋', mp: 18, cd: 2.0, branch: 2,
-                  desc: '足元から炎が噴出', prereq: null,
-                  effect: 'ground_slam', baseMult: [1.8, 2.5, 3.5], range: 90, slow: [0.5, 0.4, 0.3] },
-                { id: 'py_blaze', name: 'ブレイズ', icon: '💥', mp: 25, cd: 4.0, branch: 2,
-                  desc: '炎の連鎖が敵を焼き尽くす', prereq: 'py_inferno',
-                  effect: 'chain_lightning', bounces: [3, 5, 7], baseMult: [1.8, 2.5, 3.5] },
-                { id: 'py_meteorstorm', name: 'メテオストーム', icon: '🌠', mp: 70, cd: 12.0, branch: 2,
-                  desc: '複数の隕石が降り注ぐ超大魔法', prereq: 'py_blaze',
-                  effect: 'meteor', baseMult: [5.5, 8.0, 12.0], range: 160 }
+                // Branch 0: ファイアスペル
+                { id: 'py_firebolt', name: 'ファイアボルト', icon: '🔥', mp: 6, cd: 0.5, branch: 0, desc: 'Fire bolt', prereq: null, effect: 'projectile_fire', baseMult: [1.8, 2.2, 2.6, 3.2, 4.0], speed: 360 },
+                { id: 'py_fireball', name: 'ファイアボール', icon: '☀', mp: 14, cd: 0.8, branch: 0, desc: 'Fireball', prereq: 'py_firebolt', effect: 'projectile_fire', baseMult: [2.5, 3.0, 3.8, 4.5, 5.5], speed: 380 },
+                { id: 'py_firewall', name: 'ファイアウォール', icon: '🧱', mp: 22, cd: 4.0, branch: 0, desc: 'Fire wall', prereq: 'py_fireball', effect: 'consecrate', baseMult: [0.7, 0.9, 1.2, 1.5, 2.0], range: 80, duration: [3, 4, 5, 7, 9] },
+                { id: 'py_combustion', name: 'コンバッション', icon: '💥', mp: 28, cd: 5.0, branch: 0, desc: 'Combustion', prereq: 'py_firewall', effect: 'meteor', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 90 },
+                { id: 'py_meteor', name: 'メテオ', icon: '☄', mp: 40, cd: 7.0, branch: 0, desc: 'Meteor', prereq: 'py_combustion', effect: 'meteor', baseMult: [3.5, 4.5, 5.5, 7.0, 9.0], range: 120 },
+                { id: 'py_armageddon', name: 'アルマゲドン', icon: '🌠', mp: 50, cd: 10.0, branch: 0, desc: 'Armageddon', prereq: 'py_meteor', effect: 'arrow_rain', baseMult: [3.0, 4.0, 5.0, 6.5, 8.5], range: 150 },
+                { id: 'py_firemastery2', name: 'ファイアマスタリー', icon: '🔥', mp: 45, cd: 12.0, branch: 0, desc: 'Fire mastery', prereq: 'py_armageddon', effect: 'buff_atkspd', duration: [6, 8, 10, 14, 18], bonus: [0.4, 0.5, 0.6, 0.8, 1.0] },
+                { id: 'py_meteorstorm', name: 'メテオストーム', icon: '🌋', mp: 65, cd: 12.0, branch: 0, desc: 'Meteor storm', prereq: 'py_firemastery2', effect: 'meteor', baseMult: [5.5, 7.0, 9.0, 11.0, 14.0], range: 160 },
+                // Branch 1: エンチャント
+                { id: 'py_warmth', name: 'ウォームス', icon: '🌡', mp: 10, cd: 8.0, branch: 1, desc: 'Warmth', prereq: null, effect: 'buff_aura', duration: [6, 8, 10, 12, 16], regen: [3, 5, 7, 10, 14], reduction: [0.1, 0.15, 0.2, 0.25, 0.3] },
+                { id: 'py_enchant', name: 'エンチャント', icon: '✨', mp: 18, cd: 10.0, branch: 1, desc: 'Enchant', prereq: 'py_warmth', effect: 'buff_berserk', duration: [6, 8, 10, 12, 16] },
+                { id: 'py_blazingaura', name: 'ブレイジングオーラ', icon: '🔆', mp: 22, cd: 8.0, branch: 1, desc: 'Blazing aura', prereq: 'py_enchant', effect: 'consecrate', baseMult: [0.5, 0.7, 0.9, 1.2, 1.5], range: 70, duration: [4, 5, 6, 8, 10] },
+                { id: 'py_infernalguard', name: 'インファーナルガード', icon: '🔰', mp: 25, cd: 10.0, branch: 1, desc: 'Infernal guard', prereq: 'py_blazingaura', effect: 'buff_counter', duration: [5, 7, 9, 12, 15], reflect: [0.3, 0.4, 0.5, 0.6, 0.8] },
+                { id: 'py_moltenarmor', name: 'モルテンアーマー', icon: '🛡', mp: 28, cd: 10.0, branch: 1, desc: 'Molten armor', prereq: 'py_infernalguard', effect: 'buff_defense', duration: [6, 8, 10, 13, 16], reduction: [0.35, 0.45, 0.55, 0.6, 0.7] },
+                { id: 'py_flamebarrier', name: 'フレイムバリア', icon: '🔥', mp: 32, cd: 8.0, branch: 1, desc: 'Flame barrier', prereq: 'py_moltenarmor', effect: 'buff_counter', duration: [6, 8, 10, 12, 16], reflect: [0.4, 0.5, 0.6, 0.8, 1.0] },
+                { id: 'py_hydra', name: 'ヒドラ', icon: '🐍', mp: 40, cd: 8.0, branch: 1, desc: 'Hydra', prereq: 'py_flamebarrier', effect: 'consecrate', baseMult: [0.8, 1.0, 1.3, 1.6, 2.2], range: 100, duration: [5, 7, 9, 12, 15] },
+                { id: 'py_innerflame', name: 'インナーフレイム', icon: '💛', mp: 55, cd: 15.0, branch: 1, desc: 'Inner flame', prereq: 'py_hydra', effect: 'buff_frenzy', duration: [8, 10, 12, 16, 20], atkBonus: [0.5, 0.6, 0.7, 0.9, 1.2], spdBonus: [0.2, 0.3, 0.4, 0.5, 0.6] },
+                // Branch 2: インフェルノ
+                { id: 'py_inferno', name: 'インフェルノ', icon: '🌋', mp: 12, cd: 2.0, branch: 2, desc: 'Inferno', prereq: null, effect: 'ground_slam', baseMult: [1.5, 1.8, 2.2, 2.8, 3.5], range: 80, slow: [0.5, 0.45, 0.4, 0.35, 0.3] },
+                { id: 'py_firestorm', name: 'ファイアストーム', icon: '🔥', mp: 16, cd: 3.0, branch: 2, desc: 'Fire storm', prereq: 'py_inferno', effect: 'arrow_rain', baseMult: [1.5, 2.0, 2.5, 3.0, 4.0], range: 90 },
+                { id: 'py_blaze', name: 'ブレイズ', icon: '💥', mp: 20, cd: 3.5, branch: 2, desc: 'Blaze', prereq: 'py_firestorm', effect: 'chain_lightning', bounces: [2, 3, 4, 5, 6], baseMult: [1.5, 2.0, 2.5, 3.2, 4.0] },
+                { id: 'py_lavawalk', name: 'ラヴァウォーク', icon: '🟠', mp: 25, cd: 5.0, branch: 2, desc: 'Lava walk', prereq: 'py_blaze', effect: 'consecrate', baseMult: [0.7, 0.9, 1.2, 1.5, 2.0], range: 70, duration: [3, 4, 5, 7, 9] },
+                { id: 'py_pyromania', name: 'パイロマニア', icon: '🔥', mp: 30, cd: 6.0, branch: 2, desc: 'Pyromania', prereq: 'py_lavawalk', effect: 'meteor', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 100 },
+                { id: 'py_combustion2', name: 'コンバッションII', icon: '💥', mp: 38, cd: 7.0, branch: 2, desc: 'Combustion 2', prereq: 'py_pyromania', effect: 'meteor', baseMult: [3.0, 4.0, 5.0, 6.5, 8.0], range: 110 },
+                { id: 'py_hellfire', name: 'ヘルファイア', icon: '🔥', mp: 48, cd: 8.0, branch: 2, desc: 'Hellfire', prereq: 'py_combustion2', effect: 'arrow_rain', baseMult: [3.0, 4.0, 5.0, 6.5, 8.5], range: 140 },
+                { id: 'py_armageddon2', name: 'ファイナルフレア', icon: '🌠', mp: 60, cd: 12.0, branch: 2, desc: 'Final flare', prereq: 'py_hellfire', effect: 'meteor', baseMult: [6.0, 8.0, 10.0, 12.0, 16.0], range: 170 }
             ]
         },
         cryomancer: {
-            name: 'アイスソーサレス', icon: '❄', engName: 'ICE SORCERESS', tier: 1,
-            sprite: 'cryomancer', baseClass: 'sorcerer',
-            baseStr: 5, baseDex: 12, baseVit: 14, baseInt: 28,
+            name: 'アイスソーサレス',
+            icon: '❄',
+            engName: 'Cryomancer',
+            tier: 1,
+            baseClass: 'sorcerer',
+            sprite: 'cryomancer',
+            baseStr: 5,
+            baseDex: 12,
+            baseVit: 14,
+            baseInt: 28,
             branches: ['コールドスペル', 'フロストディフェンス', 'アイスマスタリー'],
             promotions: [],
             skills: [
-                { id: 'cy_iceblast', name: 'アイスブラスト', icon: '🔷', mp: 10, cd: 0.6, branch: 0,
-                  desc: '強化された氷の弾を放つ', prereq: null,
-                  effect: 'projectile_fire', baseMult: [2.0, 2.8, 3.8], speed: 400 },
-                { id: 'cy_glacialspike', name: 'グレイシャルスパイク', icon: '❄', mp: 22, cd: 3.5, branch: 0,
-                  desc: '氷の棘が爆発し範囲凍結', prereq: 'cy_iceblast',
-                  effect: 'frost_nova', baseMult: [1.5, 2.2, 3.0], freeze: [3, 4, 6] },
-                { id: 'cy_blizzard', name: 'ブリザード', icon: '🌨', mp: 45, cd: 7.0, branch: 0,
-                  desc: '広範囲に吹雪を降らせ壊滅ダメージ', prereq: 'cy_glacialspike',
-                  effect: 'arrow_rain', baseMult: [3.0, 4.5, 6.5], range: 130 },
-                { id: 'cy_frozenarmor', name: 'フローズンアーマー', icon: '🛡', mp: 18, cd: 10.0, branch: 1,
-                  desc: '氷の鎧で被ダメ軽減', prereq: null,
-                  effect: 'buff_defense', duration: [6, 10, 14], reduction: [0.4, 0.55, 0.7] },
-                { id: 'cy_shiverarmor', name: 'シヴァーアーマー', icon: '🪞', mp: 25, cd: 8.0, branch: 1,
-                  desc: '攻撃してきた敵に冷気で反撃', prereq: 'cy_frozenarmor',
-                  effect: 'buff_counter', duration: [5, 7, 10], reflect: [0.4, 0.6, 0.9] },
-                { id: 'cy_energyshield', name: 'エナジーシールド', icon: '🔷', mp: 35, cd: 14.0, branch: 1,
-                  desc: 'ダメージをMPで吸収するシールド', prereq: 'cy_shiverarmor',
-                  effect: 'mana_shield', duration: [6, 10, 15], absorb: [0.5, 0.65, 0.8] },
-                { id: 'cy_frostnova', name: 'フロストノヴァ', icon: '💠', mp: 20, cd: 4.0, branch: 2,
-                  desc: '強化された凍結衝撃波', prereq: null,
-                  effect: 'frost_nova', baseMult: [1.2, 1.8, 2.8], freeze: [2, 3, 5] },
-                { id: 'cy_coldmastery', name: 'コールドマスタリー', icon: '🥶', mp: 22, cd: 8.0, branch: 2,
-                  desc: '周囲の敵の防御を低下', prereq: 'cy_frostnova',
-                  effect: 'debuff_defense', duration: [5, 7, 10], reduction: [0.35, 0.5, 0.65], range: 140 },
-                { id: 'cy_frozenorb', name: 'フローズンオーブ', icon: '🌐', mp: 50, cd: 8.0, branch: 2,
-                  desc: '氷の球体が氷片を放射しながら飛ぶ', prereq: 'cy_coldmastery',
-                  effect: 'frozen_orb', baseMult: [3.0, 4.5, 7.0], speed: 200, shardCount: [6, 8, 12] }
+                // Branch 0: コールドスペル
+                { id: 'cy_icebolt', name: 'アイスボルト', icon: '🔷', mp: 6, cd: 0.5, branch: 0, desc: 'Ice bolt', prereq: null, effect: 'projectile_fire', baseMult: [1.4, 1.7, 2.0, 2.4, 3.0], speed: 380 },
+                { id: 'cy_iceblast', name: 'アイスブラスト', icon: '💎', mp: 12, cd: 0.8, branch: 0, desc: 'Ice blast', prereq: 'cy_icebolt', effect: 'projectile_fire', baseMult: [1.8, 2.2, 2.6, 3.2, 4.0], speed: 400 },
+                { id: 'cy_frostbolt', name: 'フロストボルト', icon: '🔵', mp: 16, cd: 1.5, branch: 0, desc: 'Frost bolt', prereq: 'cy_iceblast', effect: 'projectile_fire', baseMult: [2.2, 2.8, 3.5, 4.2, 5.2], speed: 360 },
+                { id: 'cy_glacialspike', name: 'グレイシャルスパイク', icon: '❄', mp: 22, cd: 3.0, branch: 0, desc: 'Glacial spike', prereq: 'cy_frostbolt', effect: 'frost_nova', baseMult: [1.5, 2.0, 2.5, 3.2, 4.2], freeze: [2, 3, 3, 4, 5] },
+                { id: 'cy_blizzard', name: 'ブリザード', icon: '🌨', mp: 38, cd: 6.0, branch: 0, desc: 'Blizzard', prereq: 'cy_glacialspike', effect: 'arrow_rain', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 130 },
+                { id: 'cy_iceorb', name: 'アイスオーブ', icon: '🌐', mp: 42, cd: 7.0, branch: 0, desc: 'Ice orb', prereq: 'cy_blizzard', effect: 'frozen_orb', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], speed: 180, shardCount: [5, 6, 8, 10, 12] },
+                { id: 'cy_absolutezero', name: 'アブソリュートゼロ', icon: '❄', mp: 50, cd: 8.0, branch: 0, desc: 'Absolute zero', prereq: 'cy_iceorb', effect: 'frost_nova', baseMult: [3.0, 4.0, 5.0, 6.5, 8.5], freeze: [3, 4, 5, 6, 8] },
+                { id: 'cy_permafrost', name: 'パーマフロスト', icon: '🧊', mp: 60, cd: 10.0, branch: 0, desc: 'Permafrost', prereq: 'cy_absolutezero', effect: 'arrow_rain', baseMult: [4.0, 5.0, 6.5, 8.0, 10.5], range: 150 },
+                // Branch 1: フロストディフェンス
+                { id: 'cy_frozenarmor', name: 'フローズンアーマー', icon: '🛡', mp: 12, cd: 8.0, branch: 1, desc: 'Frozen armor', prereq: null, effect: 'buff_defense', duration: [5, 7, 9, 12, 15], reduction: [0.3, 0.4, 0.5, 0.55, 0.65] },
+                { id: 'cy_chillingarmor', name: 'チリングアーマー', icon: '🧊', mp: 16, cd: 8.0, branch: 1, desc: 'Chilling armor', prereq: 'cy_frozenarmor', effect: 'buff_defense', duration: [6, 8, 10, 13, 16], reduction: [0.35, 0.45, 0.55, 0.6, 0.7] },
+                { id: 'cy_shiverarmor', name: 'シヴァーアーマー', icon: '🪞', mp: 20, cd: 8.0, branch: 1, desc: 'Shiver armor', prereq: 'cy_chillingarmor', effect: 'buff_counter', duration: [5, 7, 9, 11, 14], reflect: [0.3, 0.4, 0.5, 0.6, 0.8] },
+                { id: 'cy_frostwall', name: 'フロストウォール', icon: '🧱', mp: 25, cd: 6.0, branch: 1, desc: 'Frost wall', prereq: 'cy_shiverarmor', effect: 'stun_aoe', duration: [1.5, 2.0, 2.5, 3.0, 4.0], range: 100 },
+                { id: 'cy_glacialshield', name: 'グレイシャルシールド', icon: '💠', mp: 28, cd: 10.0, branch: 1, desc: 'Glacial shield', prereq: 'cy_frostwall', effect: 'mana_shield', duration: [5, 7, 9, 12, 15], absorb: [0.4, 0.5, 0.6, 0.7, 0.8] },
+                { id: 'cy_energyshield', name: 'エナジーシールド', icon: '🔷', mp: 35, cd: 12.0, branch: 1, desc: 'Energy shield', prereq: 'cy_glacialshield', effect: 'mana_shield', duration: [6, 8, 10, 14, 18], absorb: [0.5, 0.6, 0.7, 0.75, 0.85] },
+                { id: 'cy_icebarrier', name: 'アイスバリア', icon: '🏔', mp: 40, cd: 12.0, branch: 1, desc: 'Ice barrier', prereq: 'cy_energyshield', effect: 'buff_defense', duration: [8, 10, 12, 16, 20], reduction: [0.5, 0.6, 0.65, 0.7, 0.8] },
+                { id: 'cy_arcticsurge', name: 'アークティックサージ', icon: '🌊', mp: 55, cd: 15.0, branch: 1, desc: 'Arctic surge', prereq: 'cy_icebarrier', effect: 'buff_aura', duration: [8, 10, 14, 18, 22], regen: [4, 6, 8, 12, 16], reduction: [0.2, 0.3, 0.35, 0.4, 0.5] },
+                // Branch 2: アイスマスタリー
+                { id: 'cy_frostnova', name: 'フロストノヴァ', icon: '💠', mp: 14, cd: 3.0, branch: 2, desc: 'Frost nova', prereq: null, effect: 'frost_nova', baseMult: [1.0, 1.3, 1.6, 2.0, 2.5], freeze: [1, 2, 2, 3, 4] },
+                { id: 'cy_iceshards', name: 'アイスシャード', icon: '🔹', mp: 16, cd: 2.0, branch: 2, desc: 'Ice shards', prereq: 'cy_frostnova', effect: 'multi_shot', arrows: [3, 3, 4, 5, 6], baseMult: [1.0, 1.3, 1.6, 2.0, 2.5] },
+                { id: 'cy_freezingpulse', name: 'フリージングパルス', icon: '❄', mp: 20, cd: 3.5, branch: 2, desc: 'Freezing pulse', prereq: 'cy_iceshards', effect: 'frost_nova', baseMult: [1.5, 2.0, 2.5, 3.0, 4.0], freeze: [2, 2, 3, 4, 5] },
+                { id: 'cy_coldmastery', name: 'コールドマスタリー', icon: '🥶', mp: 22, cd: 8.0, branch: 2, desc: 'Cold mastery', prereq: 'cy_freezingpulse', effect: 'debuff_defense', duration: [4, 6, 8, 10, 13], reduction: [0.3, 0.4, 0.5, 0.6, 0.7], range: 140 },
+                { id: 'cy_glacialstorm', name: 'グレイシャルストーム', icon: '🌨', mp: 30, cd: 6.0, branch: 2, desc: 'Glacial storm', prereq: 'cy_coldmastery', effect: 'arrow_rain', baseMult: [2.0, 2.5, 3.2, 4.0, 5.5], range: 120 },
+                { id: 'cy_wintersfury', name: 'ウインターズフューリー', icon: '❄', mp: 38, cd: 7.0, branch: 2, desc: 'Winters fury', prereq: 'cy_glacialstorm', effect: 'frost_nova', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], freeze: [3, 4, 5, 6, 7] },
+                { id: 'cy_frozenorb', name: 'フローズンオーブ', icon: '🌐', mp: 48, cd: 8.0, branch: 2, desc: 'Frozen orb', prereq: 'cy_wintersfury', effect: 'frozen_orb', baseMult: [3.0, 4.0, 5.0, 6.5, 8.5], speed: 200, shardCount: [6, 8, 10, 12, 14] },
+                { id: 'cy_blizzardmastery', name: 'ブリザードマスタリー', icon: '🌀', mp: 60, cd: 12.0, branch: 2, desc: 'Blizzard mastery', prereq: 'cy_frozenorb', effect: 'arrow_rain', baseMult: [4.5, 5.5, 7.0, 9.0, 12.0], range: 160 }
             ]
         }
     };
@@ -2393,20 +2573,8 @@
 
     // ========== SKILL BAR MANAGEMENT ==========
     function rebuildSkillBar() {
-        const classDef = CLASS_DEFS[G.playerClass];
-        const allSkills = getAllAvailableSkills();
+        // スキルスロットは空のまま - プレイヤーが自分で設定する
         player.skills = {};
-        // Fill 6 slots: prefer skills with levels > 0
-        const learned = allSkills.filter(s => (player.skillLevels[s.id] || 0) > 0);
-        const unlearned = allSkills.filter(s => (player.skillLevels[s.id] || 0) === 0);
-        const ordered = [...learned, ...unlearned];
-        for (let i = 0; i < 6; i++) {
-            const sk = ordered[i] || ordered[0];
-            player.skills[i + 1] = {
-                id: sk.id, name: sk.name, icon: sk.icon,
-                mp: sk.mp, cooldown: 0, maxCD: sk.cd, desc: sk.desc
-            };
-        }
     }
 
     function getAllAvailableSkills() {
@@ -2425,22 +2593,55 @@
 
     let skillSelectOpen = false;
     let skillSelectSlot = 0;
+    let skillSwapFrom = 0;
+    let skillEditMode = 'assign'; // 'assign' | 'swap'
+    let treeSwapFromSlot = 0;
 
     function showSkillSelectUI() {
         skillSelectOpen = true;
         const overlay = DOM.skillSelectOverlay;
         const content = DOM.skillSelectContent;
         const allSkills = getAllAvailableSkills();
-        let html = '<div style="text-align:center;margin-bottom:12px"><span style="color:#ffd700;font-size:18px;font-weight:bold">スキルセット編集</span><br><span style="color:#aaa;font-size:11px">スロットをクリック → スキルを選択</span></div>';
+        const swapLabel = skillSwapFrom ? `入れ替え: スロット${skillSwapFrom} → 相手を選択` : '入れ替え: 先にスロットを選ぶ';
+        const modeLabel = skillEditMode === 'swap' ? '入れ替えモード' : '設定モード';
+        let html = '<div style="text-align:center;margin-bottom:12px"><span style="color:#ffd700;font-size:18px;font-weight:bold">スキルセット編集</span><br><span style="color:#aaa;font-size:11px">クリック or 1~6 でスロット選択 / A:設定 / W:入替 / X:外す / R:閉じる</span>';
+        html += `<div style="margin-top:6px">
+            <button class="toggle-btn ${skillEditMode === 'assign' ? '' : 'off'}" onclick="setSkillEditMode('assign')">設定</button>
+            <button class="toggle-btn ${skillEditMode === 'swap' ? '' : 'off'}" onclick="setSkillEditMode('swap')">入れ替え</button>
+            <button class="toggle-btn" style="background:#884444;margin-left:6px" onclick="removeSkillSlot()">外す</button>
+            <span style="color:#66ccff;font-size:10px;margin-left:6px">${modeLabel}${skillEditMode === 'swap' ? ' / ' + swapLabel : ''}</span>
+        </div></div>`;
 
-        // Current slots
-        html += '<div style="display:flex;gap:6px;justify-content:center;margin-bottom:15px">';
+        // Current slots (icons)
+        html += '<div style="display:flex;gap:6px;justify-content:center;margin-bottom:6px">';
         for (let i = 1; i <= 6; i++) {
             const sk = player.skills[i];
             const sel = skillSelectSlot === i;
-            html += `<div class="skill-slot-pick ${sel ? 'selected' : ''}" onclick="pickSlot(${i})">
-                <div style="font-size:20px">${sk.icon}</div>
+            const swapFrom = skillSwapFrom === i;
+            html += `<div class="skill-slot-pick ${sel ? 'selected' : ''} ${swapFrom ? 'swap-from' : ''}" onclick="pickSlot(${i})" draggable="true"
+                ondragstart="onSkillSlotDragStart(event,${i})" ondragover="onSkillSlotDragOver(event)" ondrop="onSkillSlotDrop(event,${i})">
+                <div class="emoji-font" style="font-size:20px">${sk ? sk.icon : '□'}</div>
                 <div style="font-size:8px;color:#aaa">${i}</div>
+            </div>`;
+        }
+        html += '</div>';
+        html += `<div style="text-align:center;margin-bottom:8px;color:#aaa;font-size:11px">選択スロット: ${skillSelectSlot || '-'}</div>`;
+
+        // Slot controls (explicit buttons)
+        html += '<div style="display:grid;grid-template-columns:1fr;gap:4px;margin-bottom:8px">';
+        for (let i = 1; i <= 6; i++) {
+            const sk = player.skills[i];
+            const name = sk ? sk.name : '空';
+            const swapBtn = skillSwapFrom && skillSwapFrom !== i
+                ? `<button class="toggle-btn" onclick="forceSwapSlots(${i})">ここに入替</button>`
+                : `<button class="toggle-btn" onclick="beginSwap(${i})">入替開始</button>`;
+            html += `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+                <div style="font-size:11px;color:#bbb">スロット${i}: ${name}</div>
+                <div style="display:flex;gap:4px">
+                    <button class="toggle-btn" onclick="pickSlot(${i})">選択</button>
+                    <button class="toggle-btn" style="background:#884444" onclick="removeSkillSlot(${i})">外す</button>
+                    ${swapBtn}
+                </div>
             </div>`;
         }
         html += '</div>';
@@ -2452,8 +2653,8 @@
             for (const sk of allSkills) {
                 const lvl = player.skillLevels[sk.id] || 0;
                 const locked = lvl < 1;
-                html += `<div class="skill-pick-item ${locked ? 'locked' : ''}" onclick="${locked ? '' : `assignSkill('${sk.id}')`}">
-                    <div style="font-size:18px">${sk.icon}</div>
+                html += `<div class="skill-pick-item ${locked ? 'locked' : ''}" onclick="${locked ? '' : `assignSkill('${sk.id}')`}" onmouseenter="showSkillTooltip(event,'${sk.id}')" onmouseleave="hideTooltip()">
+                    <div class="emoji-font" style="font-size:18px">${sk.icon}</div>
                     <div style="font-size:9px;color:${locked ? '#666' : '#ffd700'}">${sk.name}</div>
                     <div style="font-size:8px;color:${locked ? '#444' : '#88f'}">Lv.${lvl} MP:${sk.mp}</div>
                 </div>`;
@@ -2466,12 +2667,55 @@
         overlay.style.display = 'flex';
     }
 
-    window.pickSlot = function(slot) {
+    function swapSkillSlots(a, b) {
+        // より確実な入れ替え（deepコピー）
+        const tmpA = player.skills[a] ? { ...player.skills[a] } : null;
+        const tmpB = player.skills[b] ? { ...player.skills[b] } : null;
+        if (tmpB) {
+            player.skills[a] = { ...tmpB };
+        } else {
+            delete player.skills[a];
+        }
+        if (tmpA) {
+            player.skills[b] = { ...tmpA };
+        } else {
+            delete player.skills[b];
+        }
+    }
+    function selectOrSwapSkillSlot(slot) {
+        const shiftSwap = !!(keysDown['shift'] || keysDown['ShiftLeft'] || keysDown['ShiftRight']);
+        if (skillEditMode === 'assign' && !shiftSwap) {
+            skillSelectSlot = slot;
+            skillSwapFrom = 0;
+            showSkillSelectUI();
+            return;
+        }
+        if (!skillSwapFrom) {
+            skillSwapFrom = slot;
+            skillSelectSlot = slot;
+            showSkillSelectUI();
+            return;
+        }
+        if (skillSwapFrom === slot) {
+            skillSwapFrom = 0;
+            skillSelectSlot = slot;
+            showSkillSelectUI();
+            return;
+        }
+        swapSkillSlots(skillSwapFrom, slot);
+        skillSwapFrom = 0;
         skillSelectSlot = slot;
         showSkillSelectUI();
+    }
+    window.pickSlot = function(slot) {
+        selectOrSwapSkillSlot(slot);
     };
 
     window.assignSkill = function(skillId) {
+        if (skillSelectSlot < 1 || skillSelectSlot > 6) {
+            addLog('先にスロットを選択してください', '#ffaa44');
+            return;
+        }
         const allSkills = getAllAvailableSkills();
         const sk = allSkills.find(s => s.id === skillId);
         if (!sk) return;
@@ -2483,9 +2727,177 @@
         showSkillSelectUI();
     };
 
+    window.removeSkillSlot = function(slot) {
+        const s = slot || skillSelectSlot;
+        if (!s || s < 1 || s > 6) {
+            addLog('先にスロットを選択してください', '#ffaa44');
+            return;
+        }
+        if (player.skills[s]) {
+            const skillName = player.skills[s].name || 'スキル';
+            delete player.skills[s];
+            addLog(`スロット${s}から${skillName}を削除`, '#ff8844');
+            showSkillSelectUI();
+        } else {
+            addLog(`スロット${s}は空です`, '#888');
+        }
+    };
+    window.removeSkillById = function(skillId) {
+        let removed = false;
+        for (let i = 1; i <= 6; i++) {
+            if (player.skills[i] && player.skills[i].id === skillId) {
+                delete player.skills[i];
+                removed = true;
+            }
+        }
+        if (removed) addLog('ショートカットから外しました', '#ff8844');
+        else addLog('ショートカットにありません', '#888');
+    };
+    function findSlotBySkillId(skillId) {
+        for (let i = 1; i <= 6; i++) {
+            if (player.skills[i] && player.skills[i].id === skillId) return i;
+        }
+        return 0;
+    }
+    window.beginTreeSwap = function(skillId) {
+        const slot = findSlotBySkillId(skillId);
+        if (!slot) {
+            addLog('このスキルはショートカットにありません', '#ffaa44');
+            return;
+        }
+        treeSwapFromSlot = slot;
+        updateSkillTreeUI();
+    };
+    window.cancelTreeSwap = function() {
+        treeSwapFromSlot = 0;
+        treeSwapFromSkillId = '';
+        updateSkillTreeUI();
+    };
+    window.treeSwapTo = function(targetSlot) {
+        if (!treeSwapFromSlot || treeSwapFromSlot === targetSlot) return;
+        swapSkillSlots(treeSwapFromSlot, targetSlot);
+        treeSwapFromSlot = 0;
+        updateSkillTreeUI();
+        addLog('ショートカットを入れ替えました', '#66ff66');
+    };
+    window.treeSwapWithSkill = undefined;
+
     window.closeSkillSelect = function() {
         skillSelectOpen = false;
+        skillSwapFrom = 0;
+        skillEditMode = 'assign';
         DOM.skillSelectOverlay.style.display = 'none';
+    };
+    function openSkillEdit() {
+        if (G.dead || !G.started) return;
+        skillSelectSlot = 1;
+        skillSwapFrom = 0;
+        skillEditMode = 'assign';
+        showSkillSelectUI();
+    }
+    window.setSkillEditMode = function(mode) {
+        skillEditMode = mode === 'swap' ? 'swap' : 'assign';
+        skillSwapFrom = 0;
+        showSkillSelectUI();
+    };
+    window.beginSwap = function(slot) {
+        skillEditMode = 'swap';
+        skillSwapFrom = slot;
+        skillSelectSlot = slot;
+        showSkillSelectUI();
+    };
+    window.forceSwapSlots = function(targetSlot) {
+        if (!skillSwapFrom || skillSwapFrom === targetSlot) return;
+        swapSkillSlots(skillSwapFrom, targetSlot);
+        skillSwapFrom = 0;
+        skillSelectSlot = targetSlot;
+        showSkillSelectUI();
+    };
+    window.quickAssignSkill = function(skillId) {
+        // スキルツリーから直接スロットに割り当て
+        const allSkills = getAllAvailableSkills();
+        const sk = allSkills.find(s => s.id === skillId);
+        if (!sk || (player.skillLevels[sk.id] || 0) < 1) return;
+
+        // 空いているスロットを探す
+        let emptySlot = 0;
+        for (let i = 1; i <= 6; i++) {
+            if (!player.skills[i] || !player.skills[i].id) {
+                emptySlot = i;
+                break;
+            }
+        }
+
+        if (emptySlot > 0) {
+            // 空きスロットに自動割り当て
+            player.skills[emptySlot] = {
+                id: sk.id, name: sk.name, icon: sk.icon,
+                mp: sk.mp, cooldown: 0, maxCD: sk.cd, desc: sk.desc
+            };
+            addLog(`${sk.name} をスロット${emptySlot}に設定！`, '#66ff66');
+        } else {
+            // 空きがない場合はスロット選択画面を開く
+            addLog('スロットが満杯です。入れ替えてください', '#ffaa44');
+            skillSelectSlot = 1;
+            skillSwapFrom = 0;
+            skillEditMode = 'assign';
+            showSkillSelectUI();
+        }
+    };
+    window.onSkillSlotDragStart = function(e, slot) {
+        if (!e || !e.dataTransfer) return;
+        e.dataTransfer.setData('text/plain', String(slot));
+        e.dataTransfer.effectAllowed = 'move';
+    };
+    window.onSkillSlotDragOver = function(e) {
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    };
+    window.onSkillSlotDrop = function(e, slot) {
+        e.preventDefault();
+        if (!e || !e.dataTransfer) return;
+        const from = parseInt(e.dataTransfer.getData('text/plain'), 10);
+        if (!from || from === slot) return;
+        swapSkillSlots(from, slot);
+        skillSwapFrom = 0;
+        skillSelectSlot = slot;
+        showSkillSelectUI();
+    };
+
+    function renderTitleSaveMenu() {
+        if (!DOM.titleSaveContent) return;
+        let html = '';
+        for (let i = 1; i <= SAVE_SLOT_COUNT; i++) {
+            const meta = getSaveMeta(i);
+            const active = G.saveSlot === i;
+            const info = meta
+                ? `Lv.${meta.level} / B${meta.floor}F / ${meta.className}`
+                : '空';
+            const time = meta && meta.timestamp
+                ? new Date(meta.timestamp).toLocaleString('ja-JP')
+                : '';
+            html += `<div class="title-save-row">
+                <div>
+                    <div style="color:#ddb27a;font-size:12px">スロット${i}${active ? ' ★' : ''}</div>
+                    <div class="title-save-info">${info}${time ? ' / ' + time : ''}</div>
+                </div>
+                <div class="title-save-actions">
+                    <button class="toggle-btn ${active ? '' : 'off'}" onclick="setSaveSlot(${i})">選択</button>
+                    ${meta ? `<button class="toggle-btn" onclick="loadGame(${i})">ロード</button>` : ''}
+                    <button class="toggle-btn" onclick="startNewGame(${i})">新規</button>
+                </div>
+            </div>`;
+        }
+        DOM.titleSaveContent.innerHTML = html;
+    }
+
+    window.startNewGame = function(slot) {
+        setSaveSlot(slot);
+        if (hasSaveData(slot)) {
+            const ok = confirm(`スロット${slot}にはセーブがあります。新規開始しますか？`);
+            if (!ok) return;
+        }
+        showClassSelect();
     };
 
 
@@ -2524,6 +2936,9 @@
         targetX: 0, targetY: 0,
         radius: 14,
         speed: 160,
+        vx: 0, vy: 0, // 現在の速度ベクトル（慣性用）
+        acceleration: 2500, // 加速度（ハクスラ用に高速）
+        deceleration: 3000, // 減速度（キビキビ感）
         moving: false,
         attacking: false,
         attackTarget: null,
@@ -2575,12 +2990,7 @@
         classKey: 'warrior',
         className: '戦士',
         skills: {
-            1: { name: 'ファイアボール', icon: '🔥', mp: 15, cooldown: 0, maxCD: 1.2, desc: '炎の弾を撃つ' },
-            2: { name: '旋風斬', icon: '🌀', mp: 20, cooldown: 0, maxCD: 2.5, desc: '周囲の敵を斬る' },
-            3: { name: 'ヒール', icon: '💚', mp: 25, cooldown: 0, maxCD: 4.0, desc: 'HPを回復する' },
-            4: { name: 'フロストノヴァ', icon: '❄️', mp: 30, cooldown: 0, maxCD: 6.0, desc: '周囲の敵を凍結' },
-            5: { name: '魔法シールド', icon: '🛡️', mp: 35, cooldown: 0, maxCD: 10.0, desc: '5秒間ダメージ軽減' },
-            6: { name: 'メテオ', icon: '☄️', mp: 50, cooldown: 0, maxCD: 8.0, desc: '広範囲に大ダメージ' }
+            // 初期は空 - プレイヤーが自分で設定する
         },
 
         getAttackDmg() {
@@ -2901,7 +3311,7 @@
                     const baseAngle = Math.atan2(wy - this.y, wx - this.x);
                     const spread = 0.4;
                     for (let i = 0; i < numArrows; i++) {
-                        const a = baseAngle - spread / 2 + spread * i / (numArrows - 1 || 1);
+                        const a = baseAngle - spread / 2 + spread * i / Math.max(1, numArrows - 1);
                         const tx = this.x + Math.cos(a) * 400;
                         const ty = this.y + Math.sin(a) * 400;
                         projectiles.push(new Projectile(this.x, this.y, tx, ty, dmg * mult, '#ffaa00', 380, 5));
@@ -3433,26 +3843,66 @@
                 }
             }
 
-            // Arrow key movement
+            // Arrow key movement with inertia
             let kbMoveX = 0, kbMoveY = 0;
             if (keysDown['arrowup']) kbMoveY = -1;
             if (keysDown['arrowdown']) kbMoveY = 1;
             if (keysDown['arrowleft']) kbMoveX = -1;
             if (keysDown['arrowright']) kbMoveX = 1;
+
+            // 目標速度を計算
+            let targetVx = 0, targetVy = 0;
             if (kbMoveX !== 0 || kbMoveY !== 0) {
                 // Normalize diagonal
                 const kbLen = Math.hypot(kbMoveX, kbMoveY) || 1;
-                kbMoveX /= kbLen; kbMoveY /= kbLen;
-                const step = this.speed * dt;
-                const nx = this.x + kbMoveX * step;
-                const ny = this.y + kbMoveY * step;
+                targetVx = (kbMoveX / kbLen) * this.speed;
+                targetVy = (kbMoveY / kbLen) * this.speed;
+            }
+
+            // 慣性システム：現在の速度を目標速度に向けて加速/減速
+            const inputMag = Math.hypot(targetVx, targetVy);
+            if (inputMag > 0) {
+                // 加速
+                const t = Math.min(this.acceleration * dt / this.speed, 1);
+                this.vx = lerp(this.vx, targetVx, t);
+                this.vy = lerp(this.vy, targetVy, t);
+            } else {
+                // 減速（摩擦）
+                const currentSpeed = Math.hypot(this.vx, this.vy);
+                if (currentSpeed > 0.1) {
+                    const decelAmount = this.deceleration * dt;
+                    const friction = Math.max(0, currentSpeed - decelAmount) / currentSpeed;
+                    this.vx *= friction;
+                    this.vy *= friction;
+                } else {
+                    this.vx = 0;
+                    this.vy = 0;
+                }
+            }
+
+            // 速度ベクトルに基づいて位置を更新
+            const actualSpeed = Math.hypot(this.vx, this.vy);
+            if (actualSpeed > 0.1) {
+                const nx = this.x + this.vx * dt;
+                const ny = this.y + this.vy * dt;
                 const cr = 10;
                 const canBoth = canWalk(nx, ny, cr);
-                const canX = canWalk(this.x + kbMoveX * step, this.y, cr);
-                const canY = canWalk(this.x, this.y + kbMoveY * step, cr);
-                if (canBoth) { this.x = nx; this.y = ny; }
-                else if (canX) { this.x += kbMoveX * step; }
-                else if (canY) { this.y += kbMoveY * step; }
+                const canX = canWalk(this.x + this.vx * dt, this.y, cr);
+                const canY = canWalk(this.x, this.y + this.vy * dt, cr);
+                if (canBoth) {
+                    this.x = nx;
+                    this.y = ny;
+                } else if (canX) {
+                    this.x += this.vx * dt;
+                    this.vy *= 0.5; // 壁に当たったら反対方向の速度を減衰
+                } else if (canY) {
+                    this.y += this.vy * dt;
+                    this.vx *= 0.5; // 壁に当たったら反対方向の速度を減衰
+                } else {
+                    // 完全に行き詰まり
+                    this.vx *= 0.3;
+                    this.vy *= 0.3;
+                }
                 this.moving = false; // Cancel click-move
                 this.attacking = false;
                 sfxFootstep();
@@ -3967,45 +4417,66 @@
     // ========== DUNGEON INIT ==========
     let dungeon;
     let tileTexturesReady = false;
-    function initFloor() {
-        if (!tileTexturesReady) { generateTileTextures(); tileTexturesReady = true; }
+    function initFloor(opts) {
+        // opts: { useSeed: bool, skipEntities: bool }
+        opts = opts || {};
+        generateTileTextures(); tileTexturesReady = true;
+
+        // Use seeded RNG for dungeon generation so save/load produces same layout
+        if (opts.useSeed && G.dungeonSeed) {
+            seedRng(G.dungeonSeed);
+        } else {
+            // Generate new seed for this floor
+            G.dungeonSeed = (Math.random() * 0x7FFFFFFF) | 0;
+            seedRng(G.dungeonSeed);
+        }
+
         dungeon = new Dungeon(G.floor);
-        const r0 = dungeon.rooms[0];
-        player.x = r0.cx * TILE + TILE/2;
-        player.y = r0.cy * TILE + TILE/2;
-        player.targetX = player.x;
-        player.targetY = player.y;
-        player.moving = false;
-        player.attacking = false;
-        monsters.length = 0;
-        groundItems.length = 0;
+
+        // Clear visual-only arrays always
         projectiles.length = 0;
         particles.length = 0;
         bloodPools.length = 0;
         ambientParticles.length = 0;
 
-        // Spawn monsters
-        const count = 5 + G.floor * 3;
-        const types = G.floor <= 2 ? ['skeleton', 'zombie'] :
-                      G.floor <= 4 ? ['skeleton', 'zombie', 'imp'] :
-                      G.floor <= 6 ? ['zombie', 'imp', 'ghost'] :
-                      ['imp', 'ghost'];
+        if (!opts.skipEntities) {
+            // Normal flow: set player at start room, spawn fresh monsters/items
+            const r0 = dungeon.rooms[0];
+            player.x = r0.cx * TILE + TILE/2;
+            player.y = r0.cy * TILE + TILE/2;
+            player.targetX = player.x;
+            player.targetY = player.y;
+            player.moving = false;
+            player.attacking = false;
+            monsters.length = 0;
+            groundItems.length = 0;
 
-        for (let i = 0; i < count; i++) {
-            const room = dungeon.rooms[rand(1, dungeon.rooms.length - 1)];
-            const mx = room.x * TILE + rand(TILE, (room.w - 1) * TILE);
-            const my = room.y * TILE + rand(TILE, (room.h - 1) * TILE);
-            monsters.push(new Monster(mx, my, types[rand(0, types.length - 1)], G.floor));
+            // Spawn monsters (also seeded for consistency)
+            const count = 15 + G.floor * 8; // ワラワラ感UP！
+            const types = G.floor <= 2 ? ['skeleton', 'zombie'] :
+                          G.floor <= 4 ? ['skeleton', 'zombie', 'imp'] :
+                          G.floor <= 6 ? ['zombie', 'imp', 'ghost'] :
+                          ['imp', 'ghost'];
+
+            for (let i = 0; i < count; i++) {
+                const room = dungeon.rooms[rand(1, dungeon.rooms.length - 1)];
+                const mx = room.x * TILE + rand(TILE, (room.w - 1) * TILE);
+                const my = room.y * TILE + rand(TILE, (room.h - 1) * TILE);
+                monsters.push(new Monster(mx, my, types[rand(0, types.length - 1)], G.floor));
+            }
+
+            // Boss on every 5th floor
+            if (G.floor % 5 === 0) {
+                const bossRoom = dungeon.rooms[dungeon.rooms.length - 2] || dungeon.rooms[dungeon.rooms.length - 1];
+                monsters.push(new Monster(bossRoom.cx * TILE + TILE/2, bossRoom.cy * TILE + TILE/2, 'demonlord', G.floor));
+                addLog(`⚠ デーモンロードが現れた！`, '#ff0000');
+            }
+
+            addLog(`地下${G.floor}階に降りた`, '#aaaaff');
         }
 
-        // Boss on every 5th floor
-        if (G.floor % 5 === 0) {
-            const bossRoom = dungeon.rooms[dungeon.rooms.length - 2] || dungeon.rooms[dungeon.rooms.length - 1];
-            monsters.push(new Monster(bossRoom.cx * TILE + TILE/2, bossRoom.cy * TILE + TILE/2, 'demonlord', G.floor));
-            addLog(`⚠ デーモンロードが現れた！`, '#ff0000');
-        }
-
-        addLog(`地下${G.floor}階に降りた`, '#aaaaff');
+        // Switch back to normal RNG after dungeon generation
+        unseedRng();
     }
 
     // ========== LEVEL UP NOTICE ==========
@@ -4079,6 +4550,65 @@
         `;
     }
 
+    function renderHelpUI() {
+        const el = document.getElementById('helpDynamic');
+        if (!el) return;
+
+        let html = '';
+        html += `<div style="color:#daa520;font-weight:bold;margin:14px 0 4px">チュートリアルまとめ</div>`;
+        html += `<div style="font-size:12px;color:#999">・敵を倒して経験値を獲得、レベルアップで能力/スキル強化</div>`;
+        html += `<div style="font-size:12px;color:#999">・スキルツリー(T)で習得、ショートカット編集(R)で割り当て</div>`;
+        html += `<div style="font-size:12px;color:#999">・階段は敵を全滅で使用可能、近づいてEで降りる</div>`;
+        html += `<div style="font-size:12px;color:#999">・装備はインベントリ(I)で装着/解除</div>`;
+
+        if (!G.playerClass || !CLASS_DEFS[G.playerClass]) {
+            html += `<div style="color:#daa520;font-weight:bold;margin:12px 0 4px">スキル一覧</div>`;
+            html += `<div style="font-size:12px;color:#888">クラス選択後に表示されます。</div>`;
+            el.innerHTML = html;
+            return;
+        }
+
+        const classDef = CLASS_DEFS[G.playerClass];
+        const baseDef = classDef.baseClass ? CLASS_DEFS[classDef.baseClass] : null;
+        const list = [];
+        const seen = new Set();
+
+        for (const sk of classDef.skills) {
+            list.push({ sk, classLabel: classDef.name, branchLabel: classDef.branches[sk.branch] || '' });
+            seen.add(sk.id);
+        }
+        if (baseDef) {
+            for (const sk of baseDef.skills) {
+                if (seen.has(sk.id)) continue;
+                list.push({ sk, classLabel: baseDef.name, branchLabel: baseDef.branches[sk.branch] || '' });
+                seen.add(sk.id);
+            }
+        }
+
+        html += `<div style="color:#daa520;font-weight:bold;margin:12px 0 6px">スキル一覧</div>`;
+
+        let currentClass = '';
+        let currentBranch = '';
+        for (const row of list) {
+            if (row.classLabel !== currentClass) {
+                currentClass = row.classLabel;
+                currentBranch = '';
+                html += `<div style="color:#ccb38a;font-size:12px;margin:6px 0 2px">${currentClass}</div>`;
+            }
+            if (row.branchLabel && row.branchLabel !== currentBranch) {
+                currentBranch = row.branchLabel;
+                html += `<div style="color:#888;font-size:11px;margin:4px 0 2px">${currentBranch}</div>`;
+            }
+            html += `<div style="display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#ddd">
+                <div>${row.sk.icon} ${row.sk.name}</div>
+                <div style="color:#88a">${row.sk.mp}MP / ${row.sk.cd}s</div>
+            </div>`;
+            html += `<div style="font-size:10px;color:#777;margin:2px 0 6px 16px">${effectDesc(row.sk)}</div>`;
+        }
+
+        el.innerHTML = html;
+    }
+
     window.allocStat = function(stat) {
         if (player.statPoints <= 0) return;
         player[stat]++;
@@ -4147,6 +4677,63 @@
         return html;
     }
 
+    function effectDesc(sk) {
+        if (!sk) return '';
+        const range = (arr) => Array.isArray(arr) ? `${arr[0]}-${arr[arr.length - 1]}` : '';
+        const mult = (arr) => Array.isArray(arr) ? `x${arr[0]}〜x${arr[arr.length - 1]}` : '';
+        const dur = (arr) => Array.isArray(arr) ? `${arr[0]}〜${arr[arr.length - 1]}秒` : '';
+        const pct = (arr) => Array.isArray(arr) ? `${Math.round(arr[0] * 100)}〜${Math.round(arr[arr.length - 1] * 100)}%` : '';
+        switch (sk.effect) {
+            case 'melee_burst': return `近接単体に強打。倍率 ${mult(sk.baseMult)} / 射程 ${sk.range || '-'}。`;
+            case 'whirlwind': return `近接範囲攻撃。倍率 ${mult(sk.baseMult)} / 半径 ${sk.range || '-'}。`;
+            case 'stun_aoe': return `範囲スタン。持続 ${dur(sk.duration)} / 半径 ${sk.range || '-'}。`;
+            case 'buff_frenzy': return `攻撃速度/移動速度を強化。持続 ${dur(sk.duration)}。`;
+            case 'execute': return `HPが低い敵に強烈な一撃。倍率 ${mult(sk.baseMult)} / しきい値 ${pct(sk.threshold)}。`;
+            case 'debuff_defense': return `防御低下。持続 ${dur(sk.duration)} / 低下 ${pct(sk.reduction)} / 半径 ${sk.range || '-'}。`;
+            case 'buff_defense': return `被ダメ軽減。持続 ${dur(sk.duration)} / 軽減 ${pct(sk.reduction)}。`;
+            case 'buff_crit': return `クリティカル上昇。持続 ${dur(sk.duration)} / +${range(sk.bonus)}%。`;
+            case 'battle_orders': return `最大HP/MPを強化。持続 ${dur(sk.duration)} / +${pct(sk.bonus)}。`;
+            case 'charge': return `指定位置へ突進して攻撃。倍率 ${mult(sk.baseMult)} / 距離 ${sk.range || '-'}。`;
+            case 'ground_slam': return `地面衝撃で範囲攻撃。倍率 ${mult(sk.baseMult)} / 減速 ${pct(sk.slow)}。`;
+            case 'buff_berserk': return `攻撃力強化状態。持続 ${dur(sk.duration)}。`;
+            case 'buff_speed': return `移動速度上昇。持続 ${dur(sk.duration)} / +${pct(sk.bonus)}。`;
+            case 'buff_atkspd': return `攻撃速度上昇。持続 ${dur(sk.duration)} / +${pct(sk.bonus)}。`;
+            case 'buff_poison': return `毒付与。持続 ${dur(sk.duration)} / 毒DPS ${range(sk.dps)}。`;
+            case 'chain_lightning': return `連鎖稲妻。倍率 ${mult(sk.baseMult)} / 連鎖 ${range(sk.bounces)}回。`;
+            case 'consecrate': return `範囲持続ダメージ。倍率 ${mult(sk.baseMult)} / 半径 ${sk.range || '-'} / 持続 ${dur(sk.duration)}。`;
+            case 'multi_shot': return `複数弾を発射。倍率 ${mult(sk.baseMult)} / 本数 ${range(sk.arrows)}。`;
+            case 'projectile_fire': return `弾を発射。倍率 ${mult(sk.baseMult)} / 速度 ${sk.speed || '-'}。`;
+            case 'arrow_rain': return `矢の雨。倍率 ${mult(sk.baseMult)} / 半径 ${sk.range || '-'}。`;
+            case 'frost_nova': return `冷気爆発で凍結。倍率 ${mult(sk.baseMult)} / 凍結 ${range(sk.freeze)}秒。`;
+            case 'summon_minion': return `ミニオン召喚。持続 ${dur(sk.duration)} / HP ${range(sk.minionHP)} / ATK ${range(sk.minionDmg)}。`;
+            case 'buff_dodge': return `回避率上昇。持続 ${dur(sk.duration)} / ${range(sk.chance)}%。`;
+            case 'teleport': return `短距離テレポート。距離 ${range(sk.range)}。`;
+            case 'mana_shield': return `被ダメをMPで吸収。持続 ${dur(sk.duration)} / 吸収 ${pct(sk.absorb)}。`;
+            case 'buff_counter': return `被弾時に反射。持続 ${dur(sk.duration)} / 反射 ${pct(sk.reflect)}。`;
+            case 'buff_aura': return `回復オーラ。持続 ${dur(sk.duration)} / 回復 ${range(sk.regen)} / 被ダメ軽減 ${pct(sk.reduction)}。`;
+            case 'frozen_orb': return `氷のオーブが破片を撒く。倍率 ${mult(sk.baseMult)} / 破片 ${range(sk.shardCount)}。`;
+            case 'meteor': return `隕石落下。倍率 ${mult(sk.baseMult)} / 半径 ${sk.range || '-'}。`;
+            case 'holy_burst': return `聖属性の範囲攻撃。倍率 ${mult(sk.baseMult)} / 半径 ${sk.range || '-'}。`;
+            case 'place_trap': return `罠を設置。持続 ${dur(sk.duration)} / ダメージ ${mult(sk.baseMult)}。`;
+            case 'self_heal_pct': return `自分のHP回復。回復量 ${range(sk.healPct)}%。`;
+            case 'shadow_strike': return `影から急襲。倍率 ${mult(sk.baseMult)} / 射程 ${sk.range || '-'}。`;
+            case 'smoke_screen': return `煙幕で無敵/回避強化。持続 ${dur(sk.duration)}。`;
+            default: return sk.desc || '';
+        }
+    }
+
+    function buildSkillTooltipHTML(sk, slot) {
+        if (!sk) return '';
+        const name = `${sk.icon || ''} ${sk.name || ''}`.trim();
+        const mp = sk.mp != null ? `MP: ${sk.mp}` : '';
+        const cd = sk.cd != null ? `CD: ${sk.cd}s` : (sk.maxCD != null ? `CD: ${sk.maxCD}s` : '');
+        const key = slot ? `キー: ${slot}` : '';
+        const meta = [key, mp, cd].filter(Boolean).join(' | ');
+        return `<div class="tt-name" style="color:#ffd700">${name}</div>
+            ${meta ? `<div class="tt-type">${meta}</div>` : ''}
+            <div style="color:#ccc;margin-top:4px;font-size:11px">${effectDesc(sk)}</div>`;
+    }
+
     window.showInvTooltip = function(e, i) {
         const item = player.inventory[i];
         if (!item) return;
@@ -4165,6 +4752,16 @@
         tt.style.left = (e.clientX + 15) + 'px';
         tt.style.top = (e.clientY - 10) + 'px';
     };
+    window.showSkillTooltip = function(e, skillId) {
+        const allAvail = getAllAvailableSkills();
+        const sk = allAvail.find(s => s.id === skillId);
+        if (!sk) return;
+        const tt = DOM.tooltip;
+        tt.innerHTML = buildSkillTooltipHTML(sk);
+        tt.style.display = 'block';
+        tt.style.left = (e.clientX + 15) + 'px';
+        tt.style.top = (e.clientY - 10) + 'px';
+    };
     window.hideTooltip = function() { DOM.tooltip.style.display = 'none'; };
 
     function updateSkillTreeUI() {
@@ -4179,6 +4776,22 @@
             ${classDef.tier > 0 ? '<span style="color:#ff8800;font-size:10px;margin-left:6px">★上位クラス</span>' : ''}
             <div style="color:#ffcc44;font-size:12px;margin-top:6px">スキルポイント: <span style="color:#ff8;font-weight:bold">${player.skillPoints}</span></div>
         </div>`;
+        html += `<div style="text-align:center;margin-bottom:8px">
+            <span style="color:#aaa;font-size:11px">ショートカット操作:</span>
+            <button class="toggle-btn" onclick="setSkillEditMode('assign')">編集画面 (R)</button>
+            ${treeSwapFromSlot ? `<button class="toggle-btn" style="margin-left:6px" onclick="cancelTreeSwap()">入替キャンセル</button>
+            <span style="color:#66ccff;font-size:11px;margin-left:6px">入替中 (元スロット: ${treeSwapFromSlot})</span>` : ''}
+        </div>`;
+        if (treeSwapFromSlot) {
+            html += `<div style="text-align:center;margin-bottom:10px">
+                <span style="color:#888;font-size:11px">入替先 (ショートカット側):</span>
+                ${[1,2,3,4,5,6].map(n => {
+                    const sk = player.skills[n];
+                    const label = sk ? `${n}:${sk.icon || ''} ${sk.name || ''}` : `${n}:空`;
+                    return `<button class="toggle-btn" style="margin-left:4px" onclick="treeSwapTo(${n})">${label}</button>`;
+                }).join('')}
+            </div>`;
+        }
 
         function renderBranches(cDef, label) {
             let h = '';
@@ -4188,22 +4801,30 @@
                 h += '<div class="skill-branch"><div class="skill-branch-title">' + cDef.branches[b] + '</div><div>';
                 for (const sk of branchSkills) {
                     const lvl = player.skillLevels[sk.id] || 0;
-                    const maxLvl = 3;
+                    const maxLvl = 5;
                     const allAvail = getAllAvailableSkills();
                     const canLearn = lvl < maxLvl && player.skillPoints > 0 &&
                         (!sk.prereq || (player.skillLevels[sk.prereq] || 0) >= 1);
                     const stateClass = lvl >= maxLvl ? 'maxed' : lvl > 0 ? 'unlocked' : canLearn ? '' : 'locked';
                     const lvlStars = '★'.repeat(lvl) + '☆'.repeat(maxLvl - lvl);
                     const btnHtml = canLearn ? '<button class="sn-btn" onclick="learnSkill(\'' + sk.id + '\')">習得 (+1)</button>' : '';
+                    const assignBtn = lvl > 0 ? '<button class="sn-btn" style="background:#4a6a4a;margin-left:4px" onclick="quickAssignSkill(\'' + sk.id + '\')">スロットに設定</button>' : '';
+                    const shortcutBtns = lvl > 0
+                        ? `<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">
+                            <button class="sn-btn" onclick="removeSkillById('${sk.id}')">外す</button>
+                            <button class="sn-btn" onclick="beginTreeSwap('${sk.id}')">入替</button>
+                           </div>`
+                        : '';
                     const prereqName = sk.prereq ? allAvail.find(s=>s.id===sk.prereq)?.name || '' : '';
-                    h += '<div class="skill-node ' + stateClass + '">' +
-                        '<div class="sn-icon">' + sk.icon + '</div>' +
+                    h += '<div class="skill-node ' + stateClass + '" onmouseenter="showSkillTooltip(event,\'' + sk.id + '\')" onmouseleave="hideTooltip()">' +
+                        '<div class="sn-icon emoji-font">' + sk.icon + '</div>' +
                         '<div class="sn-name">' + sk.name + '</div>' +
                         '<div class="sn-level">' + lvlStars + ' (Lv.' + lvl + '/' + maxLvl + ')</div>' +
-                        '<div class="sn-desc">' + sk.desc + '</div>' +
+                        '<div class="sn-desc">' + effectDesc(sk) + '</div>' +
                         '<div style="color:#4488ff;font-size:9px;margin-top:2px">MP:' + sk.mp + ' CD:' + sk.cd + 's</div>' +
                         (sk.prereq ? '<div style="color:#885;font-size:9px">必要: ' + prereqName + '</div>' : '') +
-                        btnHtml +
+                        '<div style="margin-top:4px">' + btnHtml + assignBtn + '</div>' +
+                        shortcutBtns +
                         '</div>';
                 }
                 h += '</div></div>';
@@ -4224,7 +4845,7 @@
         const sk = allAvail.find(s => s.id === skillId);
         if (!sk) return;
         const lvl = player.skillLevels[skillId] || 0;
-        if (lvl >= 3) return;
+        if (lvl >= 5) return;
         if (sk.prereq && (player.skillLevels[sk.prereq] || 0) < 1) return;
         player.skillLevels[skillId] = lvl + 1;
         player.skillPoints--;
@@ -4263,6 +4884,25 @@
             <div class="setting-label">拾いフィルタ</div>
             <button class="toggle-btn" onclick="cyclePickupFilter()">${getPickupFilterLabel()}</button>
         </div>`;
+        html += `<div style="color:#ccb38a;font-size:11px;margin:10px 0 4px">セーブスロット</div>`;
+        for (let i = 1; i <= SAVE_SLOT_COUNT; i++) {
+            const meta = getSaveMeta(i);
+            const active = G.saveSlot === i;
+            const info = meta
+                ? `Lv.${meta.level} / B${meta.floor}F / ${meta.className}`
+                : '空';
+            const time = meta && meta.timestamp
+                ? new Date(meta.timestamp).toLocaleString('ja-JP')
+                : '';
+            html += `<div class="setting-row">
+                <div class="setting-label">スロット${i}${active ? ' ★' : ''}<div style="font-size:10px;color:#888">${info}${time ? ' / ' + time : ''}</div></div>
+                <div class="setting-actions">
+                    <button class="toggle-btn ${active ? '' : 'off'}" onclick="setSaveSlot(${i})">選択</button>
+                    <button class="toggle-btn" onclick="saveGame(${i})">セーブ</button>
+                    <button class="toggle-btn" onclick="loadGame(${i})">ロード</button>
+                </div>
+            </div>`;
+        }
         DOM.settingsContent.innerHTML = html;
     }
 
@@ -4320,6 +4960,19 @@
     // ========== INPUT ==========
     let mouse = { x: 0, y: 0 };
     let keysDown = {};
+    function getSkillBarSlotAt(mx, my) {
+        const skillW = 48, skillH = 48, skillGap = 5;
+        const numSkills = 6;
+        const skillTotalW = numSkills * skillW + (numSkills - 1) * skillGap;
+        const skillStartX = W / 2 - skillTotalW / 2;
+        const skillY = H - 62;
+        if (my < skillY || my > skillY + skillH) return 0;
+        if (mx < skillStartX || mx > skillStartX + skillTotalW) return 0;
+        const idx = Math.floor((mx - skillStartX) / (skillW + skillGap)) + 1;
+        const slotX = skillStartX + (idx - 1) * (skillW + skillGap);
+        if (mx > slotX + skillW) return 0; // gap
+        return idx >= 1 && idx <= numSkills ? idx : 0;
+    }
 
     canvas.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; }, { passive: true });
 
@@ -4336,6 +4989,11 @@
         }
 
         if (e.button === 0) {
+            const skillSlot = getSkillBarSlotAt(mouse.x, mouse.y);
+            if (skillSlot) {
+                player.selectedSkill = skillSlot;
+                return;
+            }
             const wx = mouse.x + G.camX, wy = mouse.y + G.camY;
 
             // Check if clicking a monster
@@ -4380,7 +5038,7 @@
         }
     });
 
-    document.addEventListener('keydown', e => {
+    window.addEventListener('keydown', e => {
         keysDown[e.key.toLowerCase()] = true;
         if (e.code) keysDown[e.code] = true;
         if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault();
@@ -4390,9 +5048,9 @@
             if (G.titlePhase === 'start') {
                 if (e.key === 'Enter' || e.code === 'Space') {
                     e.preventDefault();
-                    if (hasSaveData() && confirm('セーブデータが見つかりました。続きからロードしますか？\n（キャンセルで新規ゲーム）')) {
+                    if (hasSaveData(G.saveSlot)) {
                         initAudio();
-                        loadGame();
+                        loadGame(G.saveSlot);
                     } else {
                         showClassSelect();
                     }
@@ -4440,6 +5098,38 @@
         // Save/Load
         if (e.code === 'F5') { e.preventDefault(); saveGame(); return; }
         if (e.code === 'F8') { e.preventDefault(); loadGame(); return; }
+
+        if (skillSelectOpen) {
+            if (e.code === 'Escape' || e.code === 'KeyR') {
+                e.preventDefault();
+                closeSkillSelect();
+                return;
+            }
+            if (e.code && e.code.startsWith('Digit')) {
+                const n = parseInt(e.code.replace('Digit', ''), 10);
+                if (n >= 1 && n <= 6) {
+                    e.preventDefault();
+                    selectOrSwapSkillSlot(n);
+                    return;
+                }
+            }
+            if (e.code === 'KeyX') { // remove selected slot
+                e.preventDefault();
+                removeSkillSlot();
+                return;
+            }
+            if (e.code === 'KeyA') { // assign mode
+                e.preventDefault();
+                setSkillEditMode('assign');
+                return;
+            }
+            if (e.code === 'KeyW') { // swap mode
+                e.preventDefault();
+                setSkillEditMode('swap');
+                return;
+            }
+            return;
+        }
 
         // Pause / Settings
         if (e.code === 'Escape') {
@@ -4520,7 +5210,8 @@
         if (e.code === 'KeyH') {
             e.preventDefault();
             const p = DOM.helpOverlay;
-            togglePanel(p);
+            const opened = togglePanel(p);
+            if (opened) renderHelpUI();
         }
         if (e.code === 'KeyG') {
             toggleAutoPickup();
@@ -4528,10 +5219,14 @@
         if (e.code === 'KeyP') {
             cyclePickupFilter();
         }
-        if (e.code === 'KeyR') {
+        if (e.code === 'KeyR' || e.key === 'r' || e.key === 'R') {
             e.preventDefault();
-            if (skillSelectOpen) { closeSkillSelect(); }
-            else { skillSelectSlot = 1; showSkillSelectUI(); }
+            if (skillSelectOpen) closeSkillSelect();
+            else openSkillEdit();
+        }
+        if (e.code === 'KeyE') {
+            e.preventDefault();
+            tryUseStairs(true);
         }
         if (e.code === 'KeyT') {
             e.preventDefault();
@@ -4547,7 +5242,7 @@
         if (e.code === 'Digit6' || e.key === '6') player.selectedSkill = 6;
         if (e.code === 'Space') { e.preventDefault(); player.pickupNearby(); }
     });
-    document.addEventListener('keyup', e => {
+    window.addEventListener('keyup', e => {
         keysDown[e.key.toLowerCase()] = false;
         if (e.code) keysDown[e.code] = false;
     });
@@ -4560,6 +5255,7 @@
         G.titlePhase = 'classSelect';
         G.selectedClassIdx = 0;
         DOM.titleStartText.style.display = 'none';
+        if (DOM.titleSaveMenu) DOM.titleSaveMenu.style.display = 'none';
         DOM.classSelect.style.display = 'block';
         updateClassHighlight();
     }
@@ -4586,7 +5282,12 @@
     // Click handlers still work
     DOM.titleStartText.addEventListener('click', (e) => {
         e.stopPropagation();
-        showClassSelect();
+        if (hasSaveData(G.saveSlot)) {
+            initAudio();
+            loadGame(G.saveSlot);
+        } else {
+            showClassSelect();
+        }
     });
 
     window.selectClass = function(cls) {
@@ -4631,6 +5332,12 @@
         initFloor();
         addLog('復活した...', '#ffaaaa');
     });
+    if (DOM.skillEditBtn) {
+        DOM.skillEditBtn.addEventListener('click', () => {
+            if (skillSelectOpen) closeSkillSelect();
+            else openSkillEdit();
+        });
+    }
 
     // ========== DRAWING HELPERS ==========
     function drawLighting() {
@@ -4849,11 +5556,19 @@
             }
 
             // Icon
-            ctx.font = `18px ${FONT_UI}`;
             ctx.textAlign = 'center';
-            ctx.fillText(sk.icon, x + skillW / 2, skillY + 24);
+            ctx.textBaseline = 'middle';
+            ctx.font = `20px ${FONT_EMOJI}`;
+            if (sk && sk.icon) {
+                ctx.fillText(sk.icon, x + skillW / 2, skillY + skillH / 2 - 4);
+            } else {
+                ctx.font = `12px ${FONT_UI}`;
+                ctx.fillStyle = '#555';
+                ctx.fillText('空', x + skillW / 2, skillY + skillH / 2 - 2);
+            }
 
             // Key number
+            ctx.textBaseline = 'alphabetic';
             ctx.font = `bold 9px ${FONT_UI}`;
             ctx.fillStyle = sel ? '#ffd700' : '#777';
             ctx.fillText(i, x + skillW / 2, skillY + 40);
@@ -4861,10 +5576,12 @@
             // MP cost
             ctx.font = `7px ${FONT_UI}`;
             ctx.fillStyle = '#4488ff';
-            ctx.fillText(sk.mp + 'MP', x + skillW / 2, skillY + skillH - 2);
+            if (sk && sk.mp != null) {
+                ctx.fillText(sk.mp + 'MP', x + skillW / 2, skillY + skillH - 2);
+            }
 
             // Cooldown overlay
-            if (sk.cooldown > 0) {
+            if (sk && sk.cooldown > 0) {
                 ctx.fillStyle = 'rgba(0,0,0,0.65)';
                 const cdPct = sk.cooldown / sk.maxCD;
                 ctx.fillRect(x, skillY, skillW, skillH * cdPct);
@@ -5016,8 +5733,8 @@
             ['Esc', '一時停止'],
             ['G', '自動拾い'],
             ['P', '拾いフィルタ'],
-            ['F5', 'セーブ'],
-            ['F8', 'ロード']
+            ['F5', `セーブ(S${G.saveSlot})`],
+            ['F8', `ロード(S${G.saveSlot})`]
         ];
         let scX = 8;
         const scY = 14;
@@ -5053,7 +5770,7 @@
     }
 
     // ========== SAVE / LOAD SYSTEM ==========
-    function saveGame() {
+    function saveGame(slot = G.saveSlot) {
         try {
             const saveData = {
                 version: 2,
@@ -5061,6 +5778,7 @@
                 floor: G.floor,
                 time: G.time,
                 playerClass: G.playerClass,
+                dungeonSeed: G.dungeonSeed,
                 autoPickup: G.autoPickup,
                 autoPickupRarity: G.autoPickupRarity,
                 player: {
@@ -5108,11 +5826,39 @@
                     mp: sk.mp, maxCD: sk.maxCD, desc: sk.desc
                 };
             }
-            localStorage.setItem('diablo_save', JSON.stringify(saveData));
-            addLog('ゲームをセーブしました！', '#00ff88');
+            // Save only alive monsters (dead ones stay dead on load)
+            saveData.monsters = monsters.filter(m => m.alive).map(m => ({
+                x: m.x, y: m.y, type: m.type,
+                hp: m.hp, maxHP: m.maxHP, dmg: m.dmg,
+                aggroed: m.aggroed
+            }));
+            // Save ground items
+            saveData.groundItems = groundItems.map(gi => ({
+                x: gi.x, y: gi.y,
+                item: {
+                    name: gi.item.name, typeKey: gi.item.typeKey,
+                    rarityKey: gi.item.rarityKey, rarity: gi.item.rarity,
+                    typeInfo: gi.item.typeInfo,
+                    baseStat: gi.item.baseStat, statType: gi.item.statType,
+                    affixes: gi.item.affixes || [], desc: gi.item.desc || '',
+                    icon: gi.item.icon
+                }
+            }));
+            // Save remaining chest positions (unopened only)
+            saveData.remainingChests = [];
+            for (let ty = 0; ty < MAP_H; ty++) {
+                for (let tx = 0; tx < MAP_W; tx++) {
+                    if (dungeon.get(tx, ty) === 3) {
+                        saveData.remainingChests.push(tx * MAP_H + ty);
+                    }
+                }
+            }
+            localStorage.setItem(getSaveKey(slot), JSON.stringify(saveData));
+            addLog(`ゲームをセーブしました！(スロット${slot})`, '#00ff88');
             addFloatingText(player.x, player.y - 30, 'SAVED!', '#00ff88');
             emitParticles(player.x, player.y, '#00ff88', 15, 50, 0.5, 3, -40);
             playSound(600, 'sine', 0.1, 0.05);
+            if (isPanelVisible(DOM.settingsPanel)) renderSettingsUI();
             return true;
         } catch (e) {
             addLog('セーブに失敗: ' + e.message, '#ff4444');
@@ -5120,24 +5866,33 @@
         }
     }
 
-    function loadGame() {
+    function loadGame(slot = G.saveSlot) {
         try {
-            const raw = localStorage.getItem('diablo_save');
+            const raw = localStorage.getItem(getSaveKey(slot));
             if (!raw) { addLog('セーブデータが見つかりません', '#ff4444'); return false; }
             const save = JSON.parse(raw);
             if (!save.version || save.version < 2) {
                 addLog('古いセーブデータです。新しくゲームを始めてください', '#ff4444');
                 return false;
             }
+
+            // Validate classKey before using it
+            if (!save.playerClass || !CLASS_DEFS[save.playerClass]) {
+                addLog('無効なクラスデータです', '#ff4444');
+                return false;
+            }
+
             G.floor = save.floor;
             G.time = save.time || 0;
             G.playerClass = save.playerClass;
+            G.dungeonSeed = save.dungeonSeed || 0;
             G.autoPickup = save.autoPickup || false;
             G.autoPickupRarity = save.autoPickupRarity || 'normal';
             G.dead = false;
             setPaused(false);
             setPanelVisible(DOM.settingsPanel, false);
             G.started = true;
+
             const p = save.player;
             player.level = p.level;
             player.xp = p.xp;
@@ -5149,23 +5904,56 @@
             player.classKey = p.classKey;
             player.className = p.className;
             player.skillLevels = p.skillLevels || {};
+
             for (const [slot, item] of Object.entries(p.equipment)) {
                 player.equipment[slot] = item;
             }
             player.inventory = p.inventory || [];
-            if (p.skills) {
-                for (let i = 1; i <= 6; i++) {
-                    if (p.skills[i]) {
-                        player.skills[i] = { ...p.skills[i], cooldown: 0, maxCD: p.skills[i].maxCD || 0 };
-                    }
-                }
-            }
+
             player.recalcStats();
             player.hp = Math.min(p.hp, player.maxHP);
             player.mp = Math.min(p.mp, player.maxMP);
+
             DOM.titleScreen.style.display = 'none';
             DOM.deathScreen.style.display = 'none';
-            initFloor();
+
+            // Generate dungeon with saved seed (reproduces same layout)
+            // Skip entity spawning - we'll restore saved monsters/items
+            initFloor({ useSeed: true, skipEntities: true });
+
+            // Restore only alive monsters from save (dead ones are gone)
+            monsters.length = 0;
+            if (save.monsters && save.monsters.length > 0) {
+                for (const sm of save.monsters) {
+                    const m = new Monster(sm.x, sm.y, sm.type, G.floor);
+                    m.hp = sm.hp; m.maxHP = sm.maxHP; m.dmg = sm.dmg;
+                    m.alive = true; m.aggroed = sm.aggroed || false;
+                    monsters.push(m);
+                }
+            }
+            // Restore ground items from save
+            groundItems.length = 0;
+            if (save.groundItems && save.groundItems.length > 0) {
+                for (const sgi of save.groundItems) {
+                    groundItems.push(new GroundItem(sgi.x, sgi.y, sgi.item));
+                }
+            }
+            // Restore opened chests: remove chests that were opened
+            if (save.remainingChests) {
+                const remaining = new Set(save.remainingChests);
+                for (let ty = 0; ty < MAP_H; ty++) {
+                    for (let tx = 0; tx < MAP_W; tx++) {
+                        if (dungeon.get(tx, ty) === 3) {
+                            const key = tx * MAP_H + ty;
+                            if (!remaining.has(key)) {
+                                dungeon.set(tx, ty, 1); // chest was opened
+                            }
+                        }
+                    }
+                }
+            }
+
+            // THEN restore player position
             player.x = p.x; player.y = p.y;
             if (!canWalk(player.x, player.y, 10)) {
                 for (const room of dungeon.rooms) {
@@ -5176,12 +5964,27 @@
             }
             G.camX = player.x - W / 2;
             G.camY = player.y - H / 2;
-            addLog(`ロード完了！B${G.floor}F Lv.${player.level}`, '#00ff88');
+
+            // Restore skills with proper maxCD lookup
+            if (p.skills) {
+                const allSkills = getAllAvailableSkills();
+                for (let i = 1; i <= 6; i++) {
+                    if (p.skills[i]) {
+                        const skillDef = allSkills.find(sk => sk.id === p.skills[i].id);
+                        const maxCD = skillDef ? skillDef.cd : (p.skills[i].maxCD || 0);
+                        player.skills[i] = { ...p.skills[i], cooldown: 0, maxCD: maxCD };
+                    }
+                }
+            }
+            // セーブデータにskillsがない場合も空のまま
+
+            addLog(`ロード完了！B${G.floor}F Lv.${player.level} (スロット${slot})`, '#00ff88');
             addFloatingText(player.x, player.y - 30, 'LOADED!', '#00ff88');
             emitParticles(player.x, player.y, '#00ff88', 20, 60, 0.5, 4, -40);
             playSound(400, 'sine', 0.12, 0.06);
             const savedDate = new Date(save.timestamp);
             addLog(`セーブ日時: ${savedDate.toLocaleString('ja-JP')}`, '#888');
+            if (isPanelVisible(DOM.settingsPanel)) renderSettingsUI();
             return true;
         } catch (e) {
             addLog('ロードに失敗: ' + e.message, '#ff4444');
@@ -5190,8 +5993,25 @@
         }
     }
 
-    function hasSaveData() {
-        try { return !!localStorage.getItem('diablo_save'); } catch (e) { return false; }
+    function hasSaveData(slot = G.saveSlot) {
+        try { return !!localStorage.getItem(getSaveKey(slot)); } catch (e) { return false; }
+    }
+
+    function tryUseStairs(showBlocked) {
+        if (!dungeon) return false;
+        const ptx = Math.floor(player.x / TILE), pty = Math.floor(player.y / TILE);
+        const onTile = dungeon.get(ptx, pty) === 2;
+        const sd = dist(player.x, player.y, dungeon.stairsX * TILE + TILE/2, dungeon.stairsY * TILE + TILE/2);
+        const nearStairs = sd < 45;
+        if (!onTile && !nearStairs) return false;
+        if (monsters.filter(m => m.alive).length > 0) {
+            if (showBlocked) addLog('まだ敵が残っている...', '#ff4444');
+            return false;
+        }
+        sfxStairs();
+        G.floor++;
+        initFloor();
+        return true;
     }
 
     // ========== MAIN GAME LOOP ==========
@@ -5223,6 +6043,27 @@
         if (canUpdate) {
             player.update(dt);
             for (const m of monsters) m.update(dt, player);
+
+            // 敵の継続的な出現（ワラワラ感）
+            G.spawnTimer += dt;
+            if (G.spawnTimer >= G.spawnInterval) {
+                G.spawnTimer = 0;
+                const aliveCount = monsters.filter(m => m.alive).length;
+                const maxMonsters = 30 + G.floor * 5; // 階層ごとに最大数増加
+                if (aliveCount < maxMonsters && dungeon && dungeon.rooms.length > 1) {
+                    const spawnCount = Math.min(3 + Math.floor(G.floor / 2), maxMonsters - aliveCount);
+                    const types = G.floor <= 2 ? ['skeleton', 'zombie'] :
+                                  G.floor <= 4 ? ['skeleton', 'zombie', 'imp'] :
+                                  G.floor <= 6 ? ['zombie', 'imp', 'ghost'] :
+                                  ['imp', 'ghost'];
+                    for (let i = 0; i < spawnCount; i++) {
+                        const room = dungeon.rooms[rand(1, dungeon.rooms.length - 1)];
+                        const mx = room.x * TILE + rand(TILE, (room.w - 1) * TILE);
+                        const my = room.y * TILE + rand(TILE, (room.h - 1) * TILE);
+                        monsters.push(new Monster(mx, my, types[rand(0, types.length - 1)], G.floor));
+                    }
+                }
+            }
         }
 
         // Remove dead monsters after animation
@@ -5375,12 +6216,7 @@
         }
 
         // Stairs check
-        const sd = dist(player.x, player.y, dungeon.stairsX * TILE + TILE/2, dungeon.stairsY * TILE + TILE/2);
-        if (canUpdate && sd < 35 && monsters.filter(m => m.alive).length === 0) {
-            sfxStairs();
-            G.floor++;
-            initFloor();
-        }
+        if (canUpdate) tryUseStairs(false);
 
         // Level up notice
         if (canUpdate && levelUpTimer > 0) {
@@ -5520,6 +6356,18 @@
         resizeCanvas();
     });
 
+    // Capture R key even when focus is on UI elements
+    window.addEventListener('keydown', e => {
+        const key = e.key || '';
+        if (key !== 'r' && key !== 'R' && e.code !== 'KeyR') return;
+        const tag = (document.activeElement && document.activeElement.tagName) || '';
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        if (!G.started || G.dead) return;
+        e.preventDefault();
+        if (skillSelectOpen) closeSkillSelect();
+        else openSkillEdit();
+    }, true);
+
     document.addEventListener('visibilitychange', () => {
         if (document.hidden && G.started && !G.dead) setPaused(true);
     });
@@ -5541,10 +6389,13 @@
             const sx = skStartX + (i - 1) * (skW + skGap);
             if (e.clientX >= sx && e.clientX <= sx + skW && e.clientY >= skY && e.clientY <= skY + 48) {
                 const sk = player.skills[i];
-                tt.innerHTML = `<div class="tt-name" style="color:#ffd700">${sk.icon} ${sk.name}</div>
-                    <div class="tt-type">キー: ${i} | MP: ${sk.mp}</div>
-                    <div style="color:#ccc;margin-top:4px;font-size:11px">${sk.desc}</div>
-                    <div style="color:#888;margin-top:4px;font-size:10px">CD: ${sk.maxCD}秒</div>`;
+                if (!sk) {
+                    tt.innerHTML = `<div class="tt-name" style="color:#888">空スロット</div><div class="tt-type">キー: ${i}</div>`;
+                } else {
+                    const allAvail = getAllAvailableSkills();
+                    const skDef = allAvail.find(s => s.id === sk.id) || sk;
+                    tt.innerHTML = buildSkillTooltipHTML({ ...skDef, mp: sk.mp, maxCD: sk.maxCD }, i);
+                }
                 tt.style.display = 'block';
                 tt.style.left = (e.clientX + 10) + 'px';
                 tt.style.top = (skY - 90) + 'px';
