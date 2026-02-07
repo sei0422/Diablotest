@@ -1,0 +1,1700 @@
+{
+  "description": "Comprehensive 3-Tier Class System for Diablo-Style Game",
+  "notes": "Base classes promote to advanced classes at level 10 and 20. Each class has 3 skill branches with 3 skills each (9 total). Each skill has 3 levels.",
+  "spriteKey": "rogues.png row mappings",
+
+  "baseClasses": {
+    "warrior": {
+      "tier": 0,
+      "jpName": "戦士",
+      "enName": "WARRIOR",
+      "icon": "⚔",
+      "sprite": { "sheet": "rogues", "col": 0, "row": 1 },
+      "spriteAlt": "knight",
+      "baseStats": {
+        "str": 20,
+        "dex": 10,
+        "vit": 20,
+        "int": 5
+      },
+      "loreDesc": "近接戦闘の達人。高い体力と筋力で敵をなぎ倒す。",
+      "skillBranches": ["戦技", "防御"],
+      "skills": [
+        {
+          "id": "w_power",
+          "jpName": "パワーストライク",
+          "enName": "Power Strike",
+          "icon": "💥",
+          "branch": 0,
+          "branchName": "戦技",
+          "prereq": null,
+          "baseMP": 10,
+          "baseCooldown": 1.0,
+          "description": "強力な一撃を放つ。",
+          "effect": "melee_burst",
+          "scalingStats": ["str"],
+          "levels": {
+            "1": { "damageMultiplier": 1.8, "range": 60, "mpCost": 10, "cooldown": 1.0 },
+            "2": { "damageMultiplier": 2.2, "range": 60, "mpCost": 12, "cooldown": 1.0 },
+            "3": { "damageMultiplier": 2.8, "range": 70, "mpCost": 15, "cooldown": 1.0 }
+          }
+        },
+        {
+          "id": "w_whirl",
+          "jpName": "旋風斬",
+          "enName": "Whirlwind",
+          "icon": "🌀",
+          "branch": 0,
+          "branchName": "戦技",
+          "prereq": "w_power",
+          "baseMP": 20,
+          "baseCooldown": 2.5,
+          "description": "周囲の敵を斬り裂く。",
+          "effect": "whirlwind",
+          "scalingStats": ["str", "dex"],
+          "levels": {
+            "1": { "damageMultiplier": 1.2, "radius": 100, "mpCost": 20, "cooldown": 2.5 },
+            "2": { "damageMultiplier": 1.6, "radius": 110, "mpCost": 25, "cooldown": 2.5 },
+            "3": { "damageMultiplier": 2.2, "radius": 120, "mpCost": 30, "cooldown": 2.5 }
+          }
+        },
+        {
+          "id": "w_berserk",
+          "jpName": "狂戦士",
+          "enName": "Berserk",
+          "icon": "👹",
+          "branch": 0,
+          "branchName": "戦技",
+          "prereq": "w_whirl",
+          "baseMP": 30,
+          "baseCooldown": 12.0,
+          "description": "攻撃力が2倍になる。被ダメージが増加する。",
+          "effect": "buff_berserk",
+          "scalingStats": ["str"],
+          "levels": {
+            "1": { "damageMultiplier": 2.0, "duration": 8, "mpCost": 30, "cooldown": 12.0, "damageIncrease": 1.25 },
+            "2": { "damageMultiplier": 2.0, "duration": 10, "mpCost": 35, "cooldown": 12.0, "damageIncrease": 1.25 },
+            "3": { "damageMultiplier": 2.0, "duration": 12, "mpCost": 40, "cooldown": 12.0, "damageIncrease": 1.20 }
+          }
+        },
+        {
+          "id": "w_warcry",
+          "jpName": "雄叫び",
+          "enName": "War Cry",
+          "icon": "📯",
+          "branch": 1,
+          "branchName": "防御",
+          "prereq": null,
+          "baseMP": 15,
+          "baseCooldown": 6.0,
+          "description": "周囲の敵を怯ませ、一時停止させる。",
+          "effect": "stun_aoe",
+          "scalingStats": ["vit"],
+          "levels": {
+            "1": { "stunDuration": 1.5, "radius": 130, "mpCost": 15, "cooldown": 6.0 },
+            "2": { "stunDuration": 2.0, "radius": 140, "mpCost": 18, "cooldown": 6.0 },
+            "3": { "stunDuration": 3.0, "radius": 150, "mpCost": 20, "cooldown": 6.0 }
+          }
+        },
+        {
+          "id": "w_iron",
+          "jpName": "鉄壁",
+          "enName": "Iron Wall",
+          "icon": "🛡",
+          "branch": 1,
+          "branchName": "防御",
+          "prereq": "w_warcry",
+          "baseMP": 25,
+          "baseCooldown": 10.0,
+          "description": "被ダメージを軽減するバフを付与。",
+          "effect": "buff_defense",
+          "scalingStats": ["vit"],
+          "levels": {
+            "1": { "damageReduction": 0.4, "duration": 5, "mpCost": 25, "cooldown": 10.0 },
+            "2": { "damageReduction": 0.5, "duration": 7, "mpCost": 30, "cooldown": 10.0 },
+            "3": { "damageReduction": 0.6, "duration": 10, "mpCost": 35, "cooldown": 10.0 }
+          }
+        },
+        {
+          "id": "w_charge",
+          "jpName": "突撃",
+          "enName": "Charge",
+          "icon": "⚡",
+          "branch": 1,
+          "branchName": "防御",
+          "prereq": "w_warcry",
+          "baseMP": 20,
+          "baseCooldown": 5.0,
+          "description": "対象に高速突進しダメージを与える。",
+          "effect": "charge",
+          "scalingStats": ["str", "dex"],
+          "levels": {
+            "1": { "damageMultiplier": 2.0, "range": 250, "mpCost": 20, "cooldown": 5.0 },
+            "2": { "damageMultiplier": 2.5, "range": 280, "mpCost": 25, "cooldown": 5.0 },
+            "3": { "damageMultiplier": 3.5, "range": 320, "mpCost": 30, "cooldown": 5.0 }
+          }
+        }
+      ]
+    },
+
+    "rogue": {
+      "tier": 0,
+      "jpName": "盗賊",
+      "enName": "ROGUE",
+      "icon": "🏹",
+      "sprite": { "sheet": "rogues", "col": 3, "row": 0 },
+      "spriteAlt": "rogueChar",
+      "baseStats": {
+        "str": 10,
+        "dex": 20,
+        "vit": 15,
+        "int": 10
+      },
+      "loreDesc": "素早さと精密な射撃で戦う。罠を仕掛け、敵の弱点を突く。",
+      "skillBranches": ["射撃", "暗殺"],
+      "skills": [
+        {
+          "id": "r_fire",
+          "jpName": "炎の矢",
+          "enName": "Fire Arrow",
+          "icon": "🔥",
+          "branch": 0,
+          "branchName": "射撃",
+          "prereq": null,
+          "baseMP": 10,
+          "baseCooldown": 1.0,
+          "description": "炎を纏った矢を放つ。",
+          "effect": "projectile_fire",
+          "scalingStats": ["dex", "int"],
+          "levels": {
+            "1": { "damageMultiplier": 1.5, "speed": 400, "mpCost": 10, "cooldown": 1.0 },
+            "2": { "damageMultiplier": 2.0, "speed": 420, "mpCost": 12, "cooldown": 1.0 },
+            "3": { "damageMultiplier": 2.8, "speed": 450, "mpCost": 15, "cooldown": 1.0 }
+          }
+        },
+        {
+          "id": "r_multi",
+          "jpName": "マルチショット",
+          "enName": "Multi Shot",
+          "icon": "🌟",
+          "branch": 0,
+          "branchName": "射撃",
+          "prereq": "r_fire",
+          "baseMP": 25,
+          "baseCooldown": 3.0,
+          "description": "扇状に複数の矢を放つ。",
+          "effect": "multi_shot",
+          "scalingStats": ["dex"],
+          "levels": {
+            "1": { "arrowCount": 3, "damageMultiplier": 1.0, "spreadAngle": 60, "mpCost": 25, "cooldown": 3.0 },
+            "2": { "arrowCount": 5, "damageMultiplier": 1.3, "spreadAngle": 75, "mpCost": 30, "cooldown": 3.0 },
+            "3": { "arrowCount": 7, "damageMultiplier": 1.6, "spreadAngle": 90, "mpCost": 35, "cooldown": 3.0 }
+          }
+        },
+        {
+          "id": "r_rain",
+          "jpName": "矢の雨",
+          "enName": "Arrow Rain",
+          "icon": "🌧",
+          "branch": 0,
+          "branchName": "射撃",
+          "prereq": "r_multi",
+          "baseMP": 40,
+          "baseCooldown": 8.0,
+          "description": "範囲に矢を降らせる。",
+          "effect": "arrow_rain",
+          "scalingStats": ["dex", "int"],
+          "levels": {
+            "1": { "damageMultiplier": 2.0, "radius": 80, "mpCost": 40, "cooldown": 8.0 },
+            "2": { "damageMultiplier": 3.0, "radius": 90, "mpCost": 45, "cooldown": 8.0 },
+            "3": { "damageMultiplier": 4.0, "radius": 100, "mpCost": 50, "cooldown": 8.0 }
+          }
+        },
+        {
+          "id": "r_trap",
+          "jpName": "トラップ",
+          "enName": "Trap",
+          "icon": "💣",
+          "branch": 1,
+          "branchName": "暗殺",
+          "prereq": null,
+          "baseMP": 15,
+          "baseCooldown": 4.0,
+          "description": "地面に罠を設置する。",
+          "effect": "place_trap",
+          "scalingStats": ["dex"],
+          "levels": {
+            "1": { "damageMultiplier": 2.0, "trapCount": 1, "mpCost": 15, "cooldown": 4.0 },
+            "2": { "damageMultiplier": 3.0, "trapCount": 2, "mpCost": 18, "cooldown": 4.0 },
+            "3": { "damageMultiplier": 4.0, "trapCount": 3, "mpCost": 20, "cooldown": 4.0 }
+          }
+        },
+        {
+          "id": "r_dodge",
+          "jpName": "回避",
+          "enName": "Dodge",
+          "icon": "💨",
+          "branch": 1,
+          "branchName": "暗殺",
+          "prereq": "r_trap",
+          "baseMP": 20,
+          "baseCooldown": 6.0,
+          "description": "一定時間回避率が大幅に上昇。",
+          "effect": "buff_dodge",
+          "scalingStats": ["dex"],
+          "levels": {
+            "1": { "dodgeChance": 50, "duration": 3, "mpCost": 20, "cooldown": 6.0 },
+            "2": { "dodgeChance": 65, "duration": 5, "mpCost": 25, "cooldown": 6.0 },
+            "3": { "dodgeChance": 80, "duration": 7, "mpCost": 30, "cooldown": 6.0 }
+          }
+        },
+        {
+          "id": "r_shadow",
+          "jpName": "影撃ち",
+          "enName": "Shadow Strike",
+          "icon": "🗡",
+          "branch": 1,
+          "branchName": "暗殺",
+          "prereq": "r_trap",
+          "baseMP": 30,
+          "baseCooldown": 8.0,
+          "description": "テレポートして背後から急所攻撃。",
+          "effect": "shadow_strike",
+          "scalingStats": ["dex", "str"],
+          "levels": {
+            "1": { "damageMultiplier": 3.0, "mpCost": 30, "cooldown": 8.0, "critMultiplier": 1.5 },
+            "2": { "damageMultiplier": 4.0, "mpCost": 35, "cooldown": 8.0, "critMultiplier": 1.75 },
+            "3": { "damageMultiplier": 5.5, "mpCost": 40, "cooldown": 8.0, "critMultiplier": 2.0 }
+          }
+        }
+      ]
+    },
+
+    "sorcerer": {
+      "tier": 0,
+      "jpName": "魔法使い",
+      "enName": "SORCERER",
+      "icon": "🔮",
+      "sprite": { "sheet": "rogues", "col": 1, "row": 4 },
+      "spriteAlt": "wizardM",
+      "baseStats": {
+        "str": 5,
+        "dex": 10,
+        "vit": 10,
+        "int": 25
+      },
+      "loreDesc": "強力な魔法を操る。炎、雷、氷の魔法で遠距離から殲滅する。",
+      "skillBranches": ["元素魔法", "秘術"],
+      "skills": [
+        {
+          "id": "s_fbolt",
+          "jpName": "ファイアボルト",
+          "enName": "Firebolt",
+          "icon": "🔥",
+          "branch": 0,
+          "branchName": "元素魔法",
+          "prereq": null,
+          "baseMP": 12,
+          "baseCooldown": 0.8,
+          "description": "炎の弾を撃つ。",
+          "effect": "projectile_fire",
+          "scalingStats": ["int", "dex"],
+          "levels": {
+            "1": { "damageMultiplier": 1.8, "speed": 350, "mpCost": 12, "cooldown": 0.8 },
+            "2": { "damageMultiplier": 2.5, "speed": 380, "mpCost": 14, "cooldown": 0.8 },
+            "3": { "damageMultiplier": 3.5, "speed": 400, "mpCost": 16, "cooldown": 0.8 }
+          }
+        },
+        {
+          "id": "s_chain",
+          "jpName": "チェインライトニング",
+          "enName": "Chain Lightning",
+          "icon": "⚡",
+          "branch": 0,
+          "branchName": "元素魔法",
+          "prereq": "s_fbolt",
+          "baseMP": 25,
+          "baseCooldown": 2.5,
+          "description": "雷が敵を連鎖して攻撃する。",
+          "effect": "chain_lightning",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "bounceCount": 2, "damageMultiplier": 1.5, "mpCost": 25, "cooldown": 2.5, "bounceDistance": 150 },
+            "2": { "bounceCount": 3, "damageMultiplier": 2.0, "mpCost": 30, "cooldown": 2.5, "bounceDistance": 180 },
+            "3": { "bounceCount": 5, "damageMultiplier": 2.8, "mpCost": 35, "cooldown": 2.5, "bounceDistance": 200 }
+          }
+        },
+        {
+          "id": "s_meteor",
+          "jpName": "メテオ",
+          "enName": "Meteor",
+          "icon": "☄",
+          "branch": 0,
+          "branchName": "元素魔法",
+          "prereq": "s_chain",
+          "baseMP": 50,
+          "baseCooldown": 8.0,
+          "description": "広範囲に大ダメージを与える。",
+          "effect": "meteor",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "damageMultiplier": 3.0, "radius": 100, "mpCost": 50, "cooldown": 8.0 },
+            "2": { "damageMultiplier": 4.5, "radius": 120, "mpCost": 55, "cooldown": 8.0 },
+            "3": { "damageMultiplier": 6.0, "radius": 140, "mpCost": 60, "cooldown": 8.0 }
+          }
+        },
+        {
+          "id": "s_frost",
+          "jpName": "フロストノヴァ",
+          "enName": "Frost Nova",
+          "icon": "❄",
+          "branch": 1,
+          "branchName": "秘術",
+          "prereq": null,
+          "baseMP": 20,
+          "baseCooldown": 4.0,
+          "description": "周囲の敵を凍結させる。",
+          "effect": "frost_nova",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "damageMultiplier": 0.8, "freezeDuration": 2, "radius": 120, "mpCost": 20, "cooldown": 4.0 },
+            "2": { "damageMultiplier": 1.2, "freezeDuration": 3, "radius": 130, "mpCost": 25, "cooldown": 4.0 },
+            "3": { "damageMultiplier": 1.6, "freezeDuration": 4, "radius": 140, "mpCost": 30, "cooldown": 4.0 }
+          }
+        },
+        {
+          "id": "s_tele",
+          "jpName": "テレポート",
+          "enName": "Teleport",
+          "icon": "✨",
+          "branch": 1,
+          "branchName": "秘術",
+          "prereq": "s_frost",
+          "baseMP": 15,
+          "baseCooldown": 3.0,
+          "description": "指定地点に瞬間移動する。",
+          "effect": "teleport",
+          "scalingStats": ["int", "dex"],
+          "levels": {
+            "1": { "range": 200, "mpCost": 15, "cooldown": 3.0 },
+            "2": { "range": 280, "mpCost": 18, "cooldown": 3.0 },
+            "3": { "range": 350, "mpCost": 20, "cooldown": 3.0 }
+          }
+        },
+        {
+          "id": "s_mshield",
+          "jpName": "マナシールド",
+          "enName": "Mana Shield",
+          "icon": "🔷",
+          "branch": 1,
+          "branchName": "秘術",
+          "prereq": "s_frost",
+          "baseMP": 30,
+          "baseCooldown": 12.0,
+          "description": "ダメージをMPで吸収する。",
+          "effect": "mana_shield",
+          "scalingStats": ["int", "vit"],
+          "levels": {
+            "1": { "absorbRatio": 0.5, "duration": 6, "mpCost": 30, "cooldown": 12.0 },
+            "2": { "absorbRatio": 0.6, "duration": 8, "mpCost": 35, "cooldown": 12.0 },
+            "3": { "absorbRatio": 0.75, "duration": 12, "mpCost": 40, "cooldown": 12.0 }
+          }
+        }
+      ]
+    }
+  },
+
+  "advancedClasses": {
+    "knight": {
+      "tier": 1,
+      "jpName": "騎士",
+      "enName": "KNIGHT",
+      "icon": "🛡",
+      "sprite": { "sheet": "rogues", "col": 0, "row": 1 },
+      "spriteAlt": "knight",
+      "baseClass": "warrior",
+      "promoteLevel": 10,
+      "baseStats": {
+        "str": 24,
+        "dex": 12,
+        "vit": 25,
+        "int": 7
+      },
+      "loreDesc": "王の盾。完全な防御スタイルに特化した戦士。敵の攻撃を受け止め、仲間を守る。",
+      "skillBranches": ["盾術", "騎士道", "聖光"],
+      "skills": [
+        {
+          "id": "k_shield_bash",
+          "jpName": "シールドバッシュ",
+          "enName": "Shield Bash",
+          "icon": "🛡",
+          "branch": 0,
+          "branchName": "盾術",
+          "prereq": null,
+          "baseMP": 12,
+          "baseCooldown": 2.0,
+          "description": "盾で殴り付け敵をスタンさせる。",
+          "effect": "shield_bash",
+          "scalingStats": ["str", "vit"],
+          "levels": {
+            "1": { "damageMultiplier": 1.5, "stunDuration": 1.0, "mpCost": 12, "cooldown": 2.0 },
+            "2": { "damageMultiplier": 2.0, "stunDuration": 1.5, "mpCost": 14, "cooldown": 2.0 },
+            "3": { "damageMultiplier": 2.8, "stunDuration": 2.0, "mpCost": 16, "cooldown": 2.0 }
+          }
+        },
+        {
+          "id": "k_shield_wall",
+          "jpName": "シールドウォール",
+          "enName": "Shield Wall",
+          "icon": "🧱",
+          "branch": 0,
+          "branchName": "盾術",
+          "prereq": "k_shield_bash",
+          "baseMP": 30,
+          "baseCooldown": 10.0,
+          "description": "完全な盾を展開。ダメージを大幅に軽減。移動速度は低下。",
+          "effect": "shield_wall",
+          "scalingStats": ["vit"],
+          "levels": {
+            "1": { "damageReduction": 0.6, "duration": 5, "mpCost": 30, "cooldown": 10.0, "speedMod": 0.3 },
+            "2": { "damageReduction": 0.7, "duration": 7, "mpCost": 35, "cooldown": 10.0, "speedMod": 0.3 },
+            "3": { "damageReduction": 0.8, "duration": 10, "mpCost": 40, "cooldown": 10.0, "speedMod": 0.4 }
+          }
+        },
+        {
+          "id": "k_riposte",
+          "jpName": "リポスト",
+          "enName": "Riposte",
+          "icon": "⚔",
+          "branch": 0,
+          "branchName": "盾術",
+          "prereq": "k_shield_wall",
+          "baseMP": 20,
+          "baseCooldown": 5.0,
+          "description": "敵の攻撃を受けて反撃。防御値が高いほどダメージ増加。",
+          "effect": "riposte",
+          "scalingStats": ["vit", "str"],
+          "levels": {
+            "1": { "counterDamageRatio": 0.6, "defenseScaling": 0.3, "mpCost": 20, "cooldown": 5.0 },
+            "2": { "counterDamageRatio": 0.8, "defenseScaling": 0.4, "mpCost": 25, "cooldown": 5.0 },
+            "3": { "counterDamageRatio": 1.0, "defenseScaling": 0.5, "mpCost": 30, "cooldown": 5.0 }
+          }
+        },
+        {
+          "id": "k_challenge",
+          "jpName": "チャレンジ",
+          "enName": "Challenge",
+          "icon": "📢",
+          "branch": 1,
+          "branchName": "騎士道",
+          "prereq": null,
+          "baseMP": 18,
+          "baseCooldown": 6.0,
+          "description": "敵の視線を引き寄せ、自分を攻撃するよう強要する。",
+          "effect": "taunt",
+          "scalingStats": ["str", "vit"],
+          "levels": {
+            "1": { "tauntDuration": 3, "radius": 150, "mpCost": 18, "cooldown": 6.0 },
+            "2": { "tauntDuration": 4, "radius": 180, "mpCost": 22, "cooldown": 6.0 },
+            "3": { "tauntDuration": 5, "radius": 200, "mpCost": 25, "cooldown": 6.0 }
+          }
+        },
+        {
+          "id": "k_last_stand",
+          "jpName": "最後の砦",
+          "enName": "Last Stand",
+          "icon": "💪",
+          "branch": 1,
+          "branchName": "騎士道",
+          "prereq": "k_challenge",
+          "baseMP": 40,
+          "baseCooldown": 15.0,
+          "description": "HPが低いほど防御力が上昇。敵から守る。",
+          "effect": "last_stand",
+          "scalingStats": ["vit"],
+          "levels": {
+            "1": { "defenseMultiplier": 2.0, "duration": 8, "mpCost": 40, "cooldown": 15.0 },
+            "2": { "defenseMultiplier": 2.5, "duration": 10, "mpCost": 45, "cooldown": 15.0 },
+            "3": { "defenseMultiplier": 3.0, "duration": 12, "mpCost": 50, "cooldown": 15.0 }
+          }
+        },
+        {
+          "id": "k_holy_light",
+          "jpName": "聖光",
+          "enName": "Holy Light",
+          "icon": "✨",
+          "branch": 2,
+          "branchName": "聖光",
+          "prereq": null,
+          "baseMP": 25,
+          "baseCooldown": 4.0,
+          "description": "聖なる光で敵にダメージを与え、味方を回復。",
+          "effect": "holy_light",
+          "scalingStats": ["int", "str"],
+          "levels": {
+            "1": { "damageMultiplier": 1.2, "healRatio": 0.5, "radius": 150, "mpCost": 25, "cooldown": 4.0 },
+            "2": { "damageMultiplier": 1.6, "healRatio": 0.65, "radius": 170, "mpCost": 30, "cooldown": 4.0 },
+            "3": { "damageMultiplier": 2.2, "healRatio": 0.8, "radius": 190, "mpCost": 35, "cooldown": 4.0 }
+          }
+        },
+        {
+          "id": "k_divine_judgment",
+          "jpName": "神の加護",
+          "enName": "Divine Judgment",
+          "icon": "⚡",
+          "branch": 2,
+          "branchName": "聖光",
+          "prereq": "k_holy_light",
+          "baseMP": 35,
+          "baseCooldown": 8.0,
+          "description": "神の力で敵を裁く。被ダメージが少ないほどダメージ増加。",
+          "effect": "divine_judgment",
+          "scalingStats": ["int", "vit"],
+          "levels": {
+            "1": { "baseDamage": 1.5, "defenseBuff": 0.3, "mpCost": 35, "cooldown": 8.0 },
+            "2": { "baseDamage": 2.2, "defenseBuff": 0.4, "mpCost": 40, "cooldown": 8.0 },
+            "3": { "baseDamage": 3.0, "defenseBuff": 0.5, "mpCost": 45, "cooldown": 8.0 }
+          }
+        },
+        {
+          "id": "k_retribution",
+          "jpName": "神罰",
+          "enName": "Retribution",
+          "icon": "🔥",
+          "branch": 2,
+          "branchName": "聖光",
+          "prereq": "k_holy_light",
+          "baseMP": 40,
+          "baseCooldown": 10.0,
+          "description": "敵からダメージを受けるたびに反撃ダメージが蓄積される。",
+          "effect": "retribution",
+          "scalingStats": ["int", "vit"],
+          "levels": {
+            "1": { "damagePerHit": 0.2, "maxStacks": 5, "mpCost": 40, "cooldown": 10.0, "releaseMultiplier": 2.0 },
+            "2": { "damagePerHit": 0.3, "maxStacks": 7, "mpCost": 45, "cooldown": 10.0, "releaseMultiplier": 2.5 },
+            "3": { "damagePerHit": 0.4, "maxStacks": 10, "mpCost": 50, "cooldown": 10.0, "releaseMultiplier": 3.0 }
+          }
+        }
+      ]
+    },
+
+    "berserker": {
+      "tier": 1,
+      "jpName": "狂戦士",
+      "enName": "BERSERKER",
+      "icon": "👹",
+      "sprite": { "sheet": "rogues", "col": 0, "row": 3 },
+      "spriteAlt": "barbarian",
+      "baseClass": "warrior",
+      "promoteLevel": 10,
+      "baseStats": {
+        "str": 28,
+        "dex": 8,
+        "vit": 22,
+        "int": 4
+      },
+      "loreDesc": "狂気の戦士。力を極限まで引き出すが、制御が難しい。攻撃性に優れた戦闘スタイル。",
+      "skillBranches": ["野蛮", "激怒", "斬撃"],
+      "skills": [
+        {
+          "id": "b_savage_strike",
+          "jpName": "野蛮な一撃",
+          "enName": "Savage Strike",
+          "icon": "🔨",
+          "branch": 0,
+          "branchName": "野蛮",
+          "prereq": null,
+          "baseMP": 15,
+          "baseCooldown": 1.5,
+          "description": "巨大な力で敵を打ち砕く。ダメージが高いほど敵をノックバック。",
+          "effect": "savage_strike",
+          "scalingStats": ["str"],
+          "levels": {
+            "1": { "damageMultiplier": 2.2, "knockback": 100, "mpCost": 15, "cooldown": 1.5 },
+            "2": { "damageMultiplier": 2.8, "knockback": 130, "mpCost": 18, "cooldown": 1.5 },
+            "3": { "damageMultiplier": 3.8, "knockback": 160, "mpCost": 20, "cooldown": 1.5 }
+          }
+        },
+        {
+          "id": "b_tremor",
+          "jpName": "地鳴り",
+          "enName": "Tremor",
+          "icon": "🌍",
+          "branch": 0,
+          "branchName": "野蛮",
+          "prereq": "b_savage_strike",
+          "baseMP": 25,
+          "baseCooldown": 4.0,
+          "description": "地面を激しく揺らし、周囲の敵をスタンさせる。",
+          "effect": "tremor",
+          "scalingStats": ["str", "vit"],
+          "levels": {
+            "1": { "damageMultiplier": 1.5, "stunDuration": 2.0, "radius": 120, "mpCost": 25, "cooldown": 4.0 },
+            "2": { "damageMultiplier": 2.0, "stunDuration": 2.5, "radius": 140, "mpCost": 30, "cooldown": 4.0 },
+            "3": { "damageMultiplier": 2.8, "stunDuration": 3.0, "radius": 160, "mpCost": 35, "cooldown": 4.0 }
+          }
+        },
+        {
+          "id": "b_execute",
+          "jpName": "処刑",
+          "enName": "Execute",
+          "icon": "⚔",
+          "branch": 0,
+          "branchName": "野蛮",
+          "prereq": "b_tremor",
+          "baseMP": 35,
+          "baseCooldown": 6.0,
+          "description": "敵のHP低下時に威力が上昇する終結の一撃。",
+          "effect": "execute",
+          "scalingStats": ["str"],
+          "levels": {
+            "1": { "baseDamage": 2.0, "hpThreshold": 0.5, "executeBonusMult": 2.0, "mpCost": 35, "cooldown": 6.0 },
+            "2": { "baseDamage": 2.8, "hpThreshold": 0.6, "executeBonusMult": 2.5, "mpCost": 40, "cooldown": 6.0 },
+            "3": { "baseDamage": 3.8, "hpThreshold": 0.7, "executeBonusMult": 3.0, "mpCost": 45, "cooldown": 6.0 }
+          }
+        },
+        {
+          "id": "b_rage",
+          "jpName": "激怒",
+          "enName": "Rage",
+          "icon": "😡",
+          "branch": 1,
+          "branchName": "激怒",
+          "prereq": null,
+          "baseMP": 20,
+          "baseCooldown": 3.0,
+          "description": "激怒して攻撃速度と攻撃力が上昇する。効果は連続で使うと強化される。",
+          "effect": "rage_stack",
+          "scalingStats": ["str"],
+          "levels": {
+            "1": { "attackSpeedBuff": 1.3, "damageMultiplier": 1.2, "stackMultiplier": 1.1, "mpCost": 20, "cooldown": 3.0 },
+            "2": { "attackSpeedBuff": 1.5, "damageMultiplier": 1.3, "stackMultiplier": 1.15, "mpCost": 25, "cooldown": 3.0 },
+            "3": { "attackSpeedBuff": 1.8, "damageMultiplier": 1.5, "stackMultiplier": 1.2, "mpCost": 30, "cooldown": 3.0 }
+          }
+        },
+        {
+          "id": "b_onslaught",
+          "jpName": "猛進",
+          "enName": "Onslaught",
+          "icon": "🏃",
+          "branch": 1,
+          "branchName": "激怒",
+          "prereq": "b_rage",
+          "baseMP": 30,
+          "baseCooldown": 5.0,
+          "description": "高速で敵に突進し、通過した敵にダメージを与える。",
+          "effect": "onslaught",
+          "scalingStats": ["str", "dex"],
+          "levels": {
+            "1": { "damageMultiplier": 2.0, "range": 300, "mpCost": 30, "cooldown": 5.0 },
+            "2": { "damageMultiplier": 2.8, "range": 350, "mpCost": 35, "cooldown": 5.0 },
+            "3": { "damageMultiplier": 3.8, "range": 400, "mpCost": 40, "cooldown": 5.0 }
+          }
+        },
+        {
+          "id": "b_cleave",
+          "jpName": "薙ぎ払い",
+          "enName": "Cleave",
+          "icon": "🌪",
+          "branch": 2,
+          "branchName": "斬撃",
+          "prereq": null,
+          "baseMP": 22,
+          "baseCooldown": 2.5,
+          "description": "巨大な刃で敵を切り裂く。複数の敵に命中する。",
+          "effect": "cleave",
+          "scalingStats": ["str"],
+          "levels": {
+            "1": { "damageMultiplier": 1.8, "range": 140, "enemyCount": 3, "mpCost": 22, "cooldown": 2.5 },
+            "2": { "damageMultiplier": 2.3, "range": 160, "enemyCount": 4, "mpCost": 26, "cooldown": 2.5 },
+            "3": { "damageMultiplier": 3.0, "range": 180, "enemyCount": 5, "mpCost": 30, "cooldown": 2.5 }
+          }
+        },
+        {
+          "id": "b_whirlwind_slash",
+          "jpName": "旋風大斬",
+          "enName": "Whirlwind Slash",
+          "icon": "💫",
+          "branch": 2,
+          "branchName": "斬撃",
+          "prereq": "b_cleave",
+          "baseMP": 40,
+          "baseCooldown": 6.0,
+          "description": "回転斬りで周囲全体に攻撃。ダメージが蓄積される。",
+          "effect": "whirlwind_slash",
+          "scalingStats": ["str", "dex"],
+          "levels": {
+            "1": { "baseDamage": 1.2, "damagePerHit": 0.3, "duration": 3, "radius": 110, "mpCost": 40, "cooldown": 6.0 },
+            "2": { "baseDamage": 1.6, "damagePerHit": 0.4, "duration": 3.5, "radius": 130, "mpCost": 45, "cooldown": 6.0 },
+            "3": { "baseDamage": 2.2, "damagePerHit": 0.5, "duration": 4, "radius": 150, "mpCost": 50, "cooldown": 6.0 }
+          }
+        },
+        {
+          "id": "b_bloodlust",
+          "jpName": "嗜血",
+          "enName": "Bloodlust",
+          "icon": "🩸",
+          "branch": 2,
+          "branchName": "斬撃",
+          "prereq": "b_cleave",
+          "baseMP": 28,
+          "baseCooldown": 8.0,
+          "description": "敵を倒すたびに攻撃力と移動速度が上昇する。",
+          "effect": "bloodlust",
+          "scalingStats": ["str", "dex"],
+          "levels": {
+            "1": { "damagePerKill": 0.15, "speedPerKill": 0.1, "maxStacks": 5, "mpCost": 28, "cooldown": 8.0 },
+            "2": { "damagePerKill": 0.2, "speedPerKill": 0.15, "maxStacks": 7, "mpCost": 32, "cooldown": 8.0 },
+            "3": { "damagePerKill": 0.3, "speedPerKill": 0.2, "maxStacks": 10, "mpCost": 35, "cooldown": 8.0 }
+          }
+        }
+      ]
+    },
+
+    "assassin": {
+      "tier": 1,
+      "jpName": "暗殺者",
+      "enName": "ASSASSIN",
+      "icon": "🗡",
+      "sprite": { "sheet": "rogues", "col": 2, "row": 0 },
+      "spriteAlt": "ranger",
+      "baseClass": "rogue",
+      "promoteLevel": 10,
+      "baseStats": {
+        "str": 12,
+        "dex": 26,
+        "vit": 16,
+        "int": 10
+      },
+      "loreDesc": "影の刃。暗黙のうちに敵を排除する。クリティカルダメージと素早さに特化。",
+      "skillBranches": ["刃の舞", "毒", "暗殺術"],
+      "skills": [
+        {
+          "id": "a_backstab",
+          "jpName": "バックスタブ",
+          "enName": "Backstab",
+          "icon": "🗡",
+          "branch": 0,
+          "branchName": "刃の舞",
+          "prereq": null,
+          "baseMP": 15,
+          "baseCooldown": 2.0,
+          "description": "背後から急所を攻撃。クリティカル率が非常に高い。",
+          "effect": "backstab",
+          "scalingStats": ["dex", "str"],
+          "levels": {
+            "1": { "damageMultiplier": 2.0, "critChance": 80, "critMultiplier": 2.5, "mpCost": 15, "cooldown": 2.0 },
+            "2": { "damageMultiplier": 2.6, "critChance": 90, "critMultiplier": 3.0, "mpCost": 18, "cooldown": 2.0 },
+            "3": { "damageMultiplier": 3.5, "critChance": 100, "critMultiplier": 3.5, "mpCost": 20, "cooldown": 2.0 }
+          }
+        },
+        {
+          "id": "a_blade_dance",
+          "jpName": "刃の舞",
+          "enName": "Blade Dance",
+          "icon": "💃",
+          "branch": 0,
+          "branchName": "刃の舞",
+          "prereq": "a_backstab",
+          "baseMP": 25,
+          "baseCooldown": 3.0,
+          "description": "華麗に敵の周りを移動し、複数の攻撃を加える。",
+          "effect": "blade_dance",
+          "scalingStats": ["dex"],
+          "levels": {
+            "1": { "damageMultiplier": 1.3, "hitCount": 3, "mpCost": 25, "cooldown": 3.0 },
+            "2": { "damageMultiplier": 1.7, "hitCount": 5, "mpCost": 30, "cooldown": 3.0 },
+            "3": { "damageMultiplier": 2.2, "hitCount": 7, "mpCost": 35, "cooldown": 3.0 }
+          }
+        },
+        {
+          "id": "a_death_mark",
+          "jpName": "死の烙印",
+          "enName": "Death Mark",
+          "icon": "💀",
+          "branch": 0,
+          "branchName": "刃の舞",
+          "prereq": "a_blade_dance",
+          "baseMP": 35,
+          "baseCooldown": 6.0,
+          "description": "敵に印を付ける。次の攻撃で印を持つ敵に大ダメージを与える。",
+          "effect": "death_mark",
+          "scalingStats": ["dex", "int"],
+          "levels": {
+            "1": { "markedDamageMultiplier": 3.0, "markDuration": 8, "mpCost": 35, "cooldown": 6.0 },
+            "2": { "markedDamageMultiplier": 4.0, "markDuration": 10, "mpCost": 40, "cooldown": 6.0 },
+            "3": { "markedDamageMultiplier": 5.5, "markDuration": 12, "mpCost": 45, "cooldown": 6.0 }
+          }
+        },
+        {
+          "id": "a_poison_strike",
+          "jpName": "毒刃",
+          "enName": "Poison Strike",
+          "icon": "☠",
+          "branch": 1,
+          "branchName": "毒",
+          "prereq": null,
+          "baseMP": 18,
+          "baseCooldown": 2.5,
+          "description": "猛毒を纏った刃で攻撃。敵は時間をかけてダメージを受ける。",
+          "effect": "poison_strike",
+          "scalingStats": ["dex", "int"],
+          "levels": {
+            "1": { "damageMultiplier": 1.4, "poisonDamage": 10, "poisonDuration": 8, "mpCost": 18, "cooldown": 2.5 },
+            "2": { "damageMultiplier": 1.8, "poisonDamage": 15, "poisonDuration": 10, "mpCost": 22, "cooldown": 2.5 },
+            "3": { "damageMultiplier": 2.5, "poisonDamage": 20, "poisonDuration": 12, "mpCost": 25, "cooldown": 2.5 }
+          }
+        },
+        {
+          "id": "a_poison_cloud",
+          "jpName": "毒霧",
+          "enName": "Poison Cloud",
+          "icon": "💨",
+          "branch": 1,
+          "branchName": "毒",
+          "prereq": "a_poison_strike",
+          "baseMP": 30,
+          "baseCooldown": 5.0,
+          "description": "毒の霧を展開。領域内の敵に継続ダメージを与える。",
+          "effect": "poison_cloud",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "poisonDamage": 8, "radius": 100, "duration": 6, "mpCost": 30, "cooldown": 5.0 },
+            "2": { "poisonDamage": 12, "radius": 120, "duration": 8, "mpCost": 35, "cooldown": 5.0 },
+            "3": { "poisonDamage": 16, "radius": 140, "duration": 10, "mpCost": 40, "cooldown": 5.0 }
+          }
+        },
+        {
+          "id": "a_shadow_clone",
+          "jpName": "影分身",
+          "enName": "Shadow Clone",
+          "icon": "👤",
+          "branch": 2,
+          "branchName": "暗殺術",
+          "prereq": null,
+          "baseMP": 32,
+          "baseCooldown": 8.0,
+          "description": "影分身を作成。分身が敵を攻撃する。",
+          "effect": "shadow_clone",
+          "scalingStats": ["dex", "int"],
+          "levels": {
+            "1": { "cloneCount": 1, "cloneDamageRatio": 0.6, "duration": 8, "mpCost": 32, "cooldown": 8.0 },
+            "2": { "cloneCount": 2, "cloneDamageRatio": 0.7, "duration": 10, "mpCost": 38, "cooldown": 8.0 },
+            "3": { "cloneCount": 3, "cloneDamageRatio": 0.8, "duration": 12, "mpCost": 44, "cooldown": 8.0 }
+          }
+        },
+        {
+          "id": "a_evasion",
+          "jpName": "身軽さ",
+          "enName": "Evasion",
+          "icon": "🌪",
+          "branch": 2,
+          "branchName": "暗殺術",
+          "prereq": "a_shadow_clone",
+          "baseMP": 20,
+          "baseCooldown": 4.0,
+          "description": "敵の攻撃をかすめ取る。回避率が上昇。",
+          "effect": "evasion",
+          "scalingStats": ["dex"],
+          "levels": {
+            "1": { "dodgeChance": 50, "movementSpeed": 1.4, "duration": 4, "mpCost": 20, "cooldown": 4.0 },
+            "2": { "dodgeChance": 65, "movementSpeed": 1.6, "duration": 5, "mpCost": 25, "cooldown": 4.0 },
+            "3": { "dodgeChance": 80, "movementSpeed": 1.8, "duration": 6, "mpCost": 30, "cooldown": 4.0 }
+          }
+        },
+        {
+          "id": "a_deathblow",
+          "jpName": "必殺",
+          "enName": "Deathblow",
+          "icon": "⚡",
+          "branch": 2,
+          "branchName": "暗殺術",
+          "prereq": "a_shadow_clone",
+          "baseMP": 40,
+          "baseCooldown": 10.0,
+          "description": "敵の隙をついた必殺。HPが低い敵ほど威力が上昇。",
+          "effect": "deathblow",
+          "scalingStats": ["dex", "str"],
+          "levels": {
+            "1": { "baseDamage": 3.0, "hpThreshold": 0.5, "bonusMultiplier": 1.5, "mpCost": 40, "cooldown": 10.0 },
+            "2": { "baseDamage": 4.0, "hpThreshold": 0.6, "bonusMultiplier": 2.0, "mpCost": 45, "cooldown": 10.0 },
+            "3": { "baseDamage": 5.5, "hpThreshold": 0.7, "bonusMultiplier": 2.5, "mpCost": 50, "cooldown": 10.0 }
+          }
+        }
+      ]
+    },
+
+    "ranger": {
+      "tier": 1,
+      "jpName": "狩人",
+      "enName": "RANGER",
+      "icon": "🏹",
+      "sprite": { "sheet": "rogues", "col": 2, "row": 0 },
+      "spriteAlt": "ranger",
+      "baseClass": "rogue",
+      "promoteLevel": 10,
+      "baseStats": {
+        "str": 12,
+        "dex": 23,
+        "vit": 17,
+        "int": 13
+      },
+      "loreDesc": "狩人。遠距離からの正確な射撃で敵を壊滅させる。自然との調和を重視。",
+      "skillBranches": ["猟弓", "野生動物", "陥阱"],
+      "skills": [
+        {
+          "id": "rg_piercing_shot",
+          "jpName": "貫通矢",
+          "enName": "Piercing Shot",
+          "icon": "➡",
+          "branch": 0,
+          "branchName": "猟弓",
+          "prereq": null,
+          "baseMP": 12,
+          "baseCooldown": 1.2,
+          "description": "敵を貫通する矢を放つ。複数の敵に命中する。",
+          "effect": "piercing_shot",
+          "scalingStats": ["dex"],
+          "levels": {
+            "1": { "damageMultiplier": 1.4, "pierceCount": 3, "mpCost": 12, "cooldown": 1.2 },
+            "2": { "damageMultiplier": 1.9, "pierceCount": 4, "mpCost": 14, "cooldown": 1.2 },
+            "3": { "damageMultiplier": 2.6, "pierceCount": 5, "mpCost": 16, "cooldown": 1.2 }
+          }
+        },
+        {
+          "id": "rg_explosive_arrow",
+          "jpName": "爆発矢",
+          "enName": "Explosive Arrow",
+          "icon": "💥",
+          "branch": 0,
+          "branchName": "猟弓",
+          "prereq": "rg_piercing_shot",
+          "baseMP": 28,
+          "baseCooldown": 4.0,
+          "description": "爆発する矢を放つ。着弾地点で爆発。",
+          "effect": "explosive_arrow",
+          "scalingStats": ["dex", "int"],
+          "levels": {
+            "1": { "damageMultiplier": 2.0, "explosionRadius": 100, "mpCost": 28, "cooldown": 4.0 },
+            "2": { "damageMultiplier": 2.7, "explosionRadius": 120, "mpCost": 32, "cooldown": 4.0 },
+            "3": { "damageMultiplier": 3.6, "explosionRadius": 140, "mpCost": 36, "cooldown": 4.0 }
+          }
+        },
+        {
+          "id": "rg_rapid_fire",
+          "jpName": "速射",
+          "enName": "Rapid Fire",
+          "icon": "🔥",
+          "branch": 0,
+          "branchName": "猟弓",
+          "prereq": "rg_piercing_shot",
+          "baseMP": 35,
+          "baseCooldown": 5.0,
+          "description": "矢を連続で放つ。時間内に複数回発射。",
+          "effect": "rapid_fire",
+          "scalingStats": ["dex"],
+          "levels": {
+            "1": { "damageMultiplier": 1.0, "shotCount": 5, "duration": 1.5, "mpCost": 35, "cooldown": 5.0 },
+            "2": { "damageMultiplier": 1.3, "shotCount": 7, "duration": 2.0, "mpCost": 40, "cooldown": 5.0 },
+            "3": { "damageMultiplier": 1.6, "shotCount": 10, "duration": 2.5, "mpCost": 45, "cooldown": 5.0 }
+          }
+        },
+        {
+          "id": "rg_animal_companion",
+          "jpName": "動物の相棒",
+          "enName": "Animal Companion",
+          "icon": "🐺",
+          "branch": 1,
+          "branchName": "野生動物",
+          "prereq": null,
+          "baseMP": 30,
+          "baseCooldown": 10.0,
+          "description": "動物の相棒を召喚。敵を攻撃する。",
+          "effect": "animal_companion",
+          "scalingStats": ["dex", "vit"],
+          "levels": {
+            "1": { "companionType": "wolf", "duration": 15, "damageRatio": 0.7, "mpCost": 30, "cooldown": 10.0 },
+            "2": { "companionType": "bear", "duration": 20, "damageRatio": 0.85, "mpCost": 35, "cooldown": 10.0 },
+            "3": { "companionType": "tiger", "duration": 25, "damageRatio": 1.0, "mpCost": 40, "cooldown": 10.0 }
+          }
+        },
+        {
+          "id": "rg_pack_hunting",
+          "jpName": "狩りの群れ",
+          "enName": "Pack Hunting",
+          "icon": "🐾",
+          "branch": 1,
+          "branchName": "野生動物",
+          "prereq": "rg_animal_companion",
+          "baseMP": 40,
+          "baseCooldown": 8.0,
+          "description": "複数の動物を召喚。連携してダメージを与える。",
+          "effect": "pack_hunting",
+          "scalingStats": ["dex", "vit"],
+          "levels": {
+            "1": { "animalCount": 2, "damageMultiplier": 1.5, "duration": 12, "mpCost": 40, "cooldown": 8.0 },
+            "2": { "animalCount": 3, "damageMultiplier": 2.0, "duration": 14, "mpCost": 45, "cooldown": 8.0 },
+            "3": { "animalCount": 4, "damageMultiplier": 2.5, "duration": 16, "mpCost": 50, "cooldown": 8.0 }
+          }
+        },
+        {
+          "id": "rg_bear_trap",
+          "jpName": "熊罠",
+          "enName": "Bear Trap",
+          "icon": "🪤",
+          "branch": 2,
+          "branchName": "陥阱",
+          "prereq": null,
+          "baseMP": 18,
+          "baseCooldown": 3.5,
+          "description": "敵を捕らえる罠。敵を一定時間動けなくする。",
+          "effect": "bear_trap",
+          "scalingStats": ["dex"],
+          "levels": {
+            "1": { "freezeDuration": 3, "damageMultiplier": 1.5, "mpCost": 18, "cooldown": 3.5 },
+            "2": { "freezeDuration": 4, "damageMultiplier": 2.0, "mpCost": 22, "cooldown": 3.5 },
+            "3": { "freezeDuration": 5, "damageMultiplier": 2.8, "mpCost": 25, "cooldown": 3.5 }
+          }
+        },
+        {
+          "id": "rg_caltrops",
+          "jpName": "撒き菱",
+          "enName": "Caltrops",
+          "icon": "⋗",
+          "branch": 2,
+          "branchName": "陥阱",
+          "prereq": "rg_bear_trap",
+          "baseMP": 20,
+          "baseCooldown": 4.0,
+          "description": "菱形の罠を放置。敵の移動速度を低下させ、継続ダメージを与える。",
+          "effect": "caltrops",
+          "scalingStats": ["dex"],
+          "levels": {
+            "1": { "slowAmount": 0.4, "damagePerSec": 5, "radius": 80, "mpCost": 20, "cooldown": 4.0 },
+            "2": { "slowAmount": 0.5, "damagePerSec": 8, "radius": 100, "mpCost": 25, "cooldown": 4.0 },
+            "3": { "slowAmount": 0.6, "damagePerSec": 12, "radius": 120, "mpCost": 30, "cooldown": 4.0 }
+          }
+        },
+        {
+          "id": "rg_snipe",
+          "jpName": "狙撃",
+          "enName": "Snipe",
+          "icon": "🎯",
+          "branch": 2,
+          "branchName": "陥阱",
+          "prereq": "rg_bear_trap",
+          "baseMP": 32,
+          "baseCooldown": 6.0,
+          "description": "狙いを定めた一撃。ダメージが高い。",
+          "effect": "snipe",
+          "scalingStats": ["dex", "int"],
+          "levels": {
+            "1": { "damageMultiplier": 3.5, "castTime": 0.5, "mpCost": 32, "cooldown": 6.0 },
+            "2": { "damageMultiplier": 4.5, "castTime": 0.4, "mpCost": 37, "cooldown": 6.0 },
+            "3": { "damageMultiplier": 6.0, "castTime": 0.3, "mpCost": 42, "cooldown": 6.0 }
+          }
+        }
+      ]
+    },
+
+    "pyromancer": {
+      "tier": 1,
+      "jpName": "焔魔",
+      "enName": "PYROMANCER",
+      "icon": "🔥",
+      "sprite": { "sheet": "rogues", "col": 0, "row": 4 },
+      "spriteAlt": "wizardF",
+      "baseClass": "sorcerer",
+      "promoteLevel": 10,
+      "baseStats": {
+        "str": 6,
+        "dex": 12,
+        "vit": 12,
+        "int": 29
+      },
+      "loreDesc": "炎の魔導士。火炎系の魔法で敵を焼き尽くす。DoT系スキルに優れる。",
+      "skillBranches": ["火炎", "燃焼", "爆発"],
+      "skills": [
+        {
+          "id": "p_fireball",
+          "jpName": "ファイアボール",
+          "enName": "Fireball",
+          "icon": "🔥",
+          "branch": 0,
+          "branchName": "火炎",
+          "prereq": null,
+          "baseMP": 14,
+          "baseCooldown": 1.0,
+          "description": "巨大な火球を発射。着弾地点で爆発。",
+          "effect": "fireball",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "damageMultiplier": 1.6, "explosionRadius": 90, "mpCost": 14, "cooldown": 1.0 },
+            "2": { "damageMultiplier": 2.2, "explosionRadius": 110, "mpCost": 16, "cooldown": 1.0 },
+            "3": { "damageMultiplier": 3.0, "explosionRadius": 130, "mpCost": 18, "cooldown": 1.0 }
+          }
+        },
+        {
+          "id": "p_inferno",
+          "jpName": "インフェルノ",
+          "enName": "Inferno",
+          "icon": "🌋",
+          "branch": 0,
+          "branchName": "火炎",
+          "prereq": "p_fireball",
+          "baseMP": 38,
+          "baseCooldown": 6.0,
+          "description": "大規模な火炎を展開。継続ダメージを与える。",
+          "effect": "inferno",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "damageMultiplier": 1.5, "burnDamage": 10, "burnDuration": 8, "radius": 120, "mpCost": 38, "cooldown": 6.0 },
+            "2": { "damageMultiplier": 2.0, "burnDamage": 15, "burnDuration": 10, "radius": 140, "mpCost": 43, "cooldown": 6.0 },
+            "3": { "damageMultiplier": 2.8, "burnDamage": 20, "burnDuration": 12, "radius": 160, "mpCost": 48, "cooldown": 6.0 }
+          }
+        },
+        {
+          "id": "p_flame_burst",
+          "jpName": "炎爆発",
+          "enName": "Flame Burst",
+          "icon": "💥",
+          "branch": 0,
+          "branchName": "火炎",
+          "prereq": "p_inferno",
+          "baseMP": 32,
+          "baseCooldown": 4.0,
+          "description": "燃焼中の敵に追加ダメージを与える。",
+          "effect": "flame_burst",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "baseDamage": 2.0, "burnBonus": 1.5, "mpCost": 32, "cooldown": 4.0 },
+            "2": { "baseDamage": 2.8, "burnBonus": 2.0, "mpCost": 36, "cooldown": 4.0 },
+            "3": { "baseDamage": 3.8, "burnBonus": 2.5, "mpCost": 40, "cooldown": 4.0 }
+          }
+        },
+        {
+          "id": "p_combustion",
+          "jpName": "自発燃焼",
+          "enName": "Combustion",
+          "icon": "⚗",
+          "branch": 1,
+          "branchName": "燃焼",
+          "prereq": null,
+          "baseMP": 25,
+          "baseCooldown": 5.0,
+          "description": "敵に燃焼を付与。時間でダメージが増加。",
+          "effect": "combustion",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "baseBurnDamage": 5, "damageRampup": 1.2, "duration": 10, "mpCost": 25, "cooldown": 5.0 },
+            "2": { "baseBurnDamage": 8, "damageRampup": 1.4, "duration": 12, "mpCost": 30, "cooldown": 5.0 },
+            "3": { "baseBurnDamage": 12, "damageRampup": 1.6, "duration": 14, "mpCost": 35, "cooldown": 5.0 }
+          }
+        },
+        {
+          "id": "p_heat_wave",
+          "jpName": "熱波",
+          "enName": "Heat Wave",
+          "icon": "〰",
+          "branch": 1,
+          "branchName": "燃焼",
+          "prereq": "p_combustion",
+          "baseMP": 35,
+          "baseCooldown": 6.0,
+          "description": "熱波を放出。敵を押し出しながらダメージを与える。",
+          "effect": "heat_wave",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "damageMultiplier": 1.8, "pushDistance": 100, "mpCost": 35, "cooldown": 6.0 },
+            "2": { "damageMultiplier": 2.4, "pushDistance": 130, "mpCost": 40, "cooldown": 6.0 },
+            "3": { "damageMultiplier": 3.2, "pushDistance": 160, "mpCost": 45, "cooldown": 6.0 }
+          }
+        },
+        {
+          "id": "p_fire_nova",
+          "jpName": "炎の放射",
+          "enName": "Fire Nova",
+          "icon": "☀",
+          "branch": 2,
+          "branchName": "爆発",
+          "prereq": null,
+          "baseMP": 28,
+          "baseCooldown": 4.0,
+          "description": "周囲に炎を放出。複数の敵にダメージ。",
+          "effect": "fire_nova",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "damageMultiplier": 1.4, "radius": 110, "mpCost": 28, "cooldown": 4.0 },
+            "2": { "damageMultiplier": 1.9, "radius": 130, "mpCost": 32, "cooldown": 4.0 },
+            "3": { "damageMultiplier": 2.6, "radius": 150, "mpCost": 36, "cooldown": 4.0 }
+          }
+        },
+        {
+          "id": "p_immolate",
+          "jpName": "火焙",
+          "enName": "Immolate",
+          "icon": "🔥",
+          "branch": 2,
+          "branchName": "爆発",
+          "prereq": "p_fire_nova",
+          "baseMP": 40,
+          "baseCooldown": 7.0,
+          "description": "自身の周囲に火を纏う。敵との接触でダメージ。",
+          "effect": "immolate",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "burnDamagePerSec": 10, "touchDamage": 2.0, "radius": 100, "duration": 8, "mpCost": 40, "cooldown": 7.0 },
+            "2": { "burnDamagePerSec": 15, "touchDamage": 2.8, "radius": 120, "duration": 10, "mpCost": 45, "cooldown": 7.0 },
+            "3": { "burnDamagePerSec": 20, "touchDamage": 3.8, "radius": 140, "duration": 12, "mpCost": 50, "cooldown": 7.0 }
+          }
+        },
+        {
+          "id": "p_cataclysm",
+          "jpName": "大天変",
+          "enName": "Cataclysm",
+          "icon": "🌪",
+          "branch": 2,
+          "branchName": "爆発",
+          "prereq": "p_fire_nova",
+          "baseMP": 50,
+          "baseCooldown": 10.0,
+          "description": "地上に大規模な爆発を引き起こす。超高ダメージ。",
+          "effect": "cataclysm",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "damageMultiplier": 4.0, "radius": 140, "mpCost": 50, "cooldown": 10.0 },
+            "2": { "damageMultiplier": 5.5, "radius": 160, "mpCost": 55, "cooldown": 10.0 },
+            "3": { "damageMultiplier": 7.0, "radius": 180, "mpCost": 60, "cooldown": 10.0 }
+          }
+        }
+      ]
+    },
+
+    "frostbolt": {
+      "tier": 1,
+      "jpName": "氷魔",
+      "enName": "FROSTBOLT",
+      "icon": "❄",
+      "sprite": { "sheet": "rogues", "col": 1, "row": 4 },
+      "spriteAlt": "wizardM",
+      "baseClass": "sorcerer",
+      "promoteLevel": 10,
+      "baseStats": {
+        "str": 5,
+        "dex": 11,
+        "vit": 11,
+        "int": 28
+      },
+      "loreDesc": "氷の魔導士。凍結系の魔法で敵を封じ込める。制御と速度低下スキルに優れる。",
+      "skillBranches": ["凍結", "冷凍", "絶対零度"],
+      "skills": [
+        {
+          "id": "f_ice_bolt",
+          "jpName": "アイスボルト",
+          "enName": "Ice Bolt",
+          "icon": "❄",
+          "branch": 0,
+          "branchName": "凍結",
+          "prereq": null,
+          "baseMP": 12,
+          "baseCooldown": 0.8,
+          "description": "氷の矢を放つ。敵を徐々に凍結させる。",
+          "effect": "ice_bolt",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "damageMultiplier": 1.5, "slowAmount": 0.3, "freezeChance": 15, "mpCost": 12, "cooldown": 0.8 },
+            "2": { "damageMultiplier": 2.0, "slowAmount": 0.4, "freezeChance": 25, "mpCost": 14, "cooldown": 0.8 },
+            "3": { "damageMultiplier": 2.8, "slowAmount": 0.5, "freezeChance": 35, "mpCost": 16, "cooldown": 0.8 }
+          }
+        },
+        {
+          "id": "f_blizzard",
+          "jpName": "吹雪",
+          "enName": "Blizzard",
+          "icon": "❄❄❄",
+          "branch": 0,
+          "branchName": "凍結",
+          "prereq": "f_ice_bolt",
+          "baseMP": 40,
+          "baseCooldown": 7.0,
+          "description": "大規模な吹雪を起こす。複数の敵に継続ダメージ。",
+          "effect": "blizzard",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "damageMultiplier": 1.2, "slowAmount": 0.6, "duration": 8, "radius": 120, "mpCost": 40, "cooldown": 7.0 },
+            "2": { "damageMultiplier": 1.7, "slowAmount": 0.7, "duration": 10, "radius": 140, "mpCost": 45, "cooldown": 7.0 },
+            "3": { "damageMultiplier": 2.4, "slowAmount": 0.8, "duration": 12, "radius": 160, "mpCost": 50, "cooldown": 7.0 }
+          }
+        },
+        {
+          "id": "f_glacial_spike",
+          "jpName": "氷槍",
+          "enName": "Glacial Spike",
+          "icon": "⛸",
+          "branch": 0,
+          "branchName": "凍結",
+          "prereq": "f_blizzard",
+          "baseMP": 35,
+          "baseCooldown": 4.0,
+          "description": "氷の槍を放つ。凍結中の敵に大ダメージ。",
+          "effect": "glacial_spike",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "baseDamage": 1.8, "frozenBonus": 2.5, "mpCost": 35, "cooldown": 4.0 },
+            "2": { "baseDamage": 2.5, "frozenBonus": 3.5, "mpCost": 40, "cooldown": 4.0 },
+            "3": { "baseDamage": 3.5, "frozenBonus": 4.5, "mpCost": 45, "cooldown": 4.0 }
+          }
+        },
+        {
+          "id": "f_deep_freeze",
+          "jpName": "深冷",
+          "enName": "Deep Freeze",
+          "icon": "🧊",
+          "branch": 1,
+          "branchName": "冷凍",
+          "prereq": null,
+          "baseMP": 30,
+          "baseCooldown": 6.0,
+          "description": "敵を凍結させる。凍結中は移動不可。",
+          "effect": "deep_freeze",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "freezeDuration": 3, "damageMultiplier": 0.8, "mpCost": 30, "cooldown": 6.0 },
+            "2": { "freezeDuration": 4, "damageMultiplier": 1.2, "mpCost": 35, "cooldown": 6.0 },
+            "3": { "freezeDuration": 5, "damageMultiplier": 1.8, "mpCost": 40, "cooldown": 6.0 }
+          }
+        },
+        {
+          "id": "f_ice_prison",
+          "jpName": "氷牢",
+          "enName": "Ice Prison",
+          "icon": "🔗",
+          "branch": 1,
+          "branchName": "冷凍",
+          "prereq": "f_deep_freeze",
+          "baseMP": 38,
+          "baseCooldown": 8.0,
+          "description": "敵を氷で包む。複数の敵に効果。",
+          "effect": "ice_prison",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "freezeDuration": 4, "imprisonRadius": 100, "enemyCount": 2, "mpCost": 38, "cooldown": 8.0 },
+            "2": { "freezeDuration": 5, "imprisonRadius": 120, "enemyCount": 3, "mpCost": 43, "cooldown": 8.0 },
+            "3": { "freezeDuration": 6, "imprisonRadius": 140, "enemyCount": 4, "mpCost": 48, "cooldown": 8.0 }
+          }
+        },
+        {
+          "id": "f_ice_armor",
+          "jpName": "氷の鎧",
+          "enName": "Ice Armor",
+          "icon": "🧊",
+          "branch": 2,
+          "branchName": "絶対零度",
+          "prereq": null,
+          "baseMP": 28,
+          "baseCooldown": 5.0,
+          "description": "氷の鎧を纏う。敵への反撃で凍結。",
+          "effect": "ice_armor",
+          "scalingStats": ["int", "vit"],
+          "levels": {
+            "1": { "damageReduction": 0.3, "counterFreeze": 1.5, "duration": 10, "mpCost": 28, "cooldown": 5.0 },
+            "2": { "damageReduction": 0.4, "counterFreeze": 2.0, "duration": 12, "mpCost": 33, "cooldown": 5.0 },
+            "3": { "damageReduction": 0.5, "counterFreeze": 2.5, "duration": 14, "mpCost": 38, "cooldown": 5.0 }
+          }
+        },
+        {
+          "id": "f_absolute_zero",
+          "jpName": "絶対零度",
+          "enName": "Absolute Zero",
+          "icon": "❄⛸",
+          "branch": 2,
+          "branchName": "絶対零度",
+          "prereq": "f_ice_armor",
+          "baseMP": 50,
+          "baseCooldown": 12.0,
+          "description": "周囲の時間を停止させる。敵の行動を禁止。",
+          "effect": "absolute_zero",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "freezeDuration": 3, "radius": 120, "damageMultiplier": 1.5, "mpCost": 50, "cooldown": 12.0 },
+            "2": { "freezeDuration": 4, "radius": 140, "damageMultiplier": 2.0, "mpCost": 55, "cooldown": 12.0 },
+            "3": { "freezeDuration": 5, "radius": 160, "damageMultiplier": 2.8, "mpCost": 60, "cooldown": 12.0 }
+          }
+        },
+        {
+          "id": "f_frost_shatter",
+          "jpName": "氷砕",
+          "enName": "Frost Shatter",
+          "icon": "💥",
+          "branch": 2,
+          "branchName": "絶対零度",
+          "prereq": "f_ice_armor",
+          "baseMP": 32,
+          "baseCooldown": 6.0,
+          "description": "凍結中の敵を砕く。大ダメージ。",
+          "effect": "frost_shatter",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "damageMultiplier": 3.0, "frozenRequirement": true, "mpCost": 32, "cooldown": 6.0 },
+            "2": { "damageMultiplier": 4.0, "frozenRequirement": true, "mpCost": 37, "cooldown": 6.0 },
+            "3": { "damageMultiplier": 5.5, "frozenRequirement": true, "mpCost": 42, "cooldown": 6.0 }
+          }
+        }
+      ]
+    },
+
+    "arcanist": {
+      "tier": 1,
+      "jpName": "秘術師",
+      "enName": "ARCANIST",
+      "icon": "✨",
+      "sprite": { "sheet": "rogues", "col": 3, "row": 2 },
+      "spriteAlt": "templar",
+      "baseClass": "sorcerer",
+      "promoteLevel": 10,
+      "baseStats": {
+        "str": 5,
+        "dex": 13,
+        "vit": 10,
+        "int": 27
+      },
+      "loreDesc": "秘術の達人。魔法の理を極め、空間を操る。制御と補助魔法に優れる。",
+      "skillBranches": ["空間操作", "魔法操作", "時間"],
+      "skills": [
+        {
+          "id": "ar_arcane_missile",
+          "jpName": "アルカナミサイル",
+          "enName": "Arcane Missile",
+          "icon": "✨",
+          "branch": 0,
+          "branchName": "空間操作",
+          "prereq": null,
+          "baseMP": 13,
+          "baseCooldown": 0.7,
+          "description": "魔力の矢を放つ。敵を貫通する。",
+          "effect": "arcane_missile",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "damageMultiplier": 1.7, "projectileCount": 1, "mpCost": 13, "cooldown": 0.7 },
+            "2": { "damageMultiplier": 2.3, "projectileCount": 2, "mpCost": 15, "cooldown": 0.7 },
+            "3": { "damageMultiplier": 3.2, "projectileCount": 3, "mpCost": 17, "cooldown": 0.7 }
+          }
+        },
+        {
+          "id": "ar_spell_echo",
+          "jpName": "呪文の残響",
+          "enName": "Spell Echo",
+          "icon": "🔁",
+          "branch": 0,
+          "branchName": "空間操作",
+          "prereq": "ar_arcane_missile",
+          "baseMP": 35,
+          "baseCooldown": 5.0,
+          "description": "同じ魔法を自動で二重実行。複雑な魔法は効果減。",
+          "effect": "spell_echo",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "echoChance": 40, "echoDamageRatio": 0.7, "cooldownReduction": 0.2, "mpCost": 35, "cooldown": 5.0 },
+            "2": { "echoChance": 50, "echoDamageRatio": 0.8, "cooldownReduction": 0.3, "mpCost": 40, "cooldown": 5.0 },
+            "3": { "echoChance": 60, "echoDamageRatio": 0.9, "cooldownReduction": 0.4, "mpCost": 45, "cooldown": 5.0 }
+          }
+        },
+        {
+          "id": "ar_arcane_burst",
+          "jpName": "アルカナバースト",
+          "enName": "Arcane Burst",
+          "icon": "💫",
+          "branch": 0,
+          "branchName": "空間操作",
+          "prereq": "ar_spell_echo",
+          "baseMP": 40,
+          "baseCooldown": 6.0,
+          "description": "魔力を解放する。範囲内の敵にダメージ。",
+          "effect": "arcane_burst",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "damageMultiplier": 2.0, "radius": 100, "mpCost": 40, "cooldown": 6.0 },
+            "2": { "damageMultiplier": 2.8, "radius": 120, "mpCost": 45, "cooldown": 6.0 },
+            "3": { "damageMultiplier": 3.8, "radius": 140, "mpCost": 50, "cooldown": 6.0 }
+          }
+        },
+        {
+          "id": "ar_mana_shield_adv",
+          "jpName": "マナバリア",
+          "enName": "Mana Barrier",
+          "icon": "🔷",
+          "branch": 1,
+          "branchName": "魔法操作",
+          "prereq": null,
+          "baseMP": 32,
+          "baseCooldown": 8.0,
+          "description": "マナでダメージを吸収。マナが高いほど防御力上昇。",
+          "effect": "mana_barrier",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "absorbRatio": 0.6, "manaScaling": 0.3, "duration": 8, "mpCost": 32, "cooldown": 8.0 },
+            "2": { "absorbRatio": 0.7, "manaScaling": 0.4, "duration": 10, "mpCost": 37, "cooldown": 8.0 },
+            "3": { "absorbRatio": 0.8, "manaScaling": 0.5, "duration": 12, "mpCost": 42, "cooldown": 8.0 }
+          }
+        },
+        {
+          "id": "ar_spell_steal",
+          "jpName": "魔法奪取",
+          "enName": "Spell Steal",
+          "icon": "🎯",
+          "branch": 1,
+          "branchName": "魔法操作",
+          "prereq": "ar_mana_shield_adv",
+          "baseMP": 25,
+          "baseCooldown": 4.0,
+          "description": "敵のバフを奪う。自分のマナを回復。",
+          "effect": "spell_steal",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "manaRestore": 15, "buffCount": 1, "mpCost": 25, "cooldown": 4.0 },
+            "2": { "manaRestore": 25, "buffCount": 2, "mpCost": 28, "cooldown": 4.0 },
+            "3": { "manaRestore": 35, "buffCount": 3, "mpCost": 30, "cooldown": 4.0 }
+          }
+        },
+        {
+          "id": "ar_haste",
+          "jpName": "加速",
+          "enName": "Haste",
+          "icon": "⚡",
+          "branch": 2,
+          "branchName": "時間",
+          "prereq": null,
+          "baseMP": 28,
+          "baseCooldown": 6.0,
+          "description": "攻撃速度と移動速度を上昇させる。",
+          "effect": "haste",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "attackSpeedBuff": 1.3, "movementSpeedBuff": 1.3, "duration": 8, "mpCost": 28, "cooldown": 6.0 },
+            "2": { "attackSpeedBuff": 1.5, "movementSpeedBuff": 1.5, "duration": 10, "mpCost": 32, "cooldown": 6.0 },
+            "3": { "attackSpeedBuff": 1.8, "movementSpeedBuff": 1.8, "duration": 12, "mpCost": 36, "cooldown": 6.0 }
+          }
+        },
+        {
+          "id": "ar_slow",
+          "jpName": "減速",
+          "enName": "Slow",
+          "icon": "🐌",
+          "branch": 2,
+          "branchName": "時間",
+          "prereq": "ar_haste",
+          "baseMP": 24,
+          "baseCooldown": 4.0,
+          "description": "敵の速度を低下させる。",
+          "effect": "slow",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "slowAmount": 0.4, "radius": 130, "duration": 6, "mpCost": 24, "cooldown": 4.0 },
+            "2": { "slowAmount": 0.5, "radius": 150, "duration": 8, "mpCost": 28, "cooldown": 4.0 },
+            "3": { "slowAmount": 0.6, "radius": 170, "duration": 10, "mpCost": 32, "cooldown": 4.0 }
+          }
+        },
+        {
+          "id": "ar_chronal_rift",
+          "jpName": "時間裂け目",
+          "enName": "Chronal Rift",
+          "icon": "⏰",
+          "branch": 2,
+          "branchName": "時間",
+          "prereq": "ar_haste",
+          "baseMP": 48,
+          "baseCooldown": 10.0,
+          "description": "時間を操る。敵を一定時間スローさせる。",
+          "effect": "chronal_rift",
+          "scalingStats": ["int"],
+          "levels": {
+            "1": { "slowAmount": 0.7, "radius": 120, "duration": 5, "mpCost": 48, "cooldown": 10.0 },
+            "2": { "slowAmount": 0.8, "radius": 140, "duration": 6, "mpCost": 53, "cooldown": 10.0 },
+            "3": { "slowAmount": 0.9, "radius": 160, "duration": 7, "mpCost": 58, "cooldown": 10.0 }
+          }
+        }
+      ]
+    }
+  },
+
+  "legendaryClasses": {
+    "description": "Tier 2 classes at level 20. Each advanced class branches into 2 legendary classes.",
+    "note": "Omitted for brevity - follow same pattern as tier 1 with 2 parents per tier 2 class"
+  },
+
+  "classChangeRequirements": {
+    "tier_0_to_1": {
+      "minimumLevel": 10,
+      "questRequired": false,
+      "itemsRequired": [],
+      "description": "Tier 1 advancement is automatic upon reaching level 10. Choose one specialization."
+    },
+    "tier_1_to_2": {
+      "minimumLevel": 20,
+      "questRequired": false,
+      "itemsRequired": [],
+      "description": "Tier 2 advancement is automatic upon reaching level 20. Choose one legendary specialization."
+    }
+  },
+
+  "skillSystem": {
+    "skillSelectionRules": {
+      "totalSkillSlots": 6,
+      "maxSkillsPerBranch": 2,
+      "skillLevelingCost": {
+        "1": { "skillPoints": 1, "goldCost": 100 },
+        "2": { "skillPoints": 2, "goldCost": 300 },
+        "3": { "skillPoints": 3, "goldCost": 800 }
+      }
+    },
+    "skillBarMechanics": "Player can select any 6 unlocked skills from their class to place in active skill bar. Skills can be reordered and swapped anytime outside combat."
+  },
+
+  "spriteAssignments": {
+    "baseClasses": {
+      "warrior": "Row 1, Col 0 (knight)",
+      "rogue": "Row 0, Col 3 (rogueChar)",
+      "sorcerer": "Row 4, Col 1 (wizardM)"
+    },
+    "tier1Advanced": {
+      "knight": "Row 1, Col 0 (knight - same as warrior, but displayed differently in UI)",
+      "berserker": "Row 3, Col 0 (male barbarian)",
+      "assassin": "Row 0, Col 2 (ranger)",
+      "ranger": "Row 0, Col 2 (ranger)",
+      "pyromancer": "Row 4, Col 0 (female wizard)",
+      "frostbolt": "Row 4, Col 1 (male wizard)",
+      "arcanist": "Row 2, Col 4 (templar)"
+    },
+    "tier2Legendary": {
+      "description": "Available from rows 0-5 of rogues.png 32x32 grid"
+    }
+  },
+
+  "notes": {
+    "implementation": [
+      "Store all data in CLASS_DATA constant in HTML",
+      "Player classKey becomes 'warrior_base' initially, then 'knight' or 'berserker' at level 10",
+      "skillLevels object tracks: { 'w_power': 1, 'w_whirl': 0, ... }",
+      "Only unlocked skills (level > 0) can be placed in skill bar",
+      "Skills inherit stats scaling from baseStats + equipment affixes",
+      "3-level system means skill points are precious - careful progression builds",
+      "Keep skill descriptions concise but flavor-rich (Japanese names in UI)"
+    ],
+    "designPhilosophy": [
+      "Each class has distinct playstyle: Knight defends, Berserker attacks, Assassin strikes precisely",
+      "Tier 1 classes feel like meaningful progressions - not just stat bumps",
+      "Skills 1-3 in each branch form a power progression (simple → complex → ultimate)",
+      "Every class has 9 skills total to manage (6 slots = active choice system)",
+      "Skills should synergize within branches but work independently",
+      "Late-game should reward player knowledge of which 6 skills to use per situation"
+    ],
+    "balanceNotes": [
+      "Warrior branch (Knight/Berserker) focuses on survivability vs offense trade",
+      "Rogue branch (Assassin/Ranger) focuses on single target vs AoE trade",
+      "Sorcerer branch (Pyromancer/Frostbolt/Arcanist) focuses on damage type specialization",
+      "MP costs scale with level: Lv1 cheap, Lv3 expensive",
+      "Cooldowns stay consistent across levels - balance via damage not speed",
+      "Each branch has 1-2 utility skills + 1-2 damage skills + 1 ultimate"
+    ]
+  }
+}

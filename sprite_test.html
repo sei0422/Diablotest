@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html><head><title>Sprite Test</title>
+<style>body{background:#111;color:#fff;font-family:monospace;padding:20px}
+canvas{border:1px solid #444;margin:4px;image-rendering:pixelated}</style>
+</head><body>
+<h2>Sprite Loading Test</h2>
+<div id="status">Loading...</div>
+<div id="sprites"></div>
+<script>
+const sheets = {
+    tiles: 'asset/32rogues/tiles.png',
+    monsters: 'asset/32rogues/monsters.png',
+    rogues: 'asset/32rogues/rogues.png',
+    items: 'asset/32rogues/items.png',
+    animTiles: 'asset/32rogues/animated-tiles.png'
+};
+const SP = 32, TILE = 64; // draw bigger for visibility
+const SPRITES = {};
+let loaded = 0;
+const total = Object.keys(sheets).length;
+
+const atlas = {
+    'knight (warrior)':['rogues',0,32],
+    'rogueChar':['rogues',96,0],
+    'wizardM (sorc)':['rogues',32,128],
+    'paladin':['rogues',128,32],
+    'berserker':['rogues',0,96],
+    'assassin':['rogues',128,0],
+    'rangerCls':['rogues',64,0],
+    'pyromancer':['rogues',0,128],
+    'cryomancer':['rogues',64,128],
+    'skeleton':['monsters',0,128],
+    'zombie':['monsters',128,128],
+    'imp':['monsters',32,352],
+    'banshee':['monsters',0,160],
+    'deathKnight':['monsters',96,128],
+    'wallTop':['tiles',0,64],
+    'floor1':['tiles',32,192],
+    'stairsDown':['tiles',224,512],
+    'torch0':['animTiles',0,160],
+    'iSword':['items',96,0],
+    'iPotion':['items',32,608]
+};
+
+for (const [key, src] of Object.entries(sheets)) {
+    const img = new Image();
+    img.onload = () => {
+        SPRITES[key] = img;
+        document.getElementById('status').textContent = `Loaded ${++loaded}/${total}: ${key} (${img.width}x${img.height})`;
+        if (loaded === total) drawAll();
+    };
+    img.onerror = () => {
+        document.getElementById('status').textContent = `FAILED: ${src}`;
+        loaded++;
+    };
+    img.src = src;
+}
+
+function drawAll() {
+    document.getElementById('status').textContent = 'All sprites loaded! Drawing...';
+    const container = document.getElementById('sprites');
+    for (const [name, [sheet, sx, sy]] of Object.entries(atlas)) {
+        const div = document.createElement('div');
+        div.style.display = 'inline-block';
+        div.style.textAlign = 'center';
+        div.style.margin = '8px';
+        const c = document.createElement('canvas');
+        c.width = TILE; c.height = TILE;
+        const ctx = c.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+        ctx.fillStyle = '#222';
+        ctx.fillRect(0, 0, TILE, TILE);
+        if (SPRITES[sheet]) {
+            ctx.drawImage(SPRITES[sheet], sx, sy, SP, SP, 0, 0, TILE, TILE);
+        } else {
+            ctx.fillStyle = 'red';
+            ctx.fillText('NO IMG', 5, 30);
+        }
+        div.appendChild(c);
+        div.appendChild(document.createElement('br'));
+        const label = document.createElement('span');
+        label.style.fontSize = '10px';
+        label.style.color = '#aaa';
+        label.textContent = name;
+        div.appendChild(label);
+        container.appendChild(div);
+    }
+    document.getElementById('status').textContent = `Done! ${Object.keys(atlas).length} sprites rendered.`;
+}
+</script></body></html>
