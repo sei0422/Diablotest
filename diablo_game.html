@@ -4779,40 +4779,19 @@
     _drawSkeleton(sx, sy, alphaFlash) {
         const flipX = player.x < this.x;
         drawSpr('skeleton', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX);
-        if (alphaFlash > 0) {
-            ctx.save();
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.globalAlpha = alphaFlash * 0.5;
-            ctx.fillStyle = '#ff4444';
-            ctx.fillRect(sx - TILE/2, sy - TILE/2, TILE, TILE);
-            ctx.restore();
-        }
+        // Damage flash disabled to fix graphics issue
     }
 
     _drawZombie(sx, sy, alphaFlash) {
         const flipX = player.x < this.x;
         drawSpr('zombie', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX);
-        if (alphaFlash > 0) {
-            ctx.save();
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.globalAlpha = alphaFlash * 0.5;
-            ctx.fillStyle = '#ff4444';
-            ctx.fillRect(sx - TILE/2, sy - TILE/2, TILE, TILE);
-            ctx.restore();
-        }
+        // Damage flash disabled to fix graphics issue
     }
 
     _drawImp(sx, sy, alphaFlash) {
         const flipX = player.x < this.x;
         drawSpr('imp', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX);
-        if (alphaFlash > 0) {
-            ctx.save();
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.globalAlpha = alphaFlash * 0.5;
-            ctx.fillStyle = '#ff4444';
-            ctx.fillRect(sx - TILE/2, sy - TILE/2, TILE, TILE);
-            ctx.restore();
-        }
+        // Damage flash disabled to fix graphics issue
     }
 
     _drawGhost(sx, sy, alphaFlash) {
@@ -4820,14 +4799,7 @@
         ctx.globalAlpha = 0.55 + Math.sin(G.time * 3) * 0.15;
         drawSpr('banshee', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX);
         ctx.globalAlpha = 1;
-        if (alphaFlash > 0) {
-            ctx.save();
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.globalAlpha = alphaFlash * 0.4;
-            ctx.fillStyle = '#88bbff';
-            ctx.fillRect(sx - TILE/2, sy - TILE/2, TILE, TILE);
-            ctx.restore();
-        }
+        // Damage flash disabled to fix graphics issue
     }
 
     _drawDemonLord(sx, sy, alphaFlash) {
@@ -4839,14 +4811,7 @@
         ctx.fillStyle = '#ff4400';
         ctx.beginPath(); ctx.arc(sx, sy, TILE * 0.75, 0, Math.PI * 2); ctx.fill();
         ctx.globalAlpha = 1;
-        if (alphaFlash > 0) {
-            ctx.save();
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.globalAlpha = alphaFlash * 0.6;
-            ctx.fillStyle = '#ffaa00';
-            ctx.fillRect(sx - bw/2, sy - bh/2, bw, bh);
-            ctx.restore();
-        }
+        // Damage flash disabled to fix graphics issue
     }
     }
 
