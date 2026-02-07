@@ -852,7 +852,20 @@
         function loadOne(key, src, retries) {
             const img = new Image();
             img.onload = () => {
-                SPRITES[key] = img;
+                // Clean up white edges from nearly transparent pixels
+                const cleanCanvas = document.createElement('canvas');
+                const cleanCtx = cleanCanvas.getContext('2d');
+                cleanCanvas.width = img.width;
+                cleanCanvas.height = img.height;
+                cleanCtx.drawImage(img, 0, 0);
+                const imgData = cleanCtx.getImageData(0, 0, img.width, img.height);
+                for(let i = 0; i < imgData.data.length; i += 4) {
+                    if(imgData.data[i+3] < 10) { // Nearly transparent pixels
+                        imgData.data[i] = imgData.data[i+1] = imgData.data[i+2] = 0; // Set RGB to black
+                    }
+                }
+                cleanCtx.putImageData(imgData, 0, 0);
+                SPRITES[key] = cleanCanvas; // Use cleaned version instead of img
                 console.log('Sprite loaded:', key, img.width + 'x' + img.height);
                 if (++loaded === total) onAllLoaded();
             };
@@ -1504,10 +1517,10 @@
     const ATTRIBUTE_BEHAVIORS = {
         fire: {
             motion: (p, dt) => {
-                // Rising heat effect
-                p.vy -= 80 * dt;
+                // Rising heat effect (exaggerated for visibility)
+                p.vy -= 150 * dt;
                 // Flickering sideways
-                p.vx += Math.sin((p.maxLife - p.life) * 15) * 30 * dt;
+                p.vx += Math.sin((p.maxLife - p.life) * 15) * 50 * dt;
             },
             sizeScale: (lifeRatio) => 1 + (1 - lifeRatio) * 0.5, // Expands as it dies
             alphaBoost: 1.2,
@@ -1528,10 +1541,10 @@
         },
         lightning: {
             motion: (p, dt) => {
-                // Jagged, fast motion with sudden direction changes
+                // Jagged, fast motion with sudden direction changes (exaggerated)
                 if (Math.random() < 0.3) {
-                    p.vx += (Math.random() - 0.5) * 200;
-                    p.vy += (Math.random() - 0.5) * 200;
+                    p.vx += (Math.random() - 0.5) * 350;
+                    p.vy += (Math.random() - 0.5) * 350;
                 }
             },
             sizeScale: (lifeRatio) => lifeRatio > 0.5 ? 1.5 : 0.8, // Flash effect
@@ -1541,8 +1554,8 @@
         },
         physical: {
             motion: (p, dt) => {
-                // Heavy gravity for debris
-                p.grav = 250;
+                // Heavy gravity for debris (exaggerated)
+                p.grav = 400;
                 // Bounce once
                 if (!p.bounced && p.vy > 0 && p.y > p.startY + 20) {
                     p.vy *= -0.4;
@@ -1569,10 +1582,10 @@
         },
         arcane: {
             motion: (p, dt) => {
-                // Swirling, ethereal motion
+                // Swirling, ethereal motion (exaggerated)
                 const t = p.maxLife - p.life;
-                p.vx += Math.cos(t * 8) * 50 * dt;
-                p.vy += Math.sin(t * 8) * 50 * dt;
+                p.vx += Math.cos(t * 8) * 90 * dt;
+                p.vy += Math.sin(t * 8) * 90 * dt;
             },
             sizeScale: (lifeRatio) => 1 + Math.sin(lifeRatio * Math.PI) * 0.4,
             alphaBoost: 1.1,
@@ -1610,11 +1623,11 @@
             this.rotation = 0;
             this.bounced = false;
 
-            // Apply skill level scaling
+            // Apply skill level scaling (enhanced for visibility)
             if (skillLevel && skillLevel > 0) {
-                const levelScale = 0.6 + (skillLevel - 1) * 0.225; // 0.6x at L1, 1.5x at L5
-                this.size *= (0.8 + (skillLevel - 1) * 0.1); // Size: 0.8x to 1.2x
-                this.maxLife *= (1 + (skillLevel - 1) * 0.05); // Life: +5% per level
+                const levelScale = 0.7 + (skillLevel - 1) * 0.3; // 0.7x at L1, 1.9x at L5
+                this.size *= (0.8 + (skillLevel - 1) * 0.12); // Size: 0.8x to 1.28x
+                this.maxLife *= (1 + (skillLevel - 1) * 0.06); // Life: +6% per level
                 this.life = this.maxLife;
             }
         }
@@ -1694,9 +1707,9 @@
 
     const particles = [];
     function emitParticles(x, y, color, count, speed = 80, life = 0.5, size = 3, grav = 150, attribute = null, skillLevel = 1) {
-        // Apply skill level scaling to count
+        // Apply skill level scaling to count (enhanced for visibility)
         if (skillLevel && skillLevel > 0) {
-            const levelScale = 0.6 + (skillLevel - 1) * 0.225; // 0.6x at L1, 1.5x at L5
+            const levelScale = 0.7 + (skillLevel - 1) * 0.3; // 0.7x at L1, 1.9x at L5
             count = Math.round(count * levelScale);
         }
 
@@ -3750,7 +3763,12 @@
                     sfxFireball();
                     const mult = skDef.baseMult[li];
                     const spd = skDef.speed || 350;
-                    projectiles.push(new Projectile(this.x, this.y, wx, wy, dmg * mult, '#ff4400', spd, 8));
+                    // Determine attribute from skill ID
+                    let attr = null;
+                    if (skDef.id && (skDef.id.includes('fire') || skDef.id.includes('immolation'))) attr = 'fire';
+                    else if (skDef.id && (skDef.id.includes('cold') || skDef.id.includes('ice') || skDef.id.includes('frost'))) attr = 'ice';
+                    else if (skDef.id && skDef.id.includes('lightning')) attr = 'lightning';
+                    projectiles.push(new Projectile(this.x, this.y, wx, wy, dmg * mult, '#ff4400', spd, 8, attr));
                     emitParticles(this.x, this.y, '#ff6600', 6, 50, 0.3, 3, 0, 'fire', lvl);
                     break;
                 }
@@ -3760,11 +3778,16 @@
                     const mult = skDef.baseMult[li];
                     const baseAngle = Math.atan2(wy - this.y, wx - this.x);
                     const spread = 0.4;
+                    // Determine attribute from skill ID
+                    let attr = null;
+                    if (skDef.id && (skDef.id.includes('fire') || skDef.id.includes('immolation'))) attr = 'fire';
+                    else if (skDef.id && (skDef.id.includes('cold') || skDef.id.includes('ice') || skDef.id.includes('frost'))) attr = 'ice';
+                    else if (skDef.id && skDef.id.includes('lightning')) attr = 'lightning';
                     for (let i = 0; i < numArrows; i++) {
                         const a = baseAngle - spread / 2 + spread * i / Math.max(1, numArrows - 1);
                         const tx = this.x + Math.cos(a) * 400;
                         const ty = this.y + Math.sin(a) * 400;
-                        projectiles.push(new Projectile(this.x, this.y, tx, ty, dmg * mult, '#ffaa00', 380, 5));
+                        projectiles.push(new Projectile(this.x, this.y, tx, ty, dmg * mult, '#ffaa00', 380, 5, attr));
                     }
                     break;
                 }
@@ -4094,7 +4117,7 @@
                     playSound(300, 'sine', 0.15, 0.08);
                     const mult = skDef.baseMult[li];
                     const spd = skDef.speed || 250;
-                    const p = new Projectile(this.x, this.y, wx, wy, dmg * mult, '#8800ff', spd, 10);
+                    const p = new Projectile(this.x, this.y, wx, wy, dmg * mult, '#8800ff', spd, 10, 'arcane');
                     p.pierce = true;
                     projectiles.push(p);
                     emitParticles(this.x, this.y, '#8800ff', 8, 40, 0.3, 3, 0, 'arcane', lvl);
@@ -4141,7 +4164,7 @@
                     const orbMult = skDef.baseMult[li];
                     const orbSpd = skDef.speed || 200;
                     const shards = skDef.shardCount ? skDef.shardCount[li] : 8;
-                    const orbP = new Projectile(this.x, this.y, wx, wy, dmg * orbMult * 0.5, '#88ccff', orbSpd, 12);
+                    const orbP = new Projectile(this.x, this.y, wx, wy, dmg * orbMult * 0.5, '#88ccff', orbSpd, 12, 'ice');
                     orbP.pierce = true;
                     orbP.frozen_orb = true;
                     orbP.shardDmg = dmg * orbMult * 0.3;
@@ -4840,9 +4863,10 @@
     // ========== PROJECTILES ==========
     const projectiles = [];
     class Projectile {
-        constructor(x, y, tx, ty, dmg, color, spd, r) {
+        constructor(x, y, tx, ty, dmg, color, spd, r, attribute) {
             this.x = x; this.y = y;
             this.dmg = dmg; this.color = color; this.r = r;
+            this.attribute = attribute; // Store attribute for aura rendering
             const d = Math.hypot(tx - x, ty - y) || 1;
             this.vx = (tx - x) / d * spd;
             this.vy = (ty - y) / d * spd;
@@ -4887,6 +4911,19 @@
             ctx.beginPath();
             ctx.arc(this.x - cx, this.y - cy, this.r, 0, Math.PI * 2);
             ctx.fill();
+
+            // Add glowing aura ring for attributed projectiles
+            if (this.attribute && ATTRIBUTE_BEHAVIORS[this.attribute]) {
+                const auraColor = ATTRIBUTE_BEHAVIORS[this.attribute].glowColor;
+                const auraSize = this.r * (1.5 + Math.sin(G.time * 8) * 0.3);
+                ctx.globalAlpha = 0.25;
+                ctx.strokeStyle = auraColor;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(this.x - cx, this.y - cy, auraSize, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
         }
     }
 
@@ -5031,6 +5068,14 @@
         if (!el) return;
 
         let html = '';
+
+        // Add unspent skill points banner
+        if (player.skillPoints > 0) {
+            html += `<div style="background:#aa5522;border:2px solid #ffd700;padding:8px;margin:10px 0;text-align:center;border-radius:4px">
+                ⚡ 未使用のスキルポイントが${player.skillPoints}個あります！Tキーでスキルツリーを開いてスキルを習得しよう
+            </div>`;
+        }
+
         html += `<div style="color:#daa520;font-weight:bold;margin:14px 0 4px">チュートリアルまとめ</div>`;
         html += `<div style="font-size:12px;color:#999">・敵を倒して経験値を獲得、レベルアップで能力/スキル強化</div>`;
         html += `<div style="font-size:12px;color:#999">・スキルツリー(T)で習得、ショートカット編集(R)で割り当て</div>`;
@@ -5148,8 +5193,15 @@
                 currentBranch = row.branchLabel;
                 html += `<div style="color:#888;font-size:11px;margin:4px 0 2px">${currentBranch}</div>`;
             }
+            const skillLvl = player.skillLevels[row.sk.id] || 0;
+            let badge = '';
+            if (skillLvl > 0) {
+                badge = `<span style="font-size:8px;background:#228822;color:#88ff88;padding:2px 5px;border-radius:3px;font-weight:bold;margin-left:6px">習得済 L${skillLvl}</span>`;
+            } else {
+                badge = `<span style="font-size:8px;background:#aa6622;color:#ffd700;padding:2px 5px;border-radius:3px;font-weight:bold;margin-left:6px">解放済</span>`;
+            }
             html += `<div style="display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#ddd">
-                <div>${row.sk.icon} ${row.sk.name}</div>
+                <div>${row.sk.icon} ${row.sk.name}${badge}</div>
                 <div style="color:#88a">${row.sk.mp}MP / ${row.sk.cd}s</div>
             </div>`;
             html += `<div style="font-size:10px;color:#777;margin:2px 0 6px 16px">${effectDesc(row.sk)}</div>`;
@@ -5865,12 +5917,98 @@
             const opened = togglePanel(p);
             if (opened) updateSkillTreeUI();
         }
-        if (e.code === 'Digit1' || e.key === '1') player.selectedSkill = 1;
-        if (e.code === 'Digit2' || e.key === '2') player.selectedSkill = 2;
-        if (e.code === 'Digit3' || e.key === '3') player.selectedSkill = 3;
-        if (e.code === 'Digit4' || e.key === '4') player.selectedSkill = 4;
-        if (e.code === 'Digit5' || e.key === '5') player.selectedSkill = 5;
-        if (e.code === 'Digit6' || e.key === '6') player.selectedSkill = 6;
+        // Number keys (1-6) select AND activate skills
+        if (e.code === 'Digit1' || e.key === '1') {
+            player.selectedSkill = 1;
+            // Auto-target nearest enemy, or use mouse position
+            let tx = mouse.x, ty = mouse.y;
+            let nearest = null, nearestD = 400;
+            for (const m of monsters) {
+                if (!m.alive) continue;
+                const d = dist(player.x, player.y, m.x, m.y);
+                if (d < nearestD) { nearestD = d; nearest = m; }
+            }
+            if (nearest) {
+                tx = nearest.x - G.camX;
+                ty = nearest.y - G.camY;
+            }
+            player.useSkill(tx, ty);
+        }
+        if (e.code === 'Digit2' || e.key === '2') {
+            player.selectedSkill = 2;
+            let tx = mouse.x, ty = mouse.y;
+            let nearest = null, nearestD = 400;
+            for (const m of monsters) {
+                if (!m.alive) continue;
+                const d = dist(player.x, player.y, m.x, m.y);
+                if (d < nearestD) { nearestD = d; nearest = m; }
+            }
+            if (nearest) {
+                tx = nearest.x - G.camX;
+                ty = nearest.y - G.camY;
+            }
+            player.useSkill(tx, ty);
+        }
+        if (e.code === 'Digit3' || e.key === '3') {
+            player.selectedSkill = 3;
+            let tx = mouse.x, ty = mouse.y;
+            let nearest = null, nearestD = 400;
+            for (const m of monsters) {
+                if (!m.alive) continue;
+                const d = dist(player.x, player.y, m.x, m.y);
+                if (d < nearestD) { nearestD = d; nearest = m; }
+            }
+            if (nearest) {
+                tx = nearest.x - G.camX;
+                ty = nearest.y - G.camY;
+            }
+            player.useSkill(tx, ty);
+        }
+        if (e.code === 'Digit4' || e.key === '4') {
+            player.selectedSkill = 4;
+            let tx = mouse.x, ty = mouse.y;
+            let nearest = null, nearestD = 400;
+            for (const m of monsters) {
+                if (!m.alive) continue;
+                const d = dist(player.x, player.y, m.x, m.y);
+                if (d < nearestD) { nearestD = d; nearest = m; }
+            }
+            if (nearest) {
+                tx = nearest.x - G.camX;
+                ty = nearest.y - G.camY;
+            }
+            player.useSkill(tx, ty);
+        }
+        if (e.code === 'Digit5' || e.key === '5') {
+            player.selectedSkill = 5;
+            let tx = mouse.x, ty = mouse.y;
+            let nearest = null, nearestD = 400;
+            for (const m of monsters) {
+                if (!m.alive) continue;
+                const d = dist(player.x, player.y, m.x, m.y);
+                if (d < nearestD) { nearestD = d; nearest = m; }
+            }
+            if (nearest) {
+                tx = nearest.x - G.camX;
+                ty = nearest.y - G.camY;
+            }
+            player.useSkill(tx, ty);
+        }
+        if (e.code === 'Digit6' || e.key === '6') {
+            player.selectedSkill = 6;
+            let tx = mouse.x, ty = mouse.y;
+            let nearest = null, nearestD = 400;
+            for (const m of monsters) {
+                if (!m.alive) continue;
+                const d = dist(player.x, player.y, m.x, m.y);
+                if (d < nearestD) { nearestD = d; nearest = m; }
+            }
+            if (nearest) {
+                tx = nearest.x - G.camX;
+                ty = nearest.y - G.camY;
+            }
+            player.useSkill(tx, ty);
+        }
         if (e.code === 'Space') { e.preventDefault(); player.pickupNearby(); }
     });
     window.addEventListener('keyup', e => {
@@ -6725,7 +6863,7 @@
                             const sy = p.y + Math.sin(sa) * 15;
                             const tx = p.x + Math.cos(sa) * 200;
                             const ty = p.y + Math.sin(sa) * 200;
-                            const shard = new Projectile(sx, sy, tx, ty, p.shardDmg || 10, '#aaddff', 300, 4);
+                            const shard = new Projectile(sx, sy, tx, ty, p.shardDmg || 10, '#aaddff', 300, 4, 'ice');
                             shard.life = 0.4;
                             projectiles.push(shard);
                         }
