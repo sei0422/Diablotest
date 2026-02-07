@@ -1500,45 +1500,206 @@
         lastLogRender = G.time;
     }
 
+    // ========== ATTRIBUTE BEHAVIORS FOR PARTICLES ==========
+    const ATTRIBUTE_BEHAVIORS = {
+        fire: {
+            motion: (p, dt) => {
+                // Rising heat effect
+                p.vy -= 80 * dt;
+                // Flickering sideways
+                p.vx += Math.sin((p.maxLife - p.life) * 15) * 30 * dt;
+            },
+            sizeScale: (lifeRatio) => 1 + (1 - lifeRatio) * 0.5, // Expands as it dies
+            alphaBoost: 1.2,
+            glowColor: '#ffaa00'
+        },
+        ice: {
+            motion: (p, dt) => {
+                // Slow down crystallization
+                p.vx *= 0.95;
+                p.vy *= 0.95;
+                // Spinning crystals
+                p.rotation = (p.rotation || 0) + dt * 2;
+            },
+            sizeScale: (lifeRatio) => 1 + lifeRatio * 0.3, // Grows slightly
+            alphaBoost: 1.0,
+            glowColor: '#eeffff',
+            shape: 'diamond' // Special rendering hint
+        },
+        lightning: {
+            motion: (p, dt) => {
+                // Jagged, fast motion with sudden direction changes
+                if (Math.random() < 0.3) {
+                    p.vx += (Math.random() - 0.5) * 200;
+                    p.vy += (Math.random() - 0.5) * 200;
+                }
+            },
+            sizeScale: (lifeRatio) => lifeRatio > 0.5 ? 1.5 : 0.8, // Flash effect
+            alphaBoost: 1.5,
+            glowColor: '#ffffaa',
+            trail: true // Leave trail particles (handled in emitParticles)
+        },
+        physical: {
+            motion: (p, dt) => {
+                // Heavy gravity for debris
+                p.grav = 250;
+                // Bounce once
+                if (!p.bounced && p.vy > 0 && p.y > p.startY + 20) {
+                    p.vy *= -0.4;
+                    p.bounced = true;
+                }
+            },
+            sizeScale: (lifeRatio) => 1 - lifeRatio * 0.3, // Shrinks
+            alphaBoost: 0.9,
+            glowColor: '#aa7744'
+        },
+        holy: {
+            motion: (p, dt) => {
+                // Radial expansion from center
+                const angle = Math.atan2(p.y - p.centerY, p.x - p.centerX);
+                p.vx += Math.cos(angle) * 20 * dt;
+                p.vy += Math.sin(angle) * 20 * dt;
+                // Gentle upward drift
+                p.vy -= 40 * dt;
+            },
+            sizeScale: (lifeRatio) => 1 + (1 - lifeRatio) * 0.6, // Expands gently
+            alphaBoost: 0.8,
+            glowColor: '#ffffdd',
+            glow: 'soft' // Diffuse glow
+        },
+        arcane: {
+            motion: (p, dt) => {
+                // Swirling, ethereal motion
+                const t = p.maxLife - p.life;
+                p.vx += Math.cos(t * 8) * 50 * dt;
+                p.vy += Math.sin(t * 8) * 50 * dt;
+            },
+            sizeScale: (lifeRatio) => 1 + Math.sin(lifeRatio * Math.PI) * 0.4,
+            alphaBoost: 1.1,
+            glowColor: '#dd88ff',
+            ethereal: true // Transparent rendering
+        },
+        nature: {
+            motion: (p, dt) => {
+                // Organic drift with sine wave
+                p.vx += Math.sin((p.life + p.offset) * 3) * 30 * dt;
+                // Slower falloff - lingering effect
+                p.vy *= 0.98;
+            },
+            sizeScale: (lifeRatio) => 1 + (1 - lifeRatio) * 0.2,
+            alphaBoost: 0.7,
+            glowColor: '#88ff88',
+            linger: true // Longer life (handled in constructor)
+        }
+    };
+
     // ========== PARTICLE SYSTEM (Round Soft-Glow) ==========
     class Particle {
-        constructor(x, y, vx, vy, color, life, size = 3, grav = 150) {
+        constructor(x, y, vx, vy, color, life, size = 3, grav = 150, attribute = null, skillLevel = 1) {
             this.x = x; this.y = y;
+            this.startY = y; // For bounce detection
+            this.centerX = x; this.centerY = y; // For radial effects
             this.vx = vx; this.vy = vy;
             this.color = color;
             this.life = this.maxLife = life;
             this.size = size;
             this.grav = grav;
+            this.attribute = attribute; // NEW: attribute type
+            this.skillLevel = skillLevel; // NEW: skill level (1-5)
+            this.offset = Math.random() * Math.PI * 2; // For organic motion
+            this.rotation = 0;
+            this.bounced = false;
+
+            // Apply skill level scaling
+            if (skillLevel && skillLevel > 0) {
+                const levelScale = 0.6 + (skillLevel - 1) * 0.225; // 0.6x at L1, 1.5x at L5
+                this.size *= (0.8 + (skillLevel - 1) * 0.1); // Size: 0.8x to 1.2x
+                this.maxLife *= (1 + (skillLevel - 1) * 0.05); // Life: +5% per level
+                this.life = this.maxLife;
+            }
         }
         update(dt) {
             this.x += this.vx * dt;
             this.y += this.vy * dt;
             this.vy += this.grav * dt;
             this.life -= dt;
+
+            // Apply attribute-specific motion behavior
+            if (this.attribute && ATTRIBUTE_BEHAVIORS[this.attribute]) {
+                ATTRIBUTE_BEHAVIORS[this.attribute].motion(this, dt);
+            }
         }
         draw(cx, cy) {
-            const a = clamp(this.life / this.maxLife, 0, 1);
+            const lifeRatio = clamp(this.life / this.maxLife, 0, 1);
             const sx = this.x - cx, sy = this.y - cy;
-            const s = this.size * (0.5 + a * 0.5);
-            // Core
-            ctx.globalAlpha = a * 0.8;
+
+            // Base size with attribute scaling
+            let s = this.size * (0.5 + lifeRatio * 0.5);
+            if (this.attribute && ATTRIBUTE_BEHAVIORS[this.attribute]) {
+                s *= ATTRIBUTE_BEHAVIORS[this.attribute].sizeScale(lifeRatio);
+            }
+
+            // Alpha with attribute boost
+            let alpha = lifeRatio * 0.8;
+            if (this.attribute && ATTRIBUTE_BEHAVIORS[this.attribute]) {
+                alpha *= ATTRIBUTE_BEHAVIORS[this.attribute].alphaBoost;
+            }
+
+            // Core particle
+            ctx.globalAlpha = clamp(alpha, 0, 1);
             ctx.fillStyle = this.color;
-            ctx.beginPath();
-            ctx.arc(sx, sy, s, 0, Math.PI * 2);
-            ctx.fill();
+
+            // Shape rendering - diamond for ice
+            if (this.attribute === 'ice' && ATTRIBUTE_BEHAVIORS[this.attribute].shape === 'diamond') {
+                ctx.save();
+                ctx.translate(sx, sy);
+                ctx.rotate(this.rotation);
+                ctx.beginPath();
+                ctx.moveTo(0, -s);
+                ctx.lineTo(s, 0);
+                ctx.lineTo(0, s);
+                ctx.lineTo(-s, 0);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            } else {
+                ctx.beginPath();
+                ctx.arc(sx, sy, s, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Enhanced glow for high-level skills (level 3+)
+            if (this.skillLevel && this.skillLevel >= 3) {
+                const glowColor = this.attribute && ATTRIBUTE_BEHAVIORS[this.attribute]
+                    ? ATTRIBUTE_BEHAVIORS[this.attribute].glowColor
+                    : '#fff';
+                ctx.globalAlpha = clamp(alpha * 0.6, 0, 0.6);
+                ctx.fillStyle = glowColor;
+                ctx.beginPath();
+                ctx.arc(sx, sy, s * 1.8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
             // Hot center
-            ctx.globalAlpha = a * 0.4;
+            ctx.globalAlpha = clamp(alpha * 0.4, 0, 0.4);
             ctx.fillStyle = '#fff';
             ctx.beginPath();
             ctx.arc(sx, sy, s * 0.3, 0, Math.PI * 2);
             ctx.fill();
+
             ctx.globalAlpha = 1;
         }
         alive() { return this.life > 0; }
     }
 
     const particles = [];
-    function emitParticles(x, y, color, count, speed = 80, life = 0.5, size = 3, grav = 150) {
+    function emitParticles(x, y, color, count, speed = 80, life = 0.5, size = 3, grav = 150, attribute = null, skillLevel = 1) {
+        // Apply skill level scaling to count
+        if (skillLevel && skillLevel > 0) {
+            const levelScale = 0.6 + (skillLevel - 1) * 0.225; // 0.6x at L1, 1.5x at L5
+            count = Math.round(count * levelScale);
+        }
+
         if (SETTINGS.reducedParticles) count = Math.max(1, Math.floor(count * 0.55));
         // パーティクル数上限チェック
         const availableSlots = MAX_PARTICLES - particles.length;
@@ -1547,7 +1708,55 @@
         for (let i = 0; i < count; i++) {
             const a = randf(0, Math.PI * 2);
             const s = randf(20, speed);
-            particles.push(new Particle(x + randf(-4,4), y + randf(-4,4), Math.cos(a)*s, Math.sin(a)*s, color, randf(life*0.5, life), randf(size*0.5, size*1.5), grav));
+            particles.push(new Particle(
+                x + randf(-4,4),
+                y + randf(-4,4),
+                Math.cos(a)*s,
+                Math.sin(a)*s,
+                color,
+                randf(life*0.5, life),
+                randf(size*0.5, size*1.5),
+                grav,
+                attribute,  // NEW
+                skillLevel  // NEW
+            ));
+        }
+
+        // Trail effect for lightning (skill level 3+)
+        if (attribute === 'lightning' && skillLevel >= 3) {
+            setTimeout(() => {
+                if (particles.length < MAX_PARTICLES - 5) {
+                    for (let i = 0; i < 3; i++) {
+                        particles.push(new Particle(x, y, randf(-20,20), randf(-20,20), color, 0.2, 1, 0, attribute, skillLevel));
+                    }
+                }
+            }, 50);
+        }
+    }
+
+    // Trail particle system for max-level skills (Level 5)
+    function emitTrailParticles(x, y, color, attribute, skillLevel) {
+        if (skillLevel < 5) return; // Only for max level
+        if (particles.length >= MAX_PARTICLES - 10) return; // Reserve slots
+
+        const trailCount = 5;
+        for (let i = 0; i < trailCount; i++) {
+            setTimeout(() => {
+                if (particles.length < MAX_PARTICLES - 3) {
+                    particles.push(new Particle(
+                        x + randf(-8, 8),
+                        y + randf(-8, 8),
+                        randf(-15, 15),
+                        randf(-15, 15),
+                        color,
+                        0.3,
+                        2,
+                        50,
+                        attribute,
+                        skillLevel
+                    ));
+                }
+            }, i * 40); // Staggered timing
         }
     }
 
@@ -3475,7 +3684,7 @@
                         }
                     }
                     this.attackAnimT = 0.3;
-                    emitParticles(this.x, this.y, '#ffaa44', 10, 80, 0.4, 4, 0);
+                    emitParticles(this.x, this.y, '#ffaa44', 10, 80, 0.4, 4, 0, 'physical', lvl);
                     break;
                 }
                 case 'whirlwind': {
@@ -3488,13 +3697,13 @@
                             monsterTakeDmg(m, dmg * mult * (isCrit ? 2 : 1), isCrit);
                         }
                     }
-                    emitParticles(this.x, this.y, '#88aaff', 20, 100, 0.5, 4, 0);
+                    emitParticles(this.x, this.y, '#88aaff', 20, 100, 0.5, 4, 0, 'physical', lvl);
                     break;
                 }
                 case 'buff_berserk': {
                     this.berserkT = skDef.duration[li];
                     playSound(200, 'sawtooth', 0.3, 0.1);
-                    emitParticles(this.x, this.y, '#ff4400', 20, 80, 0.6, 4, -30);
+                    emitParticles(this.x, this.y, '#ff4400', 20, 80, 0.6, 4, -30, 'fire', lvl);
                     addLog(`狂戦士モード！(${skDef.duration[li]}秒)`, '#ff4400');
                     break;
                 }
@@ -3507,7 +3716,7 @@
                             m.spd = 0;
                         }
                     }
-                    emitParticles(this.x, this.y, '#ffdd88', 15, 130, 0.4, 3, 0);
+                    emitParticles(this.x, this.y, '#ffdd88', 15, 130, 0.4, 3, 0, 'physical', lvl);
                     addLog('雄叫び！敵が怯んだ！', '#ffdd88');
                     break;
                 }
@@ -3515,7 +3724,7 @@
                     this.shieldT = skDef.duration[li];
                     this.shieldReduction = skDef.reduction[li];
                     sfxShield();
-                    emitParticles(this.x, this.y, '#aaaaff', 12, 50, 0.5, 3, -40);
+                    emitParticles(this.x, this.y, '#aaaaff', 12, 50, 0.5, 3, -40, 'arcane', lvl);
                     addLog(`鉄壁発動！(${skDef.duration[li]}秒)`, '#aaaaff');
                     break;
                 }
@@ -3533,7 +3742,7 @@
                             monsterTakeDmg(m, dmg * mult, false);
                         }
                     }
-                    emitParticles(this.x, this.y, '#ffcc44', 15, 100, 0.4, 3, 0);
+                    emitParticles(this.x, this.y, '#ffcc44', 15, 100, 0.4, 3, 0, 'physical', lvl);
                     G.shakeT = 0.1; G.shakeAmt = 4;
                     break;
                 }
@@ -3542,7 +3751,7 @@
                     const mult = skDef.baseMult[li];
                     const spd = skDef.speed || 350;
                     projectiles.push(new Projectile(this.x, this.y, wx, wy, dmg * mult, '#ff4400', spd, 8));
-                    emitParticles(this.x, this.y, '#ff6600', 6, 50, 0.3, 3, 0);
+                    emitParticles(this.x, this.y, '#ff6600', 6, 50, 0.3, 3, 0, 'fire', lvl);
                     break;
                 }
                 case 'multi_shot': {
@@ -3566,7 +3775,7 @@
                     G.meteorDmg = dmg * skDef.baseMult[li];
                     G.meteorColor = '#ffaa44';
                     for (let a = 0; a < Math.PI * 2; a += 0.4) {
-                        emitParticles(wx + Math.cos(a) * skDef.range, wy + Math.sin(a) * skDef.range, '#ffaa44', 2, 20, 0.6, 2, 0);
+                        emitParticles(wx + Math.cos(a) * skDef.range, wy + Math.sin(a) * skDef.range, '#ffaa44', 2, 20, 0.6, 2, 0, 'physical', lvl);
                     }
                     addLog('矢の雨！', '#ffaa44');
                     break;
@@ -3576,7 +3785,7 @@
                     const trap = { x: this.x, y: this.y, dmg: dmg * skDef.baseMult[li], life: 10, r: 50, triggered: false };
                     if (!G.traps) G.traps = [];
                     G.traps.push(trap);
-                    emitParticles(this.x, this.y, '#ff6600', 5, 30, 0.3, 2, 0);
+                    emitParticles(this.x, this.y, '#ff6600', 5, 30, 0.3, 2, 0, 'nature', lvl);
                     addLog('トラップを設置！', '#ff8844');
                     break;
                 }
@@ -3584,7 +3793,7 @@
                     this.dodgeT = skDef.duration[li];
                     this.dodgeChance = skDef.chance[li];
                     playSound(600, 'sine', 0.15, 0.06);
-                    emitParticles(this.x, this.y, '#aaffaa', 10, 50, 0.4, 2, -30);
+                    emitParticles(this.x, this.y, '#aaffaa', 10, 50, 0.4, 2, -30, 'arcane', lvl);
                     addLog(`回避モード！(${skDef.duration[li]}秒)`, '#aaffaa');
                     break;
                 }
@@ -3602,7 +3811,7 @@
                         this.y = closest.y + Math.sin(angle) * 30;
                         monsterTakeDmg(closest, dmg * skDef.baseMult[li], true);
                         sfxHit();
-                        emitParticles(closest.x, closest.y, '#aa44ff', 15, 80, 0.4, 3, 0);
+                        emitParticles(closest.x, closest.y, '#aa44ff', 15, 80, 0.4, 3, 0, 'arcane', lvl);
                     }
                     break;
                 }
@@ -3629,7 +3838,7 @@
                             emitParticles(
                                 lerp(lastX, best.x, t) + randf(-8, 8),
                                 lerp(lastY, best.y, t) + randf(-8, 8),
-                                '#88ccff', 1, 20, 0.3, 2, 0
+                                '#88ccff', 1, 20, 0.3, 2, 0, 'lightning', lvl
                             );
                         }
                         monsterTakeDmg(best, dmg * mult * (b === 0 ? 1 : 0.7), false);
@@ -3644,7 +3853,7 @@
                     G.meteorDmg = dmg * skDef.baseMult[li];
                     G.meteorColor = '#ff4400';
                     for (let a = 0; a < Math.PI * 2; a += 0.3) {
-                        emitParticles(wx + Math.cos(a) * skDef.range, wy + Math.sin(a) * skDef.range, '#ff6600', 2, 20, 0.8, 2, 0);
+                        emitParticles(wx + Math.cos(a) * skDef.range, wy + Math.sin(a) * skDef.range, '#ff6600', 2, 20, 0.8, 2, 0, 'fire', lvl);
                     }
                     addLog('メテオ詠唱中...', '#ff8800');
                     break;
@@ -3661,8 +3870,8 @@
                             m.spd = MONSTER_DEFS[m.type].spd * 0.2;
                         }
                     }
-                    emitParticles(this.x, this.y, '#88ddff', 30, 130, 0.6, 4, 0);
-                    emitParticles(this.x, this.y, '#ffffff', 15, 80, 0.4, 2, -30);
+                    emitParticles(this.x, this.y, '#88ddff', 30, 130, 0.6, 4, 0, 'ice', lvl);
+                    emitParticles(this.x, this.y, '#ffffff', 15, 80, 0.4, 2, -30, 'ice', lvl);
                     addLog('フロストノヴァ！', '#88ddff');
                     break;
                 }
@@ -3673,17 +3882,17 @@
                     const angle = Math.atan2(wy - this.y, wx - this.x);
                     const nx = this.x + Math.cos(angle) * tdist;
                     const ny = this.y + Math.sin(angle) * tdist;
-                    emitParticles(this.x, this.y, '#aa88ff', 15, 60, 0.3, 3, 0);
+                    emitParticles(this.x, this.y, '#aa88ff', 15, 60, 0.3, 3, 0, 'arcane', lvl);
                     if (canWalk(nx, ny, 10)) { this.x = nx; this.y = ny; }
                     playSweep(800, 1600, 0.1, 'sine', 0.06);
-                    emitParticles(this.x, this.y, '#aa88ff', 15, 60, 0.3, 3, 0);
+                    emitParticles(this.x, this.y, '#aa88ff', 15, 60, 0.3, 3, 0, 'arcane', lvl);
                     break;
                 }
                 case 'mana_shield': {
                     this.manaShieldT = skDef.duration[li];
                     this.manaShieldAbsorb = skDef.absorb[li];
                     sfxShield();
-                    emitParticles(this.x, this.y, '#4488ff', 15, 50, 0.5, 3, -40);
+                    emitParticles(this.x, this.y, '#4488ff', 15, 50, 0.5, 3, -40, 'arcane', lvl);
                     addLog(`マナシールド発動！(${skDef.duration[li]}秒)`, '#4488ff');
                     break;
                 }
@@ -3692,7 +3901,7 @@
                     const healAmt = Math.round(player.maxHP * skDef.pct[li]);
                     player.hp = Math.min(player.maxHP, player.hp + healAmt);
                     addFloatingText(player.x, player.y - 20, '+' + healAmt + ' HP', '#00ff00');
-                    emitParticles(player.x, player.y, '#00ff00', 12, 50, 0.5, 3, -40);
+                    emitParticles(player.x, player.y, '#00ff00', 12, 50, 0.5, 3, -40, 'holy', lvl);
                     sfxHeal();
                     addLog(`HP回復 (+${healAmt})`, '#00ff00');
                     break;
@@ -3709,14 +3918,14 @@
                             m.frozenT = 2;
                         }
                     }
-                    emitParticles(this.x, this.y, '#aa8844', 20, skDef.range, 0.5, 4, 0);
+                    emitParticles(this.x, this.y, '#aa8844', 20, skDef.range, 0.5, 4, 0, 'physical', lvl);
                     break;
                 }
                 case 'buff_counter': {
                     this.counterT = skDef.duration[li];
                     this.counterReflect = skDef.reflect[li];
                     playSound(400, 'triangle', 0.15, 0.08);
-                    emitParticles(this.x, this.y, '#ffcc44', 10, 40, 0.4, 3, -30);
+                    emitParticles(this.x, this.y, '#ffcc44', 10, 40, 0.4, 3, -30, 'arcane', lvl);
                     addLog(`見切り発動！(${skDef.duration[li]}秒)`, '#ffcc44');
                     break;
                 }
@@ -3724,7 +3933,7 @@
                     this.speedBuffT = skDef.duration[li];
                     this.speedBuffBonus = skDef.bonus[li];
                     playSound(600, 'sine', 0.12, 0.05);
-                    emitParticles(this.x, this.y, '#88ffaa', 10, 50, 0.4, 2, -30);
+                    emitParticles(this.x, this.y, '#88ffaa', 10, 50, 0.4, 2, -30, 'arcane', lvl);
                     addLog(`移動速度UP！(${skDef.duration[li]}秒)`, '#88ffaa');
                     break;
                 }
@@ -3732,7 +3941,7 @@
                     this.poisonBuffT = skDef.duration[li];
                     this.poisonDps = skDef.dps[li];
                     playSound(300, 'sawtooth', 0.1, 0.06);
-                    emitParticles(this.x, this.y, '#88ff44', 10, 40, 0.4, 2, -30);
+                    emitParticles(this.x, this.y, '#88ff44', 10, 40, 0.4, 2, -30, 'nature', lvl);
                     addLog(`毒塗り！攻撃に毒付与(${skDef.duration[li]}秒)`, '#88ff44');
                     break;
                 }
@@ -3741,7 +3950,7 @@
                     this.dodgeT = dur;
                     this.dodgeChance = skDef.evade[li];
                     playSound(200, 'sine', 0.08, 0.06);
-                    emitParticles(this.x, this.y, '#999999', 25, skDef.range, 0.6, 5, -20);
+                    emitParticles(this.x, this.y, '#999999', 25, skDef.range, 0.6, 5, -20, 'arcane', lvl);
                     addLog(`煙幕！回避率UP(${dur}秒)`, '#999');
                     break;
                 }
@@ -3753,7 +3962,7 @@
                             monsterTakeDmg(m, dmg * mult, false);
                         }
                     }
-                    emitParticles(this.x, this.y, '#ffdd88', 25, skDef.range, 0.5, 4, 0);
+                    emitParticles(this.x, this.y, '#ffdd88', 25, skDef.range, 0.5, 4, 0, 'holy', lvl);
                     break;
                 }
                 case 'consecrate': {
@@ -3767,7 +3976,7 @@
                         tickCD: 0
                     });
                     playSound(350, 'sine', 0.1, 0.08);
-                    emitParticles(this.x, this.y, '#ffcc44', 15, skDef.range * 0.5, 0.5, 3, 0);
+                    emitParticles(this.x, this.y, '#ffcc44', 15, skDef.range * 0.5, 0.5, 3, 0, 'holy', lvl);
                     addLog('聖域を展開！', '#ffcc44');
                     break;
                 }
@@ -3775,7 +3984,7 @@
                     this.atkSpdBuffT = skDef.duration[li];
                     this.atkSpdBonus = skDef.bonus[li];
                     playSound(500, 'triangle', 0.1, 0.05);
-                    emitParticles(this.x, this.y, '#ffaa88', 10, 40, 0.3, 2, -30);
+                    emitParticles(this.x, this.y, '#ffaa88', 10, 40, 0.3, 2, -30, 'fire', lvl);
                     addLog(`攻撃速度UP！(${skDef.duration[li]}秒)`, '#ffaa88');
                     break;
                 }
@@ -3786,7 +3995,7 @@
                     this.atkSpdBuffT = skDef.duration[li];
                     this.atkSpdBonus = skDef.atkBonus[li];
                     playSound(250, 'sawtooth', 0.2, 0.1);
-                    emitParticles(this.x, this.y, '#ff6644', 20, 80, 0.6, 4, -30);
+                    emitParticles(this.x, this.y, '#ff6644', 20, 80, 0.6, 4, -30, 'fire', lvl);
                     addLog(`フレンジー！(${skDef.duration[li]}秒)`, '#ff6644');
                     break;
                 }
@@ -3806,7 +4015,7 @@
                     }
                     if (hit) {
                         this.attackAnimT = 0.3;
-                        emitParticles(this.x, this.y, '#ff4444', 15, 80, 0.4, 4, 0);
+                        emitParticles(this.x, this.y, '#ff4444', 15, 80, 0.4, 4, 0, 'physical', lvl);
                         G.shakeT = 0.15; G.shakeAmt = 5;
                     }
                     break;
@@ -3815,21 +4024,21 @@
                     this.lifestealBuffT = skDef.duration[li];
                     this.lifestealBuffPct = skDef.pct[li];
                     playSound(350, 'sine', 0.12, 0.06);
-                    emitParticles(this.x, this.y, '#ff4466', 10, 40, 0.4, 3, -30);
+                    emitParticles(this.x, this.y, '#ff4466', 10, 40, 0.4, 3, -30, 'arcane', lvl);
                     addLog(`血の刃！(${skDef.duration[li]}秒)`, '#ff4466');
                     break;
                 }
                 case 'buff_undying': {
                     this.undyingT = skDef.duration[li];
                     playSound(200, 'square', 0.15, 0.1);
-                    emitParticles(this.x, this.y, '#ffd700', 20, 60, 0.8, 4, -40);
+                    emitParticles(this.x, this.y, '#ffd700', 20, 60, 0.8, 4, -40, 'holy', lvl);
                     addLog(`不死身発動！(${skDef.duration[li]}秒)`, '#ffd700');
                     break;
                 }
                 case 'buff_stealth': {
                     this.stealthT = skDef.duration[li];
                     playSound(800, 'sine', 0.06, 0.04);
-                    emitParticles(this.x, this.y, '#aa88ff', 15, 50, 0.5, 3, -30);
+                    emitParticles(this.x, this.y, '#aa88ff', 15, 50, 0.5, 3, -30, 'arcane', lvl);
                     addLog(`消失！次の攻撃はクリティカル確定`, '#aa88ff');
                     break;
                 }
@@ -3837,7 +4046,7 @@
                     this.critBuffT = skDef.duration[li];
                     this.critBuffBonus = skDef.bonus[li];
                     playSound(700, 'triangle', 0.1, 0.05);
-                    emitParticles(this.x, this.y, '#ffdd44', 10, 40, 0.4, 2, -30);
+                    emitParticles(this.x, this.y, '#ffdd44', 10, 40, 0.4, 2, -30, 'arcane', lvl);
                     addLog(`鷹の目！クリティカル率+${skDef.bonus[li]}%(${skDef.duration[li]}秒)`, '#ffdd44');
                     break;
                 }
@@ -3848,7 +4057,7 @@
                     this.shieldT = skDef.duration[li];
                     this.shieldReduction = skDef.reduction[li];
                     sfxShield();
-                    emitParticles(this.x, this.y, '#ffdd88', 15, 60, 0.6, 4, -30);
+                    emitParticles(this.x, this.y, '#ffdd88', 15, 60, 0.6, 4, -30, 'holy', lvl);
                     addLog(`守護のオーラ発動！(${skDef.duration[li]}秒)`, '#ffdd88');
                     break;
                 }
@@ -3861,7 +4070,7 @@
                             monsterTakeDmg(m, dmg * mult, false);
                             this.mp = Math.min(this.maxMP, this.mp + mpSteal);
                             addFloatingText(this.x, this.y - 30, '+' + mpSteal + ' MP', '#8844ff');
-                            emitParticles(m.x, m.y, '#8844ff', 6, 40, 0.3, 2, -20);
+                            emitParticles(m.x, m.y, '#8844ff', 6, 40, 0.3, 2, -20, 'arcane', lvl);
                             break;
                         }
                     }
@@ -3877,7 +4086,7 @@
                             m.curseDmgMult = 1 + red;
                         }
                     }
-                    emitParticles(this.x, this.y, '#8844aa', 15, skDef.range * 0.5, 0.4, 3, 0);
+                    emitParticles(this.x, this.y, '#8844aa', 15, skDef.range * 0.5, 0.4, 3, 0, 'arcane', lvl);
                     addLog(`呪縛！敵の被ダメ増加(${dur}秒)`, '#8844aa');
                     break;
                 }
@@ -3888,7 +4097,7 @@
                     const p = new Projectile(this.x, this.y, wx, wy, dmg * mult, '#8800ff', spd, 10);
                     p.pierce = true;
                     projectiles.push(p);
-                    emitParticles(this.x, this.y, '#8800ff', 8, 40, 0.3, 3, 0);
+                    emitParticles(this.x, this.y, '#8800ff', 8, 40, 0.3, 3, 0, 'arcane', lvl);
                     break;
                 }
 
@@ -3905,7 +4114,7 @@
                     player.battleOrdersHP = hpBoost;
                     player.battleOrdersMP = mpBoost;
                     playSound(250, 'triangle', 0.2, 0.1);
-                    emitParticles(this.x, this.y, '#ffd700', 20, 80, 0.6, 4, -30);
+                    emitParticles(this.x, this.y, '#ffd700', 20, 80, 0.6, 4, -30, 'arcane', lvl);
                     addLog(`バトルオーダー！HP+${hpBoost} MP+${mpBoost} (${boDur}秒)`, '#ffd700');
                     break;
                 }
@@ -3923,7 +4132,7 @@
                         });
                     }
                     playSound(500, 'sine', 0.15, 0.08);
-                    emitParticles(this.x, this.y, '#88ddff', 15, 60, 0.5, 3, -30);
+                    emitParticles(this.x, this.y, '#88ddff', 15, 60, 0.5, 3, -30, 'arcane', lvl);
                     addLog(`召喚！(HP:${sHP} ATK:${sDmg} ${sDur}秒)`, '#88ddff');
                     break;
                 }
@@ -3939,8 +4148,34 @@
                     orbP.shardCount = shards;
                     orbP.shardTimer = 0;
                     projectiles.push(orbP);
-                    emitParticles(this.x, this.y, '#88ddff', 10, 50, 0.3, 3, 0);
+                    emitParticles(this.x, this.y, '#88ddff', 10, 50, 0.3, 3, 0, 'ice', lvl);
                     break;
+                }
+            }
+
+            // Screen flash and enhanced effects for Level 5 skills
+            if (lvl === 5) {
+                // Screen flash
+                G.flashT = 0.15;
+                G.flashColor = skDef.color || '#ffffff';
+                G.flashAlpha = 0.3;
+
+                // Enhanced shake
+                G.shakeT = Math.max(G.shakeT || 0, 0.2);
+                G.shakeAmt = Math.max(G.shakeAmt || 0, 8);
+
+                // Trail particles
+                if (skDef.effect) {
+                    // Determine attribute from effect type
+                    let attr = 'arcane'; // default
+                    if (['melee_burst', 'whirlwind', 'stun_aoe', 'charge', 'arrow_rain', 'ground_slam', 'execute'].includes(skDef.effect)) attr = 'physical';
+                    else if (['projectile_fire', 'meteor', 'buff_berserk', 'buff_frenzy', 'buff_atkspd'].includes(skDef.effect)) attr = 'fire';
+                    else if (['frost_nova', 'frozen_orb'].includes(skDef.effect)) attr = 'ice';
+                    else if (['chain_lightning'].includes(skDef.effect)) attr = 'lightning';
+                    else if (['holy_burst', 'consecrate', 'self_heal_pct', 'buff_aura', 'buff_undying'].includes(skDef.effect)) attr = 'holy';
+                    else if (['place_trap', 'buff_poison'].includes(skDef.effect)) attr = 'nature';
+
+                    emitTrailParticles(this.x, this.y, skDef.color || '#ffffff', attr, lvl);
                 }
             }
         },
@@ -4918,6 +5153,72 @@
                 <div style="color:#88a">${row.sk.mp}MP / ${row.sk.cd}s</div>
             </div>`;
             html += `<div style="font-size:10px;color:#777;margin:2px 0 6px 16px">${effectDesc(row.sk)}</div>`;
+        }
+
+        // Detailed Skill Information Section (learned skills only)
+        html += `<div style="color:#daa520;font-weight:bold;margin:16px 0 8px;border-top:2px solid #666;padding-top:8px">習得済みスキル詳細</div>`;
+        html += `<div style="color:#888;font-size:10px;margin-bottom:8px">※レベル1以上のスキルのみ表示</div>`;
+
+        // Get all learned skills (level 1+)
+        const learnedSkills = list.filter(row => (player.skillLevels[row.sk.id] || 0) > 0);
+
+        if (learnedSkills.length === 0) {
+            html += `<div style="color:#666;font-size:11px;text-align:center;margin:12px 0">まだスキルを習得していません (Tキーでスキルツリーを開く)</div>`;
+        } else {
+            for (const row of learnedSkills) {
+                const sk = row.sk;
+                const skillLvl = player.skillLevels[sk.id] || 0;
+                const allAvail = getAllAvailableSkills();
+                const skDef = allAvail.find(s => s.id === sk.id);
+
+                // Skill card container
+                html += `<div style="background:#1a1a2e;border:1px solid #444;border-radius:4px;padding:8px;margin:6px 0">`;
+
+                // Skill header
+                html += `<div style="display:flex;align-items:center;justify-content:space-between">`;
+                html += `<div style="display:flex;align-items:center;gap:8px">`;
+                html += `<span style="font-size:20px">${sk.icon}</span>`;
+                html += `<span style="color:#ffd700;font-size:13px;font-weight:bold">${sk.name}</span>`;
+                html += `<span style="color:#88ff88;font-size:10px">Lv.${skillLvl}/5</span>`;
+                html += `</div>`;
+                html += `<span style="color:#888;font-size:9px">${row.branchLabel}</span>`;
+                html += `</div>`;
+
+                // Stats row
+                html += `<div style="margin:6px 0;font-size:10px;color:#aaa">`;
+                html += `<span style="color:#4488ff">MP: ${sk.mp}</span> | `;
+                html += `<span style="color:#ff88aa">CD: ${sk.cd}s</span>`;
+
+                // Add level-specific stats
+                if (skDef) {
+                    const li = skillLvl - 1; // 0-indexed
+                    if (skDef.baseMult && skDef.baseMult[li]) {
+                        html += ` | <span style="color:#ffaa44">倍率: x${skDef.baseMult[li]}</span>`;
+                    }
+                    if (skDef.range) {
+                        html += ` | <span style="color:#88ff88">射程: ${skDef.range}</span>`;
+                    }
+                    if (skDef.duration && skDef.duration[li]) {
+                        html += ` | <span style="color:#ffdd88">持続: ${skDef.duration[li]}s</span>`;
+                    }
+                }
+                html += `</div>`;
+
+                // Description
+                html += `<div style="font-size:10px;color:#ccc;margin-top:4px">${effectDesc(sk)}</div>`;
+
+                // Level progression bar
+                html += `<div style="margin-top:6px;display:flex;gap:2px">`;
+                for (let i = 1; i <= 5; i++) {
+                    const active = i <= skillLvl;
+                    const barColor = active ? '#ffd700' : '#333';
+                    const barHeight = active ? '6px' : '4px';
+                    html += `<div style="flex:1;height:${barHeight};background:${barColor};border-radius:2px"></div>`;
+                }
+                html += `</div>`;
+
+                html += `</div>`; // Close skill card
+            }
         }
 
         el.innerHTML = html;
@@ -6675,6 +6976,15 @@
         }
 
         ctx.restore();
+
+        // Screen flash effect for Level 5 skills
+        if (G.flashT && G.flashT > 0) {
+            ctx.globalAlpha = Math.min((G.flashAlpha || 0.3) * (G.flashT / 0.15), 1);
+            ctx.fillStyle = G.flashColor || '#ffffff';
+            ctx.fillRect(0, 0, W, H);
+            ctx.globalAlpha = 1;
+            G.flashT = Math.max(0, G.flashT - dt);
+        }
 
         drawHUD();
         drawLog();
