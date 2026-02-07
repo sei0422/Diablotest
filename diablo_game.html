@@ -1321,7 +1321,7 @@
     // --- Constants ---
     const TILE = 40;
     const MAP_W = 60, MAP_H = 60;
-    const MAX_PARTICLES = 500; // パーティクル数の上限
+    const MAX_PARTICLES = 1500; // Diablo風：パーティクル数の上限を3倍に（500→1500）
     let W = window.innerWidth, H = window.innerHeight;
 
     // --- Canvas Setup ---
@@ -1690,6 +1690,12 @@
 
     const particles = [];
     function emitParticles(x, y, color, count, speed = 80, life = 0.5, size = 3, grav = 150, attribute = null, skillLevel = 1) {
+        // Diablo Mode: Triple particle count for spectacular effects
+        const DIABLO_MODE = !SETTINGS.reducedParticles; // 低負荷モードでない場合に有効
+        if (DIABLO_MODE) {
+            count = Math.round(count * 3.0); // パーティクル数を3倍に
+        }
+
         // Apply skill level scaling to count (enhanced for visibility)
         if (skillLevel && skillLevel > 0) {
             const levelScale = 0.7 + (skillLevel - 1) * 0.3; // 0.7x at L1, 1.9x at L5
@@ -3570,7 +3576,7 @@
             addFloatingText(this.x, this.y - 20, dmg, '#ff4444');
             emitParticles(this.x, this.y, '#ff0000', 8, 80, 0.4, 3);
             emitParticles(this.x, this.y, '#880000', 4, 40, 0.3, 2, 100);
-            G.shakeT = 0.2; G.shakeAmt = 5;
+            G.shakeT = 0.2; G.shakeAmt = 10; // Diablo風：2倍
             G.dmgFlashT = 0.35; // Screen blood flash
             // Counter-attack
             if (this.counterT > 0 && this.counterReflect > 0) {
@@ -3739,7 +3745,7 @@
                         }
                     }
                     emitParticles(this.x, this.y, '#ffcc44', 15, 100, 0.4, 3, 0, 'physical', lvl);
-                    G.shakeT = 0.1; G.shakeAmt = 4;
+                    G.shakeT = 0.15; G.shakeAmt = 8; // Diablo風：2倍
                     break;
                 }
                 case 'projectile_fire': {
@@ -3879,8 +3885,8 @@
                             m.spd = MONSTER_DEFS[m.type].spd * 0.2;
                         }
                     }
-                    emitParticles(this.x, this.y, '#88ddff', 30, 130, 0.6, 4, 0, 'ice', lvl);
-                    emitParticles(this.x, this.y, '#ffffff', 15, 80, 0.4, 2, -30, 'ice', lvl);
+                    emitParticles(this.x, this.y, '#88ddff', 30, 130, 0.9, 4, 0, 'ice', lvl); // 寿命1.5倍
+                    emitParticles(this.x, this.y, '#ffffff', 15, 80, 0.6, 2, -30, 'ice', lvl); // 寿命1.5倍
                     addLog('フロストノヴァ！', '#88ddff');
                     break;
                 }
@@ -3917,7 +3923,7 @@
                 }
                 case 'ground_slam': {
                     sfxHit();
-                    G.shakeT = 0.2; G.shakeAmt = 6;
+                    G.shakeT = 0.25; G.shakeAmt = 12; // Diablo風：2倍
                     const mult = skDef.baseMult[li];
                     const slowFactor = skDef.slow ? skDef.slow[li] : 0.5;
                     for (const m of monsters) {
@@ -4025,7 +4031,7 @@
                     if (hit) {
                         this.attackAnimT = 0.3;
                         emitParticles(this.x, this.y, '#ff4444', 15, 80, 0.4, 4, 0, 'physical', lvl);
-                        G.shakeT = 0.15; G.shakeAmt = 5;
+                        G.shakeT = 0.2; G.shakeAmt = 10; // Diablo風：2倍
                     }
                     break;
                 }
@@ -4170,8 +4176,8 @@
                 G.flashAlpha = 0.3;
 
                 // Enhanced shake
-                G.shakeT = Math.max(G.shakeT || 0, 0.2);
-                G.shakeAmt = Math.max(G.shakeAmt || 0, 8);
+                G.shakeT = Math.max(G.shakeT || 0, 0.3);
+                G.shakeAmt = Math.max(G.shakeAmt || 0, 16); // Diablo風：2倍
 
                 // Trail particles
                 if (skDef.effect) {
@@ -4280,10 +4286,10 @@
                     // BOOM
                     const mx = G.meteorX, my = G.meteorY;
                     sfxMeteorImpact();
-                    G.shakeT = 0.4; G.shakeAmt = 8;
-                    emitParticles(mx, my, '#ff4400', 40, 150, 0.8, 5, 50);
-                    emitParticles(mx, my, '#ffaa00', 25, 100, 0.6, 4, 30);
-                    emitParticles(mx, my, '#ffffff', 10, 60, 0.3, 2, 0);
+                    G.shakeT = 0.5; G.shakeAmt = 16; // Diablo風：2倍
+                    emitParticles(mx, my, '#ff4400', 40, 150, 1.2, 5, 50); // 寿命1.5倍
+                    emitParticles(mx, my, '#ffaa00', 25, 100, 0.9, 4, 30); // 寿命1.5倍
+                    emitParticles(mx, my, '#ffffff', 10, 60, 0.45, 2, 0); // 寿命1.5倍
                     for (const m of monsters) {
                         if (m.alive && dist(mx, my, m.x, m.y) < 100) {
                             const isCrit = Math.random() * 100 < this.getCritChance();
@@ -4774,8 +4780,12 @@
         const flipX = player.x < this.x;
         drawSpr('skeleton', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX);
         if (alphaFlash > 0) {
-            ctx.globalAlpha = alphaFlash * 0.4; ctx.fillStyle = '#fff';
-            ctx.fillRect(sx - TILE/2, sy - TILE/2, TILE, TILE); ctx.globalAlpha = 1;
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = alphaFlash * 0.5;
+            ctx.fillStyle = '#ff4444';
+            ctx.fillRect(sx - TILE/2, sy - TILE/2, TILE, TILE);
+            ctx.restore();
         }
     }
 
@@ -4783,8 +4793,12 @@
         const flipX = player.x < this.x;
         drawSpr('zombie', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX);
         if (alphaFlash > 0) {
-            ctx.globalAlpha = alphaFlash * 0.4; ctx.fillStyle = '#fff';
-            ctx.fillRect(sx - TILE/2, sy - TILE/2, TILE, TILE); ctx.globalAlpha = 1;
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = alphaFlash * 0.5;
+            ctx.fillStyle = '#ff4444';
+            ctx.fillRect(sx - TILE/2, sy - TILE/2, TILE, TILE);
+            ctx.restore();
         }
     }
 
@@ -4792,8 +4806,12 @@
         const flipX = player.x < this.x;
         drawSpr('imp', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX);
         if (alphaFlash > 0) {
-            ctx.globalAlpha = alphaFlash * 0.4; ctx.fillStyle = '#f44';
-            ctx.fillRect(sx - TILE/2, sy - TILE/2, TILE, TILE); ctx.globalAlpha = 1;
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = alphaFlash * 0.5;
+            ctx.fillStyle = '#ff4444';
+            ctx.fillRect(sx - TILE/2, sy - TILE/2, TILE, TILE);
+            ctx.restore();
         }
     }
 
@@ -4803,8 +4821,12 @@
         drawSpr('banshee', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX);
         ctx.globalAlpha = 1;
         if (alphaFlash > 0) {
-            ctx.globalAlpha = alphaFlash * 0.3; ctx.fillStyle = '#88f';
-            ctx.fillRect(sx - TILE/2, sy - TILE/2, TILE, TILE); ctx.globalAlpha = 1;
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = alphaFlash * 0.4;
+            ctx.fillStyle = '#88bbff';
+            ctx.fillRect(sx - TILE/2, sy - TILE/2, TILE, TILE);
+            ctx.restore();
         }
     }
 
@@ -4818,8 +4840,12 @@
         ctx.beginPath(); ctx.arc(sx, sy, TILE * 0.75, 0, Math.PI * 2); ctx.fill();
         ctx.globalAlpha = 1;
         if (alphaFlash > 0) {
-            ctx.globalAlpha = alphaFlash * 0.4; ctx.fillStyle = '#ff0';
-            ctx.fillRect(sx - bw/2, sy - bh/2, bw, bh); ctx.globalAlpha = 1;
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = alphaFlash * 0.6;
+            ctx.fillStyle = '#ffaa00';
+            ctx.fillRect(sx - bw/2, sy - bh/2, bw, bh);
+            ctx.restore();
         }
     }
     }
@@ -6896,7 +6922,7 @@
                             monsterTakeDmg(m, tr.dmg, false);
                             emitParticles(tr.x, tr.y, '#ff6600', 20, 100, 0.5, 4, 50);
                             playNoise(0.15, 0.1, 2000);
-                            G.shakeT = 0.1; G.shakeAmt = 3;
+                            G.shakeT = 0.15; G.shakeAmt = 6; // Diablo風：2倍
                             addLog('トラップ発動！', '#ff6600');
                             G.traps.splice(i, 1);
                             break;
