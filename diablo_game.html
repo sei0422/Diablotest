@@ -4830,7 +4830,22 @@
                 for (const p of promos) {
                     const pDef = CLASS_DEFS[p.key];
                     if (pDef) {
-                        html += `<div style="font-size:11px;color:#ccc;margin:2px 0 2px 12px">${pDef.icon} ${pDef.name}</div>`;
+                        html += `<div style="font-size:12px;color:#ffd700;margin:6px 0 2px 12px;font-weight:bold">${pDef.icon} ${pDef.name}</div>`;
+                        // スキルブランチを表示
+                        if (pDef.branches && pDef.branches.length > 0 && pDef.skills && pDef.skills.length > 0) {
+                            html += `<div style="font-size:10px;color:#aaa;margin:2px 0 2px 24px">スキルツリー:</div>`;
+                            for (let i = 0; i < pDef.branches.length; i++) {
+                                const branchName = pDef.branches[i];
+                                // 各ブランチの最初の2スキルを表示
+                                const branchSkills = pDef.skills.filter(sk => sk.branch === i).slice(0, 2);
+                                if (branchSkills.length > 0) {
+                                    const totalBranchSkills = pDef.skills.filter(sk => sk.branch === i).length;
+                                    const skillNames = branchSkills.map(sk => sk.name).join(', ');
+                                    const ellipsis = totalBranchSkills > 2 ? '...' : '';
+                                    html += `<div style="font-size:10px;color:#999;margin:1px 0 1px 24px">・${branchName}: ${skillNames}${ellipsis}</div>`;
+                                }
+                            }
+                        }
                     }
                 }
                 html += `<div style="font-size:10px;color:#888;margin:6px 0">※レベルアップ時に選択画面が表示されます</div>`;
@@ -4845,7 +4860,22 @@
                 for (const p of promos) {
                     const pDef = CLASS_DEFS[p.key];
                     if (pDef) {
-                        html += `<div style="font-size:11px;color:#999;margin:2px 0 2px 12px">${pDef.icon} ${pDef.name}</div>`;
+                        html += `<div style="font-size:12px;color:#ccb38a;margin:6px 0 2px 12px;font-weight:bold">${pDef.icon} ${pDef.name}</div>`;
+                        // スキルブランチを表示
+                        if (pDef.branches && pDef.branches.length > 0 && pDef.skills && pDef.skills.length > 0) {
+                            html += `<div style="font-size:10px;color:#888;margin:2px 0 2px 24px">スキルツリー:</div>`;
+                            for (let i = 0; i < pDef.branches.length; i++) {
+                                const branchName = pDef.branches[i];
+                                // 各ブランチの最初の2スキルを表示
+                                const branchSkills = pDef.skills.filter(sk => sk.branch === i).slice(0, 2);
+                                if (branchSkills.length > 0) {
+                                    const totalBranchSkills = pDef.skills.filter(sk => sk.branch === i).length;
+                                    const skillNames = branchSkills.map(sk => sk.name).join(', ');
+                                    const ellipsis = totalBranchSkills > 2 ? '...' : '';
+                                    html += `<div style="font-size:10px;color:#777;margin:1px 0 1px 24px">・${branchName}: ${skillNames}${ellipsis}</div>`;
+                                }
+                            }
+                        }
                     }
                 }
             } else {
