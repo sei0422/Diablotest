@@ -2789,7 +2789,12 @@
         DOM.skillSelectOverlay.style.display = 'none';
     };
     function openSkillEdit() {
-        if (G.dead || !G.started) return;
+        console.log('[openSkillEdit] Called! G.dead:', G.dead, 'G.started:', G.started);
+        if (!G.started) {
+            console.log('[openSkillEdit] BLOCKED: Game not started');
+            return;
+        }
+        console.log('[openSkillEdit] Opening skill UI...');
         skillSelectSlot = 1;
         skillSwapFrom = 0;
         skillEditMode = 'assign';
@@ -5220,9 +5225,16 @@
             cyclePickupFilter();
         }
         if (e.code === 'KeyR' || e.key === 'r' || e.key === 'R') {
+            console.log('[KeyR] Pressed! skillSelectOpen:', skillSelectOpen);
             e.preventDefault();
-            if (skillSelectOpen) closeSkillSelect();
-            else openSkillEdit();
+            if (skillSelectOpen) {
+                console.log('[KeyR] Closing skill select');
+                closeSkillSelect();
+            }
+            else {
+                console.log('[KeyR] Calling openSkillEdit()');
+                openSkillEdit();
+            }
         }
         if (e.code === 'KeyE') {
             e.preventDefault();
@@ -6357,16 +6369,7 @@
     });
 
     // Capture R key even when focus is on UI elements
-    window.addEventListener('keydown', e => {
-        const key = e.key || '';
-        if (key !== 'r' && key !== 'R' && e.code !== 'KeyR') return;
-        const tag = (document.activeElement && document.activeElement.tagName) || '';
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-        if (!G.started || G.dead) return;
-        e.preventDefault();
-        if (skillSelectOpen) closeSkillSelect();
-        else openSkillEdit();
-    }, true);
+    // 重複リスナーを削除 - メインハンドラ（Line 5227）が正しく処理する
 
     document.addEventListener('visibilitychange', () => {
         if (document.hidden && G.started && !G.dead) setPaused(true);
