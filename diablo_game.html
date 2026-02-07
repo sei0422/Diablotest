@@ -920,9 +920,8 @@
         const a = ATLAS[key];
         if (!a || !SPRITES[a[0]]) return false;
         const prevSmooth = ctx.imageSmoothingEnabled;
-        const prevComp = ctx.globalCompositeOperation;
         ctx.imageSmoothingEnabled = false;
-        ctx.globalCompositeOperation = 'multiply'; // 白背景を除去
+        // multiplyブレンドモードを削除 - 暗い背景でスプライトが透明化するため
         if (flipX) {
             ctx.save(); ctx.translate(dx + dw, dy); ctx.scale(-1, 1);
             ctx.drawImage(SPRITES[a[0]], a[1], a[2], SP, SP, 0, 0, dw, dh);
@@ -930,7 +929,6 @@
         } else {
             ctx.drawImage(SPRITES[a[0]], a[1], a[2], SP, SP, dx, dy, dw, dh);
         }
-        ctx.globalCompositeOperation = prevComp;
         ctx.imageSmoothingEnabled = prevSmooth;
         return true;
     }
