@@ -118,6 +118,7 @@
             transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
             vertical-align: top;
             isolation: isolate;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7);
         }
         .promo-card::before {
             content: "";
@@ -232,6 +233,7 @@
             font-family: var(--font-mono);
             box-shadow: 0 0 20px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.5);
             isolation: isolate;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7);
         }
         .ui-panel::before {
             content: "";
@@ -241,7 +243,7 @@
             background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_1.png") repeat;
             background-size: 32px 32px;
             image-rendering: pixelated;
-            opacity: 0.15;
+            opacity: 0.10;
             pointer-events: none;
         }
         #statsPanel { top: 60px; left: 10px; width: 280px; }
@@ -415,6 +417,7 @@
             text-align: center;
             transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
             isolation: isolate;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7);
         }
         .class-card::before {
             content: "";
@@ -459,6 +462,7 @@
             z-index: 150;
             box-shadow: 0 0 30px rgba(0,0,0,0.9), inset 0 0 30px rgba(0,0,0,0.5);
             isolation: isolate;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7);
         }
         #skillTreePanel::before {
             content: "";
@@ -468,7 +472,7 @@
             background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_1.png") repeat;
             background-size: 32px 32px;
             image-rendering: pixelated;
-            opacity: 0.18;
+            opacity: 0.12;
             pointer-events: none;
         }
         .skill-branch { margin-bottom: 15px; }
@@ -653,8 +657,7 @@
             background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_3.png") repeat;
             background-size: 48px 48px;
             image-rendering: pixelated;
-            opacity: 0.12;
-            mix-blend-mode: soft-light;
+            opacity: 0.08;
             pointer-events: none;
         }
         #promotionContent,
@@ -917,7 +920,9 @@
         const a = ATLAS[key];
         if (!a || !SPRITES[a[0]]) return false;
         const prevSmooth = ctx.imageSmoothingEnabled;
+        const prevComp = ctx.globalCompositeOperation;
         ctx.imageSmoothingEnabled = false;
+        ctx.globalCompositeOperation = 'multiply'; // 白背景を除去
         if (flipX) {
             ctx.save(); ctx.translate(dx + dw, dy); ctx.scale(-1, 1);
             ctx.drawImage(SPRITES[a[0]], a[1], a[2], SP, SP, 0, 0, dw, dh);
@@ -925,6 +930,7 @@
         } else {
             ctx.drawImage(SPRITES[a[0]], a[1], a[2], SP, SP, dx, dy, dw, dh);
         }
+        ctx.globalCompositeOperation = prevComp;
         ctx.imageSmoothingEnabled = prevSmooth;
         return true;
     }
