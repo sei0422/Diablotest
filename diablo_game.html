@@ -4811,7 +4811,50 @@
             return;
         }
 
+        // クラス昇格情報
         const classDef = CLASS_DEFS[G.playerClass];
+        html += `<div style="color:#daa520;font-weight:bold;margin:14px 0 4px;border-top:1px solid #5a4a3a;padding-top:12px">クラス進化システム</div>`;
+        html += `<div style="font-size:12px;color:#ccc;margin-bottom:8px">現在のクラス: <span style="color:#ffd700">${classDef.icon} ${classDef.name}</span></div>`;
+
+        if (classDef.tier === 1) {
+            // 既に昇格済み
+            html += `<div style="font-size:11px;color:#88ff88;margin:4px 0">✓ 上位クラスに昇格済み</div>`;
+            if (classDef.baseClass) {
+                const base = CLASS_DEFS[classDef.baseClass];
+                html += `<div style="font-size:11px;color:#aaa">${base.icon} ${base.name} → ${classDef.icon} ${classDef.name}</div>`;
+            }
+        } else if (player.level >= PROMOTION_LEVEL) {
+            // 昇格可能
+            html += `<div style="font-size:11px;color:#ffaa44;margin:4px 0">⚡ レベル${PROMOTION_LEVEL}到達！昇格可能です</div>`;
+            const promos = CLASS_PROMOTIONS[G.playerClass] || [];
+            if (promos.length > 0) {
+                html += `<div style="font-size:11px;color:#daa520;margin:6px 0 2px">昇格先:</div>`;
+                for (const p of promos) {
+                    const pDef = CLASS_DEFS[p.key];
+                    if (pDef) {
+                        html += `<div style="font-size:11px;color:#ccc;margin:2px 0 2px 12px">${pDef.icon} ${pDef.name}</div>`;
+                    }
+                }
+                html += `<div style="font-size:10px;color:#888;margin:6px 0">※レベルアップ時に選択画面が表示されます</div>`;
+            }
+        } else {
+            // まだ昇格不可
+            const promos = CLASS_PROMOTIONS[G.playerClass] || [];
+            if (promos.length > 0) {
+                const needed = PROMOTION_LEVEL - player.level;
+                html += `<div style="font-size:11px;color:#888;margin:4px 0">レベル${PROMOTION_LEVEL}で上位クラスに昇格可能 (あと${needed}レベル)</div>`;
+                html += `<div style="font-size:11px;color:#daa520;margin:6px 0 2px">昇格先:</div>`;
+                for (const p of promos) {
+                    const pDef = CLASS_DEFS[p.key];
+                    if (pDef) {
+                        html += `<div style="font-size:11px;color:#999;margin:2px 0 2px 12px">${pDef.icon} ${pDef.name}</div>`;
+                    }
+                }
+            } else {
+                html += `<div style="font-size:11px;color:#888;margin:4px 0">このクラスは最終形態です</div>`;
+            }
+        }
+
         const baseDef = classDef.baseClass ? CLASS_DEFS[classDef.baseClass] : null;
         const list = [];
         const seen = new Set();
