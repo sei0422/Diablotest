@@ -105,22 +105,40 @@
             50% { opacity: 1; }
         }
         .promo-card {
+            position: relative;
             display: inline-block;
             width: 45%;
             margin: 8px 2%;
             padding: 15px;
-            background: rgba(30,20,10,0.9);
+            background: rgba(30,20,10,0.9); /* フォールバック */
             border: 2px solid var(--panel-border-soft);
             border-radius: 6px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
             vertical-align: top;
+            isolation: isolate;
+        }
+        .promo-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            border-radius: inherit;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_2.png") repeat;
+            background-size: 20px 20px;
+            image-rendering: pixelated;
+            opacity: 0.35;
+            transition: filter 0.2s;
+            pointer-events: none;
         }
         .promo-card:hover {
             border-color: var(--accent-strong);
             box-shadow: 0 0 20px var(--ui-glow);
             transform: translateY(-3px);
+        }
+        .promo-card:hover::before {
+            filter: brightness(1.2);
         }
         .emoji-font { font-family: var(--font-emoji); }
         .skill-slot-pick {
@@ -160,20 +178,48 @@
             cursor: not-allowed;
         }
         .close-btn {
-            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_2.png") repeat;
-            background-size: 16px 16px;
+            position: relative;
+            background: rgba(101, 67, 33, 0.95); /* フォールバック背景 */
             color: var(--accent-strong);
             border: 1px solid var(--panel-border);
             padding: 8px 20px;
             cursor: pointer;
             border-radius: 4px;
             font-size: 13px;
-            image-rendering: pixelated;
+            isolation: isolate;
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.1s;
         }
-        .close-btn:hover { background: #7a5a35; }
+        .close-btn::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            border-radius: inherit;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_2.png") repeat;
+            background-size: 16px 16px;
+            image-rendering: pixelated;
+            opacity: 0.5;
+            transition: filter 0.2s, opacity 0.2s;
+            pointer-events: none;
+        }
+        .close-btn:hover {
+            border-color: var(--accent-strong);
+            box-shadow: 0 0 15px rgba(229, 179, 90, 0.4);
+            transform: translateY(-1px);
+        }
+        .close-btn:hover::before {
+            filter: brightness(1.25);
+            opacity: 0.6;
+        }
+        .close-btn:active {
+            transform: translateY(0);
+        }
+        .close-btn:active::before {
+            filter: brightness(0.85);
+        }
         .ui-panel {
             position: absolute;
-            background: linear-gradient(180deg, var(--panel-bg), rgba(10,5,2,0.95));
+            background: linear-gradient(180deg, var(--panel-bg), rgba(10,5,2,0.95)); /* フォールバック */
             border: 2px solid var(--panel-border);
             border-image: linear-gradient(180deg, var(--accent), #8b6914, #654321) 1;
             color: var(--accent);
@@ -185,6 +231,19 @@
             overflow-y: auto;
             font-family: var(--font-mono);
             box-shadow: 0 0 20px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.5);
+            isolation: isolate;
+        }
+        .ui-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_1.png") repeat;
+            background-size: 32px 32px;
+            image-rendering: pixelated;
+            opacity: 0.25;
+            mix-blend-mode: overlay;
+            pointer-events: none;
         }
         #statsPanel { top: 60px; left: 10px; width: 280px; }
         #inventoryPanel { top: 60px; right: 10px; width: 320px; }
@@ -210,15 +269,36 @@
         .stat-label { color: #aaa; }
         .stat-value { color: #ffd700; font-weight: bold; }
         .stat-btn {
-            background: #654321;
+            position: relative;
+            background: rgba(101, 67, 33, 0.9); /* フォールバック */
             color: #ffd700;
             border: 1px solid #8b7355;
             cursor: pointer;
             padding: 1px 8px;
             font-size: 12px;
             margin-left: 5px;
+            isolation: isolate;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
-        .stat-btn:hover { background: #8b6914; }
+        .stat-btn::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_2.png") repeat;
+            background-size: 16px 16px;
+            image-rendering: pixelated;
+            opacity: 0.5;
+            transition: filter 0.2s;
+            pointer-events: none;
+        }
+        .stat-btn:hover {
+            border-color: var(--accent-strong);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+        }
+        .stat-btn:hover::before {
+            filter: brightness(1.25);
+        }
         .equip-slots {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -327,19 +407,36 @@
             display: none;
         }
         .class-card {
+            position: relative;
             width: 260px;
-            background: linear-gradient(180deg, rgba(30,20,10,0.95), rgba(15,10,5,0.95));
+            background: linear-gradient(180deg, rgba(30,20,10,0.95), rgba(15,10,5,0.95)); /* フォールバック */
             border: 2px solid #5a4a3a;
             padding: 20px;
             cursor: pointer;
             text-align: center;
-            transition: all 0.3s;
+            transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+            isolation: isolate;
+        }
+        .class-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_2.png") repeat;
+            background-size: 24px 24px;
+            image-rendering: pixelated;
+            opacity: 0.3;
+            transition: filter 0.3s, opacity 0.3s;
+            pointer-events: none;
         }
         .class-card:hover {
             border-color: #daa520;
-            background: linear-gradient(180deg, rgba(50,35,15,0.95), rgba(25,18,8,0.95));
             transform: translateY(-5px);
             box-shadow: 0 5px 25px rgba(218,165,32,0.3);
+        }
+        .class-card:hover::before {
+            filter: brightness(1.3);
+            opacity: 0.4;
         }
         .class-icon { font-size: 48px; margin-bottom: 10px; font-family: var(--font-emoji); }
         .class-name { font-size: 24px; color: #daa520; font-weight: bold; letter-spacing: 4px; font-family: var(--font-title); }
@@ -353,7 +450,7 @@
             width: 650px;
             max-height: 85vh;
             overflow-y: auto;
-            background: linear-gradient(180deg, rgba(20,10,5,0.97), rgba(10,5,2,0.97));
+            background: linear-gradient(180deg, rgba(20,10,5,0.97), rgba(10,5,2,0.97)); /* フォールバック */
             border: 2px solid #8b7355;
             border-image: linear-gradient(180deg, #daa520, #8b6914, #654321) 1;
             color: #daa520;
@@ -362,6 +459,19 @@
             display: none;
             z-index: 150;
             box-shadow: 0 0 30px rgba(0,0,0,0.9), inset 0 0 30px rgba(0,0,0,0.5);
+            isolation: isolate;
+        }
+        #skillTreePanel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_1.png") repeat;
+            background-size: 32px 32px;
+            image-rendering: pixelated;
+            opacity: 0.3;
+            mix-blend-mode: overlay;
+            pointer-events: none;
         }
         .skill-branch { margin-bottom: 15px; }
         .skill-branch-title { color: #ffd700; font-size: 14px; font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #5a4a3a; padding-bottom: 4px; }
@@ -384,8 +494,37 @@
         .skill-node .sn-name { color: #daa520; font-size: 12px; font-weight: bold; }
         .skill-node .sn-level { color: #888; font-size: 10px; }
         .skill-node .sn-desc { color: #777; font-size: 10px; margin-top: 4px; }
-        .skill-node .sn-btn { background: #4a3210; color: #daa520; border: 1px solid #8b7355; padding: 2px 8px; font-size: 10px; cursor: pointer; margin-top: 4px; }
-        .skill-node .sn-btn:hover { background: #6a4a18; }
+        .skill-node .sn-btn {
+            position: relative;
+            background: rgba(74, 50, 16, 0.9); /* フォールバック */
+            color: #daa520;
+            border: 1px solid #8b7355;
+            padding: 2px 8px;
+            font-size: 10px;
+            cursor: pointer;
+            margin-top: 4px;
+            isolation: isolate;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .skill-node .sn-btn::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_2.png") repeat;
+            background-size: 16px 16px;
+            image-rendering: pixelated;
+            opacity: 0.5;
+            transition: filter 0.2s;
+            pointer-events: none;
+        }
+        .skill-node .sn-btn:hover {
+            border-color: #daa520;
+            box-shadow: 0 0 8px rgba(218, 165, 32, 0.4);
+        }
+        .skill-node .sn-btn:hover::before {
+            filter: brightness(1.25);
+        }
         #pauseOverlay {
             position: fixed;
             inset: 0;
@@ -429,17 +568,43 @@
         .setting-label { color: var(--text); font-size: 12px; }
         .setting-actions { display: flex; gap: 6px; align-items: center; }
         .toggle-btn {
-            background: #3a2716;
+            position: relative;
+            background: rgba(58, 39, 22, 0.9); /* フォールバック */
             color: var(--accent-strong);
             border: 1px solid var(--panel-border);
             padding: 4px 10px;
             font-size: 11px;
             border-radius: 4px;
             cursor: pointer;
+            isolation: isolate;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .toggle-btn::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            border-radius: inherit;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_2.png") repeat;
+            background-size: 16px 16px;
+            image-rendering: pixelated;
+            opacity: 0.5;
+            transition: filter 0.2s, opacity 0.2s;
+            pointer-events: none;
+        }
+        .toggle-btn:hover {
+            border-color: var(--accent-strong);
+            box-shadow: 0 0 10px rgba(229, 179, 90, 0.3);
+        }
+        .toggle-btn:hover::before {
+            filter: brightness(1.2);
         }
         .toggle-btn.off {
             color: #b68a5d;
             opacity: 0.8;
+        }
+        .toggle-btn.off::before {
+            opacity: 0.3; /* オフ時はテクスチャを薄く */
         }
         #titleSaveMenu {
             margin-top: 20px;
@@ -465,6 +630,69 @@
         .title-save-actions {
             display: flex;
             gap: 6px;
+        }
+        #promotionOverlay,
+        #skillSelectOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85); /* フォールバック */
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+        #skillSelectOverlay {
+            z-index: 1500;
+            background: rgba(0, 0, 0, 0.8);
+        }
+        #promotionOverlay::before,
+        #skillSelectOverlay::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_3.png") repeat;
+            background-size: 48px 48px;
+            image-rendering: pixelated;
+            opacity: 0.12;
+            mix-blend-mode: soft-light;
+            pointer-events: none;
+        }
+        #promotionContent,
+        #skillSelectContent {
+            position: relative;
+            background: linear-gradient(180deg, rgba(30,15,5,0.98), rgba(15,8,2,0.98)); /* フォールバック */
+            border: 2px solid #daa520;
+            padding: 25px;
+            max-width: 600px;
+            width: 90%;
+            border-radius: 6px;
+            box-shadow: 0 0 40px rgba(218,165,32,0.3);
+            isolation: isolate;
+        }
+        #skillSelectContent {
+            background: linear-gradient(180deg, rgba(20,12,5,0.98), rgba(10,6,2,0.98));
+            border-color: #8b7355;
+            padding: 20px;
+            max-width: 500px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        #promotionContent::before,
+        #skillSelectContent::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            border-radius: inherit;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_1.png") repeat;
+            background-size: 32px 32px;
+            image-rendering: pixelated;
+            opacity: 0.25;
+            mix-blend-mode: overlay;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -506,13 +734,13 @@
     </div>
 
     <!-- Promotion Overlay -->
-    <div id="promotionOverlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);z-index:2000;justify-content:center;align-items:center">
-        <div id="promotionContent" style="background:linear-gradient(180deg,rgba(30,15,5,0.98),rgba(15,8,2,0.98));border:2px solid #daa520;padding:25px;max-width:600px;width:90%;border-radius:6px;box-shadow:0 0 40px rgba(218,165,32,0.3)"></div>
+    <div id="promotionOverlay">
+        <div id="promotionContent"></div>
     </div>
 
     <!-- Skill Select Overlay -->
-    <div id="skillSelectOverlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.8);z-index:1500;justify-content:center;align-items:center">
-        <div id="skillSelectContent" style="background:linear-gradient(180deg,rgba(20,12,5,0.98),rgba(10,6,2,0.98));border:2px solid #8b7355;padding:20px;max-width:500px;width:90%;border-radius:6px;box-shadow:0 0 30px rgba(0,0,0,0.5);max-height:80vh;overflow-y:auto"></div>
+    <div id="skillSelectOverlay">
+        <div id="skillSelectContent"></div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
