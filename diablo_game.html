@@ -782,13 +782,8 @@
             <div><span style="color:#ffd700">Rキー</span> ─ スキルショートカット編集</div>
             <div><span style="color:#ffd700">Eキー</span> ─ 階段を降りる</div>
             <div><span style="color:#ffd700">Esc</span> ─ 一時停止</div>
-            <div style="color:#daa520;font-weight:bold;margin:12px 0 4px">スキル (1~6キーで選択)</div>
-            <div><span style="color:#ffd700">1</span> ─ 🔥 ファイアボール (15MP) ─ 炎の弾を発射</div>
-            <div><span style="color:#ffd700">2</span> ─ 🌀 旋風斬 (20MP) ─ 周囲の敵を斬る</div>
-            <div><span style="color:#ffd700">3</span> ─ 💚 ヒール (25MP) ─ HPを回復</div>
-            <div><span style="color:#ffd700">4</span> ─ ❄️ フロストノヴァ (30MP) ─ 敵を凍結</div>
-            <div><span style="color:#ffd700">5</span> ─ 🛡️ 魔法シールド (35MP) ─ ダメージ軽減</div>
-            <div><span style="color:#ffd700">6</span> ─ ☄️ メテオ (50MP) ─ 広範囲大ダメージ</div>
+            <div style="color:#daa520;font-weight:bold;margin:12px 0 4px">スキル (1~6キーで発動)</div>
+            <div id="helpSkillSlots" style="color:#ccc;font-size:12px">スキルスロット情報を読み込み中...</div>
             <div style="color:#daa520;font-weight:bold;margin:12px 0 4px">ヒント</div>
             <div style="color:#999;font-size:12px">・敵を全滅させると階段が使える</div>
             <div style="color:#999;font-size:12px">・深い階層ほど強敵と良いアイテムが出現</div>
@@ -852,20 +847,8 @@
         function loadOne(key, src, retries) {
             const img = new Image();
             img.onload = () => {
-                // Clean up white edges from nearly transparent pixels
-                const cleanCanvas = document.createElement('canvas');
-                const cleanCtx = cleanCanvas.getContext('2d');
-                cleanCanvas.width = img.width;
-                cleanCanvas.height = img.height;
-                cleanCtx.drawImage(img, 0, 0);
-                const imgData = cleanCtx.getImageData(0, 0, img.width, img.height);
-                for(let i = 0; i < imgData.data.length; i += 4) {
-                    if(imgData.data[i+3] < 10) { // Nearly transparent pixels
-                        imgData.data[i] = imgData.data[i+1] = imgData.data[i+2] = 0; // Set RGB to black
-                    }
-                }
-                cleanCtx.putImageData(imgData, 0, 0);
-                SPRITES[key] = cleanCanvas; // Use cleaned version instead of img
+                // Use original sprite without pixel processing
+                SPRITES[key] = img;
                 console.log('Sprite loaded:', key, img.width + 'x' + img.height);
                 if (++loaded === total) onAllLoaded();
             };
@@ -3768,8 +3751,9 @@
                     if (skDef.id && (skDef.id.includes('fire') || skDef.id.includes('immolation'))) attr = 'fire';
                     else if (skDef.id && (skDef.id.includes('cold') || skDef.id.includes('ice') || skDef.id.includes('frost'))) attr = 'ice';
                     else if (skDef.id && skDef.id.includes('lightning')) attr = 'lightning';
+                    else attr = 'arcane'; // Default to arcane for other projectiles
                     projectiles.push(new Projectile(this.x, this.y, wx, wy, dmg * mult, '#ff4400', spd, 8, attr));
-                    emitParticles(this.x, this.y, '#ff6600', 6, 50, 0.3, 3, 0, 'fire', lvl);
+                    emitParticles(this.x, this.y, '#ff6600', 6, 50, 0.3, 3, 0, attr, lvl);
                     break;
                 }
                 case 'multi_shot': {
@@ -3783,12 +3767,14 @@
                     if (skDef.id && (skDef.id.includes('fire') || skDef.id.includes('immolation'))) attr = 'fire';
                     else if (skDef.id && (skDef.id.includes('cold') || skDef.id.includes('ice') || skDef.id.includes('frost'))) attr = 'ice';
                     else if (skDef.id && skDef.id.includes('lightning')) attr = 'lightning';
+                    else attr = 'physical'; // Default to physical for arrows
                     for (let i = 0; i < numArrows; i++) {
                         const a = baseAngle - spread / 2 + spread * i / Math.max(1, numArrows - 1);
                         const tx = this.x + Math.cos(a) * 400;
                         const ty = this.y + Math.sin(a) * 400;
                         projectiles.push(new Projectile(this.x, this.y, tx, ty, dmg * mult, '#ffaa00', 380, 5, attr));
                     }
+                    emitParticles(this.x, this.y, '#ffaa00', 8, 60, 0.3, 3, 0, attr, lvl);
                     break;
                 }
                 case 'arrow_rain': {
@@ -5064,6 +5050,22 @@
     }
 
     function renderHelpUI() {
+        // Update skill slot display (1-6 keys)
+        const slotsEl = document.getElementById('helpSkillSlots');
+        if (slotsEl && player.skills) {
+            let slotsHtml = '';
+            for (let i = 1; i <= 6; i++) {
+                const sk = player.skills[i];
+                if (sk && sk.id) {
+                    const lvl = player.skillLevels[sk.id] || 0;
+                    slotsHtml += `<div style="margin:2px 0"><span style="color:#ffd700">${i}</span> ─ ${sk.icon} ${sk.name} Lv.${lvl} (${sk.mp}MP) ─ ${sk.desc || ''}</div>`;
+                } else {
+                    slotsHtml += `<div style="color:#666;margin:2px 0"><span style="color:#ffd700">${i}</span> ─ 未設定 (Rキーでスキル編集)</div>`;
+                }
+            }
+            slotsEl.innerHTML = slotsHtml || '<div style="color:#888">スキルスロット情報がありません</div>';
+        }
+
         const el = document.getElementById('helpDynamic');
         if (!el) return;
 
@@ -5116,13 +5118,12 @@
                             html += `<div style="font-size:10px;color:#aaa;margin:2px 0 2px 24px">スキルツリー:</div>`;
                             for (let i = 0; i < pDef.branches.length; i++) {
                                 const branchName = pDef.branches[i];
-                                // 各ブランチの最初の2スキルを表示
-                                const branchSkills = pDef.skills.filter(sk => sk.branch === i).slice(0, 2);
+                                const branchSkills = pDef.skills.filter(sk => sk.branch === i);
                                 if (branchSkills.length > 0) {
-                                    const totalBranchSkills = pDef.skills.filter(sk => sk.branch === i).length;
-                                    const skillNames = branchSkills.map(sk => sk.name).join(', ');
-                                    const ellipsis = totalBranchSkills > 2 ? '...' : '';
-                                    html += `<div style="font-size:10px;color:#999;margin:1px 0 1px 24px">・${branchName}: ${skillNames}${ellipsis}</div>`;
+                                    html += `<div style="font-size:10px;color:#daa520;font-weight:bold;margin:4px 0 2px 24px">${branchName}</div>`;
+                                    for (const sk of branchSkills) {
+                                        html += `<div style="font-size:9px;color:#999;margin:1px 0 1px 36px">・${sk.icon} ${sk.name} (${sk.mp}MP)</div>`;
+                                    }
                                 }
                             }
                         }
@@ -5146,13 +5147,12 @@
                             html += `<div style="font-size:10px;color:#888;margin:2px 0 2px 24px">スキルツリー:</div>`;
                             for (let i = 0; i < pDef.branches.length; i++) {
                                 const branchName = pDef.branches[i];
-                                // 各ブランチの最初の2スキルを表示
-                                const branchSkills = pDef.skills.filter(sk => sk.branch === i).slice(0, 2);
+                                const branchSkills = pDef.skills.filter(sk => sk.branch === i);
                                 if (branchSkills.length > 0) {
-                                    const totalBranchSkills = pDef.skills.filter(sk => sk.branch === i).length;
-                                    const skillNames = branchSkills.map(sk => sk.name).join(', ');
-                                    const ellipsis = totalBranchSkills > 2 ? '...' : '';
-                                    html += `<div style="font-size:10px;color:#777;margin:1px 0 1px 24px">・${branchName}: ${skillNames}${ellipsis}</div>`;
+                                    html += `<div style="font-size:10px;color:#ccb38a;font-weight:bold;margin:4px 0 2px 24px">${branchName}</div>`;
+                                    for (const sk of branchSkills) {
+                                        html += `<div style="font-size:9px;color:#888;margin:1px 0 1px 36px">・${sk.icon} ${sk.name} (${sk.mp}MP)</div>`;
+                                    }
                                 }
                             }
                         }
