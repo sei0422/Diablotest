@@ -53,7 +53,12 @@
             position: absolute;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
-            background: radial-gradient(ellipse at center, #1a0a0a 0%, #0a0503 55%, #000 85%);
+            background:
+                linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.85)),
+                url("asset/2D Pixel Dungeon Asset Pack/Dungeon_Tileset_at.png");
+            background-size: cover;
+            background-position: center;
+            image-rendering: pixelated;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -155,13 +160,15 @@
             cursor: not-allowed;
         }
         .close-btn {
-            background: #654321;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_2.png") repeat;
+            background-size: 16px 16px;
             color: var(--accent-strong);
             border: 1px solid var(--panel-border);
             padding: 8px 20px;
             cursor: pointer;
             border-radius: 4px;
             font-size: 13px;
+            image-rendering: pixelated;
         }
         .close-btn:hover { background: #7a5a35; }
         .ui-panel {
@@ -5094,8 +5101,17 @@
                 DOM.deathScreen.style.display = 'none';
                 initFloor();
                 addLog('復活した...', '#ffaaaa');
+                return; // 復活処理後は即座にreturn
             }
-            return;
+            // 死亡時もRキーでスキル編集を許可
+            if (e.code === 'KeyR' || e.key === 'r' || e.key === 'R') {
+                console.log('[KeyR] Pressed while dead - allowing skill edit');
+                e.preventDefault();
+                if (skillSelectOpen) closeSkillSelect();
+                else openSkillEdit();
+                return;
+            }
+            return; // 死亡時のその他のキーは無視
         }
 
         if (promotionPending) return;
