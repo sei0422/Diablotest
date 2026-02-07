@@ -128,7 +128,7 @@
             background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_2.png") repeat;
             background-size: 20px 20px;
             image-rendering: pixelated;
-            opacity: 0.35;
+            opacity: 0.22;
             transition: filter 0.2s;
             pointer-events: none;
         }
@@ -241,8 +241,7 @@
             background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_1.png") repeat;
             background-size: 32px 32px;
             image-rendering: pixelated;
-            opacity: 0.25;
-            mix-blend-mode: overlay;
+            opacity: 0.15;
             pointer-events: none;
         }
         #statsPanel { top: 60px; left: 10px; width: 280px; }
@@ -425,7 +424,7 @@
             background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_2.png") repeat;
             background-size: 24px 24px;
             image-rendering: pixelated;
-            opacity: 0.3;
+            opacity: 0.2;
             transition: filter 0.3s, opacity 0.3s;
             pointer-events: none;
         }
@@ -469,8 +468,7 @@
             background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_1.png") repeat;
             background-size: 32px 32px;
             image-rendering: pixelated;
-            opacity: 0.3;
-            mix-blend-mode: overlay;
+            opacity: 0.18;
             pointer-events: none;
         }
         .skill-branch { margin-bottom: 15px; }
@@ -690,8 +688,7 @@
             background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_1.png") repeat;
             background-size: 32px 32px;
             image-rendering: pixelated;
-            opacity: 0.25;
-            mix-blend-mode: overlay;
+            opacity: 0.15;
             pointer-events: none;
         }
     </style>
@@ -6077,10 +6074,12 @@
             saveData.player.skills = {};
             for (let i = 1; i <= 6; i++) {
                 const sk = player.skills[i];
-                saveData.player.skills[i] = {
-                    id: sk.id, name: sk.name, icon: sk.icon,
-                    mp: sk.mp, maxCD: sk.maxCD, desc: sk.desc
-                };
+                if (sk) { // 空スロット対応
+                    saveData.player.skills[i] = {
+                        id: sk.id, name: sk.name, icon: sk.icon,
+                        mp: sk.mp, maxCD: sk.maxCD, desc: sk.desc
+                    };
+                }
             }
             // Save only alive monsters (dead ones stay dead on load)
             saveData.monsters = monsters.filter(m => m.alive).map(m => ({
@@ -6222,6 +6221,7 @@
             G.camY = player.y - H / 2;
 
             // Restore skills with proper maxCD lookup
+            player.skills = {}; // 他のセーブファイルのスキル汚染を防ぐ
             if (p.skills) {
                 const allSkills = getAllAvailableSkills();
                 for (let i = 1; i <= 6; i++) {
