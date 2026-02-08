@@ -2243,10 +2243,16 @@
             this.size = randf(0.5, 2);
             this.life = this.maxLife = randf(3, 8);
             const roll = Math.random();
-            if (roll < 0.4) {
+            if (roll < 0.3) {
                 this.type = 'ember';
-            } else if (roll < 0.55) {
+            } else if (roll < 0.45) {
                 this.type = 'fog';
+            } else if (roll < 0.6) {
+                this.type = 'ash';
+            } else if (roll < 0.75) {
+                this.type = 'sparkle';
+            } else if (roll < 0.88) {
+                this.type = 'torch_spark';
             } else {
                 this.type = 'dust';
             }
@@ -2263,6 +2269,28 @@
                 this.vx = randf(-3, 3);
                 this.vy = randf(-2, 2);
                 this.life = this.maxLife = randf(5, 12);
+            } else if (this.type === 'ash') {
+                this.color = '#88776655';
+                this.alpha = 0.2;
+                this.size = randf(0.8, 1.8);
+                this.vy = randf(3, 10);
+                this.vx = randf(-4, 4);
+                this.life = this.maxLife = randf(4, 9);
+            } else if (this.type === 'sparkle') {
+                this.color = '#ffffcc';
+                this.alpha = 0.5;
+                this.size = randf(0.3, 1.0);
+                this.vx = randf(-2, 2);
+                this.vy = randf(-2, 2);
+                this.life = this.maxLife = randf(0.3, 1.0);
+            } else if (this.type === 'torch_spark') {
+                const hue = 25 + Math.random() * 15;
+                this.color = `hsl(${hue}, 100%, 65%)`;
+                this.alpha = 0.7;
+                this.size = randf(0.5, 1.5);
+                this.vy = randf(-25, -8);
+                this.vx = randf(-8, 8);
+                this.life = this.maxLife = randf(0.5, 1.5);
             } else {
                 this.color = '#aa997766';
                 this.alpha = 0.25;
@@ -2281,13 +2309,24 @@
             ctx.globalAlpha = a * this.alpha;
             ctx.fillStyle = this.color;
             if (this.type === 'fog') {
-                // Fog wisp - soft, large blurred circle
                 const fogG = ctx.createRadialGradient(sx, sy, 0, sx, sy, this.size);
                 fogG.addColorStop(0, 'rgba(100,90,80,0.06)');
                 fogG.addColorStop(0.5, 'rgba(80,70,60,0.03)');
                 fogG.addColorStop(1, 'rgba(60,50,40,0)');
                 ctx.fillStyle = fogG;
                 ctx.fillRect(sx - this.size, sy - this.size, this.size * 2, this.size * 2);
+            } else if (this.type === 'sparkle') {
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.beginPath();
+                ctx.arc(sx, sy, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalCompositeOperation = 'source-over';
+            } else if (this.type === 'torch_spark') {
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.beginPath();
+                ctx.arc(sx, sy, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalCompositeOperation = 'source-over';
             } else {
                 ctx.beginPath();
                 ctx.arc(sx, sy, this.size, 0, Math.PI * 2);
@@ -2298,13 +2337,36 @@
         alive() { return this.life > 0; }
     }
     function updateAmbientParticles(dt) {
-        const target = SETTINGS.reducedParticles ? 8 : 15;
+        const target = SETTINGS.reducedParticles ? 12 : 45;
         while (ambientParticles.length < target) ambientParticles.push(new AmbientParticle());
         while (ambientParticles.length > target) ambientParticles.pop();
         for (let i = ambientParticles.length - 1; i >= 0; i--) {
             ambientParticles[i].update(dt);
             if (!ambientParticles[i].alive()) ambientParticles[i].reset();
         }
+    }
+
+    // ========== GROUND FOG ==========
+    function drawGroundFog(cx, cy) {
+        if (G.inTown) return;
+        ctx.save();
+        ctx.globalAlpha = 1;
+        for (let i = 0; i < 12; i++) {
+            const phase = G.time * 0.3 + i * 1.7;
+            const fx = player.x + Math.sin(phase * 0.7 + i * 2.1) * 200 - cx;
+            const fy = player.y + Math.cos(phase * 0.5 + i * 1.3) * 150 - cy;
+            const fogR = 60 + Math.sin(phase + i) * 20;
+            const fogA = 0.06 + Math.sin(phase * 0.8 + i * 0.9) * 0.02;
+            const fg = ctx.createRadialGradient(fx, fy, 0, fx, fy, fogR);
+            fg.addColorStop(0, `rgba(80,70,60,${fogA})`);
+            fg.addColorStop(0.5, `rgba(60,50,40,${fogA * 0.5})`);
+            fg.addColorStop(1, 'rgba(40,30,20,0)');
+            ctx.fillStyle = fg;
+            ctx.beginPath();
+            ctx.arc(fx, fy, fogR, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
     }
 
     // ========== BLOOD POOLS (persist after monster death) ==========
@@ -8500,7 +8562,7 @@
         const flicker = Math.sin(G.time * 4.7) * 10 + Math.sin(G.time * 7.3) * 5 + Math.sin(G.time * 13.1) * 3;
 
         // lightR at function scope so torch code below can reference it
-        const lightR = G.inTown ? 600 + flicker : 350 + flicker;
+        const lightR = G.inTown ? 600 + flicker : 280 + flicker;
 
         // Town: brighter lighting
         if (G.inTown) {
@@ -8512,15 +8574,15 @@
             ctx.fillStyle = lg;
             ctx.fillRect(0, 0, W, H);
         } else {
-            // Get theme-specific darkness tint
+            // Get theme-specific darkness tint (20% darker)
             const actDef = getCurrentActDef();
             const coldTint = actDef.lightTint.cold || 'rgba(0,0,5,';
-            const lg = ctx.createRadialGradient(px, py, lightR * 0.2, px, py, lightR);
+            const lg = ctx.createRadialGradient(px, py, lightR * 0.15, px, py, lightR);
             lg.addColorStop(0, coldTint + '0)');
-            lg.addColorStop(0.3, coldTint + '0.1)');
-            lg.addColorStop(0.55, coldTint + '0.4)');
-            lg.addColorStop(0.75, coldTint + '0.7)');
-            lg.addColorStop(1, coldTint + '0.95)');
+            lg.addColorStop(0.2, coldTint + '0.15)');
+            lg.addColorStop(0.45, coldTint + '0.5)');
+            lg.addColorStop(0.65, coldTint + '0.8)');
+            lg.addColorStop(1, coldTint + '0.98)');
             ctx.fillStyle = lg;
             ctx.fillRect(0, 0, W, H);
         }
@@ -8577,34 +8639,50 @@
 
         // Player warm torch tint - amber/orange Diablo glow
         const warmG = ctx.createRadialGradient(px, py, 0, px, py, lightR * 0.55);
-        warmG.addColorStop(0, 'rgba(255,160,60,0.14)');
-        warmG.addColorStop(0.3, 'rgba(255,130,40,0.08)');
-        warmG.addColorStop(0.7, 'rgba(255,100,20,0.03)');
+        warmG.addColorStop(0, 'rgba(255,160,60,0.18)');
+        warmG.addColorStop(0.3, 'rgba(255,130,40,0.10)');
+        warmG.addColorStop(0.7, 'rgba(255,100,20,0.04)');
         warmG.addColorStop(1, 'rgba(255,80,10,0)');
         ctx.fillStyle = warmG;
         ctx.beginPath();
         ctx.arc(px, py, lightR * 0.55, 0, Math.PI * 2);
         ctx.fill();
 
-        // Color grading - warm amber tint (Diablo signature look) - strengthened
-        ctx.globalAlpha = 0.08;
+        // Torch warm color bleeding (multiply compositing on nearby walls/floor)
+        ctx.save();
+        ctx.globalCompositeOperation = 'multiply';
+        for (const torch of visibleTorches) {
+            const fade = clamp(1 - torch.d / torchMaxDist, 0, 1);
+            const tFlicker = Math.sin(G.time * 5.5 + torch.seed) * 4;
+            const tRadius = 80 + tFlicker;
+            const mg = ctx.createRadialGradient(torch.sx, torch.sy, 0, torch.sx, torch.sy, tRadius);
+            mg.addColorStop(0, `rgba(255,200,140,${0.85 * fade})`);
+            mg.addColorStop(0.5, `rgba(255,180,120,${0.92 * fade})`);
+            mg.addColorStop(1, 'rgba(255,255,255,1)');
+            ctx.fillStyle = mg;
+            ctx.fillRect(torch.sx - tRadius, torch.sy - tRadius, tRadius * 2, tRadius * 2);
+        }
+        ctx.restore();
+
+        // Color grading - warm amber tint (Diablo signature look) - stronger
+        ctx.globalAlpha = 0.12;
         ctx.fillStyle = '#442200';
         ctx.fillRect(0, 0, W, H);
         ctx.globalAlpha = 1;
 
-        // Cold blue shadow tint (D2 characteristic)
-        ctx.globalAlpha = 0.04;
+        // Cold blue shadow tint (D2 characteristic) - stronger
+        ctx.globalAlpha = 0.06;
         ctx.fillStyle = '#0a0020';
         ctx.fillRect(0, 0, W, H);
         ctx.globalAlpha = 1;
 
-        // Screen vignette - heavier, tighter cinematic
-        const vigSize = Math.max(W, H) * 0.65;
-        const vig = ctx.createRadialGradient(W / 2, H / 2, vigSize * 0.25, W / 2, H / 2, vigSize);
+        // Screen vignette - darker, tighter cinematic
+        const vigSize = Math.max(W, H) * 0.6;
+        const vig = ctx.createRadialGradient(W / 2, H / 2, vigSize * 0.2, W / 2, H / 2, vigSize);
         vig.addColorStop(0, 'rgba(0,0,0,0)');
-        vig.addColorStop(0.5, 'rgba(0,0,0,0.25)');
-        vig.addColorStop(0.8, 'rgba(0,0,0,0.5)');
-        vig.addColorStop(1, 'rgba(0,0,0,0.7)');
+        vig.addColorStop(0.4, 'rgba(0,0,0,0.3)');
+        vig.addColorStop(0.7, 'rgba(0,0,0,0.6)');
+        vig.addColorStop(1, 'rgba(0,0,0,0.85)');
         ctx.fillStyle = vig;
         ctx.fillRect(0, 0, W, H);
 
@@ -9806,6 +9884,9 @@
 
         // Blood pools (under everything else)
         drawBloodPools(G.camX, G.camY);
+
+        // Ground fog (under entities)
+        drawGroundFog(G.camX, G.camY);
 
         // Ambient particles (dust/embers in the air)
         for (const ap of ambientParticles) ap.draw(G.camX, G.camY);
