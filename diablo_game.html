@@ -535,15 +535,14 @@
         .skill-node .sn-btn:hover::before {
             filter: brightness(1.25);
         }
-        /* === Skill Tree View === */
-        .skill-tree-view-toggle { text-align: center; margin-bottom: 8px; }
-        .skill-tree-view-toggle button { margin: 0 4px; }
+        /* === Skill Tree View (Diablo 2 Style) === */
         .skill-tree-branches {
             position: relative;
             display: flex;
-            gap: 8px;
+            gap: 4px;
             justify-content: center;
             min-height: 200px;
+            padding: 8px 0;
         }
         .skill-tree-branches svg.skill-tree-svg {
             position: absolute;
@@ -551,36 +550,58 @@
             width: 100%; height: 100%;
             pointer-events: none;
             z-index: 1;
+            filter: drop-shadow(0 0 2px rgba(139,107,61,0.6));
         }
+        /* Prerequisite: thick golden glow line */
         .skill-tree-svg .prereq-line {
-            stroke: #8b6b3d;
-            stroke-width: 2;
+            stroke: #b8943d;
+            stroke-width: 3;
+            fill: none;
+            filter: drop-shadow(0 0 3px rgba(184,148,61,0.5));
+            transition: stroke 0.2s, stroke-width 0.2s, opacity 0.2s;
+        }
+        /* Glow layer behind prereq line */
+        .skill-tree-svg .prereq-line-glow {
+            stroke: rgba(218,165,32,0.25);
+            stroke-width: 8;
             fill: none;
             transition: stroke 0.2s, stroke-width 0.2s, opacity 0.2s;
         }
+        /* Synergy: bright green dashed */
         .skill-tree-svg .synergy-line {
-            stroke: #44aa66;
-            stroke-width: 1.5;
+            stroke: #55cc77;
+            stroke-width: 2;
             fill: none;
-            stroke-dasharray: 6 4;
+            stroke-dasharray: 8 5;
+            filter: drop-shadow(0 0 2px rgba(85,204,119,0.4));
             transition: stroke 0.2s, stroke-width 0.2s, opacity 0.2s;
         }
         .skill-tree-svg .synergy-arrow {
-            fill: #44aa66;
+            fill: #55cc77;
+            filter: drop-shadow(0 0 2px rgba(85,204,119,0.5));
             transition: fill 0.2s, opacity 0.2s;
         }
+        /* Dimmed state on hover */
         .skill-tree-svg.dimmed .prereq-line,
-        .skill-tree-svg.dimmed .synergy-line { opacity: 0.15; }
-        .skill-tree-svg.dimmed .synergy-arrow { opacity: 0.15; }
+        .skill-tree-svg.dimmed .prereq-line-glow,
+        .skill-tree-svg.dimmed .synergy-line { opacity: 0.1; }
+        .skill-tree-svg.dimmed .synergy-arrow { opacity: 0.1; }
         .skill-tree-svg.dimmed .prereq-line.highlight {
-            opacity: 1; stroke: #daa520; stroke-width: 3;
+            opacity: 1; stroke: #ffd700; stroke-width: 4;
+            filter: drop-shadow(0 0 6px rgba(255,215,0,0.8));
+        }
+        .skill-tree-svg.dimmed .prereq-line-glow.highlight {
+            opacity: 1; stroke: rgba(255,215,0,0.35); stroke-width: 12;
         }
         .skill-tree-svg.dimmed .synergy-line.highlight {
-            opacity: 1; stroke: #66ee88; stroke-width: 2.5;
+            opacity: 1; stroke: #88ffaa; stroke-width: 3;
+            filter: drop-shadow(0 0 6px rgba(136,255,170,0.7));
         }
         .skill-tree-svg.dimmed .synergy-arrow.highlight {
-            opacity: 1; fill: #66ee88;
+            opacity: 1; fill: #88ffaa;
+            filter: drop-shadow(0 0 4px rgba(136,255,170,0.7));
         }
+        /* Branch columns */
         .skill-branch-col {
             flex: 1;
             min-width: 0;
@@ -589,59 +610,115 @@
             align-items: center;
             z-index: 2;
             position: relative;
+            border-right: 1px solid rgba(90,74,58,0.4);
+            padding: 0 6px;
         }
+        .skill-branch-col:last-child { border-right: none; }
         .skill-branch-col-title {
             color: #ffd700;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: bold;
             text-align: center;
-            margin-bottom: 6px;
-            padding-bottom: 4px;
-            border-bottom: 1px solid #5a4a3a;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #5a4a3a;
             width: 100%;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(255,215,0,0.4);
         }
+        /* Tier rows */
         .skill-tier-row {
             display: flex;
-            gap: 6px;
+            gap: 8px;
             justify-content: center;
-            margin-bottom: 10px;
-            min-height: 76px;
+            margin-bottom: 16px;
+            min-height: 90px;
             align-items: flex-start;
         }
         .skill-tier-label {
-            color: #ff8844;
-            font-size: 9px;
+            color: #cc8833;
+            font-size: 10px;
             text-align: center;
-            margin-bottom: 2px;
-            opacity: 0.7;
+            margin-bottom: 4px;
+            font-weight: bold;
+            letter-spacing: 1px;
         }
+        /* Skill nodes - larger, icon-focused like D2 */
         .skill-node-tree {
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 82px;
-            background: rgba(30,20,10,0.85);
-            border: 1px solid #5a4a3a;
-            padding: 4px 3px;
+            justify-content: center;
+            width: 88px;
+            background: radial-gradient(ellipse at center, rgba(40,28,14,0.95), rgba(20,12,6,0.95));
+            border: 2px solid #5a4a3a;
+            border-radius: 4px;
+            padding: 6px 4px 5px;
             cursor: pointer;
-            transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s, transform 0.15s;
             z-index: 2;
             position: relative;
         }
-        .skill-node-tree:hover { border-color: #daa520; box-shadow: 0 0 8px rgba(218,165,32,0.4); }
-        .skill-node-tree.unlocked { border-color: #8b7355; }
-        .skill-node-tree.maxed { border-color: #ffd700; box-shadow: 0 0 6px rgba(255,215,0,0.3); }
-        .skill-node-tree.locked { opacity: 0.45; cursor: default; }
-        .skill-node-tree.passive { border-color: #4488cc; background: rgba(20,30,50,0.85); }
-        .skill-node-tree.passive.unlocked { border-color: #66aaff; }
-        .skill-node-tree.passive.maxed { border-color: #88ccff; box-shadow: 0 0 6px rgba(100,180,255,0.3); }
-        .skill-node-tree.highlight-node { border-color: #fff; box-shadow: 0 0 12px rgba(255,255,255,0.5); }
-        .skill-node-tree.dim-node { opacity: 0.3; }
-        .skill-node-tree .snt-icon { font-size: 22px; line-height: 1; font-family: var(--font-emoji); }
-        .skill-node-tree .snt-name { color: #daa520; font-size: 10px; font-weight: bold; text-align: center; line-height: 1.1; margin-top: 2px; }
-        .skill-node-tree.passive .snt-name { color: #66aaff; }
-        .skill-node-tree .snt-level { color: #888; font-size: 9px; }
-        .skill-node-tree .snt-progress { width: 100%; height: 4px; background: #333; border-radius: 2px; margin-top: 2px; overflow: hidden; }
+        .skill-node-tree:hover {
+            border-color: #daa520;
+            box-shadow: 0 0 12px rgba(218,165,32,0.5), inset 0 0 8px rgba(218,165,32,0.15);
+            transform: scale(1.05);
+        }
+        .skill-node-tree.unlocked {
+            border-color: #a08050;
+            background: radial-gradient(ellipse at center, rgba(50,35,18,0.95), rgba(25,16,8,0.95));
+        }
+        .skill-node-tree.maxed {
+            border-color: #ffd700;
+            box-shadow: 0 0 10px rgba(255,215,0,0.4), inset 0 0 6px rgba(255,215,0,0.1);
+            background: radial-gradient(ellipse at center, rgba(60,45,15,0.95), rgba(30,20,8,0.95));
+        }
+        .skill-node-tree.locked { opacity: 0.4; cursor: default; }
+        .skill-node-tree.locked:hover { transform: none; box-shadow: none; border-color: #5a4a3a; }
+        .skill-node-tree.passive {
+            border-color: #4488cc;
+            background: radial-gradient(ellipse at center, rgba(20,30,55,0.95), rgba(10,16,35,0.95));
+        }
+        .skill-node-tree.passive.unlocked {
+            border-color: #66aaff;
+            background: radial-gradient(ellipse at center, rgba(25,38,65,0.95), rgba(14,22,45,0.95));
+        }
+        .skill-node-tree.passive.maxed {
+            border-color: #88ccff;
+            box-shadow: 0 0 10px rgba(100,180,255,0.4), inset 0 0 6px rgba(100,180,255,0.1);
+        }
+        .skill-node-tree.highlight-node {
+            border-color: #fff;
+            box-shadow: 0 0 16px rgba(255,255,255,0.6), inset 0 0 8px rgba(255,255,255,0.1);
+            transform: scale(1.08);
+        }
+        .skill-node-tree.dim-node { opacity: 0.2; }
+        .skill-node-tree .snt-icon { font-size: 28px; line-height: 1; font-family: var(--font-emoji); }
+        .skill-node-tree .snt-name {
+            color: #daa520;
+            font-size: 10px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.15;
+            margin-top: 3px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+        .skill-node-tree.passive .snt-name { color: #77bbff; }
+        .skill-node-tree .snt-level {
+            color: #999;
+            font-size: 9px;
+            margin-top: 1px;
+        }
+        .skill-node-tree.unlocked .snt-level { color: #cca855; }
+        .skill-node-tree.maxed .snt-level { color: #ffd700; font-weight: bold; }
+        .skill-node-tree .snt-progress {
+            width: 90%;
+            height: 3px;
+            background: rgba(50,50,50,0.8);
+            border-radius: 2px;
+            margin-top: 3px;
+            overflow: hidden;
+        }
         .skill-node-tree .snt-progress-bar { height: 100%; border-radius: 2px; transition: width 0.3s; }
         .skill-node-tree .snt-progress-bar.active { background: linear-gradient(90deg, #8b6b3d, #ffd700); }
         .skill-node-tree .snt-progress-bar.passive { background: linear-gradient(90deg, #3366aa, #88ccff); }
@@ -5973,14 +6050,13 @@
         return h;
     }
 
-    // ===== SVG Connection Drawing =====
+    // ===== SVG Connection Drawing (Diablo 2 style) =====
     function drawSkillTreeConnections() {
         const containers = document.querySelectorAll('.skill-tree-branches');
         containers.forEach(container => {
             const svg = container.querySelector('.skill-tree-svg');
             if (!svg) return;
             svg.innerHTML = '';
-            const allAvail = getAllAvailableSkills();
             const containerRect = container.getBoundingClientRect();
 
             // Collect all nodes in this container
@@ -6006,25 +6082,55 @@
             svg.setAttribute('height', container.scrollHeight);
             svg.setAttribute('viewBox', `0 0 ${container.scrollWidth} ${container.scrollHeight}`);
 
-            // Draw prerequisite lines (solid)
+            // Helper: build bezier path between two nodes
+            function buildPath(parentN, childN, offsetX) {
+                const x1 = parentN.cx + (offsetX || 0);
+                const y1 = parentN.bottom;
+                const x2 = childN.cx + (offsetX || 0);
+                const y2 = childN.top;
+                const dx = Math.abs(x2 - x1);
+                const dy = Math.abs(y2 - y1);
+
+                if (dx > 80) {
+                    // Cross-branch: S-curve routing around nodes
+                    const cpOff = Math.min(dy * 0.5, 40);
+                    return `M${x1},${y1} C${x1},${y1 + cpOff} ${x2},${y2 - cpOff} ${x2},${y2}`;
+                }
+                // Same column or nearby: smooth vertical curve
+                return `M${x1},${y1} C${x1},${y1 + dy * 0.45} ${x2},${y2 - dy * 0.45} ${x2},${y2}`;
+            }
+
+            // --- Pass 1: Prereq glow layers (drawn first, behind everything) ---
             nodes.forEach(n => {
                 const id = n.getAttribute('data-skill-id');
                 const prereqs = n.getAttribute('data-prereqs');
                 if (!prereqs) return;
-                const prereqList = prereqs.split(',').filter(Boolean);
-                prereqList.forEach(pid => {
+                prereqs.split(',').filter(Boolean).forEach(pid => {
                     const parentNode = nodeMap[pid];
                     const childNode = nodeMap[id];
                     if (!parentNode || !childNode) return;
+                    const d = buildPath(parentNode, childNode, 0);
+                    const glow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    glow.setAttribute('d', d);
+                    glow.setAttribute('class', 'prereq-line-glow');
+                    glow.setAttribute('data-from', pid);
+                    glow.setAttribute('data-to', id);
+                    svg.appendChild(glow);
+                });
+            });
 
-                    const x1 = parentNode.cx;
-                    const y1 = parentNode.bottom;
-                    const x2 = childNode.cx;
-                    const y2 = childNode.top;
-                    const dy = Math.abs(y2 - y1);
-
+            // --- Pass 2: Prereq solid lines ---
+            nodes.forEach(n => {
+                const id = n.getAttribute('data-skill-id');
+                const prereqs = n.getAttribute('data-prereqs');
+                if (!prereqs) return;
+                prereqs.split(',').filter(Boolean).forEach(pid => {
+                    const parentNode = nodeMap[pid];
+                    const childNode = nodeMap[id];
+                    if (!parentNode || !childNode) return;
+                    const d = buildPath(parentNode, childNode, 0);
                     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                    path.setAttribute('d', `M${x1},${y1} C${x1},${y1 + dy * 0.4} ${x2},${y2 - dy * 0.4} ${x2},${y2}`);
+                    path.setAttribute('d', d);
                     path.setAttribute('class', 'prereq-line');
                     path.setAttribute('data-from', pid);
                     path.setAttribute('data-to', id);
@@ -6032,36 +6138,20 @@
                 });
             });
 
-            // Draw synergy lines (dashed, with arrows)
+            // --- Pass 3: Synergy lines (dashed, with arrows) ---
             nodes.forEach(n => {
                 const id = n.getAttribute('data-skill-id');
                 const synergyFrom = n.getAttribute('data-synergy-from');
                 if (!synergyFrom) return;
-                const synList = synergyFrom.split(',').filter(Boolean);
-                synList.forEach(fromId => {
+                synergyFrom.split(',').filter(Boolean).forEach(fromId => {
                     const fromNode = nodeMap[fromId];
                     const toNode = nodeMap[id];
                     if (!fromNode || !toNode) return;
 
-                    // Offset synergy lines slightly to not overlap prereq lines
-                    const offsetX = 6;
-                    const x1 = fromNode.cx + offsetX;
-                    const y1 = fromNode.bottom - 2;
-                    const x2 = toNode.cx + offsetX;
-                    const y2 = toNode.top + 2;
-
-                    // Use quadratic bezier for cross-branch, cubic for same-column
-                    const dx = Math.abs(x2 - x1);
-                    const dy = Math.abs(y2 - y1);
-                    let d;
-                    if (dx > 50) {
-                        // Cross-branch: arc out
-                        const midX = (x1 + x2) / 2;
-                        const midY = Math.min(y1, y2) - 20;
-                        d = `M${x1},${y1} Q${midX},${midY} ${x2},${y2}`;
-                    } else {
-                        d = `M${x1},${y1} C${x1},${y1 + dy * 0.5} ${x2},${y2 - dy * 0.5} ${x2},${y2}`;
-                    }
+                    // Offset to avoid overlapping prereq lines
+                    const sameColumn = Math.abs(fromNode.cx - toNode.cx) < 50;
+                    const offsetX = sameColumn ? 10 : 0;
+                    const d = buildPath(fromNode, toNode, offsetX);
 
                     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                     path.setAttribute('d', d);
@@ -6071,16 +6161,12 @@
                     svg.appendChild(path);
 
                     // Arrow at target end
-                    const arrowSize = 5;
-                    const angle = Math.atan2(y2 - (y2 - dy * 0.5), x2 - x2) || -Math.PI / 2;
-                    const ax = x2;
-                    const ay = y2;
-                    const a1x = ax - arrowSize * Math.cos(angle - 0.5);
-                    const a1y = ay - arrowSize * Math.sin(angle - 0.5);
-                    const a2x = ax - arrowSize * Math.cos(angle + 0.5);
-                    const a2y = ay - arrowSize * Math.sin(angle + 0.5);
+                    const arrowSize = 6;
+                    const ax = toNode.cx + offsetX;
+                    const ay = toNode.top;
                     const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-                    arrow.setAttribute('points', `${ax},${ay} ${a1x},${a1y} ${a2x},${a2y}`);
+                    arrow.setAttribute('points',
+                        `${ax},${ay} ${ax - arrowSize},${ay - arrowSize * 1.5} ${ax + arrowSize},${ay - arrowSize * 1.5}`);
                     arrow.setAttribute('class', 'synergy-arrow');
                     arrow.setAttribute('data-from', fromId);
                     arrow.setAttribute('data-to', id);
@@ -6122,8 +6208,8 @@
             }
         });
 
-        // Highlight related lines
-        svg.querySelectorAll('.prereq-line, .synergy-line, .synergy-arrow').forEach(el => {
+        // Highlight related lines (including glow layers)
+        svg.querySelectorAll('.prereq-line, .prereq-line-glow, .synergy-line, .synergy-arrow').forEach(el => {
             const from = el.getAttribute('data-from');
             const to = el.getAttribute('data-to');
             if (relatedIds.has(from) && relatedIds.has(to)) {
@@ -7465,8 +7551,12 @@
         const sd = dist(player.x, player.y, dungeon.stairsX * TILE + TILE/2, dungeon.stairsY * TILE + TILE/2);
         const nearStairs = sd < 45;
         if (!onTile && !nearStairs) return false;
-        if (monsters.filter(m => m.alive).length > 0) {
-            if (showBlocked) addLog('まだ敵が残っている...', '#ff4444');
+        // Check only for nearby enemies (within 200px of stairs), not all monsters
+        const stairCX = dungeon.stairsX * TILE + TILE/2;
+        const stairCY = dungeon.stairsY * TILE + TILE/2;
+        const nearbyEnemies = monsters.filter(m => m.alive && dist(m.x, m.y, stairCX, stairCY) < 200);
+        if (nearbyEnemies.length > 0) {
+            if (showBlocked) addLog(`階段付近に敵が${nearbyEnemies.length}体いる...`, '#ff4444');
             return false;
         }
         sfxStairs();
@@ -7505,7 +7595,7 @@
             player.update(dt);
             for (const m of monsters) m.update(dt, player);
 
-            // 敵の継続的な出現（ワラワラ感）
+            // 敵の継続的な出現（ワラワラ感）- 階段付近では出現しない
             G.spawnTimer += dt;
             if (G.spawnTimer >= G.spawnInterval) {
                 G.spawnTimer = 0;
@@ -7517,10 +7607,14 @@
                                   G.floor <= 4 ? ['skeleton', 'zombie', 'imp'] :
                                   G.floor <= 6 ? ['zombie', 'imp', 'ghost'] :
                                   ['imp', 'ghost'];
+                    const stairCX = dungeon.stairsX * TILE + TILE/2;
+                    const stairCY = dungeon.stairsY * TILE + TILE/2;
                     for (let i = 0; i < spawnCount; i++) {
                         const room = dungeon.rooms[rand(1, dungeon.rooms.length - 1)];
                         const mx = room.x * TILE + rand(TILE, (room.w - 1) * TILE);
                         const my = room.y * TILE + rand(TILE, (room.h - 1) * TILE);
+                        // 階段の近く（300px以内）にはスポーンさせない
+                        if (dist(mx, my, stairCX, stairCY) < 300) continue;
                         monsters.push(new Monster(mx, my, types[rand(0, types.length - 1)], G.floor));
                     }
                 }
