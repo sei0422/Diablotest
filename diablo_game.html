@@ -379,6 +379,10 @@
             position: relative;
         }
         .inv-cell:hover { border-color: #daa520; background: rgba(80,60,30,0.5); }
+        .inv-cell.selected { border-color: #ffd700; background: rgba(100,80,20,0.6); box-shadow: 0 0 6px #ffd70066; }
+        .inv-context-menu { position:fixed; background:rgba(20,15,10,0.95); border:1px solid #8b6914; padding:4px 0; z-index:10001; min-width:100px; font-size:12px; }
+        .inv-context-menu div { padding:5px 14px; color:#ddd; cursor:pointer; }
+        .inv-context-menu div:hover { background:rgba(138,105,20,0.4); color:#fff; }
         #tooltip {
             position: absolute;
             background: linear-gradient(180deg, rgba(12,8,4,0.98), rgba(4,2,0,0.99));
@@ -7479,13 +7483,15 @@
         }
         html += '</div>';
 
-        html += `<div style="color:#aaa;font-size:11px;margin:8px 0 4px">所持品 ${player.inventory.length}/${player.maxInv} (クリックで装備/ダブルクリックで捨てる)</div>`;
+        html += `<div style="color:#aaa;font-size:11px;margin:8px 0 4px">所持品 ${player.inventory.length}/${player.maxInv} (クリック:選択 / ダブルクリック:装備 / 右クリック:捨てる)</div>`;
         html += '<div class="inv-grid">';
         for (let i = 0; i < player.maxInv; i++) {
             const item = player.inventory[i];
             if (item) {
-                html += `<div class="inv-cell" style="border-color:${item.rarity.color}40"
-                    onclick="equipInvItem(${i})" ondblclick="dropInvItem(${i})"
+                const sel = (window._selectedInvIdx === i) ? ' selected' : '';
+                html += `<div class="inv-cell${sel}" style="border-color:${item.rarity.color}40"
+                    onclick="selectInvItem(${i})" ondblclick="equipInvItem(${i})"
+                    oncontextmenu="showInvContextMenu(event,${i})"
                     onmouseenter="showInvTooltip(event,${i})" onmouseleave="hideTooltip()">
                     ${item.icon}
                 </div>`;
@@ -7497,14 +7503,45 @@
         el.innerHTML = html;
     }
 
+    window._selectedInvIdx = -1;
     window.unequipSlot = function(slot) { player.unequipSlot(slot); updateInventoryPanel(); };
-    window.equipInvItem = function(i) { player.equipItem(i); updateInventoryPanel(); };
-    window.dropInvItem = function(i) {
+    window.selectInvItem = function(i) {
+        window._selectedInvIdx = (window._selectedInvIdx === i) ? -1 : i;
+        updateInventoryPanel();
+    };
+    window.equipInvItem = function(i) {
+        window._selectedInvIdx = -1;
+        player.equipItem(i);
+        updateInventoryPanel();
+    };
+    window.showInvContextMenu = function(e, i) {
+        e.preventDefault();
+        closeInvContextMenu();
+        const item = player.inventory[i];
+        if (!item) return;
+        const menu = document.createElement('div');
+        menu.className = 'inv-context-menu';
+        menu.id = 'inv-context-menu';
+        menu.innerHTML = `<div style="color:#ffd700;font-size:11px;padding:4px 14px;cursor:default">${item.name}</div>`
+            + `<div onclick="confirmDropInvItem(${i})">捨てる</div>`
+            + `<div onclick="closeInvContextMenu()">キャンセル</div>`;
+        menu.style.left = e.clientX + 'px';
+        menu.style.top = e.clientY + 'px';
+        document.body.appendChild(menu);
+        setTimeout(() => document.addEventListener('click', closeInvContextMenu, { once: true }), 0);
+    };
+    window.closeInvContextMenu = function() {
+        const m = document.getElementById('inv-context-menu');
+        if (m) m.remove();
+    };
+    window.confirmDropInvItem = function(i) {
+        closeInvContextMenu();
         const item = player.inventory[i];
         if (item) {
             dropItem(player.x, player.y, item);
             player.inventory.splice(i, 1);
             addLog(`${item.name} を捨てた`, '#888');
+            window._selectedInvIdx = -1;
             updateInventoryPanel();
         }
     };
@@ -7565,7 +7602,7 @@
             const eqName = player.equipment[slot] ? player.equipment[slot].name : 'なし';
             html += `<div style="color:#888;font-size:10px;margin-top:4px">現在: ${eqName}</div>`;
         }
-        if (item.typeInfo.slot) html += `<div class="tt-equip">クリックで装備</div>`;
+        if (item.typeInfo.slot) html += `<div class="tt-equip">ダブルクリックで装備</div>`;
         return html;
     }
 
