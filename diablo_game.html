@@ -6312,6 +6312,24 @@
         const kbDist = isCrit ? 12 : 6;
         m.knockbackX = Math.cos(hitAngle) * kbDist;
         m.knockbackY = Math.sin(hitAngle) * kbDist;
+        // Hit spark particles (white flash + colored sparks)
+        const sparkCount = isCrit ? 8 : 4;
+        for (let i = 0; i < sparkCount; i++) {
+            if (particles.length >= MAX_PARTICLES) break;
+            const sa = hitAngle + (Math.random() - 0.5) * Math.PI;
+            const ss = 80 + Math.random() * 120;
+            particles.push(new Particle(
+                m.x, m.y, Math.cos(sa) * ss, Math.sin(sa) * ss,
+                i < 2 ? '#ffffff' : '#ffdd88', 0.15 + Math.random() * 0.1,
+                1 + Math.random() * 1.5, 0
+            ));
+        }
+        // Critical hit: micro screen shake + edge flash
+        if (isCrit) {
+            G.shakeT = Math.max(G.shakeT || 0, 0.08);
+            G.shakeAmt = Math.max(G.shakeAmt || 0, 4);
+            G.flashT = 0.06; G.flashAlpha = 0.15; G.flashColor = '#ffff44';
+        }
         // Directional blood splatter (from player angle)
         const bloodCount = isCrit ? 12 : 6;
         for (let i = 0; i < bloodCount; i++) {
@@ -6474,34 +6492,46 @@
             emitParticles(this.x, this.y, this.color, 1, 20, 0.2, 2, 0);
         }
         draw(cx, cy) {
-            // Trail
-            for (let i = 0; i < this.trail.length; i++) {
-                const a = (i / this.trail.length) * 0.5;
-                ctx.globalAlpha = a;
-                ctx.fillStyle = this.color;
-                const s = this.r * (i / this.trail.length);
-                ctx.beginPath();
-                ctx.arc(this.trail[i].x - cx, this.trail[i].y - cy, s, 0, Math.PI * 2);
-                ctx.fill();
+            const px = this.x - cx, py = this.y - cy;
+            // Smooth continuous trail line
+            if (this.trail.length > 1) {
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                for (let i = 1; i < this.trail.length; i++) {
+                    const a = (i / this.trail.length) * 0.4;
+                    ctx.globalAlpha = a;
+                    ctx.strokeStyle = this.color;
+                    ctx.lineWidth = this.r * (i / this.trail.length) * 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(this.trail[i-1].x - cx, this.trail[i-1].y - cy);
+                    ctx.lineTo(this.trail[i].x - cx, this.trail[i].y - cy);
+                    ctx.stroke();
+                }
+                ctx.restore();
             }
             ctx.globalAlpha = 1;
 
-            // Glow
-            const grd = ctx.createRadialGradient(this.x - cx, this.y - cy, 0, this.x - cx, this.y - cy, this.r * 3);
-            grd.addColorStop(0, this.color + 'aa');
+            // Expanded glow (5x radius, pulsing)
+            const pulse = 1 + Math.sin(G.time * 12) * 0.15;
+            const glowR = this.r * 5 * pulse;
+            const grd = ctx.createRadialGradient(px, py, 0, px, py, glowR);
+            grd.addColorStop(0, this.color + 'cc');
+            grd.addColorStop(0.3, this.color + '66');
             grd.addColorStop(1, this.color + '00');
             ctx.fillStyle = grd;
             ctx.beginPath();
-            ctx.arc(this.x - cx, this.y - cy, this.r * 3, 0, Math.PI * 2);
+            ctx.arc(px, py, glowR, 0, Math.PI * 2);
             ctx.fill();
 
+            // Pulsing core
+            const coreR = this.r * 0.6 * pulse;
             ctx.fillStyle = '#fff';
             ctx.beginPath();
-            ctx.arc(this.x - cx, this.y - cy, this.r * 0.6, 0, Math.PI * 2);
+            ctx.arc(px, py, coreR, 0, Math.PI * 2);
             ctx.fill();
             ctx.fillStyle = this.color;
             ctx.beginPath();
-            ctx.arc(this.x - cx, this.y - cy, this.r, 0, Math.PI * 2);
+            ctx.arc(px, py, this.r * pulse, 0, Math.PI * 2);
             ctx.fill();
 
             // Add glowing aura ring for attributed projectiles
@@ -9402,13 +9432,23 @@
 
     function drawFloatingTexts() {
         for (const ft of floatingTexts) {
-            const sx = ft.x - G.camX, sy = ft.y - G.camY + ft.vy * (ft.maxLife - ft.life);
+            const elapsed = ft.maxLife - ft.life;
+            const sx = ft.x - G.camX + Math.sin(elapsed * 4 + ft.x * 0.1) * 3;
+            const sy = ft.y - G.camY + ft.vy * elapsed;
             const a = clamp(ft.life / ft.maxLife, 0, 1);
+            // Critical: scale-down animation (start big, shrink)
+            let fontSize = ft.big ? 24 : 16;
+            if (ft.big && elapsed < 0.15) {
+                fontSize = 40 - elapsed * (40 - 24) / 0.15;
+            }
             ctx.globalAlpha = a;
-            ctx.font = ft.big ? `bold 24px ${FONT_UI}` : `bold 16px ${FONT_UI}`;
+            ctx.font = `bold ${Math.round(fontSize)}px ${FONT_UI}`;
             ctx.textAlign = 'center';
-            ctx.fillStyle = '#000';
-            ctx.fillText(ft.text, sx + 1, sy + 1);
+            // Black outline stroke
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 3;
+            ctx.lineJoin = 'round';
+            ctx.strokeText(ft.text, sx, sy);
             ctx.fillStyle = ft.color;
             ctx.fillText(ft.text, sx, sy);
             ctx.globalAlpha = 1;
