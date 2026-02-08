@@ -7509,13 +7509,62 @@
         }
     };
 
-    function buildTooltipHTML(item) {
+    function compareItems(newItem, equippedItem) {
+        const avgDmg = (it) => it && it.baseDmg ? (it.baseDmg[0] + it.baseDmg[1]) / 2 : 0;
+        const dmgDiff = avgDmg(newItem) - avgDmg(equippedItem);
+        const defDiff = (newItem.baseDef || 0) - (equippedItem ? equippedItem.baseDef || 0 : 0);
+        const statKeys = ['str','dex','vit','int','dmgPct','hp','mp','lifesteal','atkSpd','def','critChance','moveSpd'];
+        const sumStats = (it) => {
+            const m = {};
+            if (it) for (const a of it.affixes) m[a.stat] = (m[a.stat] || 0) + a.value;
+            return m;
+        };
+        const nStats = sumStats(newItem), eStats = sumStats(equippedItem);
+        const affixDiffs = {};
+        for (const k of statKeys) {
+            const d = (nStats[k] || 0) - (eStats[k] || 0);
+            if (d !== 0) affixDiffs[k] = d;
+        }
+        return { dmgDiff, defDiff, affixDiffs };
+    }
+
+    function buildTooltipHTML(item, showComparison) {
         if (!item) return '';
+        const slot = item.typeInfo.slot;
+        let cmp = null;
+        if (showComparison && slot) {
+            const equipped = player.equipment[slot];
+            cmp = compareItems(item, equipped);
+        }
+        const diffSpan = (val, unit) => {
+            if (!val) return '';
+            const c = val > 0 ? '#0f0' : '#f44';
+            const arrow = val > 0 ? '▲' : '▼';
+            const sign = val > 0 ? '+' : '';
+            const v = Number.isInteger(val) ? val : val.toFixed(1);
+            return ` <span style="color:${c};font-size:11px">${arrow} ${sign}${v}${unit}</span>`;
+        };
         let html = `<div class="tt-name" style="color:${item.rarity.color}">${item.name}</div>`;
         html += `<div class="tt-type">${item.typeInfo.name} — ${item.rarity.name}</div>`;
-        if (item.baseDmg) html += `<div style="color:#fff;margin:4px 0">ダメージ: ${item.baseDmg[0]}-${item.baseDmg[1]}</div>`;
-        if (item.baseDef) html += `<div style="color:#fff;margin:4px 0">防御: +${item.baseDef}</div>`;
+        if (item.baseDmg) html += `<div style="color:#fff;margin:4px 0">ダメージ: ${item.baseDmg[0]}-${item.baseDmg[1]}${cmp ? diffSpan(cmp.dmgDiff, '') : ''}</div>`;
+        if (item.baseDef) html += `<div style="color:#fff;margin:4px 0">防御: +${item.baseDef}${cmp ? diffSpan(cmp.defDiff, '') : ''}</div>`;
         for (const a of item.affixes) html += `<div class="tt-affix">${a.text}</div>`;
+        if (cmp) {
+            const statNames = {str:'筋力',dex:'敏捷',vit:'体力',int:'知力',dmgPct:'% ダメージ',hp:'HP',mp:'MP',lifesteal:'% ライフスティール',atkSpd:'% 攻撃速度',def:'防御',critChance:'% クリティカル',moveSpd:'% 移動速度'};
+            const diffs = Object.entries(cmp.affixDiffs);
+            if (diffs.length > 0) {
+                html += `<div style="border-top:1px solid #555;margin:4px 0;padding-top:4px">`;
+                for (const [k, v] of diffs) {
+                    const c = v > 0 ? '#0f0' : '#f44';
+                    const arrow = v > 0 ? '▲' : '▼';
+                    const sign = v > 0 ? '+' : '';
+                    html += `<div style="color:${c};font-size:11px">${arrow} ${sign}${v} ${statNames[k] || k}</div>`;
+                }
+                html += `</div>`;
+            }
+            const eqName = player.equipment[slot] ? player.equipment[slot].name : 'なし';
+            html += `<div style="color:#888;font-size:10px;margin-top:4px">現在: ${eqName}</div>`;
+        }
         if (item.typeInfo.slot) html += `<div class="tt-equip">クリックで装備</div>`;
         return html;
     }
@@ -7630,7 +7679,7 @@
         const item = player.inventory[i];
         if (!item) return;
         const tt = DOM.tooltip;
-        tt.innerHTML = buildTooltipHTML(item);
+        tt.innerHTML = buildTooltipHTML(item, true);
         tt.style.display = 'block';
         tt.style.left = (e.clientX + 15) + 'px';
         tt.style.top = (e.clientY - 10) + 'px';
