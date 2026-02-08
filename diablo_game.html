@@ -2372,7 +2372,7 @@
     // ========== BLOOD POOLS (persist after monster death) ==========
     const bloodPools = [];
     function addBloodPool(x, y, size) {
-        bloodPools.push({ x, y, size: size * 0.5, maxSize: size, alpha: 0.6, growT: 0.5 });
+        bloodPools.push({ x, y, size: size * 0.5, maxSize: size, alpha: 0.6, growT: 0.5, rot: Math.random() * Math.PI * 2 });
         if (bloodPools.length > 50) bloodPools.shift(); // Limit
     }
     function updateBloodPools(dt) {
@@ -2387,12 +2387,20 @@
         for (const bp of bloodPools) {
             const sx = bp.x - cx, sy = bp.y - cy;
             if (sx < -50 || sx > W + 50 || sy < -50 || sy > H + 50) continue;
-            ctx.globalAlpha = bp.alpha * 0.7;
-            ctx.fillStyle = '#300505';
+            ctx.save();
+            ctx.translate(sx, sy + 2);
+            ctx.rotate(bp.rot || 0);
+            // Radial gradient blood pool (softer edges)
+            const bpG = ctx.createRadialGradient(0, 0, 0, 0, 0, bp.size);
+            bpG.addColorStop(0, `rgba(48,5,5,${bp.alpha * 0.8})`);
+            bpG.addColorStop(0.5, `rgba(40,3,3,${bp.alpha * 0.6})`);
+            bpG.addColorStop(0.8, `rgba(30,2,2,${bp.alpha * 0.3})`);
+            bpG.addColorStop(1, 'rgba(20,1,1,0)');
+            ctx.fillStyle = bpG;
             ctx.beginPath();
-            ctx.ellipse(sx, sy + 2, bp.size, bp.size * 0.6, 0, 0, Math.PI * 2);
+            ctx.ellipse(0, 0, bp.size, bp.size * 0.55, 0, 0, Math.PI * 2);
             ctx.fill();
-            ctx.globalAlpha = 1;
+            ctx.restore();
         }
     }
 
@@ -2425,19 +2433,22 @@
             tctx.putImageData(id, 0, 0);
         }
 
-        // --- FLOOR TILES (6 variants - theme-based colors) ---
-        for (let v = 0; v < 6; v++) {
+        // --- FLOOR TILES (9 variants - 20% darker, theme-based colors) ---
+        for (let v = 0; v < 9; v++) {
             const c = document.createElement('canvas');
             c.width = TILE; c.height = TILE;
             const tc = c.getContext('2d');
 
-            // Base color from theme
-            const baseR = themeColors.base[0] + v * 2, baseG = themeColors.base[1] + v * 1, baseB = themeColors.base[2] + v * 1;
+            // Base color from theme (20% darker)
+            const darkF = 0.8;
+            const baseR = Math.round((themeColors.base[0] + v * 2) * darkF);
+            const baseG = Math.round((themeColors.base[1] + v * 1) * darkF);
+            const baseB = Math.round((themeColors.base[2] + v * 1) * darkF);
             tc.fillStyle = `rgb(${baseR},${baseG},${baseB})`;
             tc.fillRect(0, 0, TILE, TILE);
 
             // Large stone slab pattern (Diablo cathedral feel)
-            tc.strokeStyle = `rgba(10,8,6,0.7)`;
+            tc.strokeStyle = `rgba(10,8,6,0.8)`;
             tc.lineWidth = 1;
             tc.strokeRect(1, 1, TILE - 2, TILE - 2);
 
@@ -2446,34 +2457,30 @@
             tc.fillRect(2, 2, TILE - 4, 1);
             tc.fillRect(2, 2, 1, TILE - 4);
             // Inner bevel shadow (bottom-right edges darker)
-            tc.fillStyle = `rgba(0,0,0,0.1)`;
+            tc.fillStyle = `rgba(0,0,0,0.12)`;
             tc.fillRect(2, TILE - 3, TILE - 4, 1);
             tc.fillRect(TILE - 3, 2, 1, TILE - 4);
 
-            // Add stone grain noise (more subtle)
-            addNoise(tc, TILE, TILE, 12, 1, 0.85, 0.7);
+            // Add stone grain noise (stronger)
+            addNoise(tc, TILE, TILE, 18, 1, 0.85, 0.7);
 
             // Random surface details per variant
             if (v === 0) {
-                // Scratch marks
                 tc.strokeStyle = 'rgba(10,8,6,0.3)';
                 tc.lineWidth = 0.5;
                 tc.beginPath();
                 tc.moveTo(8, 5); tc.lineTo(28, 18); tc.stroke();
             } else if (v === 1) {
-                // Small crack
                 tc.strokeStyle = 'rgba(8,5,3,0.4)';
                 tc.lineWidth = 0.5;
                 tc.beginPath();
                 tc.moveTo(15, 2); tc.lineTo(18, 15); tc.lineTo(14, 30); tc.lineTo(17, 38); tc.stroke();
             } else if (v === 2) {
-                // Worn center
-                tc.fillStyle = 'rgba(0,0,0,0.05)';
+                tc.fillStyle = 'rgba(0,0,0,0.06)';
                 tc.beginPath();
                 tc.ellipse(TILE/2, TILE/2, 12, 10, 0.3, 0, Math.PI * 2);
                 tc.fill();
             } else if (v === 3) {
-                // Double scratch cross
                 tc.strokeStyle = 'rgba(8,6,4,0.25)';
                 tc.lineWidth = 0.5;
                 tc.beginPath();
@@ -2481,7 +2488,6 @@
                 tc.beginPath();
                 tc.moveTo(25, 5); tc.lineTo(10, 32); tc.stroke();
             } else if (v === 4) {
-                // Stain / moisture mark
                 tc.fillStyle = 'rgba(15,12,8,0.12)';
                 tc.beginPath();
                 tc.ellipse(TILE * 0.35, TILE * 0.6, 8, 6, 0.5, 0, Math.PI * 2);
@@ -2491,11 +2497,40 @@
                 tc.ellipse(TILE * 0.6, TILE * 0.35, 6, 4, -0.3, 0, Math.PI * 2);
                 tc.fill();
             } else if (v === 5) {
-                // Chipped edge
                 tc.fillStyle = 'rgba(0,0,0,0.06)';
                 tc.fillRect(0, 0, 6, 6);
                 tc.fillStyle = 'rgba(255,240,220,0.02)';
                 tc.fillRect(1, 1, 4, 4);
+            } else if (v === 6) {
+                // Pillar base mark
+                tc.fillStyle = 'rgba(0,0,0,0.08)';
+                tc.beginPath();
+                tc.arc(TILE/2, TILE/2, 10, 0, Math.PI * 2);
+                tc.fill();
+                tc.strokeStyle = 'rgba(20,15,10,0.3)';
+                tc.lineWidth = 0.5;
+                tc.beginPath();
+                tc.arc(TILE/2, TILE/2, 10, 0, Math.PI * 2);
+                tc.stroke();
+            } else if (v === 7) {
+                // Bone scatter
+                tc.strokeStyle = 'rgba(180,170,150,0.1)';
+                tc.lineWidth = 1.5;
+                tc.beginPath(); tc.moveTo(10, 20); tc.lineTo(22, 18); tc.stroke();
+                tc.beginPath(); tc.moveTo(25, 28); tc.lineTo(32, 22); tc.stroke();
+                tc.fillStyle = 'rgba(160,150,130,0.08)';
+                tc.beginPath(); tc.arc(18, 30, 2, 0, Math.PI * 2); tc.fill();
+            } else if (v === 8) {
+                // Cracked pottery
+                tc.strokeStyle = 'rgba(80,60,40,0.2)';
+                tc.lineWidth = 0.5;
+                tc.beginPath();
+                tc.arc(TILE * 0.3, TILE * 0.7, 5, 0, Math.PI * 1.4);
+                tc.stroke();
+                tc.fillStyle = 'rgba(60,45,30,0.1)';
+                tc.beginPath();
+                tc.ellipse(TILE * 0.3, TILE * 0.7, 4, 3, 0.2, 0, Math.PI * 2);
+                tc.fill();
             }
 
             TILE_TEXTURES['floor_' + v] = c;
@@ -2538,12 +2573,14 @@
         wc.beginPath();
         wc.moveTo(TILE / 3, thirdH * 2); wc.lineTo(TILE / 3, TILE); wc.stroke();
 
-        // Top bevel
-        wc.fillStyle = 'rgba(255,240,200,0.05)';
+        // Top bevel / highlight gleam
+        wc.fillStyle = 'rgba(255,240,200,0.08)';
         wc.fillRect(0, 0, TILE, 2);
+        wc.fillStyle = 'rgba(255,240,200,0.03)';
+        wc.fillRect(0, 2, TILE, 1);
 
         // Stone grain
-        addNoise(wc, TILE, TILE, 10, 1, 0.85, 0.65);
+        addNoise(wc, TILE, TILE, 12, 1, 0.85, 0.65);
 
         TILE_TEXTURES['wall'] = wallC;
 
@@ -2588,20 +2625,29 @@
         addNoise(dc, TILE, TILE, 8, 0.6, 0.5, 0.4);
         TILE_TEXTURES['deep_wall'] = deepC;
 
-        // --- WALL FACE (3D bottom of wall when floor below) ---
+        // --- WALL FACE (3D bottom of wall when floor below - taller) ---
         const faceC = document.createElement('canvas');
-        faceC.width = TILE; faceC.height = 10;
+        faceC.width = TILE; faceC.height = 14;
         const fc = faceC.getContext('2d');
-        const faceG = fc.createLinearGradient(0, 0, 0, 10);
-        faceG.addColorStop(0, '#352a20');
-        faceG.addColorStop(0.6, '#2a201a');
+        const faceG = fc.createLinearGradient(0, 0, 0, 14);
+        faceG.addColorStop(0, '#3a2e22');
+        faceG.addColorStop(0.3, '#352a20');
+        faceG.addColorStop(0.7, '#2a201a');
         faceG.addColorStop(1, '#1a1510');
         fc.fillStyle = faceG;
-        fc.fillRect(0, 0, TILE, 10);
+        fc.fillRect(0, 0, TILE, 14);
+        // Stone block lines
+        fc.strokeStyle = 'rgba(0,0,0,0.3)';
+        fc.lineWidth = 0.5;
+        fc.beginPath(); fc.moveTo(TILE * 0.3, 0); fc.lineTo(TILE * 0.3, 14); fc.stroke();
+        fc.beginPath(); fc.moveTo(TILE * 0.7, 0); fc.lineTo(TILE * 0.7, 14); fc.stroke();
+        // Top highlight (wall edge gleam)
+        fc.fillStyle = 'rgba(255,240,200,0.06)';
+        fc.fillRect(0, 0, TILE, 2);
         // Bottom line
-        fc.fillStyle = 'rgba(0,0,0,0.5)';
-        fc.fillRect(0, 9, TILE, 1);
-        addNoise(fc, TILE, 10, 8, 0.7, 0.6, 0.5);
+        fc.fillStyle = 'rgba(0,0,0,0.6)';
+        fc.fillRect(0, 13, TILE, 1);
+        addNoise(fc, TILE, 14, 10, 0.7, 0.6, 0.5);
         TILE_TEXTURES['wall_face'] = faceC;
 
         // --- BLOOD SPLATTER variants ---
@@ -2687,6 +2733,18 @@
                     wfc.drawImage(SPRITES[a[0]], a[1], a[2] + 22, SP, 10, 0, 0, wf.width, wf.height);
                 }
             }
+        }
+
+        // --- GLOBAL DARKENING PASS (multiply composite) ---
+        const darkenKeys = ['floor_0','floor_1','floor_2','floor_3','floor_4','floor_5','floor_6','floor_7','floor_8','wall','wall2'];
+        for (const key of darkenKeys) {
+            const tex = TILE_TEXTURES[key];
+            if (!tex) continue;
+            const tc = tex.getContext('2d');
+            tc.globalCompositeOperation = 'multiply';
+            tc.fillStyle = 'rgb(220,215,210)';
+            tc.fillRect(0, 0, tex.width, tex.height);
+            tc.globalCompositeOperation = 'source-over';
         }
     }
 
@@ -2920,9 +2978,9 @@
                             const wallTex = (x + y) % 2 === 0 ? TILE_TEXTURES['wall'] : TILE_TEXTURES['wall2'];
                             ctx.drawImage(wallTex, sx, sy);
 
-                            // 3D wall face below
+                            // 3D wall face below (taller)
                             if (hasFloorBelow) {
-                                ctx.drawImage(TILE_TEXTURES['wall_face'], sx, sy + TILE - 10);
+                                ctx.drawImage(TILE_TEXTURES['wall_face'], sx, sy + TILE - 14);
                             }
 
                             // Moss (deterministic)
@@ -2985,7 +3043,7 @@
 
                     } else if (t === 1) {
                         // === FLOOR ===
-                        const variant = ((x * 7 + y * 13) % 6);
+                        const variant = ((x * 7 + y * 13) % 9);
                         ctx.drawImage(TILE_TEXTURES['floor_' + variant], sx, sy);
 
                         // Blood splatters (deterministic)
@@ -3074,7 +3132,7 @@
 
                     } else if (t === 2) {
                         // === STAIRS (Sprite) ===
-                        const variant = ((x * 7 + y * 13) % 6);
+                        const variant = ((x * 7 + y * 13) % 9);
                         ctx.drawImage(TILE_TEXTURES['floor_' + variant], sx, sy);
                         drawSpr('stairsDown', sx, sy, TILE, TILE);
 
@@ -3101,7 +3159,7 @@
 
                     } else if (t === 3) {
                         // === CHEST (Sprite) ===
-                        const variant = ((x * 7 + y * 13) % 6);
+                        const variant = ((x * 7 + y * 13) % 9);
                         ctx.drawImage(TILE_TEXTURES['floor_' + variant], sx, sy);
                         drawSpr('chestClosed', sx, sy, TILE, TILE);
                         // Gold glow
