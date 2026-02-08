@@ -3205,7 +3205,8 @@
         ring:    { name: '指輪', icon: '💍', slot: 'ring', baseDef: [0, 1] },
         amulet:  { name: '護符', icon: '📿', slot: 'amulet', baseDef: [0, 1] },
         boots:   { name: '靴', icon: '👢', slot: 'feet', baseDef: [1, 4] },
-        potion:  { name: '回復薬', icon: '🧪', slot: null, heal: 50 }
+        potion:  { name: 'HP回復薬', icon: '🧪', slot: null, heal: 50 },
+        manaPotion: { name: 'MP回復薬', icon: '💧', slot: null, healMP: 30 }
     };
 
     const RARITY = {
@@ -3256,7 +3257,7 @@
     };
 
     function generateItem(floor, forceRarity = null) {
-        const typeKeys = Object.keys(ITEM_TYPES).filter(k => k !== 'potion');
+        const typeKeys = Object.keys(ITEM_TYPES).filter(k => k !== 'potion' && k !== 'manaPotion');
         const typeKey = typeKeys[rand(0, typeKeys.length - 1)];
         const typeInfo = ITEM_TYPES[typeKey];
 
@@ -3299,12 +3300,24 @@
         return item;
     }
 
-    function generatePotion() {
-        return {
-            typeKey: 'potion', typeInfo: ITEM_TYPES.potion, rarityKey: 'common',
-            rarity: RARITY.common, icon: '🧪', name: '回復薬',
-            affixes: [], baseDmg: null, baseDef: null
-        };
+    const MAX_POTION_STACK = 20;
+
+    function isPotion(item) {
+        return item.typeKey === 'potion' || item.typeKey === 'manaPotion';
+    }
+
+    function findPotionStack(inventory, typeKey) {
+        return inventory.findIndex(it => it.typeKey === typeKey && (it.qty || 1) < MAX_POTION_STACK);
+    }
+
+    function getPotionCount(inventory, typeKey) {
+        return inventory.filter(it => it.typeKey === typeKey).reduce((s, it) => s + (it.qty || 1), 0);
+    }
+
+    function generatePotion(type = 'potion') {
+        const ti = ITEM_TYPES[type];
+        return { typeKey: type, typeInfo: ti, rarityKey: 'common', rarity: RARITY.common,
+                 icon: ti.icon, name: ti.name, affixes: [], baseDmg: null, baseDef: null, qty: 1 };
     }
 
     // ========== CLASS DEFINITIONS ==========
@@ -4521,12 +4534,18 @@
             for (let i = groundItems.length - 1; i >= 0; i--) {
                 const gi = groundItems[i];
                 if (dist(this.x, this.y, gi.x, gi.y) < 50) {
-                    if (gi.item.typeKey === 'potion') {
-                        this.hp = Math.min(this.maxHP, this.hp + 50);
-                        addFloatingText(this.x, this.y - 20, '+50 HP', '#00ff00');
-                        emitParticles(this.x, this.y, '#00ff00', 8, 40, 0.5, 2, -50);
-                        sfxHeal();
-                        addLog('回復薬を使った (+50 HP)', '#00ff00');
+                    if (isPotion(gi.item)) {
+                        const stackIdx = findPotionStack(this.inventory, gi.item.typeKey);
+                        if (stackIdx !== -1) {
+                            this.inventory[stackIdx].qty = (this.inventory[stackIdx].qty || 1) + 1;
+                        } else if (this.inventory.length < this.maxInv) {
+                            gi.item.qty = 1;
+                            this.inventory.push(gi.item);
+                        } else {
+                            addLog('インベントリが一杯です！', '#ff4444'); return;
+                        }
+                        sfxPickup();
+                        addLog(`${gi.item.name} を拾った`, '#88ff88');
                     } else if (this.inventory.length < this.maxInv) {
                         this.inventory.push(gi.item);
                         sfxPickup();
@@ -4561,6 +4580,36 @@
             this.equipment[slot] = null;
             this.recalcStats();
             addLog(`${item.name} を外した`, '#aaa');
+        },
+
+        useHPPotion() {
+            const idx = this.inventory.findIndex(it => it.typeKey === 'potion');
+            if (idx === -1) { addLog('HP回復薬がない', '#ff4444'); return; }
+            if (this.hp >= this.maxHP) { addLog('HPは満タン', '#888'); return; }
+            const item = this.inventory[idx];
+            const heal = item.typeInfo.heal || 50;
+            this.hp = Math.min(this.maxHP, this.hp + heal);
+            addFloatingText(this.x, this.y - 20, `+${heal} HP`, '#00ff00');
+            emitParticles(this.x, this.y, '#00ff00', 8, 40, 0.5, 2, -50);
+            sfxHeal();
+            addLog(`HP回復薬を使った (+${heal} HP)`, '#00ff00');
+            item.qty = (item.qty || 1) - 1;
+            if (item.qty <= 0) this.inventory.splice(idx, 1);
+        },
+
+        useMPPotion() {
+            const idx = this.inventory.findIndex(it => it.typeKey === 'manaPotion');
+            if (idx === -1) { addLog('MP回復薬がない', '#ff4444'); return; }
+            if (this.mp >= this.maxMP) { addLog('MPは満タン', '#888'); return; }
+            const item = this.inventory[idx];
+            const heal = item.typeInfo.healMP || 30;
+            this.mp = Math.min(this.maxMP, this.mp + heal);
+            addFloatingText(this.x, this.y - 20, `+${heal} MP`, '#4488ff');
+            emitParticles(this.x, this.y, '#4488ff', 8, 40, 0.5, 2, -50);
+            sfxHeal();
+            addLog(`MP回復薬を使った (+${heal} MP)`, '#4488ff');
+            item.qty = (item.qty || 1) - 1;
+            if (item.qty <= 0) this.inventory.splice(idx, 1);
         },
 
         useSkill(mx, my) {
@@ -6387,7 +6436,8 @@
                 const count = (m.isBoss || m.type === 'demonlord') ? rand(3, 5) : 1;
                 for (let i = 0; i < count; i++) dropItem(m.x, m.y, generateItem(globalF));
             }
-            if (Math.random() < 0.3) dropItem(m.x, m.y, generatePotion());
+            if (Math.random() < 0.25) dropItem(m.x, m.y, generatePotion('potion'));
+            if (Math.random() < 0.10) dropItem(m.x, m.y, generatePotion('manaPotion'));
             // Boss defeat with screen shake + white flash
             if (m.isBoss && m.bossKey) {
                 G.shakeT = 0.6; G.shakeAmt = 15;
@@ -6485,7 +6535,8 @@
             items.push(generateItem(globalF, forceRarity));
         }
         // Always include potions
-        for (let i = 0; i < 3; i++) items.push(generatePotion());
+        for (let i = 0; i < 3; i++) items.push(generatePotion('potion'));
+        for (let i = 0; i < 3; i++) items.push(generatePotion('manaPotion'));
         return items;
     }
 
@@ -6893,11 +6944,18 @@
         if (!item) return;
         const price = calculateBuyPrice(item);
         if (G.gold < price) { addLog('ゴールドが足りない', '#ff4444'); return; }
-        if (player.inventory.length >= 20) { addLog('インベントリが一杯', '#ff4444'); return; }
         G.gold -= price;
-        if (item.typeKey === 'potion') {
-            player.inventory.push(generatePotion());
+        if (isPotion(item)) {
+            const stackIdx = findPotionStack(player.inventory, item.typeKey);
+            if (stackIdx !== -1) {
+                player.inventory[stackIdx].qty = (player.inventory[stackIdx].qty || 1) + 1;
+            } else if (player.inventory.length >= 20) {
+                G.gold += price; addLog('インベントリが一杯', '#ff4444'); return;
+            } else {
+                player.inventory.push(generatePotion(item.typeKey));
+            }
         } else {
+            if (player.inventory.length >= 20) { G.gold += price; addLog('インベントリが一杯', '#ff4444'); return; }
             player.inventory.push(item);
             G.shopItems.splice(idx, 1);
         }
@@ -6908,9 +6966,10 @@
         const item = player.inventory[idx];
         if (!item) return;
         const price = calculateSellPrice(item);
-        G.gold += price;
+        const totalPrice = isPotion(item) ? price * (item.qty || 1) : price;
+        G.gold += totalPrice;
         player.inventory.splice(idx, 1);
-        addLog(`${item.name} を売却 (+${price}G)`, '#ffd700');
+        addLog(`${item.name}${isPotion(item) && (item.qty || 1) > 1 ? ' x' + (item.qty || 1) : ''} を売却 (+${totalPrice}G)`, '#ffd700');
         renderShopUI();
     };
 
@@ -7424,6 +7483,8 @@
                     ['A', '最寄りの敵を自動攻撃'],
                     ['S', '選択中スキルを最寄り敵に発動'],
                     ['1〜6', 'スキルスロット選択＆即発動'],
+                    ['Q', 'HP回復薬を使う'],
+                    ['W', 'MP回復薬を使う'],
                     ['Space', 'アイテムを拾う / 階段を降りる'],
                 ]],
                 ['メニュー', [
@@ -7504,11 +7565,12 @@
             const item = player.inventory[i];
             if (item) {
                 const sel = (window._selectedInvIdx === i) ? ' selected' : '';
-                html += `<div class="inv-cell${sel}" style="border-color:${item.rarity.color}40"
+                const qtyBadge = (item.qty || 1) > 1 ? `<div style="position:absolute;bottom:1px;right:2px;background:rgba(0,0,0,0.8);padding:0 3px;font-size:9px;color:#fff;border-radius:2px">x${item.qty}</div>` : '';
+                html += `<div class="inv-cell${sel}" style="border-color:${item.rarity.color}40;position:relative"
                     onclick="selectInvItem(${i})" ondblclick="equipInvItem(${i})"
                     oncontextmenu="showInvContextMenu(event,${i})"
                     onmouseenter="showInvTooltip(event,${i})" onmouseleave="hideTooltip()">
-                    ${item.icon}
+                    ${item.icon}${qtyBadge}
                 </div>`;
             } else {
                 html += '<div class="inv-cell"></div>';
@@ -7537,9 +7599,15 @@
         const menu = document.createElement('div');
         menu.className = 'inv-context-menu';
         menu.id = 'inv-context-menu';
-        menu.innerHTML = `<div style="color:#ffd700;font-size:11px;padding:4px 14px;cursor:default">${item.name}</div>`
-            + `<div onclick="confirmDropInvItem(${i})">捨てる</div>`
-            + `<div onclick="closeInvContextMenu()">キャンセル</div>`;
+        let menuHTML = `<div style="color:#ffd700;font-size:11px;padding:4px 14px;cursor:default">${item.name}${(item.qty || 1) > 1 ? ' x' + item.qty : ''}</div>`;
+        if (isPotion(item) && (item.qty || 1) > 1) {
+            menuHTML += `<div onclick="dropOnePotionInv(${i})">1つ捨てる</div>`;
+            menuHTML += `<div onclick="confirmDropInvItem(${i})">全て捨てる</div>`;
+        } else {
+            menuHTML += `<div onclick="confirmDropInvItem(${i})">捨てる</div>`;
+        }
+        menuHTML += `<div onclick="closeInvContextMenu()">キャンセル</div>`;
+        menu.innerHTML = menuHTML;
         menu.style.left = e.clientX + 'px';
         menu.style.top = e.clientY + 'px';
         document.body.appendChild(menu);
@@ -7559,6 +7627,19 @@
             window._selectedInvIdx = -1;
             updateInventoryPanel();
         }
+    };
+
+    window.dropOnePotionInv = function(i) {
+        closeInvContextMenu();
+        const item = player.inventory[i];
+        if (!item || !isPotion(item)) return;
+        const dropped = generatePotion(item.typeKey);
+        dropItem(player.x, player.y, dropped);
+        item.qty = (item.qty || 1) - 1;
+        if (item.qty <= 0) player.inventory.splice(i, 1);
+        addLog(`${item.name} を1つ捨てた`, '#888');
+        window._selectedInvIdx = -1;
+        updateInventoryPanel();
     };
 
     function compareItems(newItem, equippedItem) {
@@ -7582,6 +7663,15 @@
 
     function buildTooltipHTML(item, showComparison) {
         if (!item) return '';
+        if (isPotion(item)) {
+            let html = `<div class="tt-name" style="color:#cccccc">${item.name}</div>`;
+            if ((item.qty || 1) > 1) html += `<div style="color:#aaa;font-size:11px">所持数: ${item.qty}</div>`;
+            if (item.typeKey === 'potion') html += `<div style="color:#00ff00;margin:4px 0">HP +${item.typeInfo.heal || 50} 回復</div>`;
+            if (item.typeKey === 'manaPotion') html += `<div style="color:#4488ff;margin:4px 0">MP +${item.typeInfo.healMP || 30} 回復</div>`;
+            const key = item.typeKey === 'potion' ? 'Q' : 'W';
+            html += `<div style="color:#888;font-size:10px;margin-top:4px">${key}キーで使用 | 右クリックで捨てる</div>`;
+            return html;
+        }
         const slot = item.typeInfo.slot;
         let cmp = null;
         if (showComparison && slot) {
@@ -8524,6 +8614,9 @@
 
         if (G.paused) return;
 
+        if (e.code === 'KeyQ') { e.preventDefault(); player.useHPPotion(); return; }
+        if (e.code === 'KeyW') { e.preventDefault(); player.useMPPotion(); return; }
+
         // --- A key: Attack nearest enemy (use e.code for IME compatibility) ---
         if (e.code === 'KeyA') {
             e.preventDefault();
@@ -9406,6 +9499,25 @@
             }
         }
 
+        // Potion counts (left: HP, right: MP)
+        const hpPotCount = getPotionCount(player.inventory, 'potion');
+        const mpPotCount = getPotionCount(player.inventory, 'manaPotion');
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.font = `12px ${FONT_UI}`;
+        ctx.fillStyle = '#00ff00';
+        ctx.fillText(`🧪 x${hpPotCount}`, skillStartX - 16, skillY + skillH / 2 - 6);
+        ctx.font = `bold 9px ${FONT_UI}`;
+        ctx.fillStyle = '#888';
+        ctx.fillText('(Q)', skillStartX - 16, skillY + skillH / 2 + 10);
+        ctx.textAlign = 'left';
+        ctx.font = `12px ${FONT_UI}`;
+        ctx.fillStyle = '#4488ff';
+        ctx.fillText(`💧 x${mpPotCount}`, skillStartX + skillTotalW + 16, skillY + skillH / 2 - 6);
+        ctx.font = `bold 9px ${FONT_UI}`;
+        ctx.fillStyle = '#888';
+        ctx.fillText('(W)', skillStartX + skillTotalW + 16, skillY + skillH / 2 + 10);
+
         // XP bar
         const xpW = skillTotalW + 60;
         const xpH = 6;
@@ -9715,7 +9827,7 @@
                     typeInfo: item.typeInfo,
                     baseStat: item.baseStat, statType: item.statType,
                     affixes: item.affixes || [], desc: item.desc || '',
-                    icon: item.icon
+                    icon: item.icon, qty: item.qty || 1
                 })),
                 player: {
                     x: player.x, y: player.y,
@@ -9751,7 +9863,7 @@
                     typeInfo: item.typeInfo,
                     baseStat: item.baseStat, statType: item.statType,
                     affixes: item.affixes || [], desc: item.desc || '',
-                    icon: item.icon
+                    icon: item.icon, qty: item.qty || 1
                 });
             }
             saveData.player.skills = {};
@@ -9779,7 +9891,7 @@
                     typeInfo: gi.item.typeInfo,
                     baseStat: gi.item.baseStat, statType: gi.item.statType,
                     affixes: gi.item.affixes || [], desc: gi.item.desc || '',
-                    icon: gi.item.icon
+                    icon: gi.item.icon, qty: gi.item.qty || 1
                 }
             }));
             // Save remaining chest positions (unopened only)
@@ -9839,7 +9951,7 @@
                 G.questKillCounts = save.questKillCounts || {};
                 G.waypoints = save.waypoints || [1];
                 G.bossesDefeated = save.bossesDefeated || {};
-                G.stash = save.stash || [];
+                G.stash = (save.stash || []).map(it => { it.qty = it.qty || 1; return it; });
             } else {
                 // v2/v3 migration: map old global floor to ACT system
                 const mapped = globalFloorToAct(save.floor || 1);
@@ -9876,7 +9988,7 @@
             for (const [slot, item] of Object.entries(p.equipment)) {
                 player.equipment[slot] = item;
             }
-            player.inventory = p.inventory || [];
+            player.inventory = (p.inventory || []).map(it => { it.qty = it.qty || 1; return it; });
 
             player.recalcStats();
             player.hp = Math.min(p.hp, player.maxHP);
@@ -9907,6 +10019,7 @@
             groundItems.length = 0;
             if (save.groundItems && save.groundItems.length > 0) {
                 for (const sgi of save.groundItems) {
+                    sgi.item.qty = sgi.item.qty || 1;
                     groundItems.push(new GroundItem(sgi.x, sgi.y, sgi.item));
                 }
             }
