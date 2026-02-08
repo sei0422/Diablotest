@@ -407,6 +407,76 @@
         #controls-help {
             display: none;
         }
+        /* Tutorial tabs */
+        .help-tab {
+            padding: 5px 12px;
+            font-size: 11px;
+            color: #999;
+            background: rgba(30,20,10,0.6);
+            border: 1px solid #5a4a3a;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .help-tab:hover { color: #daa520; border-color: #8b7355; }
+        .help-tab.active {
+            color: #ffd700;
+            background: rgba(60,40,15,0.8);
+            border-color: #daa520;
+            font-weight: bold;
+        }
+        .help-section-title {
+            color: #ffd700;
+            font-size: 15px;
+            font-weight: bold;
+            margin: 6px 0 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #5a4a3a;
+            letter-spacing: 2px;
+        }
+        .help-sub-title {
+            color: #daa520;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 12px 0 4px;
+        }
+        .help-key {
+            display: inline-block;
+            color: #ffd700;
+            background: rgba(60,40,10,0.7);
+            border: 1px solid #8b7355;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+            min-width: 18px;
+            text-align: center;
+            margin-right: 4px;
+        }
+        .help-row {
+            margin: 3px 0;
+            color: #ccc;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+        .help-row-label { flex-shrink: 0; min-width: 100px; }
+        .help-tip {
+            color: #aaa;
+            font-size: 11px;
+            padding: 6px 10px;
+            margin: 6px 0;
+            border-left: 3px solid #8b6b3d;
+            background: rgba(40,30,15,0.5);
+        }
+        .help-tip-warn {
+            border-left-color: #cc6633;
+            color: #ffaa66;
+        }
+        .help-tip-good {
+            border-left-color: #44aa66;
+            color: #88ddaa;
+        }
         .class-card {
             position: relative;
             width: 260px;
@@ -962,29 +1032,10 @@
         スキル編集 (R)
     </button>
 
-    <div id="helpOverlay" class="ui-panel" style="top:50%;left:50%;transform:translate(-50%,-50%);width:500px;max-height:80vh;display:none">
-        <div class="panel-header">📖 操作ガイド (H で閉じる)</div>
-        <div style="line-height:2;font-size:13px">
-            <div style="color:#daa520;font-weight:bold;margin:8px 0 4px">基本操作</div>
-            <div><span style="color:#ffd700">左クリック</span> ─ 移動 / 敵を攻撃</div>
-            <div><span style="color:#ffd700">右クリック</span> ─ 選択中のスキルを発動</div>
-            <div><span style="color:#ffd700">Spaceキー</span> ─ 近くのアイテムを拾う</div>
-            <div style="color:#daa520;font-weight:bold;margin:12px 0 4px">メニュー</div>
-            <div><span style="color:#ffd700">Iキー</span> ─ インベントリ開閉</div>
-            <div><span style="color:#ffd700">Cキー</span> ─ ステータス画面開閉</div>
-            <div><span style="color:#ffd700">Hキー</span> ─ このヘルプ画面の開閉</div>
-            <div><span style="color:#ffd700">Oキー</span> ─ 設定画面の開閉</div>
-            <div><span style="color:#ffd700">Rキー</span> ─ スキルショートカット編集</div>
-            <div><span style="color:#ffd700">Eキー</span> ─ 階段を降りる</div>
-            <div><span style="color:#ffd700">Esc</span> ─ 一時停止</div>
-            <div style="color:#daa520;font-weight:bold;margin:12px 0 4px">スキル (1~6キーで発動)</div>
-            <div id="helpSkillSlots" style="color:#ccc;font-size:12px">スキルスロット情報を読み込み中...</div>
-            <div style="color:#daa520;font-weight:bold;margin:12px 0 4px">ヒント</div>
-            <div style="color:#999;font-size:12px">・敵を全滅させると階段が使える</div>
-            <div style="color:#999;font-size:12px">・深い階層ほど強敵と良いアイテムが出現</div>
-            <div style="color:#999;font-size:12px">・装備のレアリティ: <span style="color:#ccc">コモン</span> < <span style="color:#68f">マジック</span> < <span style="color:#fd4">レア</span> < <span style="color:#f80">レジェンダリー</span> < <span style="color:#0d6">ユニーク</span></div>
-            <div id="helpDynamic"></div>
-        </div>
+    <div id="helpOverlay" class="ui-panel" style="top:50%;left:50%;transform:translate(-50%,-50%);width:600px;max-height:85vh;display:none">
+        <div class="panel-header">📖 冒険者の手引書 (H で閉じる)</div>
+        <div id="helpTabs" style="display:flex;gap:2px;margin-bottom:8px;flex-wrap:wrap"></div>
+        <div id="helpContent" style="line-height:1.7;font-size:12px;overflow-y:auto;max-height:calc(85vh - 90px)"></div>
     </div>
 
     <div id="settingsPanel" class="ui-panel" style="top:50%;left:50%;transform:translate(-50%,-50%);width:420px;max-height:80vh;display:none">
@@ -5405,231 +5456,308 @@
         `;
     }
 
+    let helpActiveTab = 'basics';
+    window.setHelpTab = function(tab) { helpActiveTab = tab; renderHelpUI(); };
+
     function renderHelpUI() {
-        // Update skill slot display (1-6 keys)
-        const slotsEl = document.getElementById('helpSkillSlots');
-        if (slotsEl && player.skills) {
-            let slotsHtml = '';
+        const tabsEl = document.getElementById('helpTabs');
+        const contentEl = document.getElementById('helpContent');
+        if (!tabsEl || !contentEl) return;
+
+        const tabs = [
+            { id: 'basics', label: '基本操作' },
+            { id: 'combat', label: '戦闘' },
+            { id: 'skills', label: 'スキル' },
+            { id: 'items', label: '装備・アイテム' },
+            { id: 'dungeon', label: 'ダンジョン' },
+            { id: 'growth', label: 'クラス・成長' },
+            { id: 'keys', label: 'キー一覧' },
+        ];
+
+        tabsEl.innerHTML = tabs.map(t =>
+            `<button class="help-tab${helpActiveTab === t.id ? ' active' : ''}" onclick="setHelpTab('${t.id}')">${t.label}</button>`
+        ).join('');
+
+        let h = '';
+
+        // Unspent skill points banner (always shown)
+        if (player.skillPoints > 0) {
+            h += `<div style="background:rgba(170,85,34,0.5);border:1px solid #ffd700;padding:6px 10px;margin-bottom:8px;border-radius:3px;font-size:11px;text-align:center">
+                ⚡ 未使用のスキルポイントが <span style="color:#ffd700;font-weight:bold">${player.skillPoints}</span> ポイントあります！ <span class="help-key">T</span> でスキルツリーを開こう
+            </div>`;
+        }
+
+        switch (helpActiveTab) {
+
+        case 'basics':
+            h += `<div class="help-section-title">基本操作</div>`;
+            h += `<div class="help-sub-title">移動</div>`;
+            h += `<div class="help-row"><span class="help-key">左クリック</span> 地面をクリックして移動</div>`;
+            h += `<div class="help-row"><span class="help-key">←↑→↓</span> 矢印キーでも移動可能</div>`;
+            h += `<div class="help-tip">移動は慣性があります。敵の攻撃を避けながら戦いましょう。</div>`;
+
+            h += `<div class="help-sub-title">攻撃</div>`;
+            h += `<div class="help-row"><span class="help-key">左クリック</span> 敵をクリックして通常攻撃（自動で近づく）</div>`;
+            h += `<div class="help-row"><span class="help-key">A</span> 最も近い敵に自動で攻撃</div>`;
+            h += `<div class="help-tip help-tip-good">Aキーを連打するだけで最寄りの敵を攻撃できます。初心者におすすめ。</div>`;
+
+            h += `<div class="help-sub-title">スキル発動</div>`;
+            h += `<div class="help-row"><span class="help-key">右クリック</span> マウス方向にスキル発動</div>`;
+            h += `<div class="help-row"><span class="help-key">S</span> 選択中スキルを最寄りの敵に発動</div>`;
+            h += `<div class="help-row"><span class="help-key">1</span>〜<span class="help-key">6</span> スキルスロットを選択して即発動</div>`;
+            h += `<div class="help-tip">スキルにはMP消費とクールダウンがあります。画面下部のスキルバーで確認。</div>`;
+
+            h += `<div class="help-sub-title">アイテム拾得</div>`;
+            h += `<div class="help-row"><span class="help-key">Space</span> 近くのアイテムを拾う</div>`;
+            h += `<div class="help-row"><span class="help-key">G</span> 自動拾い ON/OFF</div>`;
+            h += `<div class="help-row"><span class="help-key">P</span> 自動拾いフィルタ切替（レアリティ）</div>`;
+            h += `<div class="help-tip">ポーションは拾うと即座にHP+50回復。装備はインベントリに入ります。</div>`;
+
+            h += `<div class="help-sub-title">画面・メニュー</div>`;
+            h += `<div class="help-row"><span class="help-key">I</span> インベントリ（装備管理）</div>`;
+            h += `<div class="help-row"><span class="help-key">C</span> キャラクターステータス</div>`;
+            h += `<div class="help-row"><span class="help-key">T</span> スキルツリー</div>`;
+            h += `<div class="help-row"><span class="help-key">R</span> スキルショートカット編集</div>`;
+            h += `<div class="help-row"><span class="help-key">H</span> この手引書</div>`;
+            h += `<div class="help-row"><span class="help-key">O</span> 設定画面</div>`;
+            h += `<div class="help-row"><span class="help-key">Esc</span> 一時停止</div>`;
+
+            h += `<div class="help-sub-title">セーブ / ロード</div>`;
+            h += `<div class="help-row"><span class="help-key">F5</span> ゲームをセーブ</div>`;
+            h += `<div class="help-row"><span class="help-key">F8</span> セーブデータをロード</div>`;
+            h += `<div class="help-tip help-tip-warn">ブラウザのローカルストレージに保存されます。キャッシュ削除で消える可能性があります。</div>`;
+            break;
+
+        case 'combat':
+            h += `<div class="help-section-title">戦闘システム</div>`;
+
+            h += `<div class="help-sub-title">通常攻撃</div>`;
+            h += `<div class="help-row">敵を左クリックまたは<span class="help-key">A</span>キーで通常攻撃</div>`;
+            h += `<div style="color:#aaa;font-size:11px;margin:4px 0">ダメージ = STR(力) × 武器倍率 − 敵の防御力</div>`;
+            h += `<div style="color:#aaa;font-size:11px;margin:4px 0">クリティカル率は DEX(技) に依存</div>`;
+
+            h += `<div class="help-sub-title">スキル攻撃</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">スキルは通常攻撃より高い倍率で強力。レベルアップで倍率が上昇。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">アクティブスキルはスロット<span class="help-key">1</span>〜<span class="help-key">6</span>に配置して使用。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">パッシブスキルは習得するだけで常時効果を発揮。スロット不要。</div>`;
+            h += `<div class="help-tip">スキルレベルが上がるとMP消費は微増、クールダウンは減少します。</div>`;
+
+            h += `<div class="help-sub-title">スキルの種類</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:2px 0"><span style="color:#ff8844">近接攻撃</span> ─ バッシュ、ジール等。射程が短いが高倍率</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:2px 0"><span style="color:#ff8844">範囲攻撃</span> ─ ワールウィンド、フロストノヴァ等。周囲を一掃</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:2px 0"><span style="color:#ff8844">遠距離攻撃</span> ─ ファイアアロー等。安全な距離から攻撃</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:2px 0"><span style="color:#4488ff">バフ</span> ─ シャウト等。一定時間ステータスを強化</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:2px 0"><span style="color:#ff4444">デバフ</span> ─ タウント等。敵を弱体化</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:2px 0"><span style="color:#66aaff">パッシブ</span> ─ 剣の極意等。常時発動のステータス上昇</div>`;
+
+            h += `<div class="help-sub-title">回復</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">敵がドロップするポーションでHP回復（+50）。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">一部スキル（ヒール系）やライフスティール装備でも回復可能。</div>`;
+
+            h += `<div class="help-sub-title">死亡と復活</div>`;
+            h += `<div class="help-tip help-tip-warn">HPが0になると死亡。クリックまたはSpaceで同じ階の入口から復活します。装備やスキルは失われません。</div>`;
+
+            h += `<div class="help-sub-title">ボスモンスター</div>`;
+            h += `<div style="color:#ff4444;font-size:11px;margin:4px 0">5階ごとにデーモンロードが出現。高HPで強力ですが、倒すと大量のレアアイテムをドロップ。</div>`;
+            break;
+
+        case 'skills':
+            h += `<div class="help-section-title">スキルシステム</div>`;
+
+            h += `<div class="help-sub-title">スキルツリー <span class="help-key">T</span></div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">各クラスは3つのブランチ（系統）を持ち、各ブランチにスキルが配置されています。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">ツリー表示では依存関係が線で表示されます：</div>`;
+            h += `<div style="color:#b8943d;font-size:11px;margin:2px 0 2px 12px">━ 金色の実線 = 前提条件（上のスキルを先に習得する必要あり）</div>`;
+            h += `<div style="color:#55cc77;font-size:11px;margin:2px 0 2px 12px">╌ 緑色の破線 = シナジー（他スキルのLvでボーナス）</div>`;
+            h += `<div class="help-tip">ツリー上でスキルにホバーすると、関連する線がハイライトされます。</div>`;
+
+            h += `<div class="help-sub-title">スキルの習得</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">レベルアップ時にスキルポイントを獲得。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">スキルツリー画面で左クリックして習得（最大Lv.${SKILL_MAX_LEVEL}）。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">一部のスキルはキャラクターレベルの制限あり（Lv.1/6/12/18/24/30）。</div>`;
+
+            h += `<div class="help-sub-title">スキルスロット <span class="help-key">R</span></div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">習得したアクティブスキルをスロット1〜6に配置して使用。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">ツリー画面で右クリック → 空きスロットに自動配置。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0"><span class="help-key">R</span>キーでスキル編集画面を開き、細かく入替可能。</div>`;
+
+            h += `<div class="help-sub-title">シナジー</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">一部のスキルは別のスキルからシナジーボーナスを受けます。</div>`;
+            h += `<div class="help-tip help-tip-good">例：ワールウィンドはダブルスイングとコンセントレイトのLvごとに+8%ダメージ。関連スキルを幅広く育てるのが効果的。</div>`;
+
+            // Show current skill slots
+            h += `<div class="help-sub-title">現在のスキルスロット</div>`;
             for (let i = 1; i <= 6; i++) {
                 const sk = player.skills[i];
                 if (sk && sk.id) {
                     const lvl = player.skillLevels[sk.id] || 0;
-                    slotsHtml += `<div style="margin:2px 0"><span style="color:#ffd700">${i}</span> ─ ${sk.icon} ${sk.name} Lv.${lvl} (${sk.mp}MP) ─ ${sk.desc || ''}</div>`;
+                    h += `<div style="margin:2px 0;color:#ccc;font-size:11px"><span class="help-key">${i}</span> ${sk.icon} ${sk.name} Lv.${lvl} <span style="color:#4488ff">${sk.mp}MP</span></div>`;
                 } else {
-                    slotsHtml += `<div style="color:#666;margin:2px 0"><span style="color:#ffd700">${i}</span> ─ 未設定 (Rキーでスキル編集)</div>`;
+                    h += `<div style="margin:2px 0;color:#666;font-size:11px"><span class="help-key">${i}</span> 未設定</div>`;
                 }
             }
-            slotsEl.innerHTML = slotsHtml || '<div style="color:#888">スキルスロット情報がありません</div>';
-        }
+            break;
 
-        const el = document.getElementById('helpDynamic');
-        if (!el) return;
+        case 'items':
+            h += `<div class="help-section-title">装備・アイテム</div>`;
 
-        let html = '';
+            h += `<div class="help-sub-title">アイテムの拾得</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">敵を倒すと装備やポーションをドロップ。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0"><span class="help-key">Space</span>で手動拾得、または<span class="help-key">G</span>で自動拾いON。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0"><span class="help-key">P</span>で自動拾いフィルタを変更（コモン以上/マジック以上/...）。</div>`;
 
-        // Add unspent skill points banner
-        if (player.skillPoints > 0) {
-            html += `<div style="background:#aa5522;border:2px solid #ffd700;padding:8px;margin:10px 0;text-align:center;border-radius:4px">
-                ⚡ 未使用のスキルポイントが${player.skillPoints}個あります！Tキーでスキルツリーを開いてスキルを習得しよう
-            </div>`;
-        }
+            h += `<div class="help-sub-title">レアリティ</div>`;
+            h += `<div style="margin:6px 0;font-size:12px;line-height:2">`;
+            h += `<span style="color:#ccc;background:#333;padding:2px 8px;border-radius:3px">コモン</span> `;
+            h += `<span style="color:#6688ff;background:#1a1a3e;padding:2px 8px;border-radius:3px">マジック</span> `;
+            h += `<span style="color:#ffdd44;background:#3a2e10;padding:2px 8px;border-radius:3px">レア</span> `;
+            h += `<span style="color:#ff8800;background:#3a1a00;padding:2px 8px;border-radius:3px">レジェンダリー</span> `;
+            h += `<span style="color:#00dd66;background:#0a2a1a;padding:2px 8px;border-radius:3px">ユニーク</span>`;
+            h += `</div>`;
+            h += `<div class="help-tip">高レアリティほど多くのランダムプロパティが付与。深い階層ほど出現確率UP。</div>`;
 
-        html += `<div style="color:#daa520;font-weight:bold;margin:14px 0 4px">チュートリアルまとめ</div>`;
-        html += `<div style="font-size:12px;color:#999">・敵を倒して経験値を獲得、レベルアップで能力/スキル強化</div>`;
-        html += `<div style="font-size:12px;color:#999">・スキルツリー(T)で習得、ショートカット編集(R)で割り当て</div>`;
-        html += `<div style="font-size:12px;color:#999">・階段は敵を全滅で使用可能、近づいてEで降りる</div>`;
-        html += `<div style="font-size:12px;color:#999">・装備はインベントリ(I)で装着/解除</div>`;
+            h += `<div class="help-sub-title">装備スロット</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">武器 / 盾（オフハンド） / 頭 / 体 / リング / アミュレット / 足</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0"><span class="help-key">I</span>でインベントリを開き、アイテムをクリックして装備。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">装備中のアイテムをクリックすると外してインベントリに戻ります。</div>`;
 
-        if (!G.playerClass || !CLASS_DEFS[G.playerClass]) {
-            html += `<div style="color:#daa520;font-weight:bold;margin:12px 0 4px">スキル一覧</div>`;
-            html += `<div style="font-size:12px;color:#888">クラス選択後に表示されます。</div>`;
-            el.innerHTML = html;
-            return;
-        }
+            h += `<div class="help-sub-title">ランダムプロパティ</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">装備には攻撃力・防御力のほか、ランダムな追加効果が付くことがあります：</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">+STR, +DEX, +VIT, +INT / +クリティカル率 / +攻撃速度 / +ライフスティール / +移動速度 など</div>`;
 
-        // クラス昇格情報
-        const classDef = CLASS_DEFS[G.playerClass];
-        html += `<div style="color:#daa520;font-weight:bold;margin:14px 0 4px;border-top:1px solid #5a4a3a;padding-top:12px">クラス進化システム</div>`;
-        html += `<div style="font-size:12px;color:#ccc;margin-bottom:8px">現在のクラス: <span style="color:#ffd700">${classDef.icon} ${classDef.name}</span></div>`;
+            h += `<div class="help-sub-title">ポーション</div>`;
+            h += `<div style="color:#00ff00;font-size:11px;margin:4px 0">赤いポーションを拾うとHP+50即時回復。インベントリには入りません。</div>`;
+            break;
 
-        if (classDef.tier === 1) {
-            // 既に昇格済み
-            html += `<div style="font-size:11px;color:#88ff88;margin:4px 0">✓ 上位クラスに昇格済み</div>`;
-            if (classDef.baseClass) {
-                const base = CLASS_DEFS[classDef.baseClass];
-                html += `<div style="font-size:11px;color:#aaa">${base.icon} ${base.name} → ${classDef.icon} ${classDef.name}</div>`;
-            }
-        } else if (player.level >= PROMOTION_LEVEL) {
-            // 昇格可能
-            html += `<div style="font-size:11px;color:#ffaa44;margin:4px 0">⚡ レベル${PROMOTION_LEVEL}到達！昇格可能です</div>`;
-            const promos = CLASS_PROMOTIONS[G.playerClass] || [];
-            if (promos.length > 0) {
-                html += `<div style="font-size:11px;color:#daa520;margin:6px 0 2px">昇格先:</div>`;
-                for (const p of promos) {
-                    const pDef = CLASS_DEFS[p.key];
-                    if (pDef) {
-                        html += `<div style="font-size:12px;color:#ffd700;margin:6px 0 2px 12px;font-weight:bold">${pDef.icon} ${pDef.name}</div>`;
-                        // スキルブランチを表示
-                        if (pDef.branches && pDef.branches.length > 0 && pDef.skills && pDef.skills.length > 0) {
-                            html += `<div style="font-size:10px;color:#aaa;margin:2px 0 2px 24px">スキルツリー:</div>`;
-                            for (let i = 0; i < pDef.branches.length; i++) {
-                                const branchName = pDef.branches[i];
-                                const branchSkills = pDef.skills.filter(sk => sk.branch === i);
-                                if (branchSkills.length > 0) {
-                                    html += `<div style="font-size:10px;color:#daa520;font-weight:bold;margin:4px 0 2px 24px">${branchName}</div>`;
-                                    for (const sk of branchSkills) {
-                                        html += `<div style="font-size:9px;color:#999;margin:1px 0 1px 36px">・${sk.icon} ${sk.name} (${sk.mp}MP)</div>`;
-                                    }
-                                }
+        case 'dungeon':
+            h += `<div class="help-section-title">ダンジョン探索</div>`;
+
+            h += `<div class="help-sub-title">階層構造</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">ダンジョンは地下へ進むほど難易度が上昇。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">各階はランダム生成され、敵・宝箱・階段が配置されます。</div>`;
+
+            h += `<div class="help-sub-title">階段の使い方</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">紫色に光る階段に近づき <span class="help-key">E</span> キーで次の階へ。</div>`;
+            h += `<div class="help-tip help-tip-warn">階段付近の敵を倒す必要があります（全滅は不要）。階段の周囲200px以内に敵がいると使用できません。</div>`;
+            h += `<div class="help-tip help-tip-good">階段の近く（300px以内）には新しい敵がスポーンしません。敵を倒しながら近づけば安全に降りられます。</div>`;
+
+            h += `<div class="help-sub-title">宝箱</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">宝箱の上に乗ると自動的に開きます。装備やポーションを獲得。</div>`;
+
+            h += `<div class="help-sub-title">敵の出現</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">ダンジョン内では一定間隔で敵が追加出現します（最大数あり）。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">深い階層ではより強力なモンスターが登場：</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">1〜2F: スケルトン、ゾンビ</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">3〜4F: + インプ</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">5〜6F: + ゴースト</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">7F〜 : インプ、ゴースト</div>`;
+            h += `<div style="color:#ff4444;font-size:11px;margin:6px 0">5階ごとにボス「デーモンロード」が出現！</div>`;
+            break;
+
+        case 'growth':
+            h += `<div class="help-section-title">クラス・成長システム</div>`;
+
+            h += `<div class="help-sub-title">レベルアップ</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">敵を倒してXPを獲得。一定量でレベルアップ。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">レベルアップ報酬：</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">ステータスポイント +3 → <span class="help-key">C</span>画面で STR/DEX/VIT/INT に振り分け</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">スキルポイント +5 → <span class="help-key">T</span>画面でスキル習得/強化</div>`;
+
+            h += `<div class="help-sub-title">ステータス</div>`;
+            h += `<div style="color:#ff8844;font-size:11px;margin:2px 0"><b>STR（力）</b> ─ 物理攻撃力に直結</div>`;
+            h += `<div style="color:#44dd44;font-size:11px;margin:2px 0"><b>DEX（技）</b> ─ クリティカル率・命中に影響</div>`;
+            h += `<div style="color:#ff4444;font-size:11px;margin:2px 0"><b>VIT（体力）</b> ─ 最大HPを増加</div>`;
+            h += `<div style="color:#4488ff;font-size:11px;margin:2px 0"><b>INT（知力）</b> ─ 最大MPを増加</div>`;
+
+            h += `<div class="help-sub-title">クラス昇格（転職）</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">レベル${PROMOTION_LEVEL}到達で上位クラスに昇格可能。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">各基本クラスは2つの上位クラスから選択できます。</div>`;
+            h += `<div class="help-tip">上位クラスは基本クラスのスキルに加え、新しいスキルツリーを獲得。両方のスキルを使用可能。</div>`;
+
+            // Current class info
+            if (G.playerClass && CLASS_DEFS[G.playerClass]) {
+                const cd = CLASS_DEFS[G.playerClass];
+                h += `<div class="help-sub-title">現在のクラス</div>`;
+                h += `<div style="color:#ffd700;font-size:13px;margin:4px 0">${cd.icon} ${cd.name} (${cd.engName})</div>`;
+                if (cd.tier === 1 && cd.baseClass) {
+                    const base = CLASS_DEFS[cd.baseClass];
+                    h += `<div style="color:#88ff88;font-size:11px">✓ 上位クラス昇格済 (${base.icon} ${base.name} → ${cd.icon} ${cd.name})</div>`;
+                } else if (cd.tier === 0) {
+                    const promos = CLASS_PROMOTIONS[G.playerClass] || [];
+                    if (promos.length > 0) {
+                        const canPromote = player.level >= PROMOTION_LEVEL;
+                        h += `<div style="color:${canPromote ? '#ffaa44' : '#888'};font-size:11px;margin:4px 0">${canPromote ? '⚡ 昇格可能！' : `Lv.${PROMOTION_LEVEL}で昇格可能 (あと${PROMOTION_LEVEL - player.level})`}</div>`;
+                        h += `<div style="font-size:11px;color:#ccc;margin:4px 0">昇格先：</div>`;
+                        for (const p of promos) {
+                            const pDef = CLASS_DEFS[p.key];
+                            if (pDef) {
+                                h += `<div style="font-size:11px;color:#ffd700;margin:2px 0 2px 12px">${pDef.icon} ${pDef.name} ─ <span style="color:#aaa">${pDef.branches.join(' / ')}</span></div>`;
                             }
                         }
                     }
                 }
-                html += `<div style="font-size:10px;color:#888;margin:6px 0">※レベルアップ時に選択画面が表示されます</div>`;
             }
-        } else {
-            // まだ昇格不可
-            const promos = CLASS_PROMOTIONS[G.playerClass] || [];
-            if (promos.length > 0) {
-                const needed = PROMOTION_LEVEL - player.level;
-                html += `<div style="font-size:11px;color:#888;margin:4px 0">レベル${PROMOTION_LEVEL}で上位クラスに昇格可能 (あと${needed}レベル)</div>`;
-                html += `<div style="font-size:11px;color:#daa520;margin:6px 0 2px">昇格先:</div>`;
-                for (const p of promos) {
-                    const pDef = CLASS_DEFS[p.key];
-                    if (pDef) {
-                        html += `<div style="font-size:12px;color:#ccb38a;margin:6px 0 2px 12px;font-weight:bold">${pDef.icon} ${pDef.name}</div>`;
-                        // スキルブランチを表示
-                        if (pDef.branches && pDef.branches.length > 0 && pDef.skills && pDef.skills.length > 0) {
-                            html += `<div style="font-size:10px;color:#888;margin:2px 0 2px 24px">スキルツリー:</div>`;
-                            for (let i = 0; i < pDef.branches.length; i++) {
-                                const branchName = pDef.branches[i];
-                                const branchSkills = pDef.skills.filter(sk => sk.branch === i);
-                                if (branchSkills.length > 0) {
-                                    html += `<div style="font-size:10px;color:#ccb38a;font-weight:bold;margin:4px 0 2px 24px">${branchName}</div>`;
-                                    for (const sk of branchSkills) {
-                                        html += `<div style="font-size:9px;color:#888;margin:1px 0 1px 36px">・${sk.icon} ${sk.name} (${sk.mp}MP)</div>`;
-                                    }
-                                }
-                            }
-                        }
-                    }
+
+            h += `<div class="help-sub-title">基本クラス</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:2px 0">⚔ バーバリアン ─ 近接物理。高HP・高火力</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:2px 0">🏹 アマゾン ─ 遠距離・ジャベリン。高DEX</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:2px 0">✨ ソーサレス ─ 魔法攻撃。高INT・範囲火力</div>`;
+            break;
+
+        case 'keys':
+            h += `<div class="help-section-title">キーバインド一覧</div>`;
+            const keys = [
+                ['操作', [
+                    ['左クリック', '移動 / 敵を攻撃'],
+                    ['右クリック', '選択中スキルをマウス方向に発動'],
+                    ['←↑→↓', 'キーボード移動'],
+                    ['A', '最寄りの敵を自動攻撃'],
+                    ['S', '選択中スキルを最寄り敵に発動'],
+                    ['1〜6', 'スキルスロット選択＆即発動'],
+                    ['Space', '近くのアイテムを拾う'],
+                ]],
+                ['メニュー', [
+                    ['I', 'インベントリ（装備管理）'],
+                    ['C', 'キャラクターステータス'],
+                    ['T', 'スキルツリー'],
+                    ['R', 'スキルショートカット編集'],
+                    ['H', 'この手引書'],
+                    ['O', '設定画面'],
+                    ['Esc', '一時停止 / メニュー閉じ'],
+                ]],
+                ['ダンジョン', [
+                    ['E', '階段を降りる（付近に敵がいない時）'],
+                ]],
+                ['アイテム', [
+                    ['G', '自動拾いの ON / OFF'],
+                    ['P', '自動拾いフィルタ切替'],
+                ]],
+                ['システム', [
+                    ['F5', 'ゲームをセーブ'],
+                    ['F8', 'セーブデータをロード'],
+                ]],
+            ];
+            for (const [category, bindings] of keys) {
+                h += `<div class="help-sub-title">${category}</div>`;
+                for (const [key, desc] of bindings) {
+                    h += `<div class="help-row"><span class="help-key">${key}</span> ${desc}</div>`;
                 }
-            } else {
-                html += `<div style="font-size:11px;color:#888;margin:4px 0">このクラスは最終形態です</div>`;
             }
+
+            h += `<div class="help-sub-title">スキルツリー内操作</div>`;
+            h += `<div class="help-row"><span class="help-key">左クリック</span> スキル習得 (+1)</div>`;
+            h += `<div class="help-row"><span class="help-key">右クリック</span> スロットに配置</div>`;
+            h += `<div class="help-row">ホバー ─ 詳細ツールチップ表示</div>`;
+
+            h += `<div class="help-sub-title">スキル編集画面 (R) 内</div>`;
+            h += `<div class="help-row"><span class="help-key">1〜6</span> スロット選択</div>`;
+            h += `<div class="help-row"><span class="help-key">A</span> 配置モード</div>`;
+            h += `<div class="help-row"><span class="help-key">W</span> 入替モード</div>`;
+            h += `<div class="help-row"><span class="help-key">X</span> スロットからスキルを外す</div>`;
+            break;
         }
 
-        const baseDef = classDef.baseClass ? CLASS_DEFS[classDef.baseClass] : null;
-        const list = [];
-        const seen = new Set();
-
-        for (const sk of classDef.skills) {
-            list.push({ sk, classLabel: classDef.name, branchLabel: classDef.branches[sk.branch] || '' });
-            seen.add(sk.id);
-        }
-        if (baseDef) {
-            for (const sk of baseDef.skills) {
-                if (seen.has(sk.id)) continue;
-                list.push({ sk, classLabel: baseDef.name, branchLabel: baseDef.branches[sk.branch] || '' });
-                seen.add(sk.id);
-            }
-        }
-
-        html += `<div style="color:#daa520;font-weight:bold;margin:12px 0 6px">スキル一覧</div>`;
-
-        let currentClass = '';
-        let currentBranch = '';
-        for (const row of list) {
-            if (row.classLabel !== currentClass) {
-                currentClass = row.classLabel;
-                currentBranch = '';
-                html += `<div style="color:#ccb38a;font-size:12px;margin:6px 0 2px">${currentClass}</div>`;
-            }
-            if (row.branchLabel && row.branchLabel !== currentBranch) {
-                currentBranch = row.branchLabel;
-                html += `<div style="color:#888;font-size:11px;margin:4px 0 2px">${currentBranch}</div>`;
-            }
-            const skillLvl = player.skillLevels[row.sk.id] || 0;
-            let badge = '';
-            if (skillLvl > 0) {
-                badge = `<span style="font-size:8px;background:#228822;color:#88ff88;padding:2px 5px;border-radius:3px;font-weight:bold;margin-left:6px">習得済 L${skillLvl}</span>`;
-            } else {
-                badge = `<span style="font-size:8px;background:#aa6622;color:#ffd700;padding:2px 5px;border-radius:3px;font-weight:bold;margin-left:6px">解放済</span>`;
-            }
-            html += `<div style="display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#ddd">
-                <div>${row.sk.icon} ${row.sk.name}${badge}</div>
-                <div style="color:#88a">${row.sk.mp}MP / ${row.sk.cd}s</div>
-            </div>`;
-            html += `<div style="font-size:10px;color:#777;margin:2px 0 6px 16px">${effectDesc(row.sk)}</div>`;
-        }
-
-        // Detailed Skill Information Section (learned skills only)
-        html += `<div style="color:#daa520;font-weight:bold;margin:16px 0 8px;border-top:2px solid #666;padding-top:8px">習得済みスキル詳細</div>`;
-        html += `<div style="color:#888;font-size:10px;margin-bottom:8px">※レベル1以上のスキルのみ表示</div>`;
-
-        // Get all learned skills (level 1+)
-        const learnedSkills = list.filter(row => (player.skillLevels[row.sk.id] || 0) > 0);
-
-        if (learnedSkills.length === 0) {
-            html += `<div style="color:#666;font-size:11px;text-align:center;margin:12px 0">まだスキルを習得していません (Tキーでスキルツリーを開く)</div>`;
-        } else {
-            for (const row of learnedSkills) {
-                const sk = row.sk;
-                const skillLvl = player.skillLevels[sk.id] || 0;
-                const allAvail = getAllAvailableSkills();
-                const skDef = allAvail.find(s => s.id === sk.id);
-
-                // Skill card container
-                html += `<div style="background:#1a1a2e;border:1px solid #444;border-radius:4px;padding:8px;margin:6px 0">`;
-
-                // Skill header
-                html += `<div style="display:flex;align-items:center;justify-content:space-between">`;
-                html += `<div style="display:flex;align-items:center;gap:8px">`;
-                html += `<span style="font-size:20px">${sk.icon}</span>`;
-                html += `<span style="color:#ffd700;font-size:13px;font-weight:bold">${sk.name}</span>`;
-                html += `<span style="color:#88ff88;font-size:10px">Lv.${skillLvl}/5</span>`;
-                html += `</div>`;
-                html += `<span style="color:#888;font-size:9px">${row.branchLabel}</span>`;
-                html += `</div>`;
-
-                // Stats row
-                html += `<div style="margin:6px 0;font-size:10px;color:#aaa">`;
-                html += `<span style="color:#4488ff">MP: ${sk.mp}</span> | `;
-                html += `<span style="color:#ff88aa">CD: ${sk.cd}s</span>`;
-
-                // Add level-specific stats
-                if (skDef) {
-                    const li = skillLvl - 1; // 0-indexed
-                    if (skDef.baseMult && skDef.baseMult[li]) {
-                        html += ` | <span style="color:#ffaa44">倍率: x${skDef.baseMult[li]}</span>`;
-                    }
-                    if (skDef.range) {
-                        html += ` | <span style="color:#88ff88">射程: ${skDef.range}</span>`;
-                    }
-                    if (skDef.duration && skDef.duration[li]) {
-                        html += ` | <span style="color:#ffdd88">持続: ${skDef.duration[li]}s</span>`;
-                    }
-                }
-                html += `</div>`;
-
-                // Description
-                html += `<div style="font-size:10px;color:#ccc;margin-top:4px">${effectDesc(sk)}</div>`;
-
-                // Level progression bar
-                html += `<div style="margin-top:6px;display:flex;gap:2px">`;
-                for (let i = 1; i <= 5; i++) {
-                    const active = i <= skillLvl;
-                    const barColor = active ? '#ffd700' : '#333';
-                    const barHeight = active ? '6px' : '4px';
-                    html += `<div style="flex:1;height:${barHeight};background:${barColor};border-radius:2px"></div>`;
-                }
-                html += `</div>`;
-
-                html += `</div>`; // Close skill card
-            }
-        }
-
-        el.innerHTML = html;
+        contentEl.innerHTML = h;
     }
 
     window.allocStat = function(stat) {
