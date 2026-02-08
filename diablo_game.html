@@ -1622,6 +1622,13 @@
     const TILE = 40;
     const MAP_W = 60, MAP_H = 60;
     const MAX_PARTICLES = 1500; // Diablo風：パーティクル数の上限を3倍に（500→1500）
+    const PLAYER_DRAW_SCALE = 1.8;
+    const MONSTER_DRAW_SCALES = {
+        skeleton: 1.5, zombie: 1.6, imp: 1.3, ghost: 1.4, demonlord: 2.0,
+        mummy: 1.5, scarab: 1.2, sand_golem: 1.7, treeant: 1.8,
+        poison_spider: 1.2, jungle_shaman: 1.4, demon: 1.6, hellhound: 1.4,
+        frost_zombie: 1.6, ice_wraith: 1.4, yeti: 1.8
+    };
     let W = window.innerWidth, H = window.innerHeight;
 
     // --- Canvas Setup ---
@@ -5268,10 +5275,15 @@
                 ctx.restore();
             }
 
-            // Shadow
-            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            // Shadow (scaled radial gradient)
+            const pShadowRx = TILE * PLAYER_DRAW_SCALE * 0.25;
+            const pShadowG = ctx.createRadialGradient(sx, sy + 16, 0, sx, sy + 16, pShadowRx);
+            pShadowG.addColorStop(0, 'rgba(0,0,0,0.5)');
+            pShadowG.addColorStop(0.6, 'rgba(0,0,0,0.2)');
+            pShadowG.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = pShadowG;
             ctx.beginPath();
-            ctx.ellipse(sx, sy + 16, 14, 5, 0, 0, Math.PI * 2);
+            ctx.ellipse(sx, sy + 16, pShadowRx, 6, 0, 0, Math.PI * 2);
             ctx.fill();
 
             // Walking animation phase
@@ -5282,45 +5294,46 @@
             else if (this.classKey === 'rogue' || this.classKey === 'assassin' || this.classKey === 'ranger') this._drawGenericSprite(sx, sy, walkPhase, CLASS_DEFS[this.classKey].sprite);
             else if (this.classKey === 'sorcerer' || this.classKey === 'pyromancer' || this.classKey === 'cryomancer') this._drawGenericSprite(sx, sy, walkPhase, CLASS_DEFS[this.classKey].sprite);
 
-            // HP/MP bars over head (gradient + border)
+            // HP/MP bars over head (gradient + border) - adjusted for scale
             const hpFrac = this.hp / this.maxHP;
             const mpFrac = this.mp / this.maxMP;
-            const barW = 30;
+            const barW = 36;
             const barX = sx - barW/2;
+            const pBarY = sy + TILE/2 + 4;
             // HP bar background
             ctx.fillStyle = '#1a0000';
-            ctx.fillRect(barX, sy + 20, barW, 4);
+            ctx.fillRect(barX, pBarY, barW, 4);
             // HP bar fill with gradient
             if (hpFrac > 0) {
-                const hpBarG = ctx.createLinearGradient(barX, sy + 20, barX, sy + 24);
+                const hpBarG = ctx.createLinearGradient(barX, pBarY, barX, pBarY + 4);
                 hpBarG.addColorStop(0, hpFrac > 0.3 ? '#ee3333' : '#ff6644');
                 hpBarG.addColorStop(1, hpFrac > 0.3 ? '#881111' : '#cc2222');
                 ctx.fillStyle = hpBarG;
-                ctx.fillRect(barX, sy + 20, barW * hpFrac, 4);
+                ctx.fillRect(barX, pBarY, barW * hpFrac, 4);
             }
             // HP bar border
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 0.5;
-            ctx.strokeRect(barX, sy + 20, barW, 4);
+            ctx.strokeRect(barX, pBarY, barW, 4);
             // MP bar background
             ctx.fillStyle = '#00001a';
-            ctx.fillRect(barX, sy + 25, barW, 3);
+            ctx.fillRect(barX, pBarY + 5, barW, 3);
             // MP bar fill with gradient
             if (mpFrac > 0) {
-                const mpBarG = ctx.createLinearGradient(barX, sy + 25, barX, sy + 28);
+                const mpBarG = ctx.createLinearGradient(barX, pBarY + 5, barX, pBarY + 8);
                 mpBarG.addColorStop(0, '#5555dd');
                 mpBarG.addColorStop(1, '#222288');
                 ctx.fillStyle = mpBarG;
-                ctx.fillRect(barX, sy + 25, barW * mpFrac, 3);
+                ctx.fillRect(barX, pBarY + 5, barW * mpFrac, 3);
             }
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 0.5;
-            ctx.strokeRect(barX, sy + 25, barW, 3);
-            // Level badge
+            ctx.strokeRect(barX, pBarY + 5, barW, 3);
+            // Level badge - above scaled sprite
             ctx.font = '9px monospace';
             ctx.textAlign = 'center';
             ctx.fillStyle = '#daa520';
-            ctx.fillText('Lv' + this.level, sx, sy - TILE/2 - 4);
+            ctx.fillText('Lv' + this.level, sx, sy - TILE * PLAYER_DRAW_SCALE / 2 - 6);
 
             // Berserk aura (only sorcerer shows mana shield glow)
             if (this.manaShieldT > 0) {
@@ -5332,20 +5345,27 @@
             }
         },
         _drawGenericSprite(sx, sy, walkPhase, spriteKey) {
-            const bounce = this.moving ? Math.sin(walkPhase * 10) * 2 : 0;
+            const S = PLAYER_DRAW_SCALE;
+            const drawSize = TILE * S;
+            const bounce = this.moving ? Math.sin(walkPhase * 10) * 3 : 0;
             const flipX = this.targetX < this.x - 2;
-            const atkTilt = this.attacking ? Math.sin(this.attackTimer * Math.PI * 6) * 0.15 : 0;
-            // Drop shadow
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            const atkTilt = this.attacking ? Math.sin(this.attackTimer * Math.PI * 6) * 0.2 : 0;
+            // Drop shadow (radial gradient)
+            const shadowRx = drawSize * 0.28, shadowRy = 5;
+            const shG = ctx.createRadialGradient(sx, sy + TILE/2, 0, sx, sy + TILE/2, shadowRx);
+            shG.addColorStop(0, 'rgba(0,0,0,0.45)');
+            shG.addColorStop(0.6, 'rgba(0,0,0,0.2)');
+            shG.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = shG;
             ctx.beginPath();
-            ctx.ellipse(sx, sy + TILE/2 - 2, TILE * 0.3, 3.5, 0, 0, Math.PI * 2);
+            ctx.ellipse(sx, sy + TILE/2, shadowRx, shadowRy, 0, 0, Math.PI * 2);
             ctx.fill();
             ctx.save();
             ctx.translate(sx, sy + bounce);
             if (atkTilt) ctx.rotate(atkTilt);
-            if (!drawSpr(spriteKey, -TILE/2, -TILE/2, TILE, TILE, flipX)) {
-                // Fallback: try class-specific legacy method
-                ctx.fillStyle = '#888'; ctx.fillRect(-TILE/4, -TILE/4, TILE/2, TILE/2);
+            // Draw at scaled size, anchored at feet
+            if (!drawSpr(spriteKey, -drawSize/2, -drawSize + TILE/2, drawSize, drawSize, flipX)) {
+                ctx.fillStyle = '#888'; ctx.fillRect(-drawSize/4, -drawSize/4, drawSize/2, drawSize/2);
             }
             ctx.restore();
             // Aura effects for promoted classes
@@ -5355,13 +5375,13 @@
                 const c = colors[this.classKey] || '#ffffff';
                 ctx.globalAlpha = 0.08 + Math.sin(G.time * 3) * 0.04;
                 ctx.fillStyle = c;
-                ctx.beginPath(); ctx.arc(sx, sy, TILE * 0.5, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(sx, sy, drawSize * 0.35, 0, Math.PI * 2); ctx.fill();
                 ctx.globalAlpha = 1;
             }
             if (this.attacking) {
                 ctx.globalAlpha = 0.25 * Math.abs(Math.sin(this.attackTimer * Math.PI * 4));
                 ctx.fillStyle = '#ffaa44';
-                ctx.beginPath(); ctx.arc(sx, sy, TILE * 0.6, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(sx, sy, drawSize * 0.4, 0, Math.PI * 2); ctx.fill();
                 ctx.globalAlpha = 1;
             }
         },
@@ -5473,7 +5493,7 @@
                 this.bossCD = {};
                 this.bossState = 'idle';
                 this.bossBurrowT = 0;
-                this.drawScale = 1.5;
+                this.drawScale = 2.2;
                 this.aggroRange = 500;
             } else {
                 this.maxHP = Math.round(d.hp * s * cm);
@@ -5481,7 +5501,7 @@
                 this.dmg = Math.round(d.dmg * s * cm);
                 this.spd = d.spd;
                 this.r = d.r;
-                this.drawScale = 1;
+                this.drawScale = MONSTER_DRAW_SCALES[type] || 1.3;
                 this.aggroRange = type === 'demonlord' ? 400 : 250;
             }
             this.alive = true;
@@ -5490,6 +5510,8 @@
             this.phase = type === 'ghost' || type === 'ice_wraith';
             this.phaseAlpha = 1;
             this.hitFlash = 0;
+            this.knockbackX = 0;
+            this.knockbackY = 0;
             this.frozenT = 0;
             this.origSpd = this.spd;
             this.aggroed = false;
@@ -5499,6 +5521,14 @@
             if (!this.alive) { this.deathT -= dt; return; }
             this.atkCD = Math.max(0, this.atkCD - dt);
             this.hitFlash = Math.max(0, this.hitFlash - dt);
+            // Knockback decay
+            if (this.knockbackX !== 0 || this.knockbackY !== 0) {
+                const decay = Math.min(1, dt / 0.15);
+                this.knockbackX *= (1 - decay);
+                this.knockbackY *= (1 - decay);
+                if (Math.abs(this.knockbackX) < 0.1) this.knockbackX = 0;
+                if (Math.abs(this.knockbackY) < 0.1) this.knockbackY = 0;
+            }
 
             // Frozen state
             if (this.frozenT > 0) {
@@ -5550,8 +5580,9 @@
         }
 
         draw(cx, cy) {
-            const sx = this.x - cx, sy = this.y - cy;
-            if (sx < -50 || sx > W + 50 || sy < -50 || sy > H + 50) return;
+            const sx = this.x - cx + (this.knockbackX || 0), sy = this.y - cy + (this.knockbackY || 0);
+            const mScale = this.drawScale || 1;
+            if (sx < -80 * mScale || sx > W + 80 * mScale || sy < -80 * mScale || sy > H + 80 * mScale) return;
 
             // Death animation - squash/stretch + red tint + fade
             const deathProgress = !this.alive ? clamp(1 - this.deathT / 0.5, 0, 1) : 0;
@@ -5571,10 +5602,15 @@
                 ctx.translate(-sx, -sy);
             }
 
-            // Shadow ellipse under all monsters
-            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            // Shadow ellipse under all monsters (radial gradient)
+            const mShadowRx = this.r * mScale * 0.8;
+            const mShadowG = ctx.createRadialGradient(sx, sy + this.r * mScale * 0.5 + 3, 0, sx, sy + this.r * mScale * 0.5 + 3, mShadowRx);
+            mShadowG.addColorStop(0, 'rgba(0,0,0,0.4)');
+            mShadowG.addColorStop(0.6, 'rgba(0,0,0,0.15)');
+            mShadowG.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = mShadowG;
             ctx.beginPath();
-            ctx.ellipse(sx, sy + this.r + 3, this.r * 0.7, 3, 0, 0, Math.PI * 2);
+            ctx.ellipse(sx, sy + this.r * mScale * 0.5 + 3, mShadowRx, 4 * mScale, 0, 0, Math.PI * 2);
             ctx.fill();
 
             // Apply hit flash to drawing
@@ -5604,37 +5640,39 @@
             ctx.restore();
             ctx.globalAlpha = 1;
 
-            // Frozen indicator overlay
+            // Frozen indicator overlay (scaled)
             if (this.frozenT > 0) {
                 ctx.strokeStyle = '#88ddff';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.arc(sx, sy, this.r + 4, 0, Math.PI * 2);
+                ctx.arc(sx, sy, mScaledR + 4, 0, Math.PI * 2);
                 ctx.stroke();
                 ctx.fillStyle = 'rgba(100,200,255,0.15)';
                 ctx.beginPath();
-                ctx.arc(sx, sy, this.r + 3, 0, Math.PI * 2);
+                ctx.arc(sx, sy, mScaledR + 3, 0, Math.PI * 2);
                 ctx.fill();
             }
 
-            // HP bar
+            // HP bar (scaled position)
+            const mScaledR = this.r * (this.drawScale || 1);
             if (this.alive && this.hp < this.maxHP) {
-                const bw = this.r * 2.5;
+                const bw = mScaledR * 2.2;
+                const hpY = sy - mScaledR - 10;
                 ctx.fillStyle = '#1a1a1a';
-                ctx.fillRect(sx - bw/2, sy - this.r - 10, bw, 4);
+                ctx.fillRect(sx - bw/2, hpY, bw, 4);
                 ctx.fillStyle = this.hp / this.maxHP > 0.3 ? '#00aa00' : '#dd3300';
-                ctx.fillRect(sx - bw/2, sy - this.r - 10, bw * (this.hp / this.maxHP), 4);
+                ctx.fillRect(sx - bw/2, hpY, bw * (this.hp / this.maxHP), 4);
                 ctx.strokeStyle = '#000';
                 ctx.lineWidth = 0.5;
-                ctx.strokeRect(sx - bw/2, sy - this.r - 10, bw, 4);
+                ctx.strokeRect(sx - bw/2, hpY, bw, 4);
             }
 
-            // Name plate
+            // Name plate (scaled position)
             if (this.alive) {
                 ctx.fillStyle = '#aaaaaa';
                 ctx.font = '8px monospace';
                 ctx.textAlign = 'center';
-                ctx.fillText(this.def.name, sx, sy + this.r + 12);
+                ctx.fillText(this.def.name, sx, sy + mScaledR + 12);
             }
 
             // Boss aura
@@ -5642,7 +5680,7 @@
                 ctx.strokeStyle = `rgba(200,50,50,${0.25 + Math.sin(G.time * 3.5) * 0.1})`;
                 ctx.lineWidth = 1.5;
                 ctx.beginPath();
-                ctx.arc(sx, sy, this.r + 10, 0, Math.PI * 2);
+                ctx.arc(sx, sy, mScaledR + 10, 0, Math.PI * 2);
                 ctx.stroke();
             }
 
@@ -5651,19 +5689,32 @@
                 ctx.fillStyle = '#cc5555';
                 ctx.font = 'bold 10px monospace';
                 ctx.textAlign = 'center';
-                ctx.fillText(this.def.name, sx, sy - this.r - 14);
+                ctx.fillText(this.def.name, sx, sy - mScaledR - 14);
             }
         }
 
     _drawHitFlash(sx, sy, alphaFlash, r, color) {
         if (this.hitFlash > 0) {
             const flashIntensity = this.hitFlash / 0.1;
+            const mScale = this.drawScale || 1;
+            const scaledR = r * mScale;
             ctx.save();
+            // White outline flash (larger, bright)
             ctx.globalCompositeOperation = 'lighter';
-            ctx.globalAlpha = flashIntensity * 0.4;
-            ctx.fillStyle = color;
+            ctx.globalAlpha = flashIntensity * 0.6;
+            ctx.fillStyle = '#ffffff';
             ctx.beginPath();
-            ctx.arc(sx, sy, r, 0, Math.PI * 2);
+            ctx.arc(sx, sy, scaledR * 1.15, 0, Math.PI * 2);
+            ctx.fill();
+            // Radial impact glow
+            const impG = ctx.createRadialGradient(sx, sy, 0, sx, sy, scaledR * 2);
+            impG.addColorStop(0, `rgba(255,255,255,${flashIntensity * 0.3})`);
+            impG.addColorStop(0.4, color + Math.round(flashIntensity * 60).toString(16).padStart(2,'0'));
+            impG.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.globalAlpha = flashIntensity * 0.5;
+            ctx.fillStyle = impG;
+            ctx.beginPath();
+            ctx.arc(sx, sy, scaledR * 2, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
         }
@@ -5671,33 +5722,41 @@
 
     _drawSkeleton(sx, sy, alphaFlash) {
         const flipX = player.x < this.x;
-        drawSpr('skeleton', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX, true);
+        const s = this.drawScale || 1;
+        const dw = TILE * s, dh = TILE * s;
+        drawSpr('skeleton', sx - dw/2, sy - dh/2, dw, dh, flipX, true);
         this._drawHitFlash(sx, sy, alphaFlash, this.r, '#ff4400');
     }
 
     _drawZombie(sx, sy, alphaFlash) {
         const flipX = player.x < this.x;
-        drawSpr('zombie', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX, true);
+        const s = this.drawScale || 1;
+        const dw = TILE * s, dh = TILE * s;
+        drawSpr('zombie', sx - dw/2, sy - dh/2, dw, dh, flipX, true);
         this._drawHitFlash(sx, sy, alphaFlash, this.r, '#ff4400');
     }
 
     _drawImp(sx, sy, alphaFlash) {
         const flipX = player.x < this.x;
-        drawSpr('imp', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX, true);
+        const s = this.drawScale || 1;
+        const dw = TILE * s, dh = TILE * s;
+        drawSpr('imp', sx - dw/2, sy - dh/2, dw, dh, flipX, true);
         this._drawHitFlash(sx, sy, alphaFlash, this.r, '#ff4400');
     }
 
     _drawGhost(sx, sy, alphaFlash) {
         const flipX = player.x < this.x;
+        const s = this.drawScale || 1;
+        const dw = TILE * s, dh = TILE * s;
         ctx.globalAlpha = 0.55 + Math.sin(G.time * 3) * 0.15;
-        drawSpr('banshee', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX, true);
+        drawSpr('banshee', sx - dw/2, sy - dh/2, dw, dh, flipX, true);
         ctx.globalAlpha = 1;
         this._drawHitFlash(sx, sy, alphaFlash, this.r, '#8844ff');
     }
 
     _drawDemonLord(sx, sy, alphaFlash) {
         const flipX = player.x < this.x;
-        const bossScale = 1.35;
+        const bossScale = this.drawScale || 2.0;
         const bw = TILE * bossScale, bh = TILE * bossScale;
 
         // Ground aura (dark pulsing circle beneath boss)
@@ -5745,34 +5804,33 @@
     }
 
     _drawGeneric(sx, sy, alphaFlash) {
-        // Generic colored circle draw for new monster types
+        // Generic colored circle draw for new monster types (scaled)
         const color = this.def.color || '#888';
-        const r = this.r;
-        // Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        ctx.beginPath(); ctx.ellipse(sx, sy + r + 2, r * 0.6, 2, 0, 0, Math.PI * 2); ctx.fill();
+        const s = this.drawScale || 1;
+        const r = this.r * s;
         // Body
         ctx.fillStyle = this._darken(color, 0.6);
-        ctx.beginPath(); ctx.arc(sx, sy + 2, r, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(sx, sy + 2 * s, r, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = color;
         ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
         // Highlight
         ctx.fillStyle = 'rgba(255,255,255,0.15)';
         ctx.beginPath(); ctx.arc(sx - r * 0.25, sy - r * 0.25, r * 0.45, 0, Math.PI * 2); ctx.fill();
         // Eyes
+        const eyeOff = 3 * s;
         ctx.fillStyle = '#ff0000';
-        ctx.beginPath(); ctx.arc(sx - 3, sy - 2, 1.5, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(sx + 3, sy - 2, 1.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(sx - eyeOff, sy - 2 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(sx + eyeOff, sy - 2 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
         // Icon above
         ctx.font = `${Math.round(r * 1.2)}px ${FONT_EMOJI}`;
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(this.def.icon || '?', sx, sy);
-        this._drawHitFlash(sx, sy, alphaFlash, r, '#ff4400');
+        this._drawHitFlash(sx, sy, alphaFlash, this.r, '#ff4400');
     }
 
     _drawBoss(sx, sy, alphaFlash) {
         const bd = BOSS_DEFS[this.bossKey] || {};
-        const bossScale = this.drawScale || 1.5;
+        const bossScale = this.drawScale || 2.2;
         const bw = TILE * bossScale, bh = TILE * bossScale;
         const color = bd.color || '#ff0000';
 
@@ -6041,8 +6099,12 @@
         m.hp -= dmg;
         m.hitFlash = 0.1;
         addFloatingText(m.x, m.y - m.r - 10, Math.round(dmg), isCrit ? '#ffff00' : '#ff6666', isCrit);
-        // Directional blood splatter (from player angle)
+        // Knockback (hit stagger)
         const hitAngle = Math.atan2(m.y - player.y, m.x - player.x);
+        const kbDist = isCrit ? 12 : 6;
+        m.knockbackX = Math.cos(hitAngle) * kbDist;
+        m.knockbackY = Math.sin(hitAngle) * kbDist;
+        // Directional blood splatter (from player angle)
         const bloodCount = isCrit ? 12 : 6;
         for (let i = 0; i < bloodCount; i++) {
             if (particles.length >= MAX_PARTICLES) break;
