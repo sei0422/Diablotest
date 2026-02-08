@@ -248,6 +248,45 @@
         }
         #statsPanel { top: 60px; left: 10px; width: 280px; }
         #inventoryPanel { top: 60px; right: 10px; width: 320px; }
+        .town-panel {
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 380px; max-height: 70vh;
+            z-index: 500;
+        }
+        .town-btn {
+            background: linear-gradient(180deg, #2a2018, #1a1008);
+            border: 1px solid #8b6b3d;
+            color: #e5b35a;
+            padding: 6px 12px;
+            font-family: var(--font-ui);
+            font-size: 12px;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: all 0.15s;
+        }
+        .town-btn:hover { background: linear-gradient(180deg, #3a3020, #2a2018); border-color: #ffd700; color: #ffd700; }
+        .town-btn.active { background: linear-gradient(180deg, #4a3a20, #3a2a10); border-color: #ffd700; color: #ffd700; }
+        .town-btn.disabled, .town-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .shop-grid {
+            display: flex; flex-wrap: wrap; gap: 4px; max-height: 300px; overflow-y: auto;
+            padding: 4px;
+        }
+        .shop-item {
+            display: flex; flex-direction: column; align-items: center;
+            background: rgba(20,15,8,0.8); border: 1px solid #5a4a3a;
+            padding: 4px 6px; width: 80px; cursor: pointer;
+            transition: all 0.15s;
+        }
+        .shop-item:hover { border-color: #ffd700; background: rgba(40,30,15,0.9); }
+        .shop-item.disabled { opacity: 0.4; cursor: not-allowed; }
+        .quest-item {
+            padding: 6px 8px; margin: 4px 0;
+            background: rgba(20,15,8,0.6); border: 1px solid #3a3020;
+            cursor: pointer; transition: all 0.15s;
+        }
+        .quest-item:hover { border-color: #ffd700; }
+        .quest-item.complete { border-color: #ffd700; }
+        .quest-item.locked { cursor: default; opacity: 0.5; }
         .panel-header {
             font-size: 16px;
             border-bottom: 1px solid var(--panel-border);
@@ -342,17 +381,18 @@
         .inv-cell:hover { border-color: #daa520; background: rgba(80,60,30,0.5); }
         #tooltip {
             position: absolute;
-            background: linear-gradient(180deg, rgba(20,10,5,0.98), rgba(5,2,0,0.98));
-            border: 2px solid var(--panel-border);
+            background: linear-gradient(180deg, rgba(12,8,4,0.98), rgba(4,2,0,0.99));
+            border: 2px solid #8b6914;
+            border-image: linear-gradient(180deg, #c4a44a, #654321) 1;
             color: var(--accent);
-            padding: 10px;
+            padding: 10px 12px;
             font-size: 12px;
             display: none;
             z-index: 300;
             min-width: 180px;
             max-width: 240px;
             font-family: var(--font-mono);
-            box-shadow: 0 0 15px rgba(0,0,0,0.9);
+            box-shadow: 0 0 20px rgba(0,0,0,0.95), inset 0 0 30px rgba(0,0,0,0.3);
             pointer-events: none;
         }
         .tt-name { font-weight: bold; font-size: 14px; margin-bottom: 5px; }
@@ -1055,6 +1095,14 @@
         <div id="skillTreeContent"></div>
     </div>
 
+    <!-- Town UI Panels -->
+    <div id="dialogPanel" class="ui-panel town-panel" style="display:none"></div>
+    <div id="shopPanel" class="ui-panel town-panel" style="display:none"></div>
+    <div id="blacksmithPanel" class="ui-panel town-panel" style="display:none"></div>
+    <div id="stashPanel" class="ui-panel town-panel" style="display:none;width:520px"></div>
+    <div id="waypointPanel" class="ui-panel town-panel" style="display:none"></div>
+    <div id="questPanel" class="ui-panel town-panel" style="display:none"></div>
+
     <script>
     // ========================================
     // 黒焔の迷宮 - Diablo Style Hack & Slash
@@ -1158,12 +1206,18 @@
         priest:['rogues',32,64],      // priest
     };
 
-    function drawSpr(key, dx, dy, dw, dh, flipX) {
+    function drawSpr(key, dx, dy, dw, dh, flipX, dropShadow) {
         const a = ATLAS[key];
         if (!a || !SPRITES[a[0]]) return false;
         const prevSmooth = ctx.imageSmoothingEnabled;
         ctx.imageSmoothingEnabled = false;
-        // multiplyブレンドモードを削除 - 暗い背景でスプライトが透明化するため
+        // Drop shadow for character/monster sprites
+        if (dropShadow) {
+            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            ctx.beginPath();
+            ctx.ellipse(dx + dw/2, dy + dh - 2, dw * 0.35, 3, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
         if (flipX) {
             ctx.save(); ctx.translate(dx + dw, dy); ctx.scale(-1, 1);
             ctx.drawImage(SPRITES[a[0]], a[1], a[2], SP, SP, 0, 0, dw, dh);
@@ -1630,7 +1684,16 @@
         dungeonSeed: 0,
         saveSlot: 1,
         spawnTimer: 0, // 敵リスポーンタイマー
-        spawnInterval: 8 // 8秒ごとに敵を追加出現
+        spawnInterval: 8, // 8秒ごとに敵を追加出現
+        // ACT/チャプターシステム
+        act: 1, actFloor: 1, cycle: 0, inTown: false,
+        gold: 0, quests: {}, questKillCounts: {},
+        waypoints: [1], stash: [], maxStash: 48,
+        shopItems: [], bossesDefeated: {},
+        activeNPC: null, dialogState: 0, townUIMode: null,
+        actTransitionTimer: 0, actTransitionText: '',
+        portalCasting: false, portalTimer: 0,
+        portalReturn: null // {act, actFloor, cycle, floor, x, y, dungeon, monsters, groundItems, dungeonSeed}
     };
 
     const SETTINGS = {
@@ -1681,6 +1744,8 @@
                 timestamp: save.timestamp || 0,
                 level: save.player.level || 1,
                 floor: save.floor || 1,
+                act: save.act || 0,
+                cycle: save.cycle || 0,
                 className: save.player.className || save.playerClass || '不明'
             };
         } catch (e) { return null; }
@@ -1697,6 +1762,157 @@
     loadSettings();
     initSaveSlot();
     renderTitleSaveMenu();
+
+    // ========== ACT / CHAPTER DEFINITIONS ==========
+    const ACT_DEFS = {
+        1: { name:'地下聖堂', nameEn:'Cathedral', floors:5, tileTheme:'cathedral',
+             floorColors:{base:[24,22,20], wall:'#3d3228', mortar:'#1e1610'},
+             wallColors:{primary:'#44382c',secondary:'#403428',tertiary:'#3e3226'},
+             lightTint:{warm:'rgba(255,160,64,',cold:'rgba(0,0,5,'},
+             monsterTypes:['skeleton','zombie'], bossType:'skeleton_king', bossFloor:5,
+             townName:'修道院の村', townBG:'#1a140e' },
+        2: { name:'砂漠遺跡', nameEn:'Desert Ruins', floors:5, tileTheme:'desert',
+             floorColors:{base:[38,32,22], wall:'#5a4830', mortar:'#2a2018'},
+             wallColors:{primary:'#6a5838',secondary:'#5e4e30',tertiary:'#524428'},
+             lightTint:{warm:'rgba(255,180,80,',cold:'rgba(10,5,0,'},
+             monsterTypes:['mummy','scarab','sand_golem'], bossType:'sand_worm', bossFloor:5,
+             townName:'砂漠のオアシス', townBG:'#1e1a10' },
+        3: { name:'密林神殿', nameEn:'Jungle Temple', floors:5, tileTheme:'jungle',
+             floorColors:{base:[18,28,16], wall:'#2a3a22', mortar:'#162010'},
+             wallColors:{primary:'#304828',secondary:'#2a4022',tertiary:'#263a1e'},
+             lightTint:{warm:'rgba(180,220,100,',cold:'rgba(0,10,5,'},
+             monsterTypes:['treeant','poison_spider','jungle_shaman'], bossType:'archmage', bossFloor:5,
+             townName:'クラスト港', townBG:'#0e1a0e' },
+        4: { name:'地獄', nameEn:'Hell', floors:3, tileTheme:'hell',
+             floorColors:{base:[30,10,8], wall:'#4a1a10', mortar:'#280e08'},
+             wallColors:{primary:'#5a2018',secondary:'#4e1a12',tertiary:'#42160e'},
+             lightTint:{warm:'rgba(255,80,30,',cold:'rgba(20,0,0,'},
+             monsterTypes:['demon','hellhound','imp'], bossType:'demon_lord', bossFloor:3,
+             townName:'要塞', townBG:'#1a0808' },
+        5: { name:'氷の山', nameEn:'Frozen Mountain', floors:5, tileTheme:'ice',
+             floorColors:{base:[18,22,30], wall:'#283848', mortar:'#1a2430'},
+             wallColors:{primary:'#304050',secondary:'#283848',tertiary:'#223040'},
+             lightTint:{warm:'rgba(100,150,255,',cold:'rgba(0,0,20,'},
+             monsterTypes:['frost_zombie','ice_wraith','yeti'], bossType:'ice_queen', bossFloor:5,
+             townName:'ハログス', townBG:'#0a1020' }
+    };
+    const TOTAL_ACT_FLOORS = 23; // 5+5+5+3+5
+
+    function globalFloorToAct(globalFloor) {
+        const cycle = Math.floor((globalFloor - 1) / TOTAL_ACT_FLOORS);
+        let rem = (globalFloor - 1) % TOTAL_ACT_FLOORS;
+        for (let a = 1; a <= 5; a++) {
+            if (rem < ACT_DEFS[a].floors) return { act: a, actFloor: rem + 1, cycle };
+            rem -= ACT_DEFS[a].floors;
+        }
+        return { act: 5, actFloor: ACT_DEFS[5].floors, cycle };
+    }
+    function getGlobalFloor(act, actFloor, cycle) {
+        let f = cycle * TOTAL_ACT_FLOORS;
+        for (let a = 1; a < act; a++) f += ACT_DEFS[a].floors;
+        return f + actFloor;
+    }
+    function getCurrentActDef() { return ACT_DEFS[G.act]; }
+    function getCycleMult() { return 1 + G.cycle * 0.8; }
+    function isBossFloor() { return G.actFloor === getCurrentActDef().bossFloor; }
+
+    // ========== BOSS DEFINITIONS ==========
+    const BOSS_DEFS = {
+        skeleton_king: { name:'骸骨王', icon:'👑💀', hp:500, dmg:35, spd:55, r:22, xp:1000,
+            color:'#d4a44a', phases:[
+                {hpPct:1.0, type:'melee'},
+                {hpPct:0.6, type:'summon', count:4, summonType:'skeleton', cd:8},
+                {hpPct:0.3, type:'nova', count:12, cd:5, projSpd:200, projDmg:25, projColor:'#ffffaa'}
+            ]},
+        sand_worm: { name:'砂蟲', icon:'🐛', hp:700, dmg:40, spd:50, r:24, xp:1500,
+            color:'#aa8833', phases:[
+                {hpPct:1.0, type:'burrow', cd:6},
+                {hpPct:0.6, type:'poison_spray', cd:4, count:5, projSpd:180, projDmg:20, projColor:'#44cc00'},
+                {hpPct:0.3, type:'quake', cd:5, dmg:30, radius:150}
+            ]},
+        archmage: { name:'大魔導師', icon:'🧙', hp:600, dmg:45, spd:65, r:18, xp:2000,
+            color:'#6644cc', phases:[
+                {hpPct:1.0, type:'teleport_attack', cd:3},
+                {hpPct:0.6, type:'nova', count:8, cd:4, projSpd:220, projDmg:30, projColor:'#aa44ff'},
+                {hpPct:0.3, type:'summon', count:3, summonType:'jungle_shaman', cd:10}
+            ]},
+        demon_lord: { name:'魔王', icon:'👿🔥', hp:1000, dmg:55, spd:60, r:26, xp:3000,
+            color:'#cc2200', phases:[
+                {hpPct:1.0, type:'melee'},
+                {hpPct:0.75, type:'fire_breath', cd:5, count:7, projSpd:200, projDmg:35, projColor:'#ff6600'},
+                {hpPct:0.5, type:'summon', count:3, summonType:'demon', cd:10},
+                {hpPct:0.25, type:'meteor', cd:8, count:5, dmg:50, radius:80}
+            ]},
+        ice_queen: { name:'氷の女王', icon:'👸❄', hp:800, dmg:50, spd:60, r:20, xp:2500,
+            color:'#88ccff', phases:[
+                {hpPct:1.0, type:'nova', count:6, cd:3, projSpd:200, projDmg:25, projColor:'#aaddff'},
+                {hpPct:0.5, type:'freeze_aura', cd:6, radius:120, dmg:15},
+                {hpPct:0.25, type:'blizzard', cd:8, count:12, dmg:35, radius:200}
+            ]}
+    };
+
+    // ========== QUEST DEFINITIONS ==========
+    const QUEST_DEFS = {
+        q_act1_main: { act:1, name:'骸骨王の討伐', type:'kill_boss', target:'skeleton_king',
+            desc:'地下聖堂の最深部に巣くう骸骨王を倒せ', rewards:{xp:1000, gold:500, item:'rare'} },
+        q_act1_clear: { act:1, name:'聖堂の浄化', type:'kill_count', target:50,
+            desc:'地下聖堂のモンスターを50体倒せ', rewards:{xp:500, gold:300} },
+        q_act2_main: { act:2, name:'砂蟲の退治', type:'kill_boss', target:'sand_worm', prereq:'q_act1_main',
+            desc:'砂漠の地下に潜む巨大砂蟲を倒せ', rewards:{xp:1500, gold:800, item:'rare'} },
+        q_act2_clear: { act:2, name:'遺跡の調査', type:'kill_count', target:60,
+            desc:'砂漠遺跡のモンスターを60体倒せ', rewards:{xp:800, gold:400} },
+        q_act3_main: { act:3, name:'大魔導師の打倒', type:'kill_boss', target:'archmage', prereq:'q_act2_main',
+            desc:'密林神殿の大魔導師を倒せ', rewards:{xp:2000, gold:1200, item:'legendary'} },
+        q_act3_clear: { act:3, name:'密林の制圧', type:'kill_count', target:70,
+            desc:'密林神殿のモンスターを70体倒せ', rewards:{xp:1000, gold:500} },
+        q_act4_main: { act:4, name:'魔王の討滅', type:'kill_boss', target:'demon_lord', prereq:'q_act3_main',
+            desc:'地獄の奥底に君臨する魔王を倒せ', rewards:{xp:3000, gold:2000, item:'legendary'} },
+        q_act4_clear: { act:4, name:'地獄の鎮圧', type:'kill_count', target:50,
+            desc:'地獄のモンスターを50体倒せ', rewards:{xp:1500, gold:800} },
+        q_act5_main: { act:5, name:'氷の女王の討伐', type:'kill_boss', target:'ice_queen', prereq:'q_act4_main',
+            desc:'氷の山頂に住む氷の女王を倒せ', rewards:{xp:4000, gold:3000, item:'unique'} },
+        q_act5_clear: { act:5, name:'氷山の掃討', type:'kill_count', target:80,
+            desc:'氷の山のモンスターを80体倒せ', rewards:{xp:2000, gold:1000} }
+    };
+
+    // ========== TOWN NPC DEFINITIONS ==========
+    const TOWN_NPC_DEFS = {
+        1: [
+            { id:'merchant_1', name:'商人マーロ', icon:'🧑‍💼', type:'shop', dialog:['品物を見ていくかい？何でも揃ってるよ。','良い防具があれば命を救うぞ。'] },
+            { id:'smith_1', name:'鍛冶屋グリスウォルド', icon:'⚒', type:'blacksmith', dialog:['武器を鍛えてやろう。','良い鉄を使えば、切れ味が違う。'] },
+            { id:'stash_1', name:'倉庫番カイン', icon:'📦', type:'stash', dialog:['預かり物はここに置いていけ。','倉庫はいつでも使えるぞ。'] },
+            { id:'quest_1', name:'長老アカラ', icon:'👵', type:'quest', dialog:['勇者よ、地下聖堂の魔物を退治してくれ。','骸骨王が復活したのだ...'] },
+            { id:'wp_1', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] }
+        ],
+        2: [
+            { id:'merchant_2', name:'商人エルジクス', icon:'🧑‍💼', type:'shop', dialog:['砂漠の品は珍しいぞ。','水よりも価値のある物がある。'] },
+            { id:'smith_2', name:'鍛冶屋ファーラ', icon:'⚒', type:'blacksmith', dialog:['砂漠の鉄は硬いが...鍛えがいがある。'] },
+            { id:'stash_2', name:'倉庫番メシフ', icon:'📦', type:'stash', dialog:['荷物はここに預けろ。'] },
+            { id:'quest_2', name:'賢者ドロガン', icon:'🧔', type:'quest', dialog:['砂漠の地下に巨大な蟲がいる...退治してくれ。'] },
+            { id:'wp_2', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] }
+        ],
+        3: [
+            { id:'merchant_3', name:'商人アシェラ', icon:'🧑‍💼', type:'shop', dialog:['密林の収穫品だ、見てくれ。'] },
+            { id:'smith_3', name:'鍛冶屋ヘファスト', icon:'⚒', type:'blacksmith', dialog:['神殿の金属は特殊だ...鍛え直してやろう。'] },
+            { id:'stash_3', name:'倉庫番ナタリヤ', icon:'📦', type:'stash', dialog:['安全に保管してあるわ。'] },
+            { id:'quest_3', name:'巫女オーマス', icon:'🧙‍♀', type:'quest', dialog:['大魔導師が神殿を支配している...倒してくれ。'] },
+            { id:'wp_3', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] }
+        ],
+        4: [
+            { id:'merchant_4', name:'商人ジャメラ', icon:'🧑‍💼', type:'shop', dialog:['地獄でも商売は続く...'] },
+            { id:'smith_4', name:'鍛冶屋ハルバ', icon:'⚒', type:'blacksmith', dialog:['地獄の炎で鍛えた武器は一味違う。'] },
+            { id:'stash_4', name:'倉庫番ティラエル', icon:'📦', type:'stash', dialog:['ここなら安全だ。'] },
+            { id:'quest_4', name:'天使ハラティ', icon:'👼', type:'quest', dialog:['魔王を倒さねば世界が滅ぶ...頼む。'] },
+            { id:'wp_4', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] }
+        ],
+        5: [
+            { id:'merchant_5', name:'商人アーニャ', icon:'🧑‍💼', type:'shop', dialog:['氷の品は貴重よ。'] },
+            { id:'smith_5', name:'鍛冶屋ラーズク', icon:'⚒', type:'blacksmith', dialog:['凍てつく金属...だが鍛えられる。'] },
+            { id:'stash_5', name:'倉庫番ニーラサック', icon:'📦', type:'stash', dialog:['預かるぞ。'] },
+            { id:'quest_5', name:'賢者マラス', icon:'🧓', type:'quest', dialog:['氷の女王が山を支配している...最後の戦いだ。'] },
+            { id:'wp_5', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] }
+        ]
+    };
 
     // --- Seeded PRNG (mulberry32) for dungeon reproducibility ---
     let _seedState = 0;
@@ -2019,13 +2235,27 @@
             this.vy = randf(-15, -3);
             this.size = randf(0.5, 2);
             this.life = this.maxLife = randf(3, 8);
-            this.type = Math.random() < 0.3 ? 'ember' : 'dust';
+            const roll = Math.random();
+            if (roll < 0.4) {
+                this.type = 'ember';
+            } else if (roll < 0.55) {
+                this.type = 'fog';
+            } else {
+                this.type = 'dust';
+            }
             this.drift = randf(0, Math.PI * 2);
             if (this.type === 'ember') {
                 const hue = 20 + Math.random() * 20;
                 const light = 50 + Math.random() * 30;
                 this.color = `hsl(${hue}, 100%, ${light}%)`;
                 this.alpha = 0.6;
+            } else if (this.type === 'fog') {
+                this.color = 'rgba(120,110,100,0.08)';
+                this.alpha = 0.08;
+                this.size = randf(15, 35);
+                this.vx = randf(-3, 3);
+                this.vy = randf(-2, 2);
+                this.life = this.maxLife = randf(5, 12);
             } else {
                 this.color = '#aa997766';
                 this.alpha = 0.25;
@@ -2033,7 +2263,7 @@
         }
         update(dt) {
             this.drift += dt * 0.5;
-            this.x += (this.vx + Math.sin(this.drift) * 3) * dt;
+            this.x += (this.vx + Math.sin(this.drift) * (this.type === 'fog' ? 1 : 3)) * dt;
             this.y += this.vy * dt;
             this.life -= dt;
         }
@@ -2043,9 +2273,19 @@
             const a = clamp(this.life / this.maxLife, 0, 1) * (this.life < 1 ? this.life : 1);
             ctx.globalAlpha = a * this.alpha;
             ctx.fillStyle = this.color;
-            ctx.beginPath();
-            ctx.arc(sx, sy, this.size, 0, Math.PI * 2);
-            ctx.fill();
+            if (this.type === 'fog') {
+                // Fog wisp - soft, large blurred circle
+                const fogG = ctx.createRadialGradient(sx, sy, 0, sx, sy, this.size);
+                fogG.addColorStop(0, 'rgba(100,90,80,0.06)');
+                fogG.addColorStop(0.5, 'rgba(80,70,60,0.03)');
+                fogG.addColorStop(1, 'rgba(60,50,40,0)');
+                ctx.fillStyle = fogG;
+                ctx.fillRect(sx - this.size, sy - this.size, this.size * 2, this.size * 2);
+            } else {
+                ctx.beginPath();
+                ctx.arc(sx, sy, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
             ctx.globalAlpha = 1;
         }
         alive() { return this.life > 0; }
@@ -2097,7 +2337,12 @@
     // Pre-render tile textures for much better visual quality
     const TILE_TEXTURES = {};
 
-    function generateTileTextures() {
+    function generateTileTextures(theme) {
+        theme = theme || 'cathedral';
+        const actDef = Object.values(ACT_DEFS).find(a => a.tileTheme === theme) || ACT_DEFS[1];
+        const themeColors = actDef.floorColors || { base: [24,22,20] };
+        const themeWall = actDef.wallColors || {};
+
         // Helper: create noise pattern on a canvas
         function addNoise(tctx, w, h, intensity, r, g, b) {
             const id = tctx.getImageData(0, 0, w, h);
@@ -2111,33 +2356,33 @@
             tctx.putImageData(id, 0, 0);
         }
 
-        // --- FLOOR TILES (4 variants) ---
-        for (let v = 0; v < 4; v++) {
+        // --- FLOOR TILES (6 variants - theme-based colors) ---
+        for (let v = 0; v < 6; v++) {
             const c = document.createElement('canvas');
             c.width = TILE; c.height = TILE;
             const tc = c.getContext('2d');
 
-            // Base stone color (dark, warm gray)
-            const baseR = 28 + v * 3, baseG = 25 + v * 2, baseB = 22 + v * 2;
+            // Base color from theme
+            const baseR = themeColors.base[0] + v * 2, baseG = themeColors.base[1] + v * 1, baseB = themeColors.base[2] + v * 1;
             tc.fillStyle = `rgb(${baseR},${baseG},${baseB})`;
             tc.fillRect(0, 0, TILE, TILE);
 
             // Large stone slab pattern (Diablo cathedral feel)
-            tc.strokeStyle = `rgba(15,12,10,0.6)`;
+            tc.strokeStyle = `rgba(10,8,6,0.7)`;
             tc.lineWidth = 1;
             tc.strokeRect(1, 1, TILE - 2, TILE - 2);
 
             // Inner bevel highlight (top-left edges brighter)
-            tc.fillStyle = `rgba(255,240,220,0.04)`;
+            tc.fillStyle = `rgba(255,240,220,0.03)`;
             tc.fillRect(2, 2, TILE - 4, 1);
             tc.fillRect(2, 2, 1, TILE - 4);
             // Inner bevel shadow (bottom-right edges darker)
-            tc.fillStyle = `rgba(0,0,0,0.08)`;
+            tc.fillStyle = `rgba(0,0,0,0.1)`;
             tc.fillRect(2, TILE - 3, TILE - 4, 1);
             tc.fillRect(TILE - 3, 2, 1, TILE - 4);
 
-            // Add stone grain noise
-            addNoise(tc, TILE, TILE, 15, 1, 0.9, 0.8);
+            // Add stone grain noise (more subtle)
+            addNoise(tc, TILE, TILE, 12, 1, 0.85, 0.7);
 
             // Random surface details per variant
             if (v === 0) {
@@ -2154,74 +2399,115 @@
                 tc.moveTo(15, 2); tc.lineTo(18, 15); tc.lineTo(14, 30); tc.lineTo(17, 38); tc.stroke();
             } else if (v === 2) {
                 // Worn center
-                tc.fillStyle = 'rgba(0,0,0,0.04)';
+                tc.fillStyle = 'rgba(0,0,0,0.05)';
                 tc.beginPath();
                 tc.ellipse(TILE/2, TILE/2, 12, 10, 0.3, 0, Math.PI * 2);
                 tc.fill();
+            } else if (v === 3) {
+                // Double scratch cross
+                tc.strokeStyle = 'rgba(8,6,4,0.25)';
+                tc.lineWidth = 0.5;
+                tc.beginPath();
+                tc.moveTo(5, 10); tc.lineTo(30, 28); tc.stroke();
+                tc.beginPath();
+                tc.moveTo(25, 5); tc.lineTo(10, 32); tc.stroke();
+            } else if (v === 4) {
+                // Stain / moisture mark
+                tc.fillStyle = 'rgba(15,12,8,0.12)';
+                tc.beginPath();
+                tc.ellipse(TILE * 0.35, TILE * 0.6, 8, 6, 0.5, 0, Math.PI * 2);
+                tc.fill();
+                tc.fillStyle = 'rgba(10,8,5,0.08)';
+                tc.beginPath();
+                tc.ellipse(TILE * 0.6, TILE * 0.35, 6, 4, -0.3, 0, Math.PI * 2);
+                tc.fill();
+            } else if (v === 5) {
+                // Chipped edge
+                tc.fillStyle = 'rgba(0,0,0,0.06)';
+                tc.fillRect(0, 0, 6, 6);
+                tc.fillStyle = 'rgba(255,240,220,0.02)';
+                tc.fillRect(1, 1, 4, 4);
             }
 
             TILE_TEXTURES['floor_' + v] = c;
         }
 
-        // --- WALL TILE (exposed to floor) ---
+        // --- WALL TILE (exposed to floor, 3-row brick pattern) ---
         const wallC = document.createElement('canvas');
         wallC.width = TILE; wallC.height = TILE;
         const wc = wallC.getContext('2d');
 
-        // Dark stone base
-        wc.fillStyle = '#3d3228';
+        // Dark stone base (theme-based)
+        wc.fillStyle = themeColors.wall || '#3d3228';
         wc.fillRect(0, 0, TILE, TILE);
 
-        // Brick pattern (2 rows)
-        const halfH = TILE / 2;
+        // Brick pattern (3 rows)
+        const thirdH = Math.floor(TILE / 3);
         // Row 1: full width brick
-        wc.fillStyle = '#44382c';
-        wc.fillRect(2, 2, TILE - 4, halfH - 3);
+        wc.fillStyle = themeWall.primary || '#44382c';
+        wc.fillRect(2, 2, TILE - 4, thirdH - 3);
         // Row 2: two half bricks
-        wc.fillStyle = '#403428';
-        wc.fillRect(2, halfH + 1, TILE / 2 - 3, halfH - 3);
-        wc.fillStyle = '#3e3226';
-        wc.fillRect(TILE / 2 + 1, halfH + 1, TILE / 2 - 3, halfH - 3);
+        wc.fillStyle = themeWall.secondary || '#403428';
+        wc.fillRect(2, thirdH + 1, TILE / 2 - 3, thirdH - 2);
+        wc.fillStyle = themeWall.tertiary || '#3e3226';
+        wc.fillRect(TILE / 2 + 1, thirdH + 1, TILE / 2 - 3, thirdH - 2);
+        // Row 3: offset brick (1/3 + 2/3)
+        wc.fillStyle = '#3b3024';
+        wc.fillRect(2, thirdH * 2 + 1, TILE / 3 - 2, thirdH - 3);
+        wc.fillStyle = '#42362a';
+        wc.fillRect(TILE / 3 + 1, thirdH * 2 + 1, TILE - TILE / 3 - 3, thirdH - 3);
 
-        // Mortar lines
-        wc.strokeStyle = '#2a2018';
+        // Mortar lines (D2 mortar color: #1e1610)
+        wc.strokeStyle = '#1e1610';
         wc.lineWidth = 1;
         wc.beginPath();
-        wc.moveTo(0, halfH); wc.lineTo(TILE, halfH); wc.stroke();
+        wc.moveTo(0, thirdH); wc.lineTo(TILE, thirdH); wc.stroke();
         wc.beginPath();
-        wc.moveTo(TILE / 2, halfH); wc.lineTo(TILE / 2, TILE); wc.stroke();
+        wc.moveTo(0, thirdH * 2); wc.lineTo(TILE, thirdH * 2); wc.stroke();
+        wc.beginPath();
+        wc.moveTo(TILE / 2, thirdH); wc.lineTo(TILE / 2, thirdH * 2); wc.stroke();
+        wc.beginPath();
+        wc.moveTo(TILE / 3, thirdH * 2); wc.lineTo(TILE / 3, TILE); wc.stroke();
 
         // Top bevel
-        wc.fillStyle = 'rgba(255,240,200,0.06)';
+        wc.fillStyle = 'rgba(255,240,200,0.05)';
         wc.fillRect(0, 0, TILE, 2);
 
         // Stone grain
-        addNoise(wc, TILE, TILE, 12, 1, 0.9, 0.7);
+        addNoise(wc, TILE, TILE, 10, 1, 0.85, 0.65);
 
         TILE_TEXTURES['wall'] = wallC;
 
-        // --- WALL TILE VARIANT 2 ---
+        // --- WALL TILE VARIANT 2 (offset 3-row) ---
         const wallC2 = document.createElement('canvas');
         wallC2.width = TILE; wallC2.height = TILE;
         const wc2 = wallC2.getContext('2d');
         wc2.fillStyle = '#3a3025';
         wc2.fillRect(0, 0, TILE, TILE);
-        // Offset brick pattern
+        // Offset 3-row brick pattern
         wc2.fillStyle = '#403428';
-        wc2.fillRect(2, 2, TILE / 2 - 3, halfH - 3);
+        wc2.fillRect(2, 2, TILE / 2 - 3, thirdH - 3);
         wc2.fillStyle = '#3e3226';
-        wc2.fillRect(TILE / 2 + 1, 2, TILE / 2 - 3, halfH - 3);
+        wc2.fillRect(TILE / 2 + 1, 2, TILE / 2 - 3, thirdH - 3);
         wc2.fillStyle = '#44382c';
-        wc2.fillRect(2, halfH + 1, TILE - 4, halfH - 3);
-        wc2.strokeStyle = '#2a2018';
+        wc2.fillRect(2, thirdH + 1, TILE - 4, thirdH - 2);
+        wc2.fillStyle = '#3c3026';
+        wc2.fillRect(2, thirdH * 2 + 1, TILE * 2/3 - 3, thirdH - 3);
+        wc2.fillStyle = '#403428';
+        wc2.fillRect(TILE * 2/3 + 1, thirdH * 2 + 1, TILE / 3 - 3, thirdH - 3);
+        wc2.strokeStyle = '#1e1610';
         wc2.lineWidth = 1;
         wc2.beginPath();
-        wc2.moveTo(0, halfH); wc2.lineTo(TILE, halfH); wc2.stroke();
+        wc2.moveTo(0, thirdH); wc2.lineTo(TILE, thirdH); wc2.stroke();
         wc2.beginPath();
-        wc2.moveTo(TILE / 2, 0); wc2.lineTo(TILE / 2, halfH); wc2.stroke();
-        wc2.fillStyle = 'rgba(255,240,200,0.05)';
+        wc2.moveTo(0, thirdH * 2); wc2.lineTo(TILE, thirdH * 2); wc2.stroke();
+        wc2.beginPath();
+        wc2.moveTo(TILE / 2, 0); wc2.lineTo(TILE / 2, thirdH); wc2.stroke();
+        wc2.beginPath();
+        wc2.moveTo(TILE * 2/3, thirdH * 2); wc2.lineTo(TILE * 2/3, TILE); wc2.stroke();
+        wc2.fillStyle = 'rgba(255,240,200,0.04)';
         wc2.fillRect(0, 0, TILE, 2);
-        addNoise(wc2, TILE, TILE, 12, 1, 0.9, 0.7);
+        addNoise(wc2, TILE, TILE, 10, 1, 0.85, 0.65);
         TILE_TEXTURES['wall2'] = wallC2;
 
         // --- DEEP WALL (not adjacent to floor) ---
@@ -2342,7 +2628,21 @@
             this.tiles = new Uint8Array(MAP_W * MAP_H); // 0=wall, 1=floor, 2=stairs, 3=chest
             this.rooms = [];
             this.explored = new Uint8Array(MAP_W * MAP_H);
+            this.torchPositions = []; // cached torch world positions
             this.generate();
+            this._cacheTorchPositions();
+        }
+        _cacheTorchPositions() {
+            this.torchPositions = [];
+            for (let y = 0; y < MAP_H; y++) {
+                for (let x = 0; x < MAP_W; x++) {
+                    if (this.get(x, y) !== 0) continue;
+                    const isExposed = this.walkable(x, y+1) || this.walkable(x+1, y) || this.walkable(x-1, y) || this.walkable(x, y-1);
+                    if (isExposed && (x * 7 + y * 13) % 29 === 0) {
+                        this.torchPositions.push({ wx: x * TILE + TILE/2, wy: y * TILE + TILE/2 - 4, seed: x * 3 + y * 5 });
+                    }
+                }
+            }
         }
         idx(x, y) { return y * MAP_W + x; }
         get(x, y) {
@@ -2578,24 +2878,45 @@
                             ctx.drawImage(TILE_TEXTURES['deep_wall'], sx, sy);
                         }
 
-                        // Torch on wall (animated sprite)
+                        // Torch on wall (animated sprite + enhanced glow)
                         if (isExposed && (x * 7 + y * 13) % 29 === 0) {
                             const torchFrame = Math.floor((G.time * 6 + x * 3 + y * 5) % 6);
+                            const fl = Math.sin(G.time * 8 + x * 3 + y * 5) * 3;
+                            // Outer soft glow (large, faint)
+                            const outerR = 55 + fl * 4;
+                            const outerG = ctx.createRadialGradient(sx + TILE/2, sy + TILE/2 - 4, 0, sx + TILE/2, sy + TILE/2 - 4, outerR);
+                            outerG.addColorStop(0, 'rgba(255,160,64,0.15)');
+                            outerG.addColorStop(0.4, 'rgba(255,96,16,0.06)');
+                            outerG.addColorStop(1, 'rgba(255,80,10,0)');
+                            ctx.fillStyle = outerG;
+                            ctx.fillRect(sx + TILE/2 - outerR, sy + TILE/2 - 4 - outerR, outerR * 2, outerR * 2);
                             drawSpr('torch' + torchFrame, sx, sy, TILE, TILE);
-                            // Warm glow around torch
-                            const fl = Math.sin(G.time * 8 + x * 3 + y * 5) * 2;
-                            const gr = 45 + fl * 3;
-                            ctx.globalAlpha = 0.08;
-                            ctx.fillStyle = '#ff8020';
-                            ctx.beginPath();
-                            ctx.arc(sx + TILE/2, sy + TILE/2 - 4, gr, 0, Math.PI * 2);
-                            ctx.fill();
-                            ctx.globalAlpha = 1;
+                            // Inner core glow (small, bright)
+                            const innerR = 12 + fl;
+                            const innerG = ctx.createRadialGradient(sx + TILE/2, sy + TILE/2 - 8, 0, sx + TILE/2, sy + TILE/2 - 8, innerR);
+                            innerG.addColorStop(0, 'rgba(255,220,140,0.3)');
+                            innerG.addColorStop(0.5, 'rgba(255,160,64,0.12)');
+                            innerG.addColorStop(1, 'rgba(255,128,32,0)');
+                            ctx.fillStyle = innerG;
+                            ctx.fillRect(sx + TILE/2 - innerR, sy + TILE/2 - 8 - innerR, innerR * 2, innerR * 2);
+                        }
+
+                        // Pillar detection (isolated wall surrounded by floor on 3+ sides)
+                        if (isExposed) {
+                            const floorCount = (hasFloorBelow?1:0) + (this.walkable(x+1,y)?1:0) + (this.walkable(x-1,y)?1:0) + (this.walkable(x,y-1)?1:0);
+                            if (floorCount >= 3) {
+                                // Draw as pillar with highlight
+                                ctx.fillStyle = 'rgba(255,240,200,0.03)';
+                                ctx.fillRect(sx + 4, sy + 2, TILE - 8, TILE - 4);
+                                ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+                                ctx.lineWidth = 0.5;
+                                ctx.strokeRect(sx + 4, sy + 2, TILE - 8, TILE - 4);
+                            }
                         }
 
                     } else if (t === 1) {
                         // === FLOOR ===
-                        const variant = ((x * 7 + y * 13) % 4);
+                        const variant = ((x * 7 + y * 13) % 6);
                         ctx.drawImage(TILE_TEXTURES['floor_' + variant], sx, sy);
 
                         // Blood splatters (deterministic)
@@ -2623,6 +2944,57 @@
                             ctx.fill();
                         }
 
+                        // === ENVIRONMENT DETAILS ===
+                        // Spider web (in corners near walls)
+                        if ((x * 37 + y * 19) % 89 === 0 && this.get(x-1,y) === 0 && this.get(x,y-1) === 0) {
+                            ctx.strokeStyle = 'rgba(180,170,160,0.08)';
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath();
+                            ctx.moveTo(sx, sy); ctx.lineTo(sx + 14, sy + 3);
+                            ctx.moveTo(sx, sy); ctx.lineTo(sx + 3, sy + 14);
+                            ctx.moveTo(sx, sy); ctx.lineTo(sx + 10, sy + 10);
+                            ctx.moveTo(sx + 4, sy + 2); ctx.lineTo(sx + 2, sy + 4);
+                            ctx.moveTo(sx + 8, sy + 3); ctx.lineTo(sx + 3, sy + 8);
+                            ctx.stroke();
+                        }
+
+                        // Floor crack
+                        if ((x * 41 + y * 23) % 73 === 0) {
+                            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath();
+                            ctx.moveTo(sx + 8, sy + 12);
+                            ctx.lineTo(sx + 14, sy + 20);
+                            ctx.lineTo(sx + 11, sy + 30);
+                            ctx.stroke();
+                        }
+
+                        // Scorch mark
+                        if ((x * 47 + y * 31) % 97 === 0) {
+                            ctx.fillStyle = 'rgba(10,8,5,0.12)';
+                            ctx.beginPath();
+                            ctx.ellipse(sx + TILE/2, sy + TILE/2, 8, 6, (x * 2 + y) * 0.5, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+
+                        // Dust pile
+                        if ((x * 29 + y * 43) % 83 === 0) {
+                            ctx.fillStyle = 'rgba(40,35,28,0.15)';
+                            ctx.beginPath();
+                            ctx.ellipse(sx + 12 + (x % 10), sy + 25 + (y % 8), 5, 2.5, 0, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+
+                        // Skull
+                        if ((x * 53 + y * 37) % 127 === 0) {
+                            ctx.fillStyle = 'rgba(140,130,110,0.1)';
+                            ctx.beginPath();
+                            ctx.arc(sx + 20, sy + 22, 3.5, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = 'rgba(100,90,75,0.08)';
+                            ctx.fillRect(sx + 18, sy + 25, 4, 3);
+                        }
+
                         // Wall shadows
                         if (this.get(x, y - 1) === 0) {
                             ctx.drawImage(TILE_TEXTURES['shadow_top'], sx, sy);
@@ -2633,24 +3005,26 @@
 
                     } else if (t === 2) {
                         // === STAIRS (Sprite) ===
-                        const variant = ((x * 7 + y * 13) % 4);
+                        const variant = ((x * 7 + y * 13) % 6);
                         ctx.drawImage(TILE_TEXTURES['floor_' + variant], sx, sy);
                         drawSpr('stairsDown', sx, sy, TILE, TILE);
 
-                        // Mystical glow
+                        // D2-style gold ethereal glow
+                        const glowPulse = Math.sin(G.time * 2.5) * 0.05;
                         const sg = ctx.createRadialGradient(sx + TILE/2, sy + TILE/2, 0, sx + TILE/2, sy + TILE/2, TILE * 1.3);
-                        sg.addColorStop(0, 'rgba(100,70,180,0.3)');
-                        sg.addColorStop(0.4, 'rgba(100,70,180,0.1)');
-                        sg.addColorStop(1, 'rgba(100,70,180,0)');
+                        sg.addColorStop(0, `rgba(200,170,80,${0.3 + glowPulse})`);
+                        sg.addColorStop(0.3, `rgba(180,140,50,${0.15 + glowPulse})`);
+                        sg.addColorStop(0.6, 'rgba(160,120,40,0.05)');
+                        sg.addColorStop(1, 'rgba(140,100,30,0)');
                         ctx.fillStyle = sg;
                         ctx.fillRect(sx - TILE/2, sy - TILE/2, TILE * 2, TILE * 2);
 
-                        // Sparkles
-                        for (let i = 0; i < 3; i++) {
-                            const sa = G.time * 2 + i * 2.1;
-                            const spx = sx + TILE/2 + Math.cos(sa) * 12;
+                        // Gold sparkles
+                        for (let i = 0; i < 4; i++) {
+                            const sa = G.time * 2 + i * 1.57;
+                            const spx = sx + TILE/2 + Math.cos(sa) * 14;
                             const spy = sy + TILE/2 + Math.sin(sa * 1.3) * 10 - 4;
-                            ctx.fillStyle = `rgba(180,160,255,${0.2 + Math.sin(sa * 3) * 0.15})`;
+                            ctx.fillStyle = `rgba(220,190,100,${0.25 + Math.sin(sa * 3) * 0.15})`;
                             ctx.beginPath();
                             ctx.arc(spx, spy, 1.5, 0, Math.PI * 2);
                             ctx.fill();
@@ -2658,7 +3032,7 @@
 
                     } else if (t === 3) {
                         // === CHEST (Sprite) ===
-                        const variant = ((x * 7 + y * 13) % 4);
+                        const variant = ((x * 7 + y * 13) % 6);
                         ctx.drawImage(TILE_TEXTURES['floor_' + variant], sx, sy);
                         drawSpr('chestClosed', sx, sy, TILE, TILE);
                         // Gold glow
@@ -3697,7 +4071,7 @@
             const meta = getSaveMeta(i);
             const active = G.saveSlot === i;
             const info = meta
-                ? `Lv.${meta.level} / B${meta.floor}F / ${meta.className}`
+                ? `Lv.${meta.level} / ${meta.act ? 'ACT' + meta.act : 'B' + meta.floor + 'F'}${meta.cycle ? ' (' + (meta.cycle+1) + '周目)' : ''} / ${meta.className}`
                 : '空';
             const time = meta && meta.timestamp
                 ? new Date(meta.timestamp).toLocaleString('ja-JP')
@@ -3963,6 +4337,8 @@
             emitParticles(this.x, this.y, '#880000', 4, 40, 0.3, 2, 100);
             G.shakeT = 0.2; G.shakeAmt = 10; // Diablo風：2倍
             G.dmgFlashT = 0.35; // Screen blood flash
+            // Cancel town portal on hit
+            if (G.portalCasting) { G.portalCasting = false; G.portalTimer = 0; addLog('帰還が中断された！', '#ff4444'); }
             // Counter-attack
             if (this.counterT > 0 && this.counterReflect > 0) {
                 const reflectDmg = Math.round(raw * this.counterReflect);
@@ -4906,18 +5282,40 @@
             else if (this.classKey === 'rogue' || this.classKey === 'assassin' || this.classKey === 'ranger') this._drawGenericSprite(sx, sy, walkPhase, CLASS_DEFS[this.classKey].sprite);
             else if (this.classKey === 'sorcerer' || this.classKey === 'pyromancer' || this.classKey === 'cryomancer') this._drawGenericSprite(sx, sy, walkPhase, CLASS_DEFS[this.classKey].sprite);
 
-            // HP/MP bars over head
+            // HP/MP bars over head (gradient + border)
             const hpFrac = this.hp / this.maxHP;
             const mpFrac = this.mp / this.maxMP;
             const barW = 30;
+            const barX = sx - barW/2;
+            // HP bar background
             ctx.fillStyle = '#1a0000';
-            ctx.fillRect(sx - barW/2, sy + 20, barW, 3);
-            ctx.fillStyle = hpFrac > 0.3 ? '#cc2222' : '#ff4444';
-            ctx.fillRect(sx - barW/2, sy + 20, barW * hpFrac, 3);
+            ctx.fillRect(barX, sy + 20, barW, 4);
+            // HP bar fill with gradient
+            if (hpFrac > 0) {
+                const hpBarG = ctx.createLinearGradient(barX, sy + 20, barX, sy + 24);
+                hpBarG.addColorStop(0, hpFrac > 0.3 ? '#ee3333' : '#ff6644');
+                hpBarG.addColorStop(1, hpFrac > 0.3 ? '#881111' : '#cc2222');
+                ctx.fillStyle = hpBarG;
+                ctx.fillRect(barX, sy + 20, barW * hpFrac, 4);
+            }
+            // HP bar border
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 0.5;
+            ctx.strokeRect(barX, sy + 20, barW, 4);
+            // MP bar background
             ctx.fillStyle = '#00001a';
-            ctx.fillRect(sx - barW/2, sy + 24, barW, 2);
-            ctx.fillStyle = '#4444cc';
-            ctx.fillRect(sx - barW/2, sy + 24, barW * mpFrac, 2);
+            ctx.fillRect(barX, sy + 25, barW, 3);
+            // MP bar fill with gradient
+            if (mpFrac > 0) {
+                const mpBarG = ctx.createLinearGradient(barX, sy + 25, barX, sy + 28);
+                mpBarG.addColorStop(0, '#5555dd');
+                mpBarG.addColorStop(1, '#222288');
+                ctx.fillStyle = mpBarG;
+                ctx.fillRect(barX, sy + 25, barW * mpFrac, 3);
+            }
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 0.5;
+            ctx.strokeRect(barX, sy + 25, barW, 3);
             // Level badge
             ctx.font = '9px monospace';
             ctx.textAlign = 'center';
@@ -4937,6 +5335,11 @@
             const bounce = this.moving ? Math.sin(walkPhase * 10) * 2 : 0;
             const flipX = this.targetX < this.x - 2;
             const atkTilt = this.attacking ? Math.sin(this.attackTimer * Math.PI * 6) * 0.15 : 0;
+            // Drop shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath();
+            ctx.ellipse(sx, sy + TILE/2 - 2, TILE * 0.3, 3.5, 0, 0, Math.PI * 2);
+            ctx.fill();
             ctx.save();
             ctx.translate(sx, sy + bounce);
             if (atkTilt) ctx.rotate(atkTilt);
@@ -5028,31 +5431,67 @@
         zombie:   { name: 'ゾンビ', r: 14, hp: 70, dmg: 12, spd: 40, xp: 35, color: '#3a4a25', loot: 0.45, icon: '🧟' },
         imp:      { name: 'インプ', r: 10, hp: 30, dmg: 15, spd: 100, xp: 45, color: '#8a2a2a', loot: 0.5, icon: '👹' },
         ghost:    { name: 'ゴースト', r: 11, hp: 25, dmg: 10, spd: 110, xp: 55, color: '#555588', loot: 0.55, icon: '👻' },
-        demonlord:{ name: 'デーモンロード', r: 22, hp: 300, dmg: 30, spd: 70, xp: 300, color: '#8a1515', loot: 1.0, icon: '👿' }
+        demonlord:{ name: 'デーモンロード', r: 22, hp: 300, dmg: 30, spd: 70, xp: 300, color: '#8a1515', loot: 1.0, icon: '👿' },
+        // ACT2 monsters
+        mummy:      { name: 'マミー', r: 14, hp: 80, dmg: 14, spd: 45, xp: 40, color: '#a89060', loot: 0.45, icon: '🧟' },
+        scarab:     { name: 'スカラベ', r: 9, hp: 35, dmg: 18, spd: 120, xp: 50, color: '#44662a', loot: 0.4, icon: '🪲' },
+        sand_golem: { name: 'サンドゴーレム', r: 18, hp: 120, dmg: 20, spd: 50, xp: 60, color: '#b8a060', loot: 0.5, icon: '🗿' },
+        // ACT3 monsters
+        treeant:        { name: 'トレアント', r: 18, hp: 100, dmg: 16, spd: 40, xp: 55, color: '#2a5a1a', loot: 0.5, icon: '🌳' },
+        poison_spider:  { name: '毒蜘蛛', r: 8, hp: 28, dmg: 20, spd: 130, xp: 55, color: '#44aa22', loot: 0.45, icon: '🕷' },
+        jungle_shaman:  { name: 'ジャングルシャーマン', r: 12, hp: 50, dmg: 22, spd: 70, xp: 65, color: '#558844', loot: 0.55, icon: '🧙' },
+        // ACT4 monsters
+        demon:     { name: 'デーモン', r: 16, hp: 130, dmg: 25, spd: 80, xp: 80, color: '#aa2020', loot: 0.5, icon: '👹' },
+        hellhound: { name: 'ヘルハウンド', r: 12, hp: 70, dmg: 22, spd: 140, xp: 70, color: '#cc4400', loot: 0.45, icon: '🐕' },
+        // ACT5 monsters
+        frost_zombie: { name: 'フロストゾンビ', r: 14, hp: 90, dmg: 18, spd: 50, xp: 65, color: '#5588aa', loot: 0.45, icon: '🧟' },
+        ice_wraith:   { name: 'アイスレイス', r: 11, hp: 40, dmg: 15, spd: 110, xp: 70, color: '#88bbdd', loot: 0.5, icon: '👻' },
+        yeti:         { name: 'イエティ', r: 20, hp: 150, dmg: 24, spd: 60, xp: 85, color: '#aaccdd', loot: 0.55, icon: '🦍' }
     };
 
     const monsters = [];
     class Monster {
-        constructor(x, y, type, floor) {
+        constructor(x, y, type, floor, bossKey) {
             this.x = x; this.y = y;
             this.type = type;
-            const d = MONSTER_DEFS[type];
+            this.bossKey = bossKey || null;
+            this.isBoss = !!bossKey;
+            const d = MONSTER_DEFS[type] || MONSTER_DEFS.skeleton;
             this.def = d;
             const s = 1 + (floor - 1) * 0.3;
-            this.maxHP = Math.round(d.hp * s);
-            this.hp = this.maxHP;
-            this.dmg = Math.round(d.dmg * s);
-            this.spd = d.spd;
-            this.r = d.r;
+            const cm = getCycleMult();
+
+            if (this.isBoss && BOSS_DEFS[bossKey]) {
+                const bd = BOSS_DEFS[bossKey];
+                this.maxHP = Math.round(bd.hp * cm);
+                this.hp = this.maxHP;
+                this.dmg = Math.round(bd.dmg * cm);
+                this.spd = bd.spd;
+                this.r = bd.r;
+                this.def = { ...d, name: bd.name, icon: bd.icon, xp: bd.xp, loot: 1.0, color: bd.color };
+                this.bossPhase = 0;
+                this.bossCD = {};
+                this.bossState = 'idle';
+                this.bossBurrowT = 0;
+                this.drawScale = 1.5;
+                this.aggroRange = 500;
+            } else {
+                this.maxHP = Math.round(d.hp * s * cm);
+                this.hp = this.maxHP;
+                this.dmg = Math.round(d.dmg * s * cm);
+                this.spd = d.spd;
+                this.r = d.r;
+                this.drawScale = 1;
+                this.aggroRange = type === 'demonlord' ? 400 : 250;
+            }
             this.alive = true;
             this.deathT = 0;
             this.atkCD = 0;
-            this.phase = type === 'ghost';
+            this.phase = type === 'ghost' || type === 'ice_wraith';
             this.phaseAlpha = 1;
             this.hitFlash = 0;
-            this.aggroRange = type === 'demonlord' ? 400 : 250;
             this.frozenT = 0;
-            this.origSpd = d.spd;
+            this.origSpd = this.spd;
             this.aggroed = false;
         }
 
@@ -5114,12 +5553,23 @@
             const sx = this.x - cx, sy = this.y - cy;
             if (sx < -50 || sx > W + 50 || sy < -50 || sy > H + 50) return;
 
+            // Death animation - squash/stretch + red tint + fade
+            const deathProgress = !this.alive ? clamp(1 - this.deathT / 0.5, 0, 1) : 0;
             if (!this.alive) {
-                ctx.globalAlpha = clamp(this.deathT / 0.5, 0, 1);
+                ctx.globalAlpha = clamp(this.deathT / 0.5, 0, 1) * (1 - deathProgress * 0.3);
             }
             if (this.phase) ctx.globalAlpha = this.phaseAlpha;
 
             ctx.save();
+
+            // Apply death deformation (widen + flatten)
+            if (!this.alive && deathProgress > 0) {
+                const scaleX = 1 + deathProgress * 0.4;
+                const scaleY = 1 - deathProgress * 0.5;
+                ctx.translate(sx, sy);
+                ctx.scale(scaleX, scaleY);
+                ctx.translate(-sx, -sy);
+            }
 
             // Shadow ellipse under all monsters
             ctx.fillStyle = 'rgba(0,0,0,0.25)';
@@ -5134,11 +5584,22 @@
             }
 
             // Type-specific detailed rendering
-            if (this.type === 'skeleton') this._drawSkeleton(sx, sy, alphaFlash);
-            else if (this.type === 'zombie') this._drawZombie(sx, sy, alphaFlash);
+            if (this.isBoss) this._drawBoss(sx, sy, alphaFlash);
+            else if (this.type === 'skeleton') this._drawSkeleton(sx, sy, alphaFlash);
+            else if (this.type === 'zombie' || this.type === 'frost_zombie') this._drawZombie(sx, sy, alphaFlash);
             else if (this.type === 'imp') this._drawImp(sx, sy, alphaFlash);
-            else if (this.type === 'ghost') this._drawGhost(sx, sy, alphaFlash);
+            else if (this.type === 'ghost' || this.type === 'ice_wraith') this._drawGhost(sx, sy, alphaFlash);
             else if (this.type === 'demonlord') this._drawDemonLord(sx, sy, alphaFlash);
+            else this._drawGeneric(sx, sy, alphaFlash);
+
+            // Red tint overlay during death
+            if (!this.alive && deathProgress > 0) {
+                ctx.globalCompositeOperation = 'source-atop';
+                ctx.globalAlpha = deathProgress * 0.4;
+                ctx.fillStyle = '#cc0000';
+                ctx.fillRect(sx - this.r * 1.5, sy - this.r * 1.5, this.r * 3, this.r * 3);
+                ctx.globalCompositeOperation = 'source-over';
+            }
 
             ctx.restore();
             ctx.globalAlpha = 1;
@@ -5194,65 +5655,526 @@
             }
         }
 
+    _drawHitFlash(sx, sy, alphaFlash, r, color) {
+        if (this.hitFlash > 0) {
+            const flashIntensity = this.hitFlash / 0.1;
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = flashIntensity * 0.4;
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(sx, sy, r, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
     _drawSkeleton(sx, sy, alphaFlash) {
         const flipX = player.x < this.x;
-        drawSpr('skeleton', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX);
-        // Damage flash disabled to fix graphics issue
+        drawSpr('skeleton', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX, true);
+        this._drawHitFlash(sx, sy, alphaFlash, this.r, '#ff4400');
     }
 
     _drawZombie(sx, sy, alphaFlash) {
         const flipX = player.x < this.x;
-        drawSpr('zombie', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX);
-        // Damage flash disabled to fix graphics issue
+        drawSpr('zombie', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX, true);
+        this._drawHitFlash(sx, sy, alphaFlash, this.r, '#ff4400');
     }
 
     _drawImp(sx, sy, alphaFlash) {
         const flipX = player.x < this.x;
-        drawSpr('imp', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX);
-        // Damage flash disabled to fix graphics issue
+        drawSpr('imp', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX, true);
+        this._drawHitFlash(sx, sy, alphaFlash, this.r, '#ff4400');
     }
 
     _drawGhost(sx, sy, alphaFlash) {
         const flipX = player.x < this.x;
         ctx.globalAlpha = 0.55 + Math.sin(G.time * 3) * 0.15;
-        drawSpr('banshee', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX);
+        drawSpr('banshee', sx - TILE/2, sy - TILE/2, TILE, TILE, flipX, true);
         ctx.globalAlpha = 1;
-        // Damage flash disabled to fix graphics issue
+        this._drawHitFlash(sx, sy, alphaFlash, this.r, '#8844ff');
     }
 
     _drawDemonLord(sx, sy, alphaFlash) {
         const flipX = player.x < this.x;
         const bossScale = 1.35;
         const bw = TILE * bossScale, bh = TILE * bossScale;
+
+        // Ground aura (dark pulsing circle beneath boss)
+        const auraR = TILE * 1.2;
+        const auraAlpha = 0.08 + Math.sin(G.time * 2.5) * 0.04;
+        const auraG = ctx.createRadialGradient(sx, sy + 5, 0, sx, sy + 5, auraR);
+        auraG.addColorStop(0, `rgba(180,30,0,${auraAlpha})`);
+        auraG.addColorStop(0.5, `rgba(120,10,0,${auraAlpha * 0.5})`);
+        auraG.addColorStop(1, 'rgba(80,0,0,0)');
+        ctx.fillStyle = auraG;
+        ctx.beginPath(); ctx.arc(sx, sy + 5, auraR, 0, Math.PI * 2); ctx.fill();
+
         drawSpr('deathKnight', sx - bw/2, sy - bh/2, bw, bh, flipX);
+
+        // Fire particles around boss
+        for (let fp = 0; fp < 5; fp++) {
+            const angle = G.time * 1.5 + fp * (Math.PI * 2 / 5);
+            const fpDist = TILE * 0.6 + Math.sin(G.time * 3 + fp * 2) * 5;
+            const fpx = sx + Math.cos(angle) * fpDist;
+            const fpy = sy + Math.sin(angle) * fpDist * 0.5 - Math.abs(Math.sin(G.time * 5 + fp)) * 8;
+            const fpSize = 2 + Math.sin(G.time * 6 + fp) * 1;
+            ctx.globalAlpha = 0.3 + Math.sin(G.time * 4 + fp * 1.5) * 0.15;
+            ctx.fillStyle = '#ff6020';
+            ctx.beginPath(); ctx.arc(fpx, fpy, fpSize, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ffaa40';
+            ctx.beginPath(); ctx.arc(fpx, fpy, fpSize * 0.5, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        // Inner glow
         ctx.globalAlpha = 0.12 + Math.sin(G.time * 4) * 0.05;
         ctx.fillStyle = '#ff4400';
         ctx.beginPath(); ctx.arc(sx, sy, TILE * 0.75, 0, Math.PI * 2); ctx.fill();
         ctx.globalAlpha = 1;
-        // Damage flash disabled to fix graphics issue
+
+        // Double ring aura
+        ctx.strokeStyle = `rgba(200,50,50,${0.2 + Math.sin(G.time * 3) * 0.1})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(sx, sy, TILE * 0.9, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = `rgba(255,100,20,${0.15 + Math.sin(G.time * 4.5) * 0.08})`;
+        ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.arc(sx, sy, TILE * 1.1, 0, Math.PI * 2); ctx.stroke();
+
+        this._drawHitFlash(sx, sy, alphaFlash, this.r * 1.3, '#ff4400');
     }
+
+    _drawGeneric(sx, sy, alphaFlash) {
+        // Generic colored circle draw for new monster types
+        const color = this.def.color || '#888';
+        const r = this.r;
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.beginPath(); ctx.ellipse(sx, sy + r + 2, r * 0.6, 2, 0, 0, Math.PI * 2); ctx.fill();
+        // Body
+        ctx.fillStyle = this._darken(color, 0.6);
+        ctx.beginPath(); ctx.arc(sx, sy + 2, r, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
+        // Highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        ctx.beginPath(); ctx.arc(sx - r * 0.25, sy - r * 0.25, r * 0.45, 0, Math.PI * 2); ctx.fill();
+        // Eyes
+        ctx.fillStyle = '#ff0000';
+        ctx.beginPath(); ctx.arc(sx - 3, sy - 2, 1.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(sx + 3, sy - 2, 1.5, 0, Math.PI * 2); ctx.fill();
+        // Icon above
+        ctx.font = `${Math.round(r * 1.2)}px ${FONT_EMOJI}`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(this.def.icon || '?', sx, sy);
+        this._drawHitFlash(sx, sy, alphaFlash, r, '#ff4400');
+    }
+
+    _drawBoss(sx, sy, alphaFlash) {
+        const bd = BOSS_DEFS[this.bossKey] || {};
+        const bossScale = this.drawScale || 1.5;
+        const bw = TILE * bossScale, bh = TILE * bossScale;
+        const color = bd.color || '#ff0000';
+
+        // Ground aura
+        const auraR = TILE * 1.4;
+        const auraAlpha = 0.1 + Math.sin(G.time * 2.5) * 0.05;
+        const rr = parseInt(color.slice(1,3),16), gg = parseInt(color.slice(3,5),16), bb = parseInt(color.slice(5,7),16);
+        const aG = ctx.createRadialGradient(sx, sy + 5, 0, sx, sy + 5, auraR);
+        aG.addColorStop(0, `rgba(${rr},${gg},${bb},${auraAlpha})`);
+        aG.addColorStop(0.5, `rgba(${rr},${gg},${bb},${auraAlpha * 0.4})`);
+        aG.addColorStop(1, `rgba(${rr},${gg},${bb},0)`);
+        ctx.fillStyle = aG; ctx.beginPath(); ctx.arc(sx, sy + 5, auraR, 0, Math.PI * 2); ctx.fill();
+
+        // Boss body - large icon
+        ctx.font = `${Math.round(bw * 0.7)}px ${FONT_EMOJI}`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(bd.icon || '👿', sx, sy - 4);
+
+        // Pulsing rings
+        for (let ri = 0; ri < 2; ri++) {
+            const ringR = TILE * (0.9 + ri * 0.25);
+            const ringA = 0.15 + Math.sin(G.time * (3 + ri)) * 0.08;
+            ctx.strokeStyle = `rgba(${rr},${gg},${bb},${ringA})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(sx, sy, ringR, 0, Math.PI * 2); ctx.stroke();
+        }
+
+        // Rotating particles
+        for (let fp = 0; fp < 4; fp++) {
+            const angle = G.time * 1.5 + fp * (Math.PI * 2 / 4);
+            const fpDist = TILE * 0.6 + Math.sin(G.time * 3 + fp * 2) * 5;
+            const fpx = sx + Math.cos(angle) * fpDist;
+            const fpy = sy + Math.sin(angle) * fpDist * 0.5;
+            const fpSize = 2 + Math.sin(G.time * 6 + fp) * 1;
+            ctx.globalAlpha = 0.3 + Math.sin(G.time * 4 + fp * 1.5) * 0.15;
+            ctx.fillStyle = color;
+            ctx.beginPath(); ctx.arc(fpx, fpy, fpSize, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        // Boss name plate
+        ctx.font = `bold 12px ${FONT_UI}`;
+        ctx.fillStyle = '#000'; ctx.fillText(bd.name || 'BOSS', sx + 1, sy - this.r - 21);
+        ctx.fillStyle = color; ctx.fillText(bd.name || 'BOSS', sx, sy - this.r - 22);
+
+        // Boss HP bar (wider)
+        const barW = 60, barH = 5;
+        const hpPct = clamp(this.hp / this.maxHP, 0, 1);
+        ctx.fillStyle = '#333'; ctx.fillRect(sx - barW/2, sy - this.r - 14, barW, barH);
+        ctx.fillStyle = hpPct > 0.3 ? '#cc0000' : '#ff4400';
+        ctx.fillRect(sx - barW/2, sy - this.r - 14, barW * hpPct, barH);
+        ctx.strokeStyle = '#666'; ctx.lineWidth = 0.5;
+        ctx.strokeRect(sx - barW/2, sy - this.r - 14, barW, barH);
+
+        this._drawHitFlash(sx, sy, alphaFlash, this.r * 1.3, color);
+    }
+    }
+
+    // ========== ENEMY PROJECTILES ==========
+    const enemyProjectiles = [];
+    class EnemyProjectile {
+        constructor(x, y, tx, ty, dmg, color, spd, r) {
+            this.x = x; this.y = y;
+            this.dmg = dmg; this.color = color; this.r = r || 5;
+            const d = Math.hypot(tx - x, ty - y) || 1;
+            this.vx = (tx - x) / d * spd;
+            this.vy = (ty - y) / d * spd;
+            this.life = 3;
+        }
+        update(dt) {
+            this.x += this.vx * dt;
+            this.y += this.vy * dt;
+            this.life -= dt;
+        }
+        draw(cx, cy) {
+            const sx = this.x - cx, sy = this.y - cy;
+            if (sx < -20 || sx > W + 20 || sy < -20 || sy > H + 20) return;
+            ctx.globalAlpha = 0.8;
+            ctx.fillStyle = this.color;
+            ctx.beginPath(); ctx.arc(sx, sy, this.r, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(sx, sy, this.r * 0.4, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    // ========== BOSS AI ==========
+    function updateBossAI(m, dt) {
+        if (!m.isBoss || !m.alive) return;
+        const bd = BOSS_DEFS[m.bossKey];
+        if (!bd) return;
+
+        // Determine current phase based on HP%
+        const hpPct = m.hp / m.maxHP;
+        let activePhase = bd.phases[0];
+        for (const ph of bd.phases) {
+            if (hpPct <= ph.hpPct) activePhase = ph;
+        }
+
+        // Update cooldowns
+        for (const key of Object.keys(m.bossCD)) {
+            m.bossCD[key] = Math.max(0, m.bossCD[key] - dt);
+        }
+
+        const pdist = dist(m.x, m.y, player.x, player.y);
+        if (pdist > m.aggroRange) return;
+
+        // Phase-specific behavior
+        const cdKey = activePhase.type;
+        const cd = m.bossCD[cdKey] || 0;
+
+        switch (activePhase.type) {
+            case 'melee':
+                // Chase and attack (handled by normal monster AI)
+                break;
+            case 'summon':
+                if (cd <= 0) {
+                    m.bossCD[cdKey] = activePhase.cd;
+                    const sType = activePhase.summonType;
+                    for (let i = 0; i < activePhase.count; i++) {
+                        const angle = Math.PI * 2 * i / activePhase.count;
+                        const sx = m.x + Math.cos(angle) * 60;
+                        const sy = m.y + Math.sin(angle) * 60;
+                        if (MONSTER_DEFS[sType]) {
+                            monsters.push(new Monster(sx, sy, sType, getGlobalFloor(G.act, G.actFloor, G.cycle)));
+                        }
+                    }
+                    addLog(`${bd.name}が仲間を召喚した！`, '#ff4444');
+                    emitParticles(m.x, m.y, bd.color, 20, 80, 0.5, 4, -20);
+                }
+                break;
+            case 'nova':
+                if (cd <= 0) {
+                    m.bossCD[cdKey] = activePhase.cd;
+                    for (let i = 0; i < activePhase.count; i++) {
+                        const angle = Math.PI * 2 * i / activePhase.count;
+                        const tx = m.x + Math.cos(angle) * 300;
+                        const ty = m.y + Math.sin(angle) * 300;
+                        enemyProjectiles.push(new EnemyProjectile(m.x, m.y, tx, ty,
+                            Math.round(activePhase.projDmg * getCycleMult()),
+                            activePhase.projColor, activePhase.projSpd, 5));
+                    }
+                    addLog(`${bd.name}が全方位攻撃！`, '#ff4444');
+                }
+                break;
+            case 'fire_breath':
+                if (cd <= 0) {
+                    m.bossCD[cdKey] = activePhase.cd;
+                    const baseAngle = Math.atan2(player.y - m.y, player.x - m.x);
+                    const spread = Math.PI * 0.5;
+                    for (let i = 0; i < activePhase.count; i++) {
+                        const a = baseAngle - spread / 2 + spread * i / (activePhase.count - 1);
+                        const tx = m.x + Math.cos(a) * 300;
+                        const ty = m.y + Math.sin(a) * 300;
+                        enemyProjectiles.push(new EnemyProjectile(m.x, m.y, tx, ty,
+                            Math.round(activePhase.projDmg * getCycleMult()),
+                            activePhase.projColor, activePhase.projSpd, 6));
+                    }
+                    addLog(`${bd.name}が炎のブレスを吐いた！`, '#ff4444');
+                }
+                break;
+            case 'poison_spray':
+                if (cd <= 0) {
+                    m.bossCD[cdKey] = activePhase.cd;
+                    const baseA = Math.atan2(player.y - m.y, player.x - m.x);
+                    const sp = Math.PI * 0.4;
+                    for (let i = 0; i < activePhase.count; i++) {
+                        const a = baseA - sp / 2 + sp * i / (activePhase.count - 1);
+                        const tx = m.x + Math.cos(a) * 300;
+                        const ty = m.y + Math.sin(a) * 300;
+                        enemyProjectiles.push(new EnemyProjectile(m.x, m.y, tx, ty,
+                            Math.round(activePhase.projDmg * getCycleMult()),
+                            activePhase.projColor, activePhase.projSpd, 5));
+                    }
+                }
+                break;
+            case 'teleport_attack':
+                if (cd <= 0 && pdist > 100) {
+                    m.bossCD[cdKey] = activePhase.cd;
+                    // Teleport near player
+                    const ta = Math.random() * Math.PI * 2;
+                    m.x = player.x + Math.cos(ta) * 80;
+                    m.y = player.y + Math.sin(ta) * 80;
+                    emitParticles(m.x, m.y, '#aa44ff', 15, 60, 0.4, 3, -20);
+                    addLog(`${bd.name}がテレポートした！`, '#aa44ff');
+                }
+                break;
+            case 'burrow':
+                if (cd <= 0) {
+                    m.bossCD[cdKey] = activePhase.cd;
+                    m.bossBurrowT = 2.0;
+                    emitParticles(m.x, m.y, '#aa8833', 20, 80, 0.5, 4, -30);
+                }
+                if (m.bossBurrowT > 0) {
+                    m.bossBurrowT -= dt;
+                    if (m.bossBurrowT <= 0) {
+                        // Emerge near player
+                        m.x = player.x + (Math.random() - 0.5) * 100;
+                        m.y = player.y + (Math.random() - 0.5) * 100;
+                        emitParticles(m.x, m.y, '#aa8833', 25, 100, 0.6, 5, -40);
+                        player.takeDamage(Math.round(20 * getCycleMult()));
+                        addLog(`${bd.name}が地中から出現！`, '#ff8800');
+                    }
+                }
+                break;
+            case 'quake':
+                if (cd <= 0 && pdist < activePhase.radius + 50) {
+                    m.bossCD[cdKey] = activePhase.cd;
+                    if (pdist < activePhase.radius) {
+                        player.takeDamage(Math.round(activePhase.dmg * getCycleMult()));
+                    }
+                    G.shakeT = 0.5; G.shakeAmt = 10;
+                    emitParticles(m.x, m.y, '#886644', 30, 120, 0.6, 5, -50);
+                    addLog(`${bd.name}の地震攻撃！`, '#ff8800');
+                }
+                break;
+            case 'freeze_aura':
+                if (cd <= 0) {
+                    m.bossCD[cdKey] = activePhase.cd;
+                    if (pdist < activePhase.radius) {
+                        player.takeDamage(Math.round(activePhase.dmg * getCycleMult()));
+                        addLog('凍結オーラのダメージ！', '#88ddff');
+                    }
+                    emitParticles(m.x, m.y, '#aaddff', 20, 100, 0.5, 4, -30);
+                }
+                break;
+            case 'blizzard':
+                if (cd <= 0) {
+                    m.bossCD[cdKey] = activePhase.cd;
+                    for (let i = 0; i < activePhase.count; i++) {
+                        const bx = player.x + (Math.random() - 0.5) * activePhase.radius * 2;
+                        const by = player.y + (Math.random() - 0.5) * activePhase.radius * 2;
+                        setTimeout(() => {
+                            if (!G.started || G.dead || !m.alive) return;
+                            const hitD = dist(bx, by, player.x, player.y);
+                            if (hitD < 40) player.takeDamage(Math.round(activePhase.dmg * getCycleMult()));
+                            emitParticles(bx, by, '#aaddff', 10, 60, 0.4, 3, -30);
+                        }, i * 300);
+                    }
+                    addLog(`${bd.name}のブリザード！`, '#88ddff');
+                }
+                break;
+            case 'meteor':
+                if (cd <= 0) {
+                    m.bossCD[cdKey] = activePhase.cd;
+                    for (let i = 0; i < activePhase.count; i++) {
+                        const mx = player.x + (Math.random() - 0.5) * 250;
+                        const my = player.y + (Math.random() - 0.5) * 250;
+                        setTimeout(() => {
+                            if (!G.started || G.dead || !m.alive) return;
+                            const hitD = dist(mx, my, player.x, player.y);
+                            if (hitD < activePhase.radius) {
+                                player.takeDamage(Math.round(activePhase.dmg * getCycleMult()));
+                            }
+                            emitParticles(mx, my, '#ff6600', 25, 100, 0.6, 5, -40);
+                            G.shakeT = 0.2; G.shakeAmt = 6;
+                        }, 800 + i * 400);
+                    }
+                    addLog(`${bd.name}のメテオ！`, '#ff4400');
+                }
+                break;
+        }
     }
 
     function monsterTakeDmg(m, dmg, isCrit) {
         m.hp -= dmg;
         m.hitFlash = 0.1;
         addFloatingText(m.x, m.y - m.r - 10, Math.round(dmg), isCrit ? '#ffff00' : '#ff6666', isCrit);
-        emitParticles(m.x, m.y, '#cc0000', isCrit ? 10 : 5, 70, 0.4, 3);
+        // Directional blood splatter (from player angle)
+        const hitAngle = Math.atan2(m.y - player.y, m.x - player.x);
+        const bloodCount = isCrit ? 12 : 6;
+        for (let i = 0; i < bloodCount; i++) {
+            if (particles.length >= MAX_PARTICLES) break;
+            const spread = (Math.random() - 0.5) * 1.2;
+            const angle = hitAngle + spread;
+            const speed = 40 + Math.random() * 60;
+            const bColor = isCrit ? '#ff2200' : '#cc0000';
+            particles.push(new Particle(
+                m.x, m.y,
+                Math.cos(angle) * speed,
+                Math.sin(angle) * speed,
+                bColor,
+                0.3 + Math.random() * 0.3,
+                1 + Math.random() * 2,
+                120
+            ));
+        }
+        emitParticles(m.x, m.y, '#cc0000', isCrit ? 5 : 3, 70, 0.4, 3);
         if (m.hp <= 0) {
             m.alive = false;
             m.deathT = 0.5;
             sfxMonsterDeath();
             addBloodPool(m.x, m.y, m.r * 2 + 5);
             emitParticles(m.x, m.y, '#660000', 8, 50, 0.6, 2, 80);
-            player.addXP(m.def.xp * (1 + (G.floor - 1) * 0.1));
+            const globalF = getGlobalFloor(G.act, G.actFloor, G.cycle);
+            player.addXP(m.def.xp * (1 + (globalF - 1) * 0.1));
+            // Gold drop
+            const goldAmt = Math.round(rand(Math.max(1, m.def.xp * 0.5), m.def.xp * 1.5));
+            G.gold += goldAmt;
+            addFloatingText(m.x, m.y - m.r - 25, `+${goldAmt}G`, '#ffd700');
             // Drop loot
             if (Math.random() < m.def.loot) {
-                const count = m.type === 'demonlord' ? rand(3, 5) : 1;
-                for (let i = 0; i < count; i++) dropItem(m.x, m.y, generateItem(G.floor));
+                const count = (m.isBoss || m.type === 'demonlord') ? rand(3, 5) : 1;
+                for (let i = 0; i < count; i++) dropItem(m.x, m.y, generateItem(globalF));
             }
             if (Math.random() < 0.3) dropItem(m.x, m.y, generatePotion());
-            addLog(`${m.def.name} を倒した! (+${m.def.xp} XP)`, '#ffaa00');
+            // Boss defeat
+            if (m.isBoss && m.bossKey) {
+                G.bossesDefeated[m.bossKey] = (G.bossesDefeated[m.bossKey] || 0) + 1;
+                checkQuestProgress('boss_killed', m.bossKey);
+                addLog(`★ ${m.def.name} を討伐した！★`, '#ffd700');
+            } else {
+                addLog(`${m.def.name} を倒した! (+${m.def.xp} XP)`, '#ffaa00');
+            }
+            // Quest progress: kill count
+            G.questKillCounts._total = (G.questKillCounts._total || 0) + 1;
+            checkQuestProgress('monster_killed', m.type);
         }
+    }
+
+    // ========== QUEST SYSTEM ==========
+    function checkQuestProgress(eventType, target) {
+        for (const [qid, qdef] of Object.entries(QUEST_DEFS)) {
+            const state = G.quests[qid];
+            if (!state || state.status !== 'active') continue;
+
+            if (eventType === 'boss_killed' && qdef.type === 'kill_boss' && qdef.target === target) {
+                G.quests[qid].status = 'complete';
+                addLog(`★ クエスト達成: ${qdef.name}！町に戻って報告しよう`, '#ffd700');
+            }
+            if (eventType === 'monster_killed' && qdef.type === 'kill_count') {
+                G.quests[qid].progress = (G.quests[qid].progress || 0) + 1;
+                if (G.quests[qid].progress >= qdef.target) {
+                    G.quests[qid].status = 'complete';
+                    addLog(`★ クエスト達成: ${qdef.name}！町に戻って報告しよう`, '#ffd700');
+                }
+            }
+        }
+    }
+
+    function canAcceptQuest(qid) {
+        const qdef = QUEST_DEFS[qid];
+        if (!qdef) return false;
+        if (G.quests[qid] && G.quests[qid].status === 'rewarded') return false;
+        if (qdef.prereq && (!G.quests[qdef.prereq] || G.quests[qdef.prereq].status !== 'rewarded')) return false;
+        return true;
+    }
+
+    function acceptQuest(qid) {
+        if (!canAcceptQuest(qid)) return false;
+        G.quests[qid] = { status: 'active', progress: 0 };
+        addLog(`クエスト受諾: ${QUEST_DEFS[qid].name}`, '#4488ff');
+        return true;
+    }
+
+    function turnInQuest(qid) {
+        const qdef = QUEST_DEFS[qid];
+        const state = G.quests[qid];
+        if (!qdef || !state || state.status !== 'complete') return false;
+        state.status = 'rewarded';
+        // Grant rewards
+        if (qdef.rewards.xp) player.addXP(qdef.rewards.xp);
+        if (qdef.rewards.gold) G.gold += qdef.rewards.gold;
+        if (qdef.rewards.item) {
+            const item = generateItem(getGlobalFloor(G.act, G.actFloor, G.cycle), qdef.rewards.item);
+            player.inventory.push(item);
+            addLog(`報酬アイテム: ${item.name}`, item.rarity.color);
+        }
+        addLog(`クエスト完了報酬: +${qdef.rewards.xp || 0} XP, +${qdef.rewards.gold || 0} G`, '#ffd700');
+        return true;
+    }
+
+    function getActiveQuests() {
+        const result = [];
+        for (const [qid, state] of Object.entries(G.quests)) {
+            if (state.status === 'active' || state.status === 'complete') {
+                result.push({ qid, ...QUEST_DEFS[qid], ...state });
+            }
+        }
+        return result;
+    }
+
+    // ========== SHOP / ECONOMY ==========
+    function calculateSellPrice(item) {
+        const base = { common:10, magic:30, rare:80, legendary:200, unique:500 };
+        return base[item.rarityKey] || 10;
+    }
+    function calculateBuyPrice(item) { return calculateSellPrice(item) * 3; }
+    function calculateSmithCost(item) {
+        const base = { common:100, magic:250, rare:500, legendary:1000, unique:2000 };
+        return base[item.rarityKey] || 100;
+    }
+    function generateShopItems(act) {
+        const items = [];
+        const globalF = getGlobalFloor(act, 1, G.cycle);
+        for (let i = 0; i < 8; i++) {
+            const forceRarity = Math.random() < 0.3 ? 'magic' : (Math.random() < 0.1 ? 'rare' : null);
+            items.push(generateItem(globalF, forceRarity));
+        }
+        // Always include potions
+        for (let i = 0; i < 3; i++) items.push(generatePotion());
+        return items;
     }
 
     // ========== PROJECTILES ==========
@@ -5328,7 +6250,11 @@
     function initFloor(opts) {
         // opts: { useSeed: bool, skipEntities: bool }
         opts = opts || {};
-        generateTileTextures(); tileTexturesReady = true;
+        const actDef = getCurrentActDef();
+        G.floor = getGlobalFloor(G.act, G.actFloor, G.cycle);
+        G.inTown = false;
+
+        generateTileTextures(actDef.tileTheme); tileTexturesReady = true;
 
         // Use seeded RNG for dungeon generation so save/load produces same layout
         if (opts.useSeed && G.dungeonSeed) {
@@ -5343,6 +6269,7 @@
 
         // Clear visual-only arrays always
         projectiles.length = 0;
+        enemyProjectiles.length = 0;
         particles.length = 0;
         bloodPools.length = 0;
         ambientParticles.length = 0;
@@ -5359,12 +6286,9 @@
             monsters.length = 0;
             groundItems.length = 0;
 
-            // Spawn monsters (also seeded for consistency)
-            const count = 15 + G.floor * 8; // ワラワラ感UP！
-            const types = G.floor <= 2 ? ['skeleton', 'zombie'] :
-                          G.floor <= 4 ? ['skeleton', 'zombie', 'imp'] :
-                          G.floor <= 6 ? ['zombie', 'imp', 'ghost'] :
-                          ['imp', 'ghost'];
+            // Spawn monsters using ACT-specific types
+            const count = 15 + G.actFloor * 8;
+            const types = actDef.monsterTypes;
 
             for (let i = 0; i < count; i++) {
                 const room = dungeon.rooms[rand(1, dungeon.rooms.length - 1)];
@@ -5373,19 +6297,478 @@
                 monsters.push(new Monster(mx, my, types[rand(0, types.length - 1)], G.floor));
             }
 
-            // Boss on every 5th floor
-            if (G.floor % 5 === 0) {
+            // Boss on final floor of each ACT
+            if (isBossFloor() && actDef.bossType) {
                 const bossRoom = dungeon.rooms[dungeon.rooms.length - 2] || dungeon.rooms[dungeon.rooms.length - 1];
-                monsters.push(new Monster(bossRoom.cx * TILE + TILE/2, bossRoom.cy * TILE + TILE/2, 'demonlord', G.floor));
-                addLog(`⚠ デーモンロードが現れた！`, '#ff0000');
+                const bm = new Monster(bossRoom.cx * TILE + TILE/2, bossRoom.cy * TILE + TILE/2,
+                    actDef.monsterTypes[0], G.floor, actDef.bossType);
+                monsters.push(bm);
+                const bd = BOSS_DEFS[actDef.bossType];
+                addLog(`⚠ ${bd ? bd.name : 'ボス'}が現れた！`, '#ff0000');
             }
 
-            addLog(`地下${G.floor}階に降りた`, '#aaaaff');
+            addLog(`ACT${G.act} ${actDef.name} - 第${G.actFloor}層${G.cycle > 0 ? ' (' + (G.cycle+1) + '周目)' : ''}`, '#aaaaff');
         }
 
         // Switch back to normal RNG after dungeon generation
         unseedRng();
     }
+
+    // ========== TOWN SYSTEM ==========
+    const townNPCs = [];
+
+    class TownMap {
+        constructor(act) {
+            this.act = act;
+            this.tiles = new Uint8Array(MAP_W * MAP_H);
+            this.rooms = [];
+            this.explored = new Uint8Array(MAP_W * MAP_H);
+            this.explored.fill(1); // Town is fully explored
+            this.torchPositions = [];
+            this.stairsX = 0; this.stairsY = 0;
+            this._generate();
+            this._cacheTorchPositions();
+        }
+        _generate() {
+            this.tiles.fill(0);
+            // Central plaza
+            const px = Math.floor(MAP_W / 2) - 8, py = Math.floor(MAP_H / 2) - 6;
+            const pw = 16, ph = 12;
+            for (let y = py; y < py + ph; y++)
+                for (let x = px; x < px + pw; x++) this.set(x, y, 1);
+            this.rooms.push({ x: px, y: py, w: pw, h: ph, cx: px + pw/2, cy: py + ph/2 });
+
+            // NPC alcoves around plaza
+            const alcovePositions = [
+                { x: px - 6, y: py + 2 }, { x: px + pw + 1, y: py + 2 },
+                { x: px - 6, y: py + ph - 6 }, { x: px + pw + 1, y: py + ph - 6 },
+                { x: px + pw/2 - 2, y: py - 6 }
+            ];
+            for (const ap of alcovePositions) {
+                for (let y = ap.y; y < ap.y + 5; y++)
+                    for (let x = ap.x; x < ap.x + 5; x++) this.set(x, y, 1);
+                this.rooms.push({ x: ap.x, y: ap.y, w: 5, h: 5, cx: ap.x + 2, cy: ap.y + 2 });
+                // Corridor to plaza
+                const cx = ap.x + 2, cy = ap.y + 2;
+                const pcx = px + pw/2, pcy = py + ph/2;
+                let wx = cx, wy = cy;
+                while (Math.abs(wx - pcx) > 1 || Math.abs(wy - pcy) > 1) {
+                    if (Math.abs(wx - pcx) > Math.abs(wy - pcy)) wx += wx < pcx ? 1 : -1;
+                    else wy += wy < pcy ? 1 : -1;
+                    this.set(wx, wy, 1);
+                    this.set(wx + 1, wy, 1);
+                    this.set(wx, wy + 1, 1);
+                }
+            }
+
+            // Stairs (dungeon entrance) at bottom of plaza
+            this.stairsX = px + pw/2;
+            this.stairsY = py + ph - 2;
+            this.set(this.stairsX, this.stairsY, 2);
+        }
+        _cacheTorchPositions() {
+            this.torchPositions = [];
+            for (let y = 0; y < MAP_H; y++) {
+                for (let x = 0; x < MAP_W; x++) {
+                    if (this.get(x, y) !== 0) continue;
+                    const isExposed = this.walkable(x, y+1) || this.walkable(x+1, y) || this.walkable(x-1, y) || this.walkable(x, y-1);
+                    if (isExposed && (x * 7 + y * 13) % 19 === 0) {
+                        this.torchPositions.push({ wx: x * TILE + TILE/2, wy: y * TILE + TILE/2 - 4, seed: x * 3 + y * 5 });
+                    }
+                }
+            }
+        }
+        idx(x, y) { return y * MAP_W + x; }
+        get(x, y) { if (x < 0 || x >= MAP_W || y < 0 || y >= MAP_H) return 0; return this.tiles[this.idx(x, y)]; }
+        set(x, y, v) { if (x >= 0 && x < MAP_W && y >= 0 && y < MAP_H) this.tiles[this.idx(x, y)] = v; }
+        walkable(x, y) { const t = this.get(x, y); return t === 1 || t === 2; }
+        reveal() {} // Town is always explored
+    }
+    // Copy Dungeon's draw and reveal methods to TownMap prototype
+    TownMap.prototype.draw = Dungeon.prototype.draw;
+    // TownMap.reveal is a no-op (already fully explored)
+
+    function enterTown(act) {
+        G.act = act;
+        G.actFloor = 0; // 0 = town
+        G.inTown = true;
+        G.floor = getGlobalFloor(act, 1, G.cycle); // for scaling reference
+
+        generateTileTextures(ACT_DEFS[act].tileTheme); tileTexturesReady = true;
+
+        dungeon = new TownMap(act);
+
+        // Clear arrays
+        projectiles.length = 0;
+        enemyProjectiles.length = 0;
+        particles.length = 0;
+        bloodPools.length = 0;
+        ambientParticles.length = 0;
+        monsters.length = 0;
+        groundItems.length = 0;
+
+        // Place player at plaza center
+        const r0 = dungeon.rooms[0];
+        player.x = r0.cx * TILE + TILE/2;
+        player.y = r0.cy * TILE + TILE/2;
+        player.targetX = player.x;
+        player.targetY = player.y;
+        player.moving = false;
+        player.attacking = false;
+
+        // Full heal
+        player.hp = player.maxHP;
+        player.mp = player.maxMP;
+
+        // Setup NPCs
+        townNPCs.length = 0;
+        const npcDefs = TOWN_NPC_DEFS[act] || [];
+        for (let i = 0; i < npcDefs.length; i++) {
+            const npcDef = npcDefs[i];
+            const room = dungeon.rooms[i + 1] || dungeon.rooms[0];
+            townNPCs.push({
+                ...npcDef,
+                x: room.cx * TILE + TILE/2,
+                y: room.cy * TILE + TILE/2,
+                interactRadius: 60
+            });
+        }
+
+        // Enable waypoint for this ACT
+        if (!G.waypoints.includes(act)) G.waypoints.push(act);
+
+        // Generate shop items
+        G.shopItems = generateShopItems(act);
+
+        addLog(`${ACT_DEFS[act].townName}に到着した`, '#88ff88');
+        addLog('NPCに近づいてEキーで会話', '#aaaaaa');
+
+        // Auto save
+        saveGame();
+    }
+
+    function travelToAct(targetAct) {
+        if (!G.waypoints.includes(targetAct)) return;
+        closeTownUI();
+        G.portalReturn = null; // close return portal when traveling
+        enterTown(targetAct);
+    }
+
+    function usePortalReturn() {
+        const pr = G.portalReturn;
+        if (!pr) return;
+
+        G.act = pr.act;
+        G.actFloor = pr.actFloor;
+        G.cycle = pr.cycle;
+        G.floor = pr.floor;
+        G.inTown = false;
+        G.dungeonSeed = pr.dungeonSeed;
+
+        const actDef = getCurrentActDef();
+        generateTileTextures(actDef.tileTheme); tileTexturesReady = true;
+
+        // Restore saved dungeon state
+        dungeon = pr.dungeon;
+        monsters.length = 0;
+        for (const m of pr.monsters) monsters.push(m);
+        groundItems.length = 0;
+        for (const it of pr.groundItems) groundItems.push(it);
+
+        // Clear visual-only arrays
+        projectiles.length = 0;
+        enemyProjectiles.length = 0;
+        particles.length = 0;
+        bloodPools.length = 0;
+        ambientParticles.length = 0;
+        townNPCs.length = 0;
+
+        // Restore player position
+        player.x = pr.x;
+        player.y = pr.y;
+        player.targetX = pr.x;
+        player.targetY = pr.y;
+        player.moving = false;
+        player.attacking = false;
+
+        // Close portal after use
+        G.portalReturn = null;
+
+        addLog(`ACT${G.act} 第${G.actFloor}層に戻った`, '#aaaaff');
+    }
+
+    // ========== TOWN UI SYSTEM ==========
+    function closeTownUI() {
+        G.townUIMode = null;
+        G.activeNPC = null;
+        G.dialogState = 0;
+        const panels = ['dialogPanel','shopPanel','blacksmithPanel','stashPanel','waypointPanel','questPanel'];
+        for (const id of panels) {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        }
+    }
+
+    function openNPCInteraction(npc) {
+        closeTownUI();
+        G.activeNPC = npc;
+        switch (npc.type) {
+            case 'shop': openShopUI(npc); break;
+            case 'blacksmith': openBlacksmithUI(npc); break;
+            case 'stash': openStashUI(npc); break;
+            case 'quest': openQuestUI(npc); break;
+            case 'waypoint': openWaypointUI(npc); break;
+        }
+    }
+
+    function openShopUI(npc) {
+        G.townUIMode = 'shop';
+        const panel = document.getElementById('shopPanel');
+        if (!panel) return;
+        panel.style.display = 'block';
+        renderShopUI();
+    }
+    function renderShopUI() {
+        const panel = document.getElementById('shopPanel');
+        if (!panel) return;
+        let html = `<div class="panel-header">🛒 ${G.activeNPC ? G.activeNPC.name : '商人'} <span style="float:right;color:#ffd700">💰 ${G.gold}G</span></div>`;
+        html += `<div style="display:flex;gap:8px;margin:6px 0"><button class="town-btn active" onclick="shopTab='buy';renderShopUI()">購入</button><button class="town-btn" onclick="shopTab='sell';renderShopUI()">売却</button></div>`;
+
+        if (typeof shopTab === 'undefined' || shopTab === 'buy') {
+            html += '<div class="shop-grid">';
+            for (let i = 0; i < G.shopItems.length; i++) {
+                const item = G.shopItems[i];
+                const price = calculateBuyPrice(item);
+                const canBuy = G.gold >= price;
+                html += `<div class="shop-item ${canBuy ? '' : 'disabled'}" onclick="buyItem(${i})" title="${item.name}">
+                    <span style="font-size:18px">${item.icon}</span>
+                    <span style="color:${item.rarity.color};font-size:11px">${item.name}</span>
+                    <span style="color:#ffd700;font-size:10px">${price}G</span>
+                </div>`;
+            }
+            html += '</div>';
+        } else {
+            html += '<div class="shop-grid">';
+            for (let i = 0; i < player.inventory.length; i++) {
+                const item = player.inventory[i];
+                const price = calculateSellPrice(item);
+                html += `<div class="shop-item" onclick="sellItem(${i})" title="${item.name}">
+                    <span style="font-size:18px">${item.icon}</span>
+                    <span style="color:${item.rarity.color};font-size:11px">${item.name}</span>
+                    <span style="color:#ffd700;font-size:10px">${price}G</span>
+                </div>`;
+            }
+            html += '</div>';
+        }
+        html += `<button class="town-btn" onclick="closeTownUI()" style="margin-top:8px">閉じる</button>`;
+        panel.innerHTML = html;
+    }
+    window.shopTab = 'buy';
+    window.buyItem = function(idx) {
+        const item = G.shopItems[idx];
+        if (!item) return;
+        const price = calculateBuyPrice(item);
+        if (G.gold < price) { addLog('ゴールドが足りない', '#ff4444'); return; }
+        if (player.inventory.length >= 20) { addLog('インベントリが一杯', '#ff4444'); return; }
+        G.gold -= price;
+        if (item.typeKey === 'potion') {
+            player.inventory.push(generatePotion());
+        } else {
+            player.inventory.push(item);
+            G.shopItems.splice(idx, 1);
+        }
+        addLog(`${item.name} を購入 (-${price}G)`, '#88ff88');
+        renderShopUI();
+    };
+    window.sellItem = function(idx) {
+        const item = player.inventory[idx];
+        if (!item) return;
+        const price = calculateSellPrice(item);
+        G.gold += price;
+        player.inventory.splice(idx, 1);
+        addLog(`${item.name} を売却 (+${price}G)`, '#ffd700');
+        renderShopUI();
+    };
+
+    function openBlacksmithUI(npc) {
+        G.townUIMode = 'blacksmith';
+        const panel = document.getElementById('blacksmithPanel');
+        if (!panel) return;
+        panel.style.display = 'block';
+        renderBlacksmithUI();
+    }
+    function renderBlacksmithUI() {
+        const panel = document.getElementById('blacksmithPanel');
+        if (!panel) return;
+        let html = `<div class="panel-header">⚒ ${G.activeNPC ? G.activeNPC.name : '鍛冶屋'} <span style="float:right;color:#ffd700">💰 ${G.gold}G</span></div>`;
+        html += `<p style="font-size:11px;color:#aaa;margin:4px 0">装備を選んで強化（50%でアフィックス追加 / 50%で既存+20%）</p>`;
+        html += '<div class="shop-grid">';
+        // Show equipped items + inventory equipment
+        const allEquip = [];
+        for (const [slot, item] of Object.entries(player.equipment)) {
+            if (item) allEquip.push({ item, source: 'equip', slot });
+        }
+        for (let i = 0; i < player.inventory.length; i++) {
+            const item = player.inventory[i];
+            if (item.typeKey !== 'potion') allEquip.push({ item, source: 'inv', idx: i });
+        }
+        for (const eq of allEquip) {
+            const cost = calculateSmithCost(eq.item);
+            const canAfford = G.gold >= cost;
+            html += `<div class="shop-item ${canAfford ? '' : 'disabled'}" onclick="smithItem('${eq.source}','${eq.source === 'equip' ? eq.slot : eq.idx}')" title="${eq.item.name}">
+                <span style="font-size:18px">${eq.item.icon}</span>
+                <span style="color:${eq.item.rarity.color};font-size:11px">${eq.item.name}</span>
+                <span style="color:#ffd700;font-size:10px">${cost}G</span>
+            </div>`;
+        }
+        html += '</div>';
+        html += `<button class="town-btn" onclick="closeTownUI()" style="margin-top:8px">閉じる</button>`;
+        panel.innerHTML = html;
+    }
+    window.smithItem = function(source, key) {
+        let item;
+        if (source === 'equip') item = player.equipment[key];
+        else item = player.inventory[parseInt(key)];
+        if (!item) return;
+        const cost = calculateSmithCost(item);
+        if (G.gold < cost) { addLog('ゴールドが足りない', '#ff4444'); return; }
+        G.gold -= cost;
+        if (Math.random() < 0.5 && item.affixes) {
+            // Add random affix
+            const pool = AFFIXES.filter(a => !item.affixes.some(af => af.stat === a.stat));
+            if (pool.length > 0) {
+                const a = pool[rand(0, pool.length - 1)];
+                const floorMult = 1 + (G.floor - 1) * 0.2;
+                const v = Math.round(rand(a.min, a.max) * floorMult);
+                item.affixes.push({ stat: a.stat, value: v, text: a.fmt.replace('{v}', v) });
+                addLog(`鍛冶成功！${a.fmt.replace('{v}', v)} が追加された`, '#88ff88');
+            }
+        } else if (item.affixes && item.affixes.length > 0) {
+            // Boost existing affix by 20%
+            const af = item.affixes[rand(0, item.affixes.length - 1)];
+            const boost = Math.max(1, Math.round(af.value * 0.2));
+            af.value += boost;
+            af.text = af.text.replace(/\d+/, af.value);
+            addLog(`鍛冶成功！${af.text} が強化された`, '#88ff88');
+        } else {
+            addLog('鍛冶に失敗...何も起きなかった', '#ff8844');
+        }
+        player.recalcStats();
+        renderBlacksmithUI();
+    };
+
+    function openStashUI(npc) {
+        G.townUIMode = 'stash';
+        const panel = document.getElementById('stashPanel');
+        if (!panel) return;
+        panel.style.display = 'block';
+        renderStashUI();
+    }
+    function renderStashUI() {
+        const panel = document.getElementById('stashPanel');
+        if (!panel) return;
+        let html = `<div class="panel-header">📦 倉庫 (${G.stash.length}/${G.maxStash})</div>`;
+        html += `<div style="display:flex;gap:8px">`;
+        // Inventory side
+        html += `<div style="flex:1"><div style="color:#aaa;font-size:11px;margin:4px 0">インベントリ → 倉庫</div><div class="shop-grid">`;
+        for (let i = 0; i < player.inventory.length; i++) {
+            const item = player.inventory[i];
+            html += `<div class="shop-item" onclick="stashDeposit(${i})">
+                <span style="font-size:16px">${item.icon}</span>
+                <span style="color:${item.rarity.color};font-size:10px">${item.name}</span>
+            </div>`;
+        }
+        html += `</div></div>`;
+        // Stash side
+        html += `<div style="flex:1"><div style="color:#aaa;font-size:11px;margin:4px 0">倉庫 → インベントリ</div><div class="shop-grid">`;
+        for (let i = 0; i < G.stash.length; i++) {
+            const item = G.stash[i];
+            html += `<div class="shop-item" onclick="stashWithdraw(${i})">
+                <span style="font-size:16px">${item.icon}</span>
+                <span style="color:${item.rarity.color};font-size:10px">${item.name}</span>
+            </div>`;
+        }
+        html += `</div></div></div>`;
+        html += `<button class="town-btn" onclick="closeTownUI()" style="margin-top:8px">閉じる</button>`;
+        panel.innerHTML = html;
+    }
+    window.stashDeposit = function(idx) {
+        if (G.stash.length >= G.maxStash) { addLog('倉庫が一杯', '#ff4444'); return; }
+        G.stash.push(player.inventory.splice(idx, 1)[0]);
+        renderStashUI();
+    };
+    window.stashWithdraw = function(idx) {
+        if (player.inventory.length >= 20) { addLog('インベントリが一杯', '#ff4444'); return; }
+        player.inventory.push(G.stash.splice(idx, 1)[0]);
+        renderStashUI();
+    };
+
+    function openWaypointUI(npc) {
+        G.townUIMode = 'waypoint';
+        const panel = document.getElementById('waypointPanel');
+        if (!panel) return;
+        panel.style.display = 'block';
+        renderWaypointUI();
+    }
+    function renderWaypointUI() {
+        const panel = document.getElementById('waypointPanel');
+        if (!panel) return;
+        let html = `<div class="panel-header">🌀 ウェイポイント</div>`;
+        html += '<div style="display:flex;flex-direction:column;gap:4px">';
+        for (let a = 1; a <= 5; a++) {
+            const discovered = G.waypoints.includes(a);
+            const current = G.act === a && G.inTown;
+            html += `<button class="town-btn ${current ? 'active' : ''} ${discovered ? '' : 'disabled'}"
+                onclick="${discovered && !current ? 'travelToAct(' + a + ')' : ''}"
+                ${discovered ? '' : 'disabled'}>
+                ACT${a}: ${ACT_DEFS[a].townName} ${current ? '(現在地)' : ''} ${discovered ? '' : '(未発見)'}
+            </button>`;
+        }
+        html += '</div>';
+        html += `<button class="town-btn" onclick="closeTownUI()" style="margin-top:8px">閉じる</button>`;
+        panel.innerHTML = html;
+    }
+    window.travelToAct = travelToAct;
+
+    function openQuestUI(npc) {
+        G.townUIMode = 'quest';
+        const panel = document.getElementById('questPanel');
+        if (!panel) return;
+        panel.style.display = 'block';
+        renderQuestUI();
+    }
+    function renderQuestUI() {
+        const panel = document.getElementById('questPanel');
+        if (!panel) return;
+        let html = `<div class="panel-header">📜 クエスト</div>`;
+
+        // Available quests for current ACT
+        const actQuests = Object.entries(QUEST_DEFS).filter(([_, q]) => q.act === G.act);
+        for (const [qid, qdef] of actQuests) {
+            const state = G.quests[qid];
+            if (state && state.status === 'rewarded') {
+                html += `<div class="quest-item rewarded"><span style="color:#888">✅ ${qdef.name} (完了)</span></div>`;
+            } else if (state && state.status === 'complete') {
+                html += `<div class="quest-item complete" onclick="turnInQuest('${qid}');renderQuestUI()">
+                    <span style="color:#ffd700">★ ${qdef.name} - 報告可能！クリックで報告</span>
+                </div>`;
+            } else if (state && state.status === 'active') {
+                const prog = qdef.type === 'kill_count' ? ` (${state.progress || 0}/${qdef.target})` : '';
+                html += `<div class="quest-item active"><span style="color:#4488ff">📌 ${qdef.name}${prog}</span><br><span style="color:#888;font-size:10px">${qdef.desc}</span></div>`;
+            } else if (canAcceptQuest(qid)) {
+                html += `<div class="quest-item available" onclick="acceptQuest('${qid}');renderQuestUI()">
+                    <span style="color:#88ff88">❓ ${qdef.name} - クリックで受諾</span><br><span style="color:#888;font-size:10px">${qdef.desc}</span>
+                </div>`;
+            } else {
+                html += `<div class="quest-item locked"><span style="color:#555">🔒 ${qdef.name} (前提未達成)</span></div>`;
+            }
+        }
+        html += `<button class="town-btn" onclick="closeTownUI()" style="margin-top:8px">閉じる</button>`;
+        panel.innerHTML = html;
+    }
+    window.turnInQuest = turnInQuest;
+    window.acceptQuest = acceptQuest;
+    window.closeTownUI = closeTownUI;
 
     // ========== LEVEL UP NOTICE ==========
     let levelUpTimer = 0;
@@ -5452,7 +6835,8 @@
             <div class="stat-row"><span class="stat-label">移動速度</span><span class="stat-value">${Math.round(player.speed)}</span></div>
             <hr style="border-color:#333;margin:6px 0">
             <div style="color:#ccc;font-size:11px;margin-bottom:4px">🗺 探索情報</div>
-            <div class="stat-row"><span class="stat-label">現在階層</span><span class="stat-value" style="color:#aa88ff">B${G.floor}F</span></div>
+            <div class="stat-row"><span class="stat-label">現在地</span><span class="stat-value" style="color:#aa88ff">ACT${G.act} ${G.inTown ? '町' : '第' + G.actFloor + '層'}${G.cycle > 0 ? ' (' + (G.cycle+1) + '周目)' : ''}</span></div>
+            <div class="stat-row"><span class="stat-label">ゴールド</span><span class="stat-value" style="color:#ffd700">${G.gold}G</span></div>
             <div class="stat-row"><span class="stat-label">残り敵数</span><span class="stat-value" style="color:#ff6666">${monsters.filter(m=>m.alive).length}</span></div>
             <div class="stat-row"><span class="stat-label">所持アイテム</span><span class="stat-value">${player.inventory.length}/${player.maxInv}</span></div>
         `;
@@ -6456,7 +7840,7 @@
             const meta = getSaveMeta(i);
             const active = G.saveSlot === i;
             const info = meta
-                ? `Lv.${meta.level} / B${meta.floor}F / ${meta.className}`
+                ? `Lv.${meta.level} / ${meta.act ? 'ACT' + meta.act : 'B' + meta.floor + 'F'}${meta.cycle ? ' (' + (meta.cycle+1) + '周目)' : ''} / ${meta.className}`
                 : '空';
             const time = meta && meta.timestamp
                 ? new Date(meta.timestamp).toLocaleString('ja-JP')
@@ -6650,12 +8034,11 @@
                 initAudio();
                 G.dead = false;
                 setPaused(false);
-                G.floor = Math.max(1, G.floor - 1);
                 player.hp = player.maxHP;
                 player.mp = player.maxMP;
                 DOM.deathScreen.style.display = 'none';
-                initFloor();
-                addLog('復活した...', '#ffaaaa');
+                enterTown(G.act);
+                addLog('町で復活した...', '#ffaaaa');
                 return; // 復活処理後は即座にreturn
             }
             // 死亡時もRキーでスキル編集を許可
@@ -6710,6 +8093,8 @@
         // Pause / Settings
         if (e.code === 'Escape') {
             e.preventDefault();
+            // Close town UI first
+            if (G.townUIMode) { closeTownUI(); return; }
             if (isPanelVisible(DOM.settingsPanel)) {
                 setPanelVisible(DOM.settingsPanel, false);
                 setPaused(false);
@@ -6809,13 +8194,46 @@
         }
         if (e.code === 'KeyE') {
             e.preventDefault();
-            tryUseStairs(true);
+            if (G.inTown) {
+                // Close town UI if open
+                if (G.townUIMode) { closeTownUI(); return; }
+                // Check portal proximity first
+                if (G.portalReturn && G._portalScreenX) {
+                    const portalD = dist(player.x, player.y, G._portalScreenX, G._portalScreenY);
+                    if (portalD < 60) {
+                        usePortalReturn();
+                        return;
+                    }
+                }
+                // Check NPC proximity
+                let nearestNPC = null, nearestD = 999;
+                for (const npc of townNPCs) {
+                    const d = dist(player.x, player.y, npc.x, npc.y);
+                    if (d < npc.interactRadius && d < nearestD) { nearestD = d; nearestNPC = npc; }
+                }
+                if (nearestNPC) {
+                    openNPCInteraction(nearestNPC);
+                } else {
+                    tryUseStairs(true);
+                }
+            } else {
+                tryUseStairs(true);
+            }
         }
         if (e.code === 'KeyT') {
             e.preventDefault();
             const p = DOM.skillTreePanel;
             const opened = togglePanel(p);
             if (opened) updateSkillTreeUI();
+        }
+        // Town Portal (V key)
+        if (e.code === 'KeyV') {
+            e.preventDefault();
+            if (!G.inTown && !G.portalCasting) {
+                G.portalCasting = true;
+                G.portalTimer = 2.0; // 2秒キャスト
+                addLog('帰還の巻物を使用中...', '#8888ff');
+            }
         }
         // Number keys (1-6) select AND activate skills
         if (e.code === 'Digit1' || e.key === '1') {
@@ -6984,22 +8402,26 @@
         setPanelVisible(DOM.settingsPanel, false);
         G.started = true;
         G.hintTimer = 8;
+        G.act = 1; G.actFloor = 1; G.cycle = 0;
+        G.gold = 0; G.quests = {}; G.questKillCounts = {};
+        G.waypoints = [1]; G.stash = []; G.bossesDefeated = {};
         player.recalcStats();
         player.hp = player.maxHP;
         player.mp = player.maxMP;
-        initFloor();
+        // Start in ACT1 town
+        enterTown(1);
     };
 
     DOM.deathScreen.addEventListener('click', () => {
         initAudio();
         G.dead = false;
         setPaused(false);
-        G.floor = Math.max(1, G.floor - 1);
+        // Revive in current ACT's town
         player.hp = player.maxHP;
         player.mp = player.maxMP;
         DOM.deathScreen.style.display = 'none';
-        initFloor();
-        addLog('復活した...', '#ffaaaa');
+        enterTown(G.act);
+        addLog('町で復活した...', '#ffaaaa');
     });
     if (DOM.skillEditBtn) {
         DOM.skillEditBtn.addEventListener('click', () => {
@@ -7010,23 +8432,88 @@
 
     // ========== DRAWING HELPERS ==========
     function drawLighting() {
-        dungeon.reveal(player.x, player.y, 300);
+        if (typeof dungeon.reveal === 'function') dungeon.reveal(player.x, player.y, 300);
         const px = player.x - G.camX, py = player.y - G.camY;
         // Dynamic torch flicker
         const flicker = Math.sin(G.time * 4.7) * 10 + Math.sin(G.time * 7.3) * 5 + Math.sin(G.time * 13.1) * 3;
-        const lightR = 350 + flicker;
 
-        // Main darkness overlay - deeper darkness
-        const lg = ctx.createRadialGradient(px, py, lightR * 0.2, px, py, lightR);
-        lg.addColorStop(0, 'rgba(0,0,5,0)');
-        lg.addColorStop(0.35, 'rgba(0,0,5,0.1)');
-        lg.addColorStop(0.6, 'rgba(0,0,5,0.35)');
-        lg.addColorStop(0.8, 'rgba(0,0,5,0.65)');
-        lg.addColorStop(1, 'rgba(0,0,5,0.88)');
-        ctx.fillStyle = lg;
-        ctx.fillRect(0, 0, W, H);
+        // lightR at function scope so torch code below can reference it
+        const lightR = G.inTown ? 600 + flicker : 350 + flicker;
 
-        // Warm torch tint - amber/orange Diablo glow
+        // Town: brighter lighting
+        if (G.inTown) {
+            const lg = ctx.createRadialGradient(px, py, lightR * 0.3, px, py, lightR);
+            lg.addColorStop(0, 'rgba(0,0,5,0)');
+            lg.addColorStop(0.5, 'rgba(0,0,5,0.05)');
+            lg.addColorStop(0.8, 'rgba(0,0,5,0.2)');
+            lg.addColorStop(1, 'rgba(0,0,5,0.4)');
+            ctx.fillStyle = lg;
+            ctx.fillRect(0, 0, W, H);
+        } else {
+            // Get theme-specific darkness tint
+            const actDef = getCurrentActDef();
+            const coldTint = actDef.lightTint.cold || 'rgba(0,0,5,';
+            const lg = ctx.createRadialGradient(px, py, lightR * 0.2, px, py, lightR);
+            lg.addColorStop(0, coldTint + '0)');
+            lg.addColorStop(0.3, coldTint + '0.1)');
+            lg.addColorStop(0.55, coldTint + '0.4)');
+            lg.addColorStop(0.75, coldTint + '0.7)');
+            lg.addColorStop(1, coldTint + '0.95)');
+            ctx.fillStyle = lg;
+            ctx.fillRect(0, 0, W, H);
+        }
+
+        if (G.inTown) return; // Town doesn't need torch lighting
+
+        // === MULTI-SOURCE TORCH LIGHTING ===
+        // Collect nearby torches (screen visible + player proximity)
+        const torchMaxDist = 600;
+        const visibleTorches = [];
+        for (const t of dungeon.torchPositions) {
+            const dx = t.wx - player.x, dy = t.wy - player.y;
+            const d = Math.sqrt(dx*dx + dy*dy);
+            if (d > torchMaxDist) continue;
+            const screenX = t.wx - G.camX, screenY = t.wy - G.camY;
+            if (screenX < -120 || screenX > W + 120 || screenY < -120 || screenY > H + 120) continue;
+            visibleTorches.push({ sx: screenX, sy: screenY, d, seed: t.seed });
+            if (visibleTorches.length >= 20) break;
+        }
+
+        // Phase 1: Punch holes in darkness (destination-out)
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-out';
+        for (const torch of visibleTorches) {
+            const tFlicker = Math.sin(G.time * 8.3 + torch.seed) * 6 + Math.sin(G.time * 13.7 + torch.seed * 2) * 3;
+            const tRadius = 70 + tFlicker;
+            const fade = clamp(1 - torch.d / torchMaxDist, 0, 1);
+            const tg = ctx.createRadialGradient(torch.sx, torch.sy, 0, torch.sx, torch.sy, tRadius);
+            tg.addColorStop(0, `rgba(0,0,0,${0.55 * fade})`);
+            tg.addColorStop(0.4, `rgba(0,0,0,${0.3 * fade})`);
+            tg.addColorStop(0.7, `rgba(0,0,0,${0.1 * fade})`);
+            tg.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = tg;
+            ctx.fillRect(torch.sx - tRadius, torch.sy - tRadius, tRadius * 2, tRadius * 2);
+        }
+        ctx.restore();
+
+        // Phase 2: Add warm torch color (lighter blend)
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        for (const torch of visibleTorches) {
+            const tFlicker = Math.sin(G.time * 6.1 + torch.seed * 1.3) * 4 + Math.sin(G.time * 11.2 + torch.seed) * 2;
+            const tRadius = 65 + tFlicker;
+            const fade = clamp(1 - torch.d / torchMaxDist, 0, 1);
+            const cg = ctx.createRadialGradient(torch.sx, torch.sy, 0, torch.sx, torch.sy, tRadius);
+            cg.addColorStop(0, `rgba(255,160,64,${0.12 * fade})`);
+            cg.addColorStop(0.3, `rgba(255,96,16,${0.06 * fade})`);
+            cg.addColorStop(0.7, `rgba(255,80,10,${0.02 * fade})`);
+            cg.addColorStop(1, 'rgba(255,80,10,0)');
+            ctx.fillStyle = cg;
+            ctx.fillRect(torch.sx - tRadius, torch.sy - tRadius, tRadius * 2, tRadius * 2);
+        }
+        ctx.restore();
+
+        // Player warm torch tint - amber/orange Diablo glow
         const warmG = ctx.createRadialGradient(px, py, 0, px, py, lightR * 0.55);
         warmG.addColorStop(0, 'rgba(255,160,60,0.14)');
         warmG.addColorStop(0.3, 'rgba(255,130,40,0.08)');
@@ -7037,29 +8524,45 @@
         ctx.arc(px, py, lightR * 0.55, 0, Math.PI * 2);
         ctx.fill();
 
-        // Color grading - warm amber tint (Diablo signature look)
-        ctx.globalAlpha = 0.06;
+        // Color grading - warm amber tint (Diablo signature look) - strengthened
+        ctx.globalAlpha = 0.08;
         ctx.fillStyle = '#442200';
         ctx.fillRect(0, 0, W, H);
         ctx.globalAlpha = 1;
 
-        // Screen vignette - heavy, cinematic
-        const vigSize = Math.max(W, H) * 0.7;
-        const vig = ctx.createRadialGradient(W / 2, H / 2, vigSize * 0.3, W / 2, H / 2, vigSize);
+        // Cold blue shadow tint (D2 characteristic)
+        ctx.globalAlpha = 0.04;
+        ctx.fillStyle = '#0a0020';
+        ctx.fillRect(0, 0, W, H);
+        ctx.globalAlpha = 1;
+
+        // Screen vignette - heavier, tighter cinematic
+        const vigSize = Math.max(W, H) * 0.65;
+        const vig = ctx.createRadialGradient(W / 2, H / 2, vigSize * 0.25, W / 2, H / 2, vigSize);
         vig.addColorStop(0, 'rgba(0,0,0,0)');
-        vig.addColorStop(0.6, 'rgba(0,0,0,0.2)');
-        vig.addColorStop(0.85, 'rgba(0,0,0,0.45)');
-        vig.addColorStop(1, 'rgba(0,0,0,0.6)');
+        vig.addColorStop(0.5, 'rgba(0,0,0,0.25)');
+        vig.addColorStop(0.8, 'rgba(0,0,0,0.5)');
+        vig.addColorStop(1, 'rgba(0,0,0,0.7)');
         ctx.fillStyle = vig;
         ctx.fillRect(0, 0, W, H);
 
-        // Damage flash - red vignette when hit
+        // Damage flash - stronger red vignette + white flash peak when hit
         if (G.dmgFlashT > 0) {
-            const flashA = clamp(G.dmgFlashT / 0.35, 0, 1) * 0.4;
-            const dmgVig = ctx.createRadialGradient(W/2, H/2, W*0.1, W/2, H/2, W*0.6);
+            const flashA = clamp(G.dmgFlashT / 0.35, 0, 1);
+            // White flash at peak
+            if (flashA > 0.8) {
+                ctx.globalAlpha = (flashA - 0.8) * 2.5 * 0.15;
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, W, H);
+                ctx.globalAlpha = 1;
+            }
+            // Red vignette
+            const redA = flashA * 0.5;
+            const dmgVig = ctx.createRadialGradient(W/2, H/2, W*0.05, W/2, H/2, W*0.55);
             dmgVig.addColorStop(0, `rgba(120,0,0,0)`);
-            dmgVig.addColorStop(0.5, `rgba(150,0,0,${flashA * 0.3})`);
-            dmgVig.addColorStop(1, `rgba(180,0,0,${flashA})`);
+            dmgVig.addColorStop(0.4, `rgba(160,0,0,${redA * 0.3})`);
+            dmgVig.addColorStop(0.7, `rgba(200,10,0,${redA * 0.6})`);
+            dmgVig.addColorStop(1, `rgba(220,20,0,${redA})`);
             ctx.fillStyle = dmgVig;
             ctx.fillRect(0, 0, W, H);
         }
@@ -7098,24 +8601,76 @@
         }
     }
 
+    // D2-style globe frame helper
+    function drawGlobeFrame(cx, cy, r) {
+        // Outer dark ring
+        ctx.strokeStyle = '#1a1208';
+        ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.arc(cx, cy, r + 2, 0, Math.PI * 2); ctx.stroke();
+        // Metal gradient ring
+        const metalG = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
+        metalG.addColorStop(0, '#c4a44a');
+        metalG.addColorStop(0.3, '#8b6914');
+        metalG.addColorStop(0.6, '#ddc070');
+        metalG.addColorStop(1, '#8b6914');
+        ctx.strokeStyle = metalG;
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+        // Inner highlight arc (top-left)
+        ctx.strokeStyle = 'rgba(255,240,200,0.25)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(cx, cy, r - 1, -Math.PI * 0.8, -Math.PI * 0.2); ctx.stroke();
+        // Inner shadow arc (bottom-right)
+        ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(cx, cy, r - 1, Math.PI * 0.2, Math.PI * 0.8); ctx.stroke();
+        // 4-direction rivets
+        const rivetR = 2.5;
+        const rivetPositions = [
+            [cx, cy - r - 1], [cx, cy + r + 1],
+            [cx - r - 1, cy], [cx + r + 1, cy]
+        ];
+        for (const [rx, ry] of rivetPositions) {
+            const rg = ctx.createRadialGradient(rx - 0.5, ry - 0.5, 0, rx, ry, rivetR);
+            rg.addColorStop(0, '#ddc070');
+            rg.addColorStop(0.5, '#8b6914');
+            rg.addColorStop(1, '#654321');
+            ctx.fillStyle = rg;
+            ctx.beginPath(); ctx.arc(rx, ry, rivetR, 0, Math.PI * 2); ctx.fill();
+        }
+    }
+
     function drawHUD() {
-        // ===== BOTTOM BAR BACKGROUND =====
+        // ===== BOTTOM BAR BACKGROUND (stone texture + metal trim) =====
         const barH = 80;
         const barY = H - barH;
-        ctx.fillStyle = 'rgba(8,5,3,0.9)';
+        // Stone texture base
+        const stoneG = ctx.createLinearGradient(0, barY, 0, H);
+        stoneG.addColorStop(0, 'rgba(22,18,14,0.95)');
+        stoneG.addColorStop(0.3, 'rgba(16,12,8,0.95)');
+        stoneG.addColorStop(1, 'rgba(8,5,3,0.98)');
+        ctx.fillStyle = stoneG;
         ctx.fillRect(0, barY, W, barH);
-        ctx.strokeStyle = '#5a4a3a';
+        // Stone noise overlay
+        ctx.globalAlpha = 0.04;
+        for (let nx = 0; nx < W; nx += 64) {
+            if (TILE_TEXTURES['grain']) ctx.drawImage(TILE_TEXTURES['grain'], nx, barY, 64, barH);
+        }
+        ctx.globalAlpha = 1;
+        // Gold metal trim top line
+        const trimG = ctx.createLinearGradient(0, barY - 1, W, barY - 1);
+        trimG.addColorStop(0, '#654321');
+        trimG.addColorStop(0.2, '#c4a44a');
+        trimG.addColorStop(0.5, '#ddc070');
+        trimG.addColorStop(0.8, '#c4a44a');
+        trimG.addColorStop(1, '#654321');
+        ctx.strokeStyle = trimG;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, barY); ctx.lineTo(W, barY); ctx.stroke();
+        // Secondary dark line below trim
+        ctx.strokeStyle = '#1a1208';
         ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(0, barY);
-        ctx.lineTo(W, barY);
-        ctx.stroke();
-        // Decorative line
-        ctx.strokeStyle = '#3a2a1a';
-        ctx.beginPath();
-        ctx.moveTo(0, barY + 1);
-        ctx.lineTo(W, barY + 1);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, barY + 2); ctx.lineTo(W, barY + 2); ctx.stroke();
 
         // Health & Mana Globes
         const globeR = 30;
@@ -7133,8 +8688,30 @@
         // Fill
         const hpPct = clamp(player.hp / player.maxHP, 0, 1);
         const hpFillH = globeR * 2 * hpPct;
-        ctx.fillStyle = '#cc0000';
+        const hpGrad = ctx.createLinearGradient(hpX - globeR, 0, hpX + globeR, 0);
+        hpGrad.addColorStop(0, '#aa0000');
+        hpGrad.addColorStop(0.4, '#dd1111');
+        hpGrad.addColorStop(0.6, '#cc0000');
+        hpGrad.addColorStop(1, '#880000');
+        ctx.fillStyle = hpGrad;
         ctx.fillRect(hpX - globeR, globeY + globeR - hpFillH, globeR * 2, hpFillH);
+        // Bubble animation on liquid surface
+        const hpSurfaceY = globeY + globeR - hpFillH;
+        for (let b = 0; b < 3; b++) {
+            const bx = hpX + Math.sin(G.time * 2.5 + b * 2.1) * (globeR * 0.5);
+            const by = hpSurfaceY + Math.sin(G.time * 3.3 + b * 1.7) * 3 + 3;
+            ctx.fillStyle = 'rgba(255,120,120,0.3)';
+            ctx.beginPath(); ctx.arc(bx, by, 1.5 + Math.sin(G.time * 4 + b) * 0.5, 0, Math.PI * 2); ctx.fill();
+        }
+        // Wave line on surface
+        ctx.strokeStyle = 'rgba(255,80,80,0.4)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let wx = hpX - globeR; wx < hpX + globeR; wx += 2) {
+            const wy = hpSurfaceY + Math.sin(G.time * 3 + wx * 0.15) * 1.5;
+            wx === hpX - globeR ? ctx.moveTo(wx, wy) : ctx.lineTo(wx, wy);
+        }
+        ctx.stroke();
         // Sheen
         const hpSheen = ctx.createRadialGradient(hpX - 8, globeY - 8, 0, hpX, globeY, globeR);
         hpSheen.addColorStop(0, 'rgba(255,100,100,0.3)');
@@ -7142,12 +8719,8 @@
         ctx.fillStyle = hpSheen;
         ctx.fillRect(hpX - globeR, globeY - globeR, globeR * 2, globeR * 2);
         ctx.restore();
-        // Border
-        ctx.strokeStyle = '#8b6914';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(hpX, globeY, globeR, 0, Math.PI * 2);
-        ctx.stroke();
+        // D2-style frame
+        drawGlobeFrame(hpX, globeY, globeR);
         // Text
         ctx.fillStyle = '#fff';
         ctx.font = `bold 13px ${FONT_UI}`;
@@ -7167,19 +8740,38 @@
         ctx.fillRect(mpX - globeR, globeY - globeR, globeR * 2, globeR * 2);
         const mpPct = clamp(player.mp / player.maxMP, 0, 1);
         const mpFillH = globeR * 2 * mpPct;
-        ctx.fillStyle = '#0044cc';
+        const mpGrad = ctx.createLinearGradient(mpX - globeR, 0, mpX + globeR, 0);
+        mpGrad.addColorStop(0, '#002299');
+        mpGrad.addColorStop(0.4, '#0055dd');
+        mpGrad.addColorStop(0.6, '#0044cc');
+        mpGrad.addColorStop(1, '#001a88');
+        ctx.fillStyle = mpGrad;
         ctx.fillRect(mpX - globeR, globeY + globeR - mpFillH, globeR * 2, mpFillH);
+        // Bubble animation
+        const mpSurfaceY = globeY + globeR - mpFillH;
+        for (let b = 0; b < 3; b++) {
+            const bx = mpX + Math.sin(G.time * 2.2 + b * 2.3) * (globeR * 0.5);
+            const by = mpSurfaceY + Math.sin(G.time * 3.1 + b * 1.5) * 3 + 3;
+            ctx.fillStyle = 'rgba(120,120,255,0.3)';
+            ctx.beginPath(); ctx.arc(bx, by, 1.5 + Math.sin(G.time * 4.2 + b) * 0.5, 0, Math.PI * 2); ctx.fill();
+        }
+        // Wave line on surface
+        ctx.strokeStyle = 'rgba(80,80,255,0.4)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let wx = mpX - globeR; wx < mpX + globeR; wx += 2) {
+            const wy = mpSurfaceY + Math.sin(G.time * 2.8 + wx * 0.15) * 1.5;
+            wx === mpX - globeR ? ctx.moveTo(wx, wy) : ctx.lineTo(wx, wy);
+        }
+        ctx.stroke();
         const mpSheen = ctx.createRadialGradient(mpX - 8, globeY - 8, 0, mpX, globeY, globeR);
         mpSheen.addColorStop(0, 'rgba(100,100,255,0.3)');
         mpSheen.addColorStop(1, 'rgba(0,0,0,0)');
         ctx.fillStyle = mpSheen;
         ctx.fillRect(mpX - globeR, globeY - globeR, globeR * 2, globeR * 2);
         ctx.restore();
-        ctx.strokeStyle = '#4a4a8b';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(mpX, globeY, globeR, 0, Math.PI * 2);
-        ctx.stroke();
+        // D2-style frame
+        drawGlobeFrame(mpX, globeY, globeR);
         ctx.fillStyle = '#fff';
         ctx.font = `bold 13px ${FONT_UI}`;
         ctx.textAlign = 'center';
@@ -7195,11 +8787,26 @@
         const skillStartX = W / 2 - skillTotalW / 2;
         const skillY = H - 62;
 
-        // Skill bar background
-        ctx.fillStyle = 'rgba(10,8,5,0.85)';
-        ctx.fillRect(skillStartX - 8, skillY - 5, skillTotalW + 16, skillH + 18);
-        ctx.strokeStyle = '#8b7355';
-        ctx.lineWidth = 1.5;
+        // Skill bar background (stone panel + metal trim double border)
+        const skillBgG = ctx.createLinearGradient(skillStartX - 8, skillY - 5, skillStartX - 8, skillY + skillH + 13);
+        skillBgG.addColorStop(0, 'rgba(18,14,10,0.92)');
+        skillBgG.addColorStop(0.5, 'rgba(12,9,6,0.95)');
+        skillBgG.addColorStop(1, 'rgba(8,5,3,0.95)');
+        ctx.fillStyle = skillBgG;
+        ctx.fillRect(skillStartX - 10, skillY - 7, skillTotalW + 20, skillH + 22);
+        // Outer metal trim
+        const skillTrimOuter = ctx.createLinearGradient(skillStartX - 10, 0, skillStartX + skillTotalW + 10, 0);
+        skillTrimOuter.addColorStop(0, '#654321');
+        skillTrimOuter.addColorStop(0.3, '#8b6914');
+        skillTrimOuter.addColorStop(0.5, '#c4a44a');
+        skillTrimOuter.addColorStop(0.7, '#8b6914');
+        skillTrimOuter.addColorStop(1, '#654321');
+        ctx.strokeStyle = skillTrimOuter;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(skillStartX - 10, skillY - 7, skillTotalW + 20, skillH + 22);
+        // Inner dark trim
+        ctx.strokeStyle = '#1a1208';
+        ctx.lineWidth = 1;
         ctx.strokeRect(skillStartX - 8, skillY - 5, skillTotalW + 16, skillH + 18);
 
         for (let i = 1; i <= numSkills; i++) {
@@ -7277,16 +8884,85 @@
         ctx.textAlign = 'center';
         ctx.fillText(`Lv.${player.level}  ${player.xp}/${player.xpToNext} XP`, W / 2, xpY - 2);
 
-        // Minimap
+        // ACT / Floor / Gold info (above minimap)
+        const actDef = getCurrentActDef();
+        ctx.font = `bold 12px ${FONT_UI}`;
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#ffd700';
+        const actLabel = G.inTown ? `${ACT_DEFS[G.act].townName}` : `ACT${G.act} ${actDef.name}`;
+        ctx.fillText(actLabel, W - 15, 155);
+        ctx.font = `10px ${FONT_UI}`;
+        ctx.fillStyle = '#aaa';
+        if (!G.inTown) {
+            ctx.fillText(`第${G.actFloor}層/${actDef.floors}${G.cycle > 0 ? ' (' + (G.cycle+1) + '周目)' : ''}`, W - 15, 170);
+        } else {
+            ctx.fillText(`${G.cycle > 0 ? (G.cycle+1) + '周目' : '拠点'}`, W - 15, 170);
+        }
+        ctx.fillStyle = '#ffd700';
+        ctx.fillText(`💰 ${G.gold}G`, W - 15, 185);
+
+        // Quest tracker (top-left, below shortcuts)
+        G._questTrackerH = 0;
+        const activeQuests = getActiveQuests();
+        if (activeQuests.length > 0) {
+            const qtY = 24;
+            ctx.textAlign = 'left';
+            ctx.font = `bold 11px ${FONT_UI}`;
+            let qy = qtY + 10;
+            const qtH = Math.min(activeQuests.length, 3) * 28 + 4;
+            G._questTrackerH = qtH + 10;
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect(5, qtY, 200, qtH);
+            for (const q of activeQuests.slice(0, 3)) {
+                const color = q.status === 'complete' ? '#ffd700' : '#4488ff';
+                ctx.fillStyle = color;
+                const prog = q.type === 'kill_count' ? ` (${q.progress || 0}/${q.target})` : '';
+                const prefix = q.status === 'complete' ? '★ ' : '📌 ';
+                ctx.fillText(`${prefix}${q.name}${prog}`, 10, qy);
+                qy += 14;
+                ctx.font = `9px ${FONT_UI}`;
+                ctx.fillStyle = '#888';
+                ctx.fillText(q.desc, 10, qy);
+                qy += 14;
+                ctx.font = `bold 11px ${FONT_UI}`;
+            }
+        }
+
+        // Minimap (stone frame + corner rivets)
         const mmSize = 130;
         const mmX = W - mmSize - 10, mmY = 10;
         const mmScale = mmSize / (MAP_W * TILE);
 
-        ctx.fillStyle = 'rgba(0,0,0,0.75)';
-        ctx.fillRect(mmX, mmY, mmSize, mmSize);
-        ctx.strokeStyle = '#8b7355';
+        // Stone background
+        const mmBgG = ctx.createLinearGradient(mmX, mmY, mmX + mmSize, mmY + mmSize);
+        mmBgG.addColorStop(0, 'rgba(8,6,4,0.85)');
+        mmBgG.addColorStop(1, 'rgba(4,3,2,0.9)');
+        ctx.fillStyle = mmBgG;
+        ctx.fillRect(mmX - 3, mmY - 3, mmSize + 6, mmSize + 6);
+        // Outer dark border
+        ctx.strokeStyle = '#1a1208';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(mmX - 3, mmY - 3, mmSize + 6, mmSize + 6);
+        // Inner metal trim
+        const mmTrimG = ctx.createLinearGradient(mmX, mmY, mmX + mmSize, mmY);
+        mmTrimG.addColorStop(0, '#654321');
+        mmTrimG.addColorStop(0.3, '#c4a44a');
+        mmTrimG.addColorStop(0.5, '#ddc070');
+        mmTrimG.addColorStop(0.7, '#c4a44a');
+        mmTrimG.addColorStop(1, '#654321');
+        ctx.strokeStyle = mmTrimG;
         ctx.lineWidth = 1.5;
         ctx.strokeRect(mmX, mmY, mmSize, mmSize);
+        // Corner rivets
+        const corners = [[mmX, mmY], [mmX + mmSize, mmY], [mmX, mmY + mmSize], [mmX + mmSize, mmY + mmSize]];
+        for (const [crx, cry] of corners) {
+            const crg = ctx.createRadialGradient(crx - 0.5, cry - 0.5, 0, crx, cry, 3);
+            crg.addColorStop(0, '#ddc070');
+            crg.addColorStop(0.5, '#8b6914');
+            crg.addColorStop(1, '#654321');
+            ctx.fillStyle = crg;
+            ctx.beginPath(); ctx.arc(crx, cry, 3, 0, Math.PI * 2); ctx.fill();
+        }
 
         // Rooms - only explored ones
         for (const room of dungeon.rooms) {
@@ -7353,7 +9029,7 @@
         ctx.fillStyle = '#daa520';
         ctx.font = `bold 14px ${FONT_UI}`;
         ctx.textAlign = 'right';
-        ctx.fillText(`B${G.floor}F`, mmX - 5, mmY + 16);
+        ctx.fillText(G.inTown ? '町' : `${G.actFloor}F`, mmX - 5, mmY + 16);
 
         ctx.font = `11px ${FONT_UI}`;
         ctx.fillStyle = '#cc6666';
@@ -7386,7 +9062,15 @@
         ctx.globalAlpha = 0.6;
         ctx.font = `10px ${FONT_UI}`;
         ctx.textAlign = 'left';
-        const shortcuts = [
+        const shortcuts = G.inTown ? [
+            ['矢印', '移動'],
+            ['E', 'NPC会話/階段'],
+            ['I', '装備'],
+            ['C', 'ステータス'],
+            ['Esc', '閉じる'],
+            ['F5', `セーブ(S${G.saveSlot})`],
+            ['F8', `ロード(S${G.saveSlot})`]
+        ] : [
             ['矢印', '移動'],
             ['A', '攻撃'],
             ['S', 'スキル'],
@@ -7394,6 +9078,8 @@
             ['RClick', 'スキル'],
             ['1-6', 'スキル選択'],
             ['Space', '拾う'],
+            ['E', '階段'],
+            ['V', '帰還'],
             ['I', '装備'],
             ['C', 'ステータス'],
             ['T', 'スキルツリー'],
@@ -7442,14 +9128,25 @@
     function saveGame(slot = G.saveSlot) {
         try {
             const saveData = {
-                version: 3,
+                version: 4,
                 timestamp: Date.now(),
                 floor: G.floor,
+                act: G.act, actFloor: G.actFloor, cycle: G.cycle, inTown: G.inTown,
+                gold: G.gold, quests: G.quests, questKillCounts: G.questKillCounts,
+                waypoints: G.waypoints, bossesDefeated: G.bossesDefeated,
                 time: G.time,
                 playerClass: G.playerClass,
                 dungeonSeed: G.dungeonSeed,
                 autoPickup: G.autoPickup,
                 autoPickupRarity: G.autoPickupRarity,
+                stash: G.stash.map(item => ({
+                    name: item.name, typeKey: item.typeKey,
+                    rarityKey: item.rarityKey, rarity: item.rarity,
+                    typeInfo: item.typeInfo,
+                    baseStat: item.baseStat, statType: item.statType,
+                    affixes: item.affixes || [], desc: item.desc || '',
+                    icon: item.icon
+                })),
                 player: {
                     x: player.x, y: player.y,
                     level: player.level, xp: player.xp, xpToNext: player.xpToNext,
@@ -7497,8 +9194,8 @@
                     };
                 }
             }
-            // Save only alive monsters (dead ones stay dead on load)
-            saveData.monsters = monsters.filter(m => m.alive).map(m => ({
+            // Save only alive monsters (dead ones stay dead on load, skip if in town)
+            saveData.monsters = G.inTown ? [] : monsters.filter(m => m.alive && !m.isBoss).map(m => ({
                 x: m.x, y: m.y, type: m.type,
                 hp: m.hp, maxHP: m.maxHP, dmg: m.dmg,
                 aggroed: m.aggroed
@@ -7560,6 +9257,35 @@
             G.dungeonSeed = save.dungeonSeed || 0;
             G.autoPickup = save.autoPickup || false;
             G.autoPickupRarity = save.autoPickupRarity || 'normal';
+
+            // v4: ACT system migration
+            if (save.version >= 4) {
+                G.act = save.act || 1;
+                G.actFloor = save.actFloor || 1;
+                G.cycle = save.cycle || 0;
+                G.inTown = save.inTown || false;
+                G.gold = save.gold || 0;
+                G.quests = save.quests || {};
+                G.questKillCounts = save.questKillCounts || {};
+                G.waypoints = save.waypoints || [1];
+                G.bossesDefeated = save.bossesDefeated || {};
+                G.stash = save.stash || [];
+            } else {
+                // v2/v3 migration: map old global floor to ACT system
+                const mapped = globalFloorToAct(save.floor || 1);
+                G.act = mapped.act;
+                G.actFloor = mapped.actFloor;
+                G.cycle = mapped.cycle;
+                G.inTown = false;
+                G.gold = 0;
+                G.quests = {};
+                G.questKillCounts = {};
+                G.waypoints = [1];
+                for (let a = 1; a <= mapped.act; a++) G.waypoints.push(a);
+                G.bossesDefeated = {};
+                G.stash = [];
+            }
+
             G.dead = false;
             setPaused(false);
             setPanelVisible(DOM.settingsPanel, false);
@@ -7589,9 +9315,13 @@
             DOM.titleScreen.style.display = 'none';
             DOM.deathScreen.style.display = 'none';
 
-            // Generate dungeon with saved seed (reproduces same layout)
-            // Skip entity spawning - we'll restore saved monsters/items
-            initFloor({ useSeed: true, skipEntities: true });
+            // Generate dungeon or town with saved seed
+            if (G.inTown) {
+                enterTown(G.act);
+            } else {
+                // Skip entity spawning - we'll restore saved monsters/items
+                initFloor({ useSeed: true, skipEntities: true });
+            }
 
             // Restore only alive monsters from save (dead ones are gone)
             monsters.length = 0;
@@ -7656,7 +9386,7 @@
             recalcPassives();
             // セーブデータにskillsがない場合も空のまま
 
-            addLog(`ロード完了！B${G.floor}F Lv.${player.level} (スロット${slot})`, '#00ff88');
+            addLog(`ロード完了！ACT${G.act} Lv.${player.level} (スロット${slot})`, '#00ff88');
             addFloatingText(player.x, player.y - 30, 'LOADED!', '#00ff88');
             emitParticles(player.x, player.y, '#00ff88', 20, 60, 0.5, 4, -40);
             playSound(400, 'sine', 0.12, 0.06);
@@ -7682,7 +9412,19 @@
         const sd = dist(player.x, player.y, dungeon.stairsX * TILE + TILE/2, dungeon.stairsY * TILE + TILE/2);
         const nearStairs = sd < 45;
         if (!onTile && !nearStairs) return false;
-        // Check only for nearby enemies (within 200px of stairs), not all monsters
+
+        // Town: enter dungeon (ACT floor 1)
+        if (G.inTown) {
+            sfxStairs();
+            closeTownUI();
+            G.portalReturn = null; // close return portal
+            G.actFloor = 1;
+            G.inTown = false;
+            initFloor();
+            return true;
+        }
+
+        // Dungeon: check for nearby enemies
         const stairCX = dungeon.stairsX * TILE + TILE/2;
         const stairCY = dungeon.stairsY * TILE + TILE/2;
         const nearbyEnemies = monsters.filter(m => m.alive && dist(m.x, m.y, stairCX, stairCY) < 200);
@@ -7691,9 +9433,31 @@
             return false;
         }
         sfxStairs();
-        G.floor++;
-        initFloor();
+
+        const actDef = getCurrentActDef();
+        if (G.actFloor >= actDef.floors) {
+            // Last floor of ACT: go to next ACT's town
+            if (G.act >= 5) {
+                // Completed ACT5: start new cycle (NG+)
+                G.cycle++;
+                showActTransition(`${G.cycle + 1}周目 開始！`, `全ACTの敵が強化されました`);
+                enterTown(1);
+            } else {
+                showActTransition(`ACT ${G.act + 1}: ${ACT_DEFS[G.act + 1].name}`, ACT_DEFS[G.act + 1].nameEn);
+                enterTown(G.act + 1);
+            }
+        } else {
+            // Normal floor progression within ACT
+            G.actFloor++;
+            initFloor();
+        }
         return true;
+    }
+
+    function showActTransition(line1, line2) {
+        G.actTransitionTimer = 3.0;
+        G.actTransitionText = line1;
+        G.actTransitionText2 = line2 || '';
     }
 
     // ========== MAIN GAME LOOP ==========
@@ -7724,36 +9488,79 @@
         // Update
         if (canUpdate) {
             player.update(dt);
-            for (const m of monsters) m.update(dt, player);
 
-            // 敵の継続的な出現（ワラワラ感）- 階段付近では出現しない
-            G.spawnTimer += dt;
-            if (G.spawnTimer >= G.spawnInterval) {
-                G.spawnTimer = 0;
-                const aliveCount = monsters.filter(m => m.alive).length;
-                const maxMonsters = 30 + G.floor * 5; // 階層ごとに最大数増加
-                if (aliveCount < maxMonsters && dungeon && dungeon.rooms.length > 1) {
-                    const spawnCount = Math.min(3 + Math.floor(G.floor / 2), maxMonsters - aliveCount);
-                    const types = G.floor <= 2 ? ['skeleton', 'zombie'] :
-                                  G.floor <= 4 ? ['skeleton', 'zombie', 'imp'] :
-                                  G.floor <= 6 ? ['zombie', 'imp', 'ghost'] :
-                                  ['imp', 'ghost'];
-                    const stairCX = dungeon.stairsX * TILE + TILE/2;
-                    const stairCY = dungeon.stairsY * TILE + TILE/2;
-                    for (let i = 0; i < spawnCount; i++) {
-                        const room = dungeon.rooms[rand(1, dungeon.rooms.length - 1)];
-                        const mx = room.x * TILE + rand(TILE, (room.w - 1) * TILE);
-                        const my = room.y * TILE + rand(TILE, (room.h - 1) * TILE);
-                        // 階段の近く（300px以内）にはスポーンさせない
-                        if (dist(mx, my, stairCX, stairCY) < 300) continue;
-                        monsters.push(new Monster(mx, my, types[rand(0, types.length - 1)], G.floor));
+            // ACT transition timer
+            if (G.actTransitionTimer > 0) G.actTransitionTimer -= dt;
+
+            // Town portal casting timer
+            if (G.portalCasting) {
+                G.portalTimer -= dt;
+                // Cancel if player moves or takes damage
+                if (player.moving) {
+                    G.portalCasting = false;
+                    G.portalTimer = 0;
+                    addLog('帰還が中断された！', '#ff4444');
+                } else if (G.portalTimer <= 0) {
+                    G.portalCasting = false;
+                    G.portalTimer = 0;
+                    // Save dungeon state for portal return
+                    G.portalReturn = {
+                        act: G.act, actFloor: G.actFloor, cycle: G.cycle,
+                        floor: G.floor, x: player.x, y: player.y,
+                        dungeon: dungeon, monsters: [...monsters],
+                        groundItems: [...groundItems], dungeonSeed: G.dungeonSeed
+                    };
+                    addLog('町へ帰還した！', '#88ff88');
+                    enterTown(G.act);
+                    addLog('青いポータルでダンジョンに戻れる', '#8888ff');
+                }
+            }
+
+            if (!G.inTown) {
+                for (const m of monsters) {
+                    m.update(dt, player);
+                    if (m.isBoss && m.alive) updateBossAI(m, dt);
+                }
+
+                // Enemy projectile update
+                for (let i = enemyProjectiles.length - 1; i >= 0; i--) {
+                    const ep = enemyProjectiles[i];
+                    ep.update(dt);
+                    if (ep.life <= 0) { enemyProjectiles.splice(i, 1); continue; }
+                    // Hit player
+                    if (dist(ep.x, ep.y, player.x, player.y) < ep.r + player.radius) {
+                        player.takeDamage(ep.dmg);
+                        emitParticles(ep.x, ep.y, ep.color, 8, 50, 0.3, 2, 0);
+                        enemyProjectiles.splice(i, 1);
+                    }
+                }
+
+                // 敵の継続的な出現（ワラワラ感）- 階段付近では出現しない
+                G.spawnTimer += dt;
+                if (G.spawnTimer >= G.spawnInterval) {
+                    G.spawnTimer = 0;
+                    const aliveCount = monsters.filter(m => m.alive).length;
+                    const maxMonsters = 30 + G.actFloor * 5;
+                    if (aliveCount < maxMonsters && dungeon && dungeon.rooms.length > 1) {
+                        const spawnCount = Math.min(3 + Math.floor(G.actFloor / 2), maxMonsters - aliveCount);
+                        const actDef = getCurrentActDef();
+                        const types = actDef.monsterTypes;
+                        const stairCX = dungeon.stairsX * TILE + TILE/2;
+                        const stairCY = dungeon.stairsY * TILE + TILE/2;
+                        for (let i = 0; i < spawnCount; i++) {
+                            const room = dungeon.rooms[rand(1, dungeon.rooms.length - 1)];
+                            const mx = room.x * TILE + rand(TILE, (room.w - 1) * TILE);
+                            const my = room.y * TILE + rand(TILE, (room.h - 1) * TILE);
+                            if (dist(mx, my, stairCX, stairCY) < 300) continue;
+                            monsters.push(new Monster(mx, my, types[rand(0, types.length - 1)], G.floor));
+                        }
                     }
                 }
             }
         }
 
         // Remove dead monsters after animation
-        if (canUpdate) {
+        if (canUpdate && !G.inTown) {
             for (let i = monsters.length - 1; i >= 0; i--) {
                 if (!monsters[i].alive && monsters[i].deathT <= 0) monsters.splice(i, 1);
             }
@@ -7887,9 +9694,9 @@
             }
         }
 
-        // Chest check - open chests when walked over
+        // Chest check - open chests when walked over (not in town)
         const ptx = Math.floor(player.x / TILE), pty = Math.floor(player.y / TILE);
-        if (canUpdate && dungeon.get(ptx, pty) === 3) {
+        if (canUpdate && !G.inTown && dungeon.get(ptx, pty) === 3) {
             dungeon.set(ptx, pty, 1);
             sfxChestOpen();
             const numItems = rand(1, 3);
@@ -7986,7 +9793,88 @@
             }
         }
         for (const p of projectiles) p.draw(G.camX, G.camY);
+        for (const ep of enemyProjectiles) ep.draw(G.camX, G.camY);
         for (const m of monsters) m.draw(G.camX, G.camY);
+        // Draw town NPCs
+        if (G.inTown) {
+            for (const npc of townNPCs) {
+                const nx = npc.x - G.camX, ny = npc.y - G.camY;
+                if (nx < -50 || nx > W + 50 || ny < -50 || ny > H + 50) continue;
+                // NPC icon
+                ctx.font = `24px ${FONT_EMOJI}`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(npc.icon, nx, ny - 8);
+                // NPC name
+                ctx.font = `bold 11px ${FONT_UI}`;
+                ctx.fillStyle = '#000'; ctx.fillText(npc.name, nx + 1, ny - 26);
+                ctx.fillStyle = '#ffd700'; ctx.fillText(npc.name, nx, ny - 27);
+                // [E] prompt if near
+                const pd = dist(player.x, player.y, npc.x, npc.y);
+                if (pd < npc.interactRadius) {
+                    ctx.font = `bold 10px ${FONT_UI}`;
+                    ctx.fillStyle = '#88ff88';
+                    ctx.fillText('[E] 話す', nx, ny + 16);
+                }
+            }
+        }
+        // Draw town portal (return portal)
+        if (G.inTown && G.portalReturn) {
+            const pr = G.portalReturn;
+            // Portal position: near player spawn (plaza center offset)
+            const r0 = dungeon.rooms[0];
+            const portalWX = r0.cx * TILE + TILE/2 + 60;
+            const portalWY = r0.cy * TILE + TILE/2;
+            G._portalScreenX = portalWX; G._portalScreenY = portalWY; // for interaction check
+            const ppx = portalWX - G.camX, ppy = portalWY - G.camY;
+            if (ppx > -80 && ppx < W + 80 && ppy > -80 && ppy < H + 80) {
+                // Swirling blue oval portal
+                ctx.save();
+                const pulse = 0.6 + Math.sin(G.time * 2) * 0.15;
+                // Outer glow
+                ctx.globalAlpha = 0.3 * pulse;
+                ctx.fillStyle = '#4488ff';
+                ctx.beginPath();
+                ctx.ellipse(ppx, ppy - 16, 28, 36, 0, 0, Math.PI * 2);
+                ctx.fill();
+                // Inner bright core
+                ctx.globalAlpha = 0.7 * pulse;
+                ctx.fillStyle = '#88bbff';
+                ctx.beginPath();
+                ctx.ellipse(ppx, ppy - 16, 18, 28, 0, 0, Math.PI * 2);
+                ctx.fill();
+                // Center white glow
+                ctx.globalAlpha = 0.9;
+                ctx.fillStyle = '#ccddff';
+                ctx.beginPath();
+                ctx.ellipse(ppx, ppy - 16, 8, 14, 0, 0, Math.PI * 2);
+                ctx.fill();
+                // Orbiting particles
+                for (let i = 0; i < 8; i++) {
+                    const a = G.time * 2.5 + i * Math.PI / 4;
+                    const ox = Math.cos(a) * 22;
+                    const oy = Math.sin(a) * 32;
+                    ctx.globalAlpha = 0.6;
+                    ctx.fillStyle = '#aaccff';
+                    ctx.beginPath();
+                    ctx.arc(ppx + ox, ppy - 16 + oy, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+                // Label
+                ctx.font = `bold 10px ${FONT_UI}`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#88bbff';
+                ctx.fillText(`ACT${pr.act} 第${pr.actFloor}層`, ppx, ppy + 24);
+                // [E] prompt if near
+                const portalD = dist(player.x, player.y, portalWX, portalWY);
+                if (portalD < 60) {
+                    ctx.font = `bold 10px ${FONT_UI}`;
+                    ctx.fillStyle = '#88ff88';
+                    ctx.fillText('[E] 戻る', ppx, ppy + 36);
+                }
+            }
+        }
+
         // Draw summoned minions
         if (G.minions) {
             for (const mn of G.minions) {
@@ -8039,6 +9927,52 @@
 
         drawHUD();
         drawLog();
+
+        // Town portal casting overlay
+        if (G.portalCasting && G.portalTimer > 0) {
+            const prog = 1 - G.portalTimer / 2.0;
+            // Swirling blue portal effect around player
+            const px = player.x - G.camX, py = player.y - G.camY;
+            ctx.save();
+            for (let i = 0; i < 12; i++) {
+                const angle = G.time * 3 + (i * Math.PI * 2 / 12);
+                const r = 30 + prog * 20;
+                const ox = Math.cos(angle) * r;
+                const oy = Math.sin(angle) * r * 0.6;
+                ctx.globalAlpha = 0.5 + prog * 0.4;
+                ctx.fillStyle = i % 2 === 0 ? '#4488ff' : '#88bbff';
+                ctx.beginPath();
+                ctx.arc(px + ox, py + oy - 10, 3 + prog * 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+            // Progress bar
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.fillRect(W/2 - 80, H/2 + 60, 160, 14);
+            ctx.fillStyle = '#4488ff';
+            ctx.fillRect(W/2 - 78, H/2 + 62, 156 * prog, 10);
+            ctx.font = `bold 14px ${FONT_UI}`;
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#aaccff';
+            ctx.fillText('帰還中...', W/2, H/2 + 55);
+        }
+
+        // ACT transition overlay
+        if (G.actTransitionTimer > 0) {
+            const alpha = G.actTransitionTimer > 2.5 ? (3 - G.actTransitionTimer) * 2 :
+                          G.actTransitionTimer < 0.5 ? G.actTransitionTimer * 2 : 1;
+            ctx.fillStyle = `rgba(0,0,0,${alpha * 0.85})`;
+            ctx.fillRect(0, 0, W, H);
+            ctx.globalAlpha = alpha;
+            ctx.font = `bold 36px ${FONT_TITLE}`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#ffd700';
+            ctx.fillText(G.actTransitionText || '', W/2, H/2 - 20);
+            ctx.font = `18px ${FONT_UI}`;
+            ctx.fillStyle = '#aaa';
+            ctx.fillText(G.actTransitionText2 || '', W/2, H/2 + 20);
+            ctx.globalAlpha = 1;
+        }
 
         // Update UI panels if open
         if (isPanelVisible(DOM.statsPanel)) updateStatsPanel();
