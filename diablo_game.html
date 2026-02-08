@@ -1208,6 +1208,21 @@
         warlock:['rogues',160,128],   // warlock (6th col row5)
         fencer:['rogues',128,96],     // fencer
         priest:['rogues',32,64],      // priest
+        // === Town NPC sprites (rogues.png rows 6-7) ===
+        npcFarmerWheat:['rogues',0,160],   // farmer (wheat thresher)
+        npcFarmerScythe:['rogues',32,160], // farmer (scythe)
+        npcFarmerFork:['rogues',64,160],   // farmer (pitchfork)
+        npcBaker:['rogues',96,160],        // baker
+        npcBlacksmith:['rogues',128,160],  // blacksmith
+        npcScholar:['rogues',160,160],     // scholar
+        npcPeasant1:['rogues',0,192],      // peasant / coalburner
+        npcPeasant2:['rogues',32,192],     // peasant
+        npcShopkeep:['rogues',64,192],     // shopkeep
+        npcElderlyW:['rogues',96,192],     // elderly woman
+        npcElderlyM:['rogues',128,192],    // elderly man
+        npcDesertSage:['rogues',96,128],   // desert sage
+        npcWarClericF:['rogues',64,64],    // female war cleric
+        npcWarClericM:['rogues',96,64],    // male war cleric
     };
 
     function drawSpr(key, dx, dy, dw, dh, flipX, dropShadow) {
@@ -1889,38 +1904,38 @@
     // ========== TOWN NPC DEFINITIONS ==========
     const TOWN_NPC_DEFS = {
         1: [
-            { id:'merchant_1', name:'商人マーロ', icon:'🧑‍💼', type:'shop', dialog:['品物を見ていくかい？何でも揃ってるよ。','良い防具があれば命を救うぞ。'] },
-            { id:'smith_1', name:'鍛冶屋グリスウォルド', icon:'⚒', type:'blacksmith', dialog:['武器を鍛えてやろう。','良い鉄を使えば、切れ味が違う。'] },
-            { id:'stash_1', name:'倉庫番カイン', icon:'📦', type:'stash', dialog:['預かり物はここに置いていけ。','倉庫はいつでも使えるぞ。'] },
-            { id:'quest_1', name:'長老アカラ', icon:'👵', type:'quest', dialog:['勇者よ、地下聖堂の魔物を退治してくれ。','骸骨王が復活したのだ...'] },
+            { id:'merchant_1', name:'商人マーロ', icon:'🧑‍💼', sprite:'npcShopkeep', type:'shop', dialog:['品物を見ていくかい？何でも揃ってるよ。','良い防具があれば命を救うぞ。'] },
+            { id:'smith_1', name:'鍛冶屋グリスウォルド', icon:'⚒', sprite:'npcBlacksmith', type:'blacksmith', dialog:['武器を鍛えてやろう。','良い鉄を使えば、切れ味が違う。'] },
+            { id:'stash_1', name:'倉庫番カイン', icon:'📦', sprite:'npcScholar', type:'stash', dialog:['預かり物はここに置いていけ。','倉庫はいつでも使えるぞ。'] },
+            { id:'quest_1', name:'長老アカラ', icon:'👵', sprite:'npcElderlyW', type:'quest', dialog:['勇者よ、地下聖堂の魔物を退治してくれ。','骸骨王が復活したのだ...'] },
             { id:'wp_1', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] }
         ],
         2: [
-            { id:'merchant_2', name:'商人エルジクス', icon:'🧑‍💼', type:'shop', dialog:['砂漠の品は珍しいぞ。','水よりも価値のある物がある。'] },
-            { id:'smith_2', name:'鍛冶屋ファーラ', icon:'⚒', type:'blacksmith', dialog:['砂漠の鉄は硬いが...鍛えがいがある。'] },
-            { id:'stash_2', name:'倉庫番メシフ', icon:'📦', type:'stash', dialog:['荷物はここに預けろ。'] },
-            { id:'quest_2', name:'賢者ドロガン', icon:'🧔', type:'quest', dialog:['砂漠の地下に巨大な蟲がいる...退治してくれ。'] },
+            { id:'merchant_2', name:'商人エルジクス', icon:'🧑‍💼', sprite:'npcShopkeep', type:'shop', dialog:['砂漠の品は珍しいぞ。','水よりも価値のある物がある。'] },
+            { id:'smith_2', name:'鍛冶屋ファーラ', icon:'⚒', sprite:'npcBlacksmith', type:'blacksmith', dialog:['砂漠の鉄は硬いが...鍛えがいがある。'] },
+            { id:'stash_2', name:'倉庫番メシフ', icon:'📦', sprite:'npcPeasant1', type:'stash', dialog:['荷物はここに預けろ。'] },
+            { id:'quest_2', name:'賢者ドロガン', icon:'🧔', sprite:'npcDesertSage', type:'quest', dialog:['砂漠の地下に巨大な蟲がいる...退治してくれ。'] },
             { id:'wp_2', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] }
         ],
         3: [
-            { id:'merchant_3', name:'商人アシェラ', icon:'🧑‍💼', type:'shop', dialog:['密林の収穫品だ、見てくれ。'] },
-            { id:'smith_3', name:'鍛冶屋ヘファスト', icon:'⚒', type:'blacksmith', dialog:['神殿の金属は特殊だ...鍛え直してやろう。'] },
-            { id:'stash_3', name:'倉庫番ナタリヤ', icon:'📦', type:'stash', dialog:['安全に保管してあるわ。'] },
-            { id:'quest_3', name:'巫女オーマス', icon:'🧙‍♀', type:'quest', dialog:['大魔導師が神殿を支配している...倒してくれ。'] },
+            { id:'merchant_3', name:'商人アシェラ', icon:'🧑‍💼', sprite:'npcShopkeep', type:'shop', dialog:['密林の収穫品だ、見てくれ。'] },
+            { id:'smith_3', name:'鍛冶屋ヘファスト', icon:'⚒', sprite:'npcBlacksmith', type:'blacksmith', dialog:['神殿の金属は特殊だ...鍛え直してやろう。'] },
+            { id:'stash_3', name:'倉庫番ナタリヤ', icon:'📦', sprite:'npcWarClericF', type:'stash', dialog:['安全に保管してあるわ。'] },
+            { id:'quest_3', name:'巫女オーマス', icon:'🧙‍♀', sprite:'npcWarClericM', type:'quest', dialog:['大魔導師が神殿を支配している...倒してくれ。'] },
             { id:'wp_3', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] }
         ],
         4: [
-            { id:'merchant_4', name:'商人ジャメラ', icon:'🧑‍💼', type:'shop', dialog:['地獄でも商売は続く...'] },
-            { id:'smith_4', name:'鍛冶屋ハルバ', icon:'⚒', type:'blacksmith', dialog:['地獄の炎で鍛えた武器は一味違う。'] },
-            { id:'stash_4', name:'倉庫番ティラエル', icon:'📦', type:'stash', dialog:['ここなら安全だ。'] },
-            { id:'quest_4', name:'天使ハラティ', icon:'👼', type:'quest', dialog:['魔王を倒さねば世界が滅ぶ...頼む。'] },
+            { id:'merchant_4', name:'商人ジャメラ', icon:'🧑‍💼', sprite:'npcShopkeep', type:'shop', dialog:['地獄でも商売は続く...'] },
+            { id:'smith_4', name:'鍛冶屋ハルバ', icon:'⚒', sprite:'npcBlacksmith', type:'blacksmith', dialog:['地獄の炎で鍛えた武器は一味違う。'] },
+            { id:'stash_4', name:'倉庫番ティラエル', icon:'📦', sprite:'templar', type:'stash', dialog:['ここなら安全だ。'] },
+            { id:'quest_4', name:'天使ハラティ', icon:'👼', sprite:'priest', type:'quest', dialog:['魔王を倒さねば世界が滅ぶ...頼む。'] },
             { id:'wp_4', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] }
         ],
         5: [
-            { id:'merchant_5', name:'商人アーニャ', icon:'🧑‍💼', type:'shop', dialog:['氷の品は貴重よ。'] },
-            { id:'smith_5', name:'鍛冶屋ラーズク', icon:'⚒', type:'blacksmith', dialog:['凍てつく金属...だが鍛えられる。'] },
-            { id:'stash_5', name:'倉庫番ニーラサック', icon:'📦', type:'stash', dialog:['預かるぞ。'] },
-            { id:'quest_5', name:'賢者マラス', icon:'🧓', type:'quest', dialog:['氷の女王が山を支配している...最後の戦いだ。'] },
+            { id:'merchant_5', name:'商人アーニャ', icon:'🧑‍💼', sprite:'npcShopkeep', type:'shop', dialog:['氷の品は貴重よ。'] },
+            { id:'smith_5', name:'鍛冶屋ラーズク', icon:'⚒', sprite:'npcBlacksmith', type:'blacksmith', dialog:['凍てつく金属...だが鍛えられる。'] },
+            { id:'stash_5', name:'倉庫番ニーラサック', icon:'📦', sprite:'npcElderlyM', type:'stash', dialog:['預かるぞ。'] },
+            { id:'quest_5', name:'賢者マラス', icon:'🧓', sprite:'npcElderlyM', type:'quest', dialog:['氷の女王が山を支配している...最後の戦いだ。'] },
             { id:'wp_5', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] }
         ]
     };
@@ -10355,17 +10370,26 @@
         for (const m of monsters) m.draw(G.camX, G.camY);
         // Draw town NPCs
         if (G.inTown) {
+            const npcSprSize = 48; // rendered sprite size
             for (const npc of townNPCs) {
                 const nx = npc.x - G.camX, ny = npc.y - G.camY;
-                if (nx < -50 || nx > W + 50 || ny < -50 || ny > H + 50) continue;
-                // NPC icon
-                ctx.font = `24px ${FONT_EMOJI}`;
-                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText(npc.icon, nx, ny - 8);
+                if (nx < -60 || nx > W + 60 || ny < -60 || ny > H + 60) continue;
+                // NPC sprite or emoji fallback
+                if (npc.sprite && ATLAS[npc.sprite]) {
+                    // Idle bob animation
+                    const bob = Math.sin(G.time * 1.5 + npc.x * 0.1) * 1.5;
+                    drawSpr(npc.sprite, nx - npcSprSize/2, ny - npcSprSize + 4 + bob, npcSprSize, npcSprSize, false, true);
+                } else {
+                    // Waypoint or missing sprite: emoji fallback
+                    ctx.font = `24px ${FONT_EMOJI}`;
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText(npc.icon, nx, ny - 8);
+                }
                 // NPC name
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.font = `bold 11px ${FONT_UI}`;
-                ctx.fillStyle = '#000'; ctx.fillText(npc.name, nx + 1, ny - 26);
-                ctx.fillStyle = '#ffd700'; ctx.fillText(npc.name, nx, ny - 27);
+                ctx.fillStyle = '#000'; ctx.fillText(npc.name, nx + 1, ny - npcSprSize + 2);
+                ctx.fillStyle = '#ffd700'; ctx.fillText(npc.name, nx, ny - npcSprSize + 1);
                 // [E] prompt if near
                 const pd = dist(player.x, player.y, npc.x, npc.y);
                 if (pd < npc.interactRadius) {
