@@ -5409,11 +5409,33 @@
         _drawGenericSprite(sx, sy, walkPhase, spriteKey) {
             const S = PLAYER_DRAW_SCALE;
             const drawSize = TILE * S;
-            const bounce = this.moving ? Math.sin(walkPhase * 10) * 3 : 0;
             const flipX = this.targetX < this.x - 2;
-            const atkTilt = this.attacking ? Math.sin(this.attackTimer * Math.PI * 6) * 0.2 : 0;
+
+            // --- Procedural animation transforms ---
+            let bounce = 0, tilt = 0, scaleX = 1, scaleY = 1;
+            if (this.moving) {
+                // Walk: bounce with landing squash, body sway
+                const walkT = G.time * 8;
+                bounce = Math.abs(Math.sin(walkT)) * 5;
+                tilt = Math.sin(walkT) * 0.06;
+                const landPhase = Math.abs(Math.sin(walkT));
+                scaleX = 1 + (1 - landPhase) * 0.03;
+                scaleY = 1 - (1 - landPhase) * 0.03;
+            } else if (!this.attacking) {
+                // Idle breathing
+                bounce = Math.sin(G.time * 2) * 1.5;
+                scaleY = 1 + Math.sin(G.time * 2) * 0.015;
+                scaleX = 1 - Math.sin(G.time * 2) * 0.01;
+            }
+            if (this.attacking) {
+                // Attack: more aggressive tilt + lunge
+                const atkP = this.attackTimer * Math.PI * 6;
+                tilt = Math.sin(atkP) * 0.25;
+                bounce = Math.sin(atkP * 0.5) * -3;
+            }
+
             // Drop shadow (radial gradient)
-            const shadowRx = drawSize * 0.28, shadowRy = 5;
+            const shadowRx = drawSize * 0.28 * scaleX, shadowRy = 5;
             const shG = ctx.createRadialGradient(sx, sy + TILE/2, 0, sx, sy + TILE/2, shadowRx);
             shG.addColorStop(0, 'rgba(0,0,0,0.45)');
             shG.addColorStop(0.6, 'rgba(0,0,0,0.2)');
@@ -5422,14 +5444,41 @@
             ctx.beginPath();
             ctx.ellipse(sx, sy + TILE/2, shadowRx, shadowRy, 0, 0, Math.PI * 2);
             ctx.fill();
+
             ctx.save();
-            ctx.translate(sx, sy + bounce);
-            if (atkTilt) ctx.rotate(atkTilt);
+            ctx.translate(sx, sy - bounce);
+            if (tilt) ctx.rotate(tilt);
+            ctx.scale(scaleX, scaleY);
             // Draw at scaled size, anchored at feet
             if (!drawSpr(spriteKey, -drawSize/2, -drawSize + TILE/2, drawSize, drawSize, flipX)) {
                 ctx.fillStyle = '#888'; ctx.fillRect(-drawSize/4, -drawSize/4, drawSize/2, drawSize/2);
             }
             ctx.restore();
+
+            // Attack slash arc effect
+            if (this.attacking) {
+                const atkPhase = clamp(this.attackTimer * 4, 0, 1);
+                const slashDir = flipX ? -1 : 1;
+                const arcStart = -Math.PI * 0.6 * slashDir;
+                const arcEnd = Math.PI * 0.4 * slashDir;
+                const arcR = drawSize * 0.55;
+                ctx.save();
+                ctx.translate(sx, sy - drawSize * 0.2);
+                for (let t = 0; t < 5; t++) {
+                    const trailP = clamp(atkPhase - t * 0.06, 0, 1);
+                    const segStart = arcStart + (arcEnd - arcStart) * (trailP - 0.15);
+                    const segEnd = arcStart + (arcEnd - arcStart) * trailP;
+                    ctx.globalAlpha = (1 - t * 0.18) * 0.6 * (1 - atkPhase * 0.5);
+                    ctx.strokeStyle = t === 0 ? '#ffffff' : `rgba(255,${180 - t * 30},${80 - t * 15},1)`;
+                    ctx.lineWidth = 3 - t * 0.5;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, arcR - t * 2, segStart, segEnd);
+                    ctx.stroke();
+                }
+                ctx.restore();
+                ctx.globalAlpha = 1;
+            }
+
             // Aura effects for promoted classes
             const classDef = CLASS_DEFS[this.classKey];
             if (classDef && classDef.tier > 0) {
@@ -5438,12 +5487,6 @@
                 ctx.globalAlpha = 0.08 + Math.sin(G.time * 3) * 0.04;
                 ctx.fillStyle = c;
                 ctx.beginPath(); ctx.arc(sx, sy, drawSize * 0.35, 0, Math.PI * 2); ctx.fill();
-                ctx.globalAlpha = 1;
-            }
-            if (this.attacking) {
-                ctx.globalAlpha = 0.25 * Math.abs(Math.sin(this.attackTimer * Math.PI * 4));
-                ctx.fillStyle = '#ffaa44';
-                ctx.beginPath(); ctx.arc(sx, sy, drawSize * 0.4, 0, Math.PI * 2); ctx.fill();
                 ctx.globalAlpha = 1;
             }
         },
@@ -5655,12 +5698,44 @@
 
             ctx.save();
 
-            // Apply death deformation (widen + flatten)
+            // Procedural animation transforms for monsters
+            let mBounce = 0, mTilt = 0, mScX = 1, mScY = 1;
+            if (this.alive && this.aggroed && this.frozenT <= 0) {
+                // Walking animation
+                const mWalkT = G.time * (this.spd / 15);
+                mBounce = Math.abs(Math.sin(mWalkT)) * 3 * mScale;
+                mTilt = Math.sin(mWalkT) * 0.04;
+                const mLand = Math.abs(Math.sin(mWalkT));
+                mScX = 1 + (1 - mLand) * 0.025;
+                mScY = 1 - (1 - mLand) * 0.025;
+            } else if (this.alive) {
+                // Idle breathing
+                mBounce = Math.sin(G.time * 1.5 + this.x * 0.1) * 1.5;
+                mScY = 1 + Math.sin(G.time * 1.5 + this.x * 0.1) * 0.01;
+            }
+
+            // Enhanced death animation (2-phase)
             if (!this.alive && deathProgress > 0) {
-                const scaleX = 1 + deathProgress * 0.4;
-                const scaleY = 1 - deathProgress * 0.5;
+                if (deathProgress < 0.4) {
+                    // Phase 1: white flash burst
+                    const flashP = deathProgress / 0.4;
+                    mScX = 1 + flashP * 0.3;
+                    mScY = 1 + flashP * 0.2;
+                } else {
+                    // Phase 2: collapse + fade
+                    const collapseP = (deathProgress - 0.4) / 0.6;
+                    mScX = 1.3 + collapseP * 0.4;
+                    mScY = 1.2 - collapseP * 0.8;
+                }
                 ctx.translate(sx, sy);
-                ctx.scale(scaleX, scaleY);
+                ctx.scale(mScX, mScY);
+                ctx.translate(-sx, -sy);
+            } else if (this.alive) {
+                // Apply walk/idle transforms
+                ctx.translate(sx, sy);
+                ctx.translate(0, -mBounce);
+                ctx.rotate(mTilt);
+                ctx.scale(mScX, mScY);
                 ctx.translate(-sx, -sy);
             }
 
@@ -5690,13 +5765,26 @@
             else if (this.type === 'demonlord') this._drawDemonLord(sx, sy, alphaFlash);
             else this._drawGeneric(sx, sy, alphaFlash);
 
-            // Red tint overlay during death
+            // Death visual overlay (2-phase)
             if (!this.alive && deathProgress > 0) {
-                ctx.globalCompositeOperation = 'source-atop';
-                ctx.globalAlpha = deathProgress * 0.4;
-                ctx.fillStyle = '#cc0000';
-                ctx.fillRect(sx - this.r * 1.5, sy - this.r * 1.5, this.r * 3, this.r * 3);
-                ctx.globalCompositeOperation = 'source-over';
+                const dR = this.r * mScale * 2;
+                if (deathProgress < 0.4) {
+                    // Phase 1: white flash burst
+                    const flashP = deathProgress / 0.4;
+                    ctx.globalCompositeOperation = 'lighter';
+                    ctx.globalAlpha = (1 - flashP) * 0.8;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath(); ctx.arc(sx, sy, dR * (0.5 + flashP * 0.5), 0, Math.PI * 2); ctx.fill();
+                    ctx.globalCompositeOperation = 'source-over';
+                } else {
+                    // Phase 2: red tint + collapse
+                    const collapseP = (deathProgress - 0.4) / 0.6;
+                    ctx.globalCompositeOperation = 'source-atop';
+                    ctx.globalAlpha = collapseP * 0.5;
+                    ctx.fillStyle = '#cc0000';
+                    ctx.fillRect(sx - dR, sy - dR, dR * 2, dR * 2);
+                    ctx.globalCompositeOperation = 'source-over';
+                }
             }
 
             ctx.restore();
@@ -6187,10 +6275,12 @@
         emitParticles(m.x, m.y, '#cc0000', isCrit ? 5 : 3, 70, 0.4, 3);
         if (m.hp <= 0) {
             m.alive = false;
-            m.deathT = 0.5;
+            m.deathT = 0.6;
             sfxMonsterDeath();
             addBloodPool(m.x, m.y, m.r * 2 + 5);
-            emitParticles(m.x, m.y, '#660000', 8, 50, 0.6, 2, 80);
+            emitParticles(m.x, m.y, '#660000', 12, 60, 0.6, 2, 80);
+            // Death white flash burst
+            emitParticles(m.x, m.y, '#ffffff', 4, 80, 0.2, 4, 0);
             const globalF = getGlobalFloor(G.act, G.actFloor, G.cycle);
             player.addXP(m.def.xp * (1 + (globalF - 1) * 0.1));
             // Gold drop
@@ -6203,8 +6293,11 @@
                 for (let i = 0; i < count; i++) dropItem(m.x, m.y, generateItem(globalF));
             }
             if (Math.random() < 0.3) dropItem(m.x, m.y, generatePotion());
-            // Boss defeat
+            // Boss defeat with screen shake + white flash
             if (m.isBoss && m.bossKey) {
+                G.shakeT = 0.6; G.shakeAmt = 15;
+                G.flashT = 0.2; G.flashAlpha = 0.5; G.flashColor = '#ffffff';
+                emitParticles(m.x, m.y, '#ffffff', 12, 120, 0.4, 5, 0);
                 G.bossesDefeated[m.bossKey] = (G.bossesDefeated[m.bossKey] || 0) + 1;
                 checkQuestProgress('boss_killed', m.bossKey);
                 addLog(`★ ${m.def.name} を討伐した！★`, '#ffd700');
