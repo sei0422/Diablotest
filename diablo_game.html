@@ -3255,7 +3255,9 @@
         { stat: 'lightRes', fmt: '+{v}% 雷耐性', min: 5, max: 25 },
         { stat: 'poisonRes', fmt: '+{v}% 毒耐性', min: 5, max: 25 },
         { stat: 'allRes', fmt: '+{v}% 全耐性', min: 3, max: 15 },
-        { stat: 'blockChance', fmt: '+{v}% ブロック率', min: 5, max: 15 }
+        { stat: 'blockChance', fmt: '+{v}% ブロック率', min: 5, max: 15 },
+        { stat: 'magicFind', fmt: '+{v}% マジックファインド', min: 5, max: 35 },
+        { stat: 'skillBonus', fmt: '+{v} 全スキルレベル', min: 1, max: 2 }
     ];
 
     const UNIQUE_NAMES = {
@@ -3270,6 +3272,93 @@
         boots: ['疾風の靴', '影渡りの長靴']
     };
 
+    // ========== SET ITEMS (D2-style) ==========
+    const ITEM_SETS = {
+        angelic_raiment: {
+            name: '天使の衣',
+            color: '#44ff88',
+            pieces: { amulet: '天使の声', ring: '天使の指輪', armor: '天使の鎧' },
+            bonuses: {
+                2: { hp: 50, allRes: 10, desc: '+50 HP, +10 全耐性' },
+                3: { hp: 100, allRes: 20, dmgPct: 15, desc: '+100 HP, +20 全耐性, +15% ダメージ' }
+            }
+        },
+        berserker_arsenal: {
+            name: '狂戦士の武装',
+            color: '#ff4444',
+            pieces: { sword: '狂戦士の刃', helmet: '狂戦士の兜', boots: '狂戦士の脚甲' },
+            bonuses: {
+                2: { dmgPct: 20, critChance: 5, desc: '+20% ダメージ, +5% クリ率' },
+                3: { dmgPct: 40, critChance: 10, atkSpd: 15, desc: '+40% ダメージ, +10% クリ率, +15% 攻撃速度' }
+            }
+        },
+        arcane_sanctuary: {
+            name: '秘術の聖域',
+            color: '#8844ff',
+            pieces: { staff: '秘術の杖', helmet: '秘術の冠', ring: '秘術の環' },
+            bonuses: {
+                2: { mp: 80, allRes: 8, desc: '+80 MP, +8 全耐性' },
+                3: { mp: 150, allRes: 15, skillBonus: 1, desc: '+150 MP, +15 全耐性, +1 全スキル' }
+            }
+        },
+        death_ward: {
+            name: '死の守護',
+            color: '#888888',
+            pieces: { shield: '死の壁', armor: '死の鎧', boots: '死の靴' },
+            bonuses: {
+                2: { def: 30, blockChance: 10, desc: '+30 防御, +10% ブロック率' },
+                3: { def: 60, blockChance: 20, hp: 80, desc: '+60 防御, +20% ブロック率, +80 HP' }
+            }
+        },
+        shadow_dancer: {
+            name: '影踊り',
+            color: '#aa66cc',
+            pieces: { axe: '影の斧', amulet: '影の護符', boots: '影の靴' },
+            bonuses: {
+                2: { moveSpd: 15, critChance: 8, desc: '+15% 移動速度, +8% クリ率' },
+                3: { moveSpd: 25, critChance: 15, lifesteal: 8, desc: '+25% 移動速度, +15% クリ率, +8% ライフスティール' }
+            }
+        }
+    };
+
+    function findSetForItem(itemName) {
+        for (const [setKey, setDef] of Object.entries(ITEM_SETS)) {
+            for (const pieceName of Object.values(setDef.pieces)) {
+                if (pieceName === itemName) return setKey;
+            }
+        }
+        return null;
+    }
+
+    function countEquippedSetPieces(setKey) {
+        const setDef = ITEM_SETS[setKey];
+        if (!setDef) return 0;
+        let count = 0;
+        for (const slot of Object.values(player.equipment)) {
+            if (!slot || !slot.setKey) continue;
+            if (slot.setKey === setKey) count++;
+        }
+        return count;
+    }
+
+    function getActiveSetBonuses() {
+        const bonuses = {};
+        for (const [setKey, setDef] of Object.entries(ITEM_SETS)) {
+            const count = countEquippedSetPieces(setKey);
+            if (count >= 2) {
+                for (const [reqCount, bonus] of Object.entries(setDef.bonuses)) {
+                    if (count >= parseInt(reqCount)) {
+                        for (const [stat, val] of Object.entries(bonus)) {
+                            if (stat === 'desc') continue;
+                            bonuses[stat] = (bonuses[stat] || 0) + val;
+                        }
+                    }
+                }
+            }
+        }
+        return bonuses;
+    }
+
     function generateItem(floor, forceRarity = null) {
         const typeKeys = Object.keys(ITEM_TYPES).filter(k => k !== 'potion' && k !== 'manaPotion');
         const typeKey = typeKeys[rand(0, typeKeys.length - 1)];
@@ -3277,7 +3366,9 @@
 
         let rarityKey = forceRarity;
         if (!rarityKey) {
-            const r = Math.random();
+            // Magic Find shifts rarity distribution toward better items
+            const mf = (player && player.getMagicFind) ? player.getMagicFind() : 0;
+            const r = Math.random() * (1 - mf / 300); // MF reduces the random roll, making better rarity more likely
             rarityKey = pickRarity(r);
         }
         const rarity = RARITY[rarityKey];
@@ -3291,14 +3382,35 @@
             baseDef: typeInfo.baseDef ? Math.round((typeInfo.baseDef[0] + rand(0, typeInfo.baseDef[1] - typeInfo.baseDef[0])) * rarity.mult * floorMult) : null,
         };
 
-        // Name
-        if (rarityKey === 'unique' && UNIQUE_NAMES[typeKey]) {
-            const names = UNIQUE_NAMES[typeKey];
-            item.name = names[rand(0, names.length - 1)];
-        } else {
-            const prefixes = ['呪われし', '聖なる', '古代の', '鍛えられし', '朽ちた', '輝く', '血染めの', '影の', '蒼き', '灼熱の'];
-            const prefix = rarityKey !== 'common' ? prefixes[rand(0, prefixes.length-1)] + ' ' : '';
-            item.name = prefix + typeInfo.name;
+        // Item level & required level
+        item.itemLevel = floor;
+        const baseReq = Math.max(1, Math.ceil(floor / 2));
+        item.requiredLevel = rarityKey === 'unique' ? baseReq + 4 : rarityKey === 'legendary' ? baseReq + 2 : baseReq;
+
+        // Name & set item detection
+        // Check if this typeKey could be a set item (15% chance for legendary+ items)
+        let isSetItem = false;
+        if ((rarityKey === 'legendary' || rarityKey === 'unique') && Math.random() < 0.15) {
+            for (const [setKey, setDef] of Object.entries(ITEM_SETS)) {
+                if (setDef.pieces[typeKey]) {
+                    item.name = setDef.pieces[typeKey];
+                    item.setKey = setKey;
+                    item.setName = setDef.name;
+                    item.rarity = { ...RARITY[rarityKey], color: setDef.color, name: 'セット' };
+                    isSetItem = true;
+                    break;
+                }
+            }
+        }
+        if (!isSetItem) {
+            if (rarityKey === 'unique' && UNIQUE_NAMES[typeKey]) {
+                const names = UNIQUE_NAMES[typeKey];
+                item.name = names[rand(0, names.length - 1)];
+            } else {
+                const prefixes = ['呪われし', '聖なる', '古代の', '鍛えられし', '朽ちた', '輝く', '血染めの', '影の', '蒼き', '灼熱の'];
+                const prefix = rarityKey !== 'common' ? prefixes[rand(0, prefixes.length-1)] + ' ' : '';
+                item.name = prefix + typeInfo.name;
+            }
         }
 
         // Generate affixes
@@ -4382,6 +4494,8 @@
                     if (a.stat === 'dmgPct') dmgPct += a.value;
                 }
             }
+            // Set bonus damage
+            dmgPct += (this.setBonuses && this.setBonuses.dmgPct) || 0;
             let finalDmg = Math.round(base * (1 + dmgPct / 100));
             if (this.berserkT > 0) finalDmg = Math.round(finalDmg * 2);
             return finalDmg;
@@ -4396,6 +4510,8 @@
                     if (a.stat === 'def') def += a.value;
                 }
             }
+            // Set bonus defense
+            def += (this.setBonuses && this.setBonuses.def) || 0;
             const defPct = (this.passiveBonuses && this.passiveBonuses.defensePercent) || 0;
             if (defPct > 0) def = Math.round(def * (1 + defPct / 100));
             return def;
@@ -4424,6 +4540,8 @@
             }
             // Passive bonus
             c += (this.passiveBonuses && this.passiveBonuses.critChance) || 0;
+            // Set bonus
+            c += (this.setBonuses && this.setBonuses.critChance) || 0;
             return Math.min(c, 80); // Cap at 80%
         },
 
@@ -4449,6 +4567,8 @@
             }
             // Passive bonus
             ls += (this.passiveBonuses && this.passiveBonuses.lifeSteal) || 0;
+            // Set bonus
+            ls += (this.setBonuses && this.setBonuses.lifesteal) || 0;
             return ls;
         },
 
@@ -4464,6 +4584,8 @@
                     if (a.stat === 'allRes') res += a.value;
                 }
             }
+            // Set bonus allRes
+            res += (this.setBonuses && this.setBonuses.allRes) || 0;
             return Math.min(res, 75); // Cap at 75% like D2
         },
 
@@ -4476,7 +4598,31 @@
             }
             // DEX bonus: +0.1% per dex
             block += this.getTotalStat('dex') * 0.1;
+            // Set bonus
+            block += (this.setBonuses && this.setBonuses.blockChance) || 0;
             return Math.min(block, 75); // Cap at 75%
+        },
+
+        getMagicFind() {
+            let mf = 0;
+            for (const slot of Object.values(this.equipment)) {
+                if (!slot) continue;
+                for (const a of slot.affixes) {
+                    if (a.stat === 'magicFind') mf += a.value;
+                }
+            }
+            return mf;
+        },
+
+        getSkillBonus() {
+            let sb = 0;
+            for (const slot of Object.values(this.equipment)) {
+                if (!slot) continue;
+                for (const a of slot.affixes) {
+                    if (a.stat === 'skillBonus') sb += a.value;
+                }
+            }
+            return sb;
         },
 
         recalcStats() {
@@ -4501,11 +4647,18 @@
                     if (a.stat === 'moveSpd') bonusSpd += a.value;
                 }
             }
+            // Apply set bonuses
+            const setBonuses = getActiveSetBonuses();
+            bonusHP += (setBonuses.hp || 0);
+            bonusMP += (setBonuses.mp || 0);
+            bonusSpd += (setBonuses.moveSpd || 0);
+
             this.maxHP = 80 + this.vit * 5 + this.level * 10 + bonusHP + (pb.maxHP || 0);
             this.maxMP = 30 + this.int * 3 + this.level * 5 + bonusMP + (pb.maxMP || 0);
             this.speed = 160 * (1 + bonusSpd / 100) * (1 + (this.speedBuffBonus || 0)) * (1 + (pb.moveSpeed || 0) / 100);
             this.hp = Math.min(this.hp, this.maxHP);
             this.mp = Math.min(this.mp, this.maxMP);
+            this.setBonuses = setBonuses; // Cache for display
         },
 
         addXP(amount) {
@@ -4641,6 +4794,11 @@
         equipItem(invIdx) {
             const item = this.inventory[invIdx];
             if (!item || !item.typeInfo.slot) return;
+            // Item level requirement check
+            if (item.requiredLevel && this.level < item.requiredLevel) {
+                addLog(`レベル ${item.requiredLevel} 以上が必要です！`, '#ff4444');
+                return;
+            }
             const slot = item.typeInfo.slot;
             const prev = this.equipment[slot];
             this.equipment[slot] = item;
@@ -4696,8 +4854,11 @@
             const allAvail = getAllAvailableSkills();
             const skDef = allAvail.find(s => s.id === sk.id);
             if (!skDef) return;
-            const lvl = this.skillLevels[sk.id] || 0;
+            let lvl = this.skillLevels[sk.id] || 0;
             if (lvl < 1) { addLog('スキル未習得！(Tでスキルツリーを開く)', '#ff4444'); return; }
+            // Apply +skill bonus from equipment
+            const itemSkillBonus = this.getSkillBonus() + ((this.setBonuses && this.setBonuses.skillBonus) || 0);
+            lvl = Math.min(20, lvl + itemSkillBonus);
             // Use scaled MP cost
             const mpCost = getSkillMPCost(skDef, lvl);
             if (this.mp < mpCost) return;
@@ -7567,10 +7728,12 @@
             <div class="stat-row"><span class="stat-label">クリティカル率</span><span class="stat-value" style="color:#ffcc44">${player.getCritChance().toFixed(1)}%</span></div>
             <div class="stat-row"><span class="stat-label">クリティカルダメージ</span><span class="stat-value" style="color:#ffaa22">${player.getCritDamage()}%</span></div>
             <div class="stat-row"><span class="stat-label">ライフスティール</span><span class="stat-value" style="color:#44ff88">${player.getLifesteal()}%</span></div>
-            <div class="stat-row"><span class="stat-label">攻撃速度</span><span class="stat-value" style="color:#66ccff">+${((player.passiveBonuses && player.passiveBonuses.attackSpeed) || 0)}%</span></div>
+            <div class="stat-row"><span class="stat-label">攻撃速度</span><span class="stat-value" style="color:#66ccff">+${((player.passiveBonuses && player.passiveBonuses.attackSpeed) || 0) + ((player.setBonuses && player.setBonuses.atkSpd) || 0)}%</span></div>
             <div class="stat-row"><span class="stat-label">回避率</span><span class="stat-value" style="color:#88ff88">${((player.passiveBonuses && player.passiveBonuses.dodgeChance) || 0).toFixed(1)}%</span></div>
             <div class="stat-row"><span class="stat-label">移動速度</span><span class="stat-value">${Math.round(player.speed)}</span></div>
             <div class="stat-row"><span class="stat-label">ブロック率</span><span class="stat-value" style="color:#88aaff">${player.getBlockChance().toFixed(1)}%</span></div>
+            <div class="stat-row"><span class="stat-label">マジックファインド</span><span class="stat-value" style="color:#00dd66">${player.getMagicFind()}%</span></div>
+            ${player.getSkillBonus() > 0 ? `<div class="stat-row"><span class="stat-label">全スキル</span><span class="stat-value" style="color:#ffaa44">+${player.getSkillBonus()}</span></div>` : ''}
             <hr style="border-color:#333;margin:6px 0">
             <div style="color:#ccc;font-size:11px;margin-bottom:4px">🛡 属性耐性</div>
             <div class="stat-row"><span class="stat-label">🔥 火炎耐性</span><span class="stat-value" style="color:#ff4400">${player.getResistance('fire')}%</span></div>
@@ -8077,8 +8240,28 @@
         }
         if (item.baseDef) html += `<div style="color:#fff;margin:4px 0">防御: +${item.baseDef}${cmp ? diffSpan(cmp.defDiff, '') : ''}</div>`;
         for (const a of item.affixes) html += `<div class="tt-affix">${a.text}</div>`;
+        // Required level
+        if (item.requiredLevel) {
+            const canEquip = player.level >= item.requiredLevel;
+            html += `<div style="color:${canEquip ? '#888' : '#ff4444'};font-size:10px;margin:4px 0">必要レベル: ${item.requiredLevel}${canEquip ? '' : ' (不足)'}</div>`;
+        }
+        // Set item info
+        if (item.setKey && ITEM_SETS[item.setKey]) {
+            const setDef = ITEM_SETS[item.setKey];
+            const equipped = countEquippedSetPieces(item.setKey);
+            html += `<div style="border-top:1px solid ${setDef.color};margin:6px 0;padding-top:6px;color:${setDef.color};font-weight:bold">⚙ ${setDef.name}</div>`;
+            for (const typeKey of Object.keys(setDef.pieces)) {
+                const pName = setDef.pieces[typeKey];
+                const have = Object.values(player.equipment).some(e => e && e.setKey === item.setKey && e.name === pName);
+                html += `<div style="color:${have ? '#0f0' : '#666'};font-size:10px">${have ? '✓' : '○'} ${pName}</div>`;
+            }
+            for (const [reqCount, bonus] of Object.entries(setDef.bonuses)) {
+                const active = equipped >= parseInt(reqCount);
+                html += `<div style="color:${active ? '#0f0' : '#888'};font-size:10px;margin-top:2px">(${reqCount}個) ${bonus.desc}</div>`;
+            }
+        }
         if (cmp) {
-            const statNames = {str:'筋力',dex:'敏捷',vit:'体力',int:'知力',dmgPct:'% ダメージ',hp:'HP',mp:'MP',lifesteal:'% ライフスティール',atkSpd:'% 攻撃速度',def:'防御',critChance:'% クリティカル率',critDmg:'% クリティカルダメージ',moveSpd:'% 移動速度',fireRes:'% 火炎耐性',coldRes:'% 冷気耐性',lightRes:'% 雷耐性',poisonRes:'% 毒耐性',allRes:'% 全耐性',blockChance:'% ブロック率'};
+            const statNames = {str:'筋力',dex:'敏捷',vit:'体力',int:'知力',dmgPct:'% ダメージ',hp:'HP',mp:'MP',lifesteal:'% ライフスティール',atkSpd:'% 攻撃速度',def:'防御',critChance:'% クリティカル率',critDmg:'% クリティカルダメージ',moveSpd:'% 移動速度',fireRes:'% 火炎耐性',coldRes:'% 冷気耐性',lightRes:'% 雷耐性',poisonRes:'% 毒耐性',allRes:'% 全耐性',blockChance:'% ブロック率',magicFind:'% MF',skillBonus:' 全スキル'};
             const diffs = Object.entries(cmp.affixDiffs);
             if (diffs.length > 0) {
                 html += `<div style="border-top:1px solid #555;margin:4px 0;padding-top:4px">`;
