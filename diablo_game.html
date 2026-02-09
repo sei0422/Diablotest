@@ -2774,6 +2774,8 @@
             this.tiles = new Uint8Array(MAP_W * MAP_H); // 0=wall, 1=floor, 2=stairs, 3=chest
             this.rooms = [];
             this.explored = new Uint8Array(MAP_W * MAP_H);
+            this.minimapDirty = true;
+            this.minimapCache = null;
             this.torchPositions = []; // cached torch world positions
             this.generate();
             this._cacheTorchPositions();
@@ -2967,7 +2969,10 @@
                 for (let dx = -tr; dx <= tr; dx++) {
                     const xx = tx + dx, yy = ty + dy;
                     if (xx >= 0 && xx < MAP_W && yy >= 0 && yy < MAP_H) {
-                        if (dx*dx + dy*dy <= tr*tr) this.explored[this.idx(xx, yy)] = 1;
+                        if (dx*dx + dy*dy <= tr*tr) {
+                            if (!this.explored[this.idx(xx, yy)]) this.minimapDirty = true;
+                            this.explored[this.idx(xx, yy)] = 1;
+                        }
                     }
                 }
             }
@@ -5272,7 +5277,7 @@
                             }
                         }
                     }
-                    if (con.life <= 0) G.consecrations.splice(ci, 1);
+                    if (con.life <= 0) { G.consecrations[ci] = G.consecrations[G.consecrations.length - 1]; G.consecrations.pop(); }
                 }
             }
             // Meteor timer - explode when ready
@@ -9010,38 +9015,57 @@
             if (visibleTorches.length >= 20) break;
         }
 
-        // Phase 1: Punch holes in darkness (destination-out)
+        // Pre-rendered torch gradient caches (created once, reused every frame)
+        if (!G._torchHoleCache) {
+            const sz = 128;
+            // Phase 1 cache: darkness hole
+            const c1 = document.createElement('canvas'); c1.width = sz; c1.height = sz;
+            const x1 = c1.getContext('2d'); const r1 = sz / 2;
+            const g1 = x1.createRadialGradient(r1, r1, 0, r1, r1, r1);
+            g1.addColorStop(0, 'rgba(0,0,0,0.55)');
+            g1.addColorStop(0.4, 'rgba(0,0,0,0.3)');
+            g1.addColorStop(0.7, 'rgba(0,0,0,0.1)');
+            g1.addColorStop(1, 'rgba(0,0,0,0)');
+            x1.fillStyle = g1; x1.fillRect(0, 0, sz, sz);
+            G._torchHoleCache = c1;
+            // Phase 2 cache: warm color
+            const c2 = document.createElement('canvas'); c2.width = sz; c2.height = sz;
+            const x2 = c2.getContext('2d'); const r2 = sz / 2;
+            const g2 = x2.createRadialGradient(r2, r2, 0, r2, r2, r2);
+            g2.addColorStop(0, 'rgba(255,160,64,0.12)');
+            g2.addColorStop(0.3, 'rgba(255,96,16,0.06)');
+            g2.addColorStop(0.7, 'rgba(255,80,10,0.02)');
+            g2.addColorStop(1, 'rgba(255,80,10,0)');
+            x2.fillStyle = g2; x2.fillRect(0, 0, sz, sz);
+            G._torchWarmCache = c2;
+        }
+
+        // Phase 1: Punch holes in darkness (destination-out) - using cached gradient
         ctx.save();
         ctx.globalCompositeOperation = 'destination-out';
         for (const torch of visibleTorches) {
             const tFlicker = Math.sin(G.time * 8.3 + torch.seed) * 6 + Math.sin(G.time * 13.7 + torch.seed * 2) * 3;
             const tRadius = 70 + tFlicker;
             const fade = clamp(1 - torch.d / torchMaxDist, 0, 1);
-            const tg = ctx.createRadialGradient(torch.sx, torch.sy, 0, torch.sx, torch.sy, tRadius);
-            tg.addColorStop(0, `rgba(0,0,0,${0.55 * fade})`);
-            tg.addColorStop(0.4, `rgba(0,0,0,${0.3 * fade})`);
-            tg.addColorStop(0.7, `rgba(0,0,0,${0.1 * fade})`);
-            tg.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = tg;
-            ctx.fillRect(torch.sx - tRadius, torch.sy - tRadius, tRadius * 2, tRadius * 2);
+            ctx.globalAlpha = fade;
+            const drawSz = tRadius * 2;
+            ctx.drawImage(G._torchHoleCache, torch.sx - tRadius, torch.sy - tRadius, drawSz, drawSz);
         }
+        ctx.globalAlpha = 1;
         ctx.restore();
 
-        // Phase 2: Add warm torch color (lighter blend)
+        // Phase 2: Add warm torch color (lighter blend) - using cached gradient
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         for (const torch of visibleTorches) {
             const tFlicker = Math.sin(G.time * 6.1 + torch.seed * 1.3) * 4 + Math.sin(G.time * 11.2 + torch.seed) * 2;
             const tRadius = 65 + tFlicker;
             const fade = clamp(1 - torch.d / torchMaxDist, 0, 1);
-            const cg = ctx.createRadialGradient(torch.sx, torch.sy, 0, torch.sx, torch.sy, tRadius);
-            cg.addColorStop(0, `rgba(255,160,64,${0.12 * fade})`);
-            cg.addColorStop(0.3, `rgba(255,96,16,${0.06 * fade})`);
-            cg.addColorStop(0.7, `rgba(255,80,10,${0.02 * fade})`);
-            cg.addColorStop(1, 'rgba(255,80,10,0)');
-            ctx.fillStyle = cg;
-            ctx.fillRect(torch.sx - tRadius, torch.sy - tRadius, tRadius * 2, tRadius * 2);
+            ctx.globalAlpha = fade;
+            const drawSz = tRadius * 2;
+            ctx.drawImage(G._torchWarmCache, torch.sx - tRadius, torch.sy - tRadius, drawSz, drawSz);
         }
+        ctx.globalAlpha = 1;
         ctx.restore();
 
         // Player warm torch tint - amber/orange Diablo glow
@@ -9055,20 +9079,29 @@
         ctx.arc(px, py, lightR * 0.55, 0, Math.PI * 2);
         ctx.fill();
 
-        // Torch warm color bleeding (multiply compositing on nearby walls/floor)
+        // Torch warm color bleeding (multiply compositing on nearby walls/floor) - cached gradient
+        if (!G._torchMultCache) {
+            const sz = 128, r = sz / 2;
+            const c3 = document.createElement('canvas'); c3.width = sz; c3.height = sz;
+            const x3 = c3.getContext('2d');
+            const g3 = x3.createRadialGradient(r, r, 0, r, r, r);
+            g3.addColorStop(0, 'rgba(255,200,140,0.85)');
+            g3.addColorStop(0.5, 'rgba(255,180,120,0.92)');
+            g3.addColorStop(1, 'rgba(255,255,255,1)');
+            x3.fillStyle = g3; x3.fillRect(0, 0, sz, sz);
+            G._torchMultCache = c3;
+        }
         ctx.save();
         ctx.globalCompositeOperation = 'multiply';
         for (const torch of visibleTorches) {
             const fade = clamp(1 - torch.d / torchMaxDist, 0, 1);
             const tFlicker = Math.sin(G.time * 5.5 + torch.seed) * 4;
             const tRadius = 80 + tFlicker;
-            const mg = ctx.createRadialGradient(torch.sx, torch.sy, 0, torch.sx, torch.sy, tRadius);
-            mg.addColorStop(0, `rgba(255,200,140,${0.85 * fade})`);
-            mg.addColorStop(0.5, `rgba(255,180,120,${0.92 * fade})`);
-            mg.addColorStop(1, 'rgba(255,255,255,1)');
-            ctx.fillStyle = mg;
-            ctx.fillRect(torch.sx - tRadius, torch.sy - tRadius, tRadius * 2, tRadius * 2);
+            ctx.globalAlpha = fade;
+            const drawSz = tRadius * 2;
+            ctx.drawImage(G._torchMultCache, torch.sx - tRadius, torch.sy - tRadius, drawSz, drawSz);
         }
+        ctx.globalAlpha = 1;
         ctx.restore();
 
         // Color grading - warm amber tint (Diablo signature look) - stronger
@@ -9611,80 +9644,79 @@
             }
         }
 
-        // Minimap (stone frame + corner rivets)
+        // Minimap (stone frame + corner rivets) - cached via OffscreenCanvas
         const mmSize = 130;
         const mmX = W - mmSize - 10, mmY = 10;
         const mmScale = mmSize / (MAP_W * TILE);
 
-        // Stone background
-        const mmBgG = ctx.createLinearGradient(mmX, mmY, mmX + mmSize, mmY + mmSize);
-        mmBgG.addColorStop(0, 'rgba(8,6,4,0.85)');
-        mmBgG.addColorStop(1, 'rgba(4,3,2,0.9)');
-        ctx.fillStyle = mmBgG;
-        ctx.fillRect(mmX - 3, mmY - 3, mmSize + 6, mmSize + 6);
-        // Outer dark border
-        ctx.strokeStyle = '#1a1208';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(mmX - 3, mmY - 3, mmSize + 6, mmSize + 6);
-        // Inner metal trim
-        const mmTrimG = ctx.createLinearGradient(mmX, mmY, mmX + mmSize, mmY);
-        mmTrimG.addColorStop(0, '#654321');
-        mmTrimG.addColorStop(0.3, '#c4a44a');
-        mmTrimG.addColorStop(0.5, '#ddc070');
-        mmTrimG.addColorStop(0.7, '#c4a44a');
-        mmTrimG.addColorStop(1, '#654321');
-        ctx.strokeStyle = mmTrimG;
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(mmX, mmY, mmSize, mmSize);
-        // Corner rivets
-        const corners = [[mmX, mmY], [mmX + mmSize, mmY], [mmX, mmY + mmSize], [mmX + mmSize, mmY + mmSize]];
-        for (const [crx, cry] of corners) {
-            const crg = ctx.createRadialGradient(crx - 0.5, cry - 0.5, 0, crx, cry, 3);
-            crg.addColorStop(0, '#ddc070');
-            crg.addColorStop(0.5, '#8b6914');
-            crg.addColorStop(1, '#654321');
-            ctx.fillStyle = crg;
-            ctx.beginPath(); ctx.arc(crx, cry, 3, 0, Math.PI * 2); ctx.fill();
-        }
-
-        // Rooms - only explored ones
-        for (const room of dungeon.rooms) {
-            // Check if any tile in this room has been explored
-            const explored = dungeon.explored[dungeon.idx(room.cx, room.cy)];
-            if (explored) {
-                ctx.fillStyle = '#2a2040';
-                ctx.fillRect(
-                    mmX + room.x * TILE * mmScale,
-                    mmY + room.y * TILE * mmScale,
-                    room.w * TILE * mmScale,
-                    room.h * TILE * mmScale
-                );
+        // Rebuild minimap cache when exploration changes
+        if (dungeon.minimapDirty || !dungeon.minimapCache) {
+            const mmCanvasW = mmSize + 6;
+            const mmCanvas = document.createElement('canvas');
+            mmCanvas.width = mmCanvasW; mmCanvas.height = mmCanvasW;
+            const mc = mmCanvas.getContext('2d');
+            // Stone background
+            const mmBgG = mc.createLinearGradient(0, 0, mmCanvasW, mmCanvasW);
+            mmBgG.addColorStop(0, 'rgba(8,6,4,0.85)');
+            mmBgG.addColorStop(1, 'rgba(4,3,2,0.9)');
+            mc.fillStyle = mmBgG;
+            mc.fillRect(0, 0, mmCanvasW, mmCanvasW);
+            // Outer dark border
+            mc.strokeStyle = '#1a1208';
+            mc.lineWidth = 3;
+            mc.strokeRect(0, 0, mmCanvasW, mmCanvasW);
+            // Inner metal trim
+            const mmTrimG = mc.createLinearGradient(3, 3, mmSize + 3, 3);
+            mmTrimG.addColorStop(0, '#654321');
+            mmTrimG.addColorStop(0.3, '#c4a44a');
+            mmTrimG.addColorStop(0.5, '#ddc070');
+            mmTrimG.addColorStop(0.7, '#c4a44a');
+            mmTrimG.addColorStop(1, '#654321');
+            mc.strokeStyle = mmTrimG;
+            mc.lineWidth = 1.5;
+            mc.strokeRect(3, 3, mmSize, mmSize);
+            // Corner rivets
+            const corners = [[3, 3], [3 + mmSize, 3], [3, 3 + mmSize], [3 + mmSize, 3 + mmSize]];
+            for (const [crx, cry] of corners) {
+                const crg = mc.createRadialGradient(crx - 0.5, cry - 0.5, 0, crx, cry, 3);
+                crg.addColorStop(0, '#ddc070');
+                crg.addColorStop(0.5, '#8b6914');
+                crg.addColorStop(1, '#654321');
+                mc.fillStyle = crg;
+                mc.beginPath(); mc.arc(crx, cry, 3, 0, Math.PI * 2); mc.fill();
             }
-        }
-
-
-        // Explored corridor tiles (not just rooms)
-        ctx.fillStyle = '#1a1530';
-        for (let ty = 0; ty < MAP_H; ty++) {
-            for (let tx = 0; tx < MAP_W; tx++) {
-                if (dungeon.explored[dungeon.idx(tx, ty)] && dungeon.get(tx, ty) >= 1) {
-                    let inRoom = false;
-                    for (const room of dungeon.rooms) {
-                        if (dungeon.explored[dungeon.idx(room.cx, room.cy)] &&
-                            tx >= room.x && tx < room.x + room.w &&
-                            ty >= room.y && ty < room.y + room.h) {
-                            inRoom = true; break;
+            // Rooms - only explored ones
+            for (const room of dungeon.rooms) {
+                const explored = dungeon.explored[dungeon.idx(room.cx, room.cy)];
+                if (explored) {
+                    mc.fillStyle = '#2a2040';
+                    mc.fillRect(3 + room.x * TILE * mmScale, 3 + room.y * TILE * mmScale, room.w * TILE * mmScale, room.h * TILE * mmScale);
+                }
+            }
+            // Explored corridor tiles (not just rooms)
+            mc.fillStyle = '#1a1530';
+            for (let ty = 0; ty < MAP_H; ty++) {
+                for (let tx = 0; tx < MAP_W; tx++) {
+                    if (dungeon.explored[dungeon.idx(tx, ty)] && dungeon.get(tx, ty) >= 1) {
+                        let inRoom = false;
+                        for (const room of dungeon.rooms) {
+                            if (dungeon.explored[dungeon.idx(room.cx, room.cy)] &&
+                                tx >= room.x && tx < room.x + room.w &&
+                                ty >= room.y && ty < room.y + room.h) {
+                                inRoom = true; break;
+                            }
                         }
-                    }
-                    if (!inRoom) {
-                        ctx.fillRect(
-                            mmX + tx * TILE * mmScale, mmY + ty * TILE * mmScale,
-                            Math.max(TILE * mmScale, 1.5), Math.max(TILE * mmScale, 1.5)
-                        );
+                        if (!inRoom) {
+                            mc.fillRect(3 + tx * TILE * mmScale, 3 + ty * TILE * mmScale, Math.max(TILE * mmScale, 1.5), Math.max(TILE * mmScale, 1.5));
+                        }
                     }
                 }
             }
+            dungeon.minimapCache = mmCanvas;
+            dungeon.minimapDirty = false;
         }
+        // Draw cached minimap background
+        ctx.drawImage(dungeon.minimapCache, mmX - 3, mmY - 3);
 
         // Player on minimap
         ctx.fillStyle = '#00ff00';
@@ -9737,7 +9769,7 @@
 
         ctx.font = `11px ${FONT_UI}`;
         ctx.fillStyle = '#cc6666';
-        ctx.fillText(`敵: ${monsters.filter(m=>m.alive).length}`, mmX - 5, mmY + 32);
+        ctx.fillText(`敵: ${aliveMonsterCount}`, mmX - 5, mmY + 32);
 
         // Auto-pickup indicator
         if (G.autoPickup) {
@@ -9748,7 +9780,7 @@
         }
 
         // Stairs hint
-        if (monsters.filter(m => m.alive).length === 0) {
+        if (aliveMonsterCount === 0) {
             ctx.fillStyle = '#aaaaff';
             ctx.font = `12px ${FONT_UI}`;
             ctx.textAlign = 'center';
@@ -10191,6 +10223,8 @@
         if (fpsAcc >= 0.5) { fps = fpsFrames / fpsAcc; fpsAcc = 0; fpsFrames = 0; }
 
         const canUpdate = !G.paused;
+        let aliveMonsterCount = 0;
+        for (let i = 0; i < monsters.length; i++) if (monsters[i].alive) aliveMonsterCount++;
         if (canUpdate) {
             G.time += dt;
             sfxAmbient();
@@ -10241,12 +10275,12 @@
                 for (let i = enemyProjectiles.length - 1; i >= 0; i--) {
                     const ep = enemyProjectiles[i];
                     ep.update(dt);
-                    if (ep.life <= 0) { enemyProjectiles.splice(i, 1); continue; }
+                    if (ep.life <= 0) { enemyProjectiles[i] = enemyProjectiles[enemyProjectiles.length - 1]; enemyProjectiles.pop(); continue; }
                     // Hit player
                     if (dist(ep.x, ep.y, player.x, player.y) < ep.r + player.radius) {
                         player.takeDamage(ep.dmg);
                         emitParticles(ep.x, ep.y, ep.color, 8, 50, 0.3, 2, 0);
-                        enemyProjectiles.splice(i, 1);
+                        enemyProjectiles[i] = enemyProjectiles[enemyProjectiles.length - 1]; enemyProjectiles.pop();
                     }
                 }
 
@@ -10254,7 +10288,7 @@
                 G.spawnTimer += dt;
                 if (G.spawnTimer >= G.spawnInterval) {
                     G.spawnTimer = 0;
-                    const aliveCount = monsters.filter(m => m.alive).length;
+                    const aliveCount = aliveMonsterCount;
                     const maxMonsters = 30 + G.actFloor * 5;
                     if (aliveCount < maxMonsters && dungeon && dungeon.rooms.length > 1) {
                         const spawnCount = Math.min(3 + Math.floor(G.actFloor / 2), maxMonsters - aliveCount);
@@ -10277,7 +10311,7 @@
         // Remove dead monsters after animation
         if (canUpdate && !G.inTown) {
             for (let i = monsters.length - 1; i >= 0; i--) {
-                if (!monsters[i].alive && monsters[i].deathT <= 0) monsters.splice(i, 1);
+                if (!monsters[i].alive && monsters[i].deathT <= 0) { monsters[i] = monsters[monsters.length - 1]; monsters.pop(); }
             }
         }
 
@@ -10285,7 +10319,7 @@
         if (canUpdate) for (let i = projectiles.length - 1; i >= 0; i--) {
             const p = projectiles[i];
             p.update(dt);
-            if (p.life <= 0) { projectiles.splice(i, 1); continue; }
+            if (p.life <= 0) { projectiles[i] = projectiles[projectiles.length - 1]; projectiles.pop(); continue; }
 
                 // Frozen Orb shard emission
                 if (p.frozen_orb) {
@@ -10313,7 +10347,7 @@
                     const d = isCrit ? p.dmg * 2 : p.dmg;
                     monsterTakeDmg(m, d, isCrit);
                     emitParticles(p.x, p.y, '#ffaa00', 10, 80, 0.4, 3, 0);
-                    projectiles.splice(i, 1);
+                    projectiles[i] = projectiles[projectiles.length - 1]; projectiles.pop();
                     break;
                 }
             }
@@ -10324,7 +10358,7 @@
             for (let i = G.traps.length - 1; i >= 0; i--) {
                 const tr = G.traps[i];
                 tr.life -= dt;
-                if (tr.life <= 0) { G.traps.splice(i, 1); continue; }
+                if (tr.life <= 0) { G.traps[i] = G.traps[G.traps.length - 1]; G.traps.pop(); continue; }
                 if (!tr.triggered) {
                     for (const m of monsters) {
                         if (m.alive && dist(tr.x, tr.y, m.x, m.y) < tr.r) {
@@ -10334,7 +10368,7 @@
                             playNoise(0.15, 0.1, 2000);
                             G.shakeT = 0.15; G.shakeAmt = 6; // Diablo風：2倍
                             addLog('トラップ発動！', '#ff6600');
-                            G.traps.splice(i, 1);
+                            G.traps[i] = G.traps[G.traps.length - 1]; G.traps.pop();
                             break;
                         }
                     }
@@ -10345,13 +10379,13 @@
         // Particles
         if (canUpdate) for (let i = particles.length - 1; i >= 0; i--) {
             particles[i].update(dt);
-            if (!particles[i].alive()) particles.splice(i, 1);
+            if (!particles[i].alive()) { particles[i] = particles[particles.length - 1]; particles.pop(); }
         }
 
         // Floating texts
         if (canUpdate) for (let i = floatingTexts.length - 1; i >= 0; i--) {
             floatingTexts[i].life -= dt;
-            if (floatingTexts[i].life <= 0) floatingTexts.splice(i, 1);
+            if (floatingTexts[i].life <= 0) { floatingTexts[i] = floatingTexts[floatingTexts.length - 1]; floatingTexts.pop(); }
         }
 
                 // Update summoned minions
@@ -10361,7 +10395,7 @@
                 mn.life -= dt;
                 if (mn.life <= 0 || mn.hp <= 0) {
                     emitParticles(mn.x, mn.y, '#88ddff', 10, 50, 0.3, 2, -20);
-                    G.minions.splice(mi, 1); continue;
+                    G.minions[mi] = G.minions[G.minions.length - 1]; G.minions.pop(); continue;
                 }
                 let nearM = null, nearD = 200;
                 for (const m of monsters) {
@@ -10625,18 +10659,29 @@
         drawFloatingTexts();
         drawLighting();
 
-        // Film grain overlay (lightweight pre-rendered noise)
+        // Film grain overlay (frame-skipped: update every 3 frames, cache full-screen)
         if (SETTINGS.filmGrain && TILE_TEXTURES['grain']) {
-            ctx.globalAlpha = 0.15;
-            ctx.globalCompositeOperation = 'overlay';
-            const gx = (Math.random() * 256) | 0;
-            const gy = (Math.random() * 256) | 0;
-            const gc = TILE_TEXTURES['grain'];
-            for (let py = -gy; py < H; py += 256) {
-                for (let px = -gx; px < W; px += 256) {
-                    ctx.drawImage(gc, px, py);
+            if (!G._grainFrame) G._grainFrame = 0;
+            G._grainFrame++;
+            if (!G._grainFullCache || G._grainFullCache.width !== W || G._grainFullCache.height !== H || G._grainFrame % 3 === 0) {
+                if (!G._grainFullCache || G._grainFullCache.width !== W || G._grainFullCache.height !== H) {
+                    G._grainFullCache = document.createElement('canvas');
+                    G._grainFullCache.width = W; G._grainFullCache.height = H;
+                }
+                const gfCtx = G._grainFullCache.getContext('2d');
+                gfCtx.clearRect(0, 0, W, H);
+                const gx = (Math.random() * 256) | 0;
+                const gy = (Math.random() * 256) | 0;
+                const gc = TILE_TEXTURES['grain'];
+                for (let py = -gy; py < H; py += 256) {
+                    for (let px = -gx; px < W; px += 256) {
+                        gfCtx.drawImage(gc, px, py);
+                    }
                 }
             }
+            ctx.globalAlpha = 0.15;
+            ctx.globalCompositeOperation = 'overlay';
+            ctx.drawImage(G._grainFullCache, 0, 0);
             ctx.globalCompositeOperation = 'source-over';
             ctx.globalAlpha = 1;
         }
