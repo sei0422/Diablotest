@@ -1727,7 +1727,8 @@
         screenShake: true,
         reducedParticles: false,
         filmGrain: true,
-        showFPS: false
+        showFPS: false,
+        showDamageNumbers: true
     };
 
     function loadSettings() {
@@ -2425,7 +2426,8 @@
 
     // ========== FLOATING DAMAGE ==========
     const floatingTexts = [];
-    function addFloatingText(x, y, text, color, big = false) {
+    function addFloatingText(x, y, text, color, big = false, force = false) {
+        if (!force && !SETTINGS.showDamageNumbers) return;
         floatingTexts.push({ x, y, text: String(text), color, life: 1.2, maxLife: 1.2, big, vy: -60 });
     }
 
@@ -7123,7 +7125,8 @@
         html += `<div style="flex:1"><div style="color:#aaa;font-size:11px;margin:4px 0">インベントリ → 倉庫</div><div class="shop-grid">`;
         for (let i = 0; i < player.inventory.length; i++) {
             const item = player.inventory[i];
-            html += `<div class="shop-item" onclick="stashDeposit(${i})">
+            html += `<div class="shop-item" onclick="stashDeposit(${i})"
+                onmouseenter="showInvTooltip(event,${i})" onmouseleave="hideTooltip()">
                 <span style="font-size:16px">${item.icon}</span>
                 <span style="color:${item.rarity.color};font-size:10px">${item.name}</span>
             </div>`;
@@ -7133,7 +7136,8 @@
         html += `<div style="flex:1"><div style="color:#aaa;font-size:11px;margin:4px 0">倉庫 → インベントリ</div><div class="shop-grid">`;
         for (let i = 0; i < G.stash.length; i++) {
             const item = G.stash[i];
-            html += `<div class="shop-item" onclick="stashWithdraw(${i})">
+            html += `<div class="shop-item" onclick="stashWithdraw(${i})"
+                onmouseenter="showStashTooltip(event,${i})" onmouseleave="hideTooltip()">
                 <span style="font-size:16px">${item.icon}</span>
                 <span style="color:${item.rarity.color};font-size:10px">${item.name}</span>
             </div>`;
@@ -7631,6 +7635,7 @@
         html += '</div>';
 
         html += `<div style="color:#aaa;font-size:11px;margin:8px 0 4px">所持品 ${player.inventory.length}/${player.maxInv} (クリック:選択 / ダブルクリック:装備 / 右クリック:捨てる)</div>`;
+        html += `<div style="margin-bottom:4px;display:flex;gap:4px"><button class="toggle-btn" onclick="sortInventory('rarity')" style="font-size:10px;padding:2px 6px">レア度順</button><button class="toggle-btn" onclick="sortInventory('type')" style="font-size:10px;padding:2px 6px">種類順</button><button class="toggle-btn" onclick="sortInventory('name')" style="font-size:10px;padding:2px 6px">名前順</button></div>`;
         html += '<div class="inv-grid">';
         for (let i = 0; i < player.maxInv; i++) {
             const item = player.inventory[i];
@@ -7700,6 +7705,19 @@
         }
     };
 
+    window.sortInventory = function(mode) {
+        const rarityOrder = ['common','magic','rare','legendary','unique'];
+        if (mode === 'rarity') {
+            player.inventory.sort((a, b) => rarityOrder.indexOf(b.rarityKey) - rarityOrder.indexOf(a.rarityKey));
+        } else if (mode === 'type') {
+            player.inventory.sort((a, b) => a.typeKey.localeCompare(b.typeKey));
+        } else if (mode === 'name') {
+            player.inventory.sort((a, b) => a.name.localeCompare(b.name));
+        }
+        window._selectedInvIdx = -1;
+        updateInventoryPanel();
+    };
+
     window.dropOnePotionInv = function(i) {
         closeInvContextMenu();
         const item = player.inventory[i];
@@ -7759,7 +7777,17 @@
         };
         let html = `<div class="tt-name" style="color:${item.rarity.color}">${item.name}</div>`;
         html += `<div class="tt-type">${item.typeInfo.name} — ${item.rarity.name}</div>`;
-        if (item.baseDmg) html += `<div style="color:#fff;margin:4px 0">ダメージ: ${item.baseDmg[0]}-${item.baseDmg[1]}${cmp ? diffSpan(cmp.dmgDiff, '') : ''}</div>`;
+        if (item.baseDmg) {
+            html += `<div style="color:#fff;margin:4px 0">ダメージ: ${item.baseDmg[0]}-${item.baseDmg[1]}${cmp ? diffSpan(cmp.dmgDiff, '') : ''}</div>`;
+            let atkSpdPct = (player.passiveBonuses && player.passiveBonuses.attackSpeed) || 0;
+            for (const s of Object.values(player.equipment)) { if (s) for (const a of s.affixes) if (a.stat === 'atkSpd') atkSpdPct += a.value; }
+            const atkPerSec = (1 + atkSpdPct / 100) / 0.5;
+            const avgDmg = (item.baseDmg[0] + item.baseDmg[1]) / 2;
+            const cc = Math.min(player.getCritChance(), 80) / 100;
+            const cd = player.getCritDamage() / 100;
+            const dps = (avgDmg * atkPerSec * (1 + cc * (cd - 1))).toFixed(1);
+            html += `<div style="color:#ffaa00;font-size:11px;margin:2px 0">DPS: ${dps}</div>`;
+        }
         if (item.baseDef) html += `<div style="color:#fff;margin:4px 0">防御: +${item.baseDef}${cmp ? diffSpan(cmp.defDiff, '') : ''}</div>`;
         for (const a of item.affixes) html += `<div class="tt-affix">${a.text}</div>`;
         if (cmp) {
@@ -7893,6 +7921,15 @@
         if (!item) return;
         const tt = DOM.tooltip;
         tt.innerHTML = buildTooltipHTML(item, true);
+        tt.style.display = 'block';
+        tt.style.left = (e.clientX + 15) + 'px';
+        tt.style.top = (e.clientY - 10) + 'px';
+    };
+    window.showStashTooltip = function(e, i) {
+        const item = G.stash[i];
+        if (!item) return;
+        const tt = DOM.tooltip;
+        tt.innerHTML = buildTooltipHTML(item, false);
         tt.style.display = 'block';
         tt.style.left = (e.clientX + 15) + 'px';
         tt.style.top = (e.clientY - 10) + 'px';
@@ -8383,7 +8420,8 @@
             { key: 'screenShake', label: '画面揺れ', value: SETTINGS.screenShake },
             { key: 'reducedParticles', label: 'パーティクル削減', value: SETTINGS.reducedParticles },
             { key: 'filmGrain', label: 'フィルムグレイン', value: SETTINGS.filmGrain },
-            { key: 'showFPS', label: 'FPS 表示', value: SETTINGS.showFPS }
+            { key: 'showFPS', label: 'FPS 表示', value: SETTINGS.showFPS },
+            { key: 'showDamageNumbers', label: 'ダメージ数値', value: SETTINGS.showDamageNumbers }
         ];
         let html = '<div style="color:#ccb38a;font-size:11px;margin-bottom:8px">ゲームの演出や負荷を調整できます。</div>';
         for (const r of rows) {
@@ -9217,8 +9255,15 @@
             const c = gi.item.rarity.color;
             const rk = gi.item.rarityKey;
 
-            // Light beam for rare+ items
+            // Ground glow + light beam for rare+ items
             if (beamRarities[rk]) {
+                const glowR = 25 + Math.sin(gi.bobT * 2) * 5;
+                const glow = ctx.createRadialGradient(sx, sy + 5, 0, sx, sy + 5, glowR);
+                glow.addColorStop(0, c + '55');
+                glow.addColorStop(0.5, c + '22');
+                glow.addColorStop(1, c + '00');
+                ctx.fillStyle = glow;
+                ctx.beginPath(); ctx.arc(sx, sy + 5, glowR, 0, Math.PI * 2); ctx.fill();
                 const beamH = 60 + Math.sin(gi.bobT * 2) * 8;
                 const beamG = ctx.createLinearGradient(sx, sy, sx, sy - beamH);
                 beamG.addColorStop(0, c + '44');
@@ -9868,11 +9913,8 @@
             ['F5', `セーブ(S${G.saveSlot})`],
             ['F8', `ロード(S${G.saveSlot})`]
         ] : [
-            ['矢印', '移動'],
-            ['A', '攻撃'],
-            ['S', 'スキル'],
-            ['LClick', '攻撃'],
-            ['RClick', 'スキル'],
+            ['A/Click', '攻撃'],
+            ['S/RClick', 'スキル'],
             ['1-6', 'スキル選択'],
             ['Space', '拾う'],
             ['E', '階段'],
@@ -9880,13 +9922,7 @@
             ['I', '装備'],
             ['C', 'ステータス'],
             ['T', 'スキルツリー'],
-            ['H', 'ヘルプ'],
-            ['O', '設定'],
-            ['Esc', '一時停止'],
-            ['G', '自動拾い'],
-            ['P', '拾いフィルタ'],
-            ['F5', `セーブ(S${G.saveSlot})`],
-            ['F8', `ロード(S${G.saveSlot})`]
+            ['Esc', '一時停止']
         ];
         let scX = 8;
         const scY = 14;
@@ -10030,7 +10066,7 @@
             }
             localStorage.setItem(getSaveKey(slot), JSON.stringify(saveData));
             addLog(`ゲームをセーブしました！(スロット${slot})`, '#00ff88');
-            addFloatingText(player.x, player.y - 30, 'SAVED!', '#00ff88');
+            addFloatingText(player.x, player.y - 30, 'SAVED!', '#00ff88', false, true);
             emitParticles(player.x, player.y, '#00ff88', 15, 50, 0.5, 3, -40);
             playSound(600, 'sine', 0.1, 0.05);
             if (isPanelVisible(DOM.settingsPanel)) renderSettingsUI();
@@ -10196,7 +10232,7 @@
             // セーブデータにskillsがない場合も空のまま
 
             addLog(`ロード完了！ACT${G.act} Lv.${player.level} (スロット${slot})`, '#00ff88');
-            addFloatingText(player.x, player.y - 30, 'LOADED!', '#00ff88');
+            addFloatingText(player.x, player.y - 30, 'LOADED!', '#00ff88', false, true);
             emitParticles(player.x, player.y, '#00ff88', 20, 60, 0.5, 4, -40);
             playSound(400, 'sine', 0.12, 0.06);
             const savedDate = new Date(save.timestamp);
