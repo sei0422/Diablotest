@@ -1706,7 +1706,7 @@
         dead: false,
         paused: false,
         autoPickup: false,
-        autoPickupRarity: 'normal',
+        autoPickupRarity: 'magic',
         dungeonSeed: 0,
         saveSlot: 1,
         spawnTimer: 0, // 敵リスポーンタイマー
@@ -3223,10 +3223,10 @@
     };
 
     function pickRarity(r) {
-        return r < 0.50 ? 'common' :
-               r < 0.78 ? 'magic' :
-               r < 0.93 ? 'rare' :
-               r < 0.99 ? 'legendary' : 'unique';
+        return r < 0.35 ? 'common' :
+               r < 0.68 ? 'magic' :
+               r < 0.90 ? 'rare' :
+               r < 0.98 ? 'legendary' : 'unique';
     }
     function getAffixCount(rarity) {
         return Array.isArray(rarity.affixes)
@@ -3245,7 +3245,8 @@
         { stat: 'lifesteal', fmt: '{v}% ライフスティール', min: 2, max: 10 },
         { stat: 'atkSpd', fmt: '+{v}% 攻撃速度', min: 5, max: 20 },
         { stat: 'def', fmt: '+{v} 防御', min: 2, max: 12 },
-        { stat: 'critChance', fmt: '+{v}% クリティカル', min: 2, max: 10 },
+        { stat: 'critChance', fmt: '+{v}% クリティカル率', min: 2, max: 10 },
+        { stat: 'critDmg', fmt: '+{v}% クリティカルダメージ', min: 10, max: 30 },
         { stat: 'moveSpd', fmt: '+{v}% 移動速度', min: 3, max: 15 }
     ];
 
@@ -4415,7 +4416,19 @@
             }
             // Passive bonus
             c += (this.passiveBonuses && this.passiveBonuses.critChance) || 0;
-            return c;
+            return Math.min(c, 80); // Cap at 80%
+        },
+
+        getCritDamage() {
+            let cd = 150; // Base 150% (1.5x)
+            for (const slot of Object.values(this.equipment)) {
+                if (!slot) continue;
+                for (const a of slot.affixes) {
+                    if (a.stat === 'critDmg') cd += a.value;
+                }
+            }
+            cd += (this.passiveBonuses && this.passiveBonuses.critDamage) || 0;
+            return cd;
         },
 
         getLifesteal() {
@@ -4432,6 +4445,12 @@
         },
 
         recalcStats() {
+            // Clear Battle Orders boost before recalc to prevent corruption
+            if (this.battleOrdersHP > 0) {
+                this.battleOrdersHP = 0;
+                this.battleOrdersMP = 0;
+                this.battleOrdersT = 0;
+            }
             // Recalculate passive bonuses first
             recalcPassives();
             const pb = this.passiveBonuses || {};
@@ -4655,7 +4674,7 @@
                     for (const m of monsters) {
                         if (m.alive && dist(this.x, this.y, m.x, m.y) < skDef.range) {
                             const isCrit = Math.random() * 100 < this.getCritChance();
-                            const d = dmg * mult * (isCrit ? 2 : 1);
+                            const d = dmg * mult * (isCrit ? this.getCritDamage() / 100 : 1);
                             monsterTakeDmg(m, d, isCrit);
                             break; // Single target
                         }
@@ -4671,7 +4690,7 @@
                     for (const m of monsters) {
                         if (m.alive && dist(this.x, this.y, m.x, m.y) < skDef.range) {
                             const isCrit = Math.random() * 100 < this.getCritChance();
-                            monsterTakeDmg(m, dmg * mult * (isCrit ? 2 : 1), isCrit);
+                            monsterTakeDmg(m, dmg * mult * (isCrit ? player.getCritDamage() / 100 : 1), isCrit);
                         }
                     }
                     emitParticles(this.x, this.y, '#88aaff', 20, 100, 0.5, 4, 0, 'physical', lvl);
@@ -5318,7 +5337,7 @@
                     if (this.attackCooldown <= 0) {
                         const dmg = this.getAttackDmg();
                         const isCrit = Math.random() * 100 < this.getCritChance();
-                        const finalDmg = isCrit ? dmg * 2 : dmg;
+                        const finalDmg = isCrit ? dmg * this.getCritDamage() / 100 : dmg;
                         monsterTakeDmg(this.attackTarget, finalDmg, isCrit);
                         let atkSpdPct = (this.passiveBonuses && this.passiveBonuses.attackSpeed) || 0;
                         for (const slot of Object.values(this.equipment)) {
@@ -5716,8 +5735,8 @@
         poison_spider:  { name: '毒蜘蛛', r: 8, hp: 28, dmg: 20, spd: 130, xp: 55, color: '#44aa22', loot: 0.45, icon: '🕷', defense: 50 },
         jungle_shaman:  { name: 'ジャングルシャーマン', r: 12, hp: 50, dmg: 22, spd: 70, xp: 65, color: '#558844', loot: 0.55, icon: '🧙', defense: 50 },
         // ACT4 monsters
-        demon:     { name: 'デーモン', r: 16, hp: 130, dmg: 25, spd: 80, xp: 120, color: '#aa2020', loot: 0.5, icon: '👹', defense: 80 },
-        hellhound: { name: 'ヘルハウンド', r: 12, hp: 70, dmg: 22, spd: 140, xp: 100, color: '#cc4400', loot: 0.45, icon: '🐕', defense: 80 },
+        demon:     { name: 'デーモン', r: 16, hp: 130, dmg: 25, spd: 80, xp: 150, color: '#aa2020', loot: 0.55, icon: '👹', defense: 80 },
+        hellhound: { name: 'ヘルハウンド', r: 12, hp: 70, dmg: 22, spd: 140, xp: 130, color: '#cc4400', loot: 0.50, icon: '🐕', defense: 80 },
         // ACT5 monsters
         frost_zombie: { name: 'フロストゾンビ', r: 14, hp: 140, dmg: 28, spd: 50, xp: 100, color: '#5588aa', loot: 0.45, icon: '🧟', defense: 120 },
         ice_wraith:   { name: 'アイスレイス', r: 11, hp: 65, dmg: 24, spd: 110, xp: 110, color: '#88bbdd', loot: 0.5, icon: '👻', defense: 120 },
@@ -6463,7 +6482,7 @@
             // Death white flash burst
             emitParticles(m.x, m.y, '#ffffff', 4, 80, 0.2, 4, 0);
             const globalF = getGlobalFloor(G.act, G.actFloor, G.cycle);
-            player.addXP(m.def.xp * (1 + (globalF - 1) * 0.1));
+            player.addXP(Math.round(m.def.xp * (1 + (globalF - 1) * 0.1) * (1 + G.cycle * 0.3)));
             // Gold drop
             const goldAmt = Math.round(rand(Math.max(1, m.def.xp * 0.5), m.def.xp * 1.5));
             G.gold += goldAmt;
@@ -6686,6 +6705,11 @@
         bloodPools.length = 0;
         ambientParticles.length = 0;
 
+        G.traps = [];
+        G.consecrations = [];
+        G.minions = [];
+        G.spawnTimer = 0;
+
         if (!opts.skipEntities) {
             // Normal flow: set player at start room, spawn fresh monsters/items
             const r0 = dungeon.rooms[0];
@@ -6818,6 +6842,9 @@
         ambientParticles.length = 0;
         monsters.length = 0;
         groundItems.length = 0;
+        G.traps = [];
+        G.consecrations = [];
+        G.minions = [];
 
         // Place player at plaza center
         const r0 = dungeon.rooms[0];
@@ -6894,6 +6921,9 @@
         bloodPools.length = 0;
         ambientParticles.length = 0;
         townNPCs.length = 0;
+        G.traps = [];
+        G.consecrations = [];
+        G.minions = [];
 
         // Restore player position
         player.x = pr.x;
@@ -7251,7 +7281,10 @@
             <div class="stat-row"><span class="stat-label">攻撃力</span><span class="stat-value" style="color:#ff8866">${player.getAttackDmg()}</span></div>
             <div class="stat-row"><span class="stat-label">防御力</span><span class="stat-value" style="color:#88aaff">${player.getDefense()}${shieldOn}</span></div>
             <div class="stat-row"><span class="stat-label">クリティカル率</span><span class="stat-value" style="color:#ffcc44">${player.getCritChance().toFixed(1)}%</span></div>
+            <div class="stat-row"><span class="stat-label">クリティカルダメージ</span><span class="stat-value" style="color:#ffaa22">${player.getCritDamage()}%</span></div>
             <div class="stat-row"><span class="stat-label">ライフスティール</span><span class="stat-value" style="color:#44ff88">${player.getLifesteal()}%</span></div>
+            <div class="stat-row"><span class="stat-label">攻撃速度</span><span class="stat-value" style="color:#66ccff">+${((player.passiveBonuses && player.passiveBonuses.attackSpeed) || 0)}%</span></div>
+            <div class="stat-row"><span class="stat-label">回避率</span><span class="stat-value" style="color:#88ff88">${((player.passiveBonuses && player.passiveBonuses.dodgeChance) || 0).toFixed(1)}%</span></div>
             <div class="stat-row"><span class="stat-label">移動速度</span><span class="stat-value">${Math.round(player.speed)}</span></div>
             <hr style="border-color:#333;margin:6px 0">
             <div style="color:#ccc;font-size:11px;margin-bottom:4px">🗺 探索情報</div>
@@ -7259,6 +7292,7 @@
             <div class="stat-row"><span class="stat-label">ゴールド</span><span class="stat-value" style="color:#ffd700">${G.gold}G</span></div>
             <div class="stat-row"><span class="stat-label">残り敵数</span><span class="stat-value" style="color:#ff6666">${monsters.filter(m=>m.alive).length}</span></div>
             <div class="stat-row"><span class="stat-label">所持アイテム</span><span class="stat-value">${player.inventory.length}/${player.maxInv}</span></div>
+            <div class="stat-row"><span class="stat-label">総キル数</span><span class="stat-value" style="color:#ff6666">${G.totalKills || 0}</span></div>
         `;
     }
 
@@ -7729,7 +7763,7 @@
         if (item.baseDef) html += `<div style="color:#fff;margin:4px 0">防御: +${item.baseDef}${cmp ? diffSpan(cmp.defDiff, '') : ''}</div>`;
         for (const a of item.affixes) html += `<div class="tt-affix">${a.text}</div>`;
         if (cmp) {
-            const statNames = {str:'筋力',dex:'敏捷',vit:'体力',int:'知力',dmgPct:'% ダメージ',hp:'HP',mp:'MP',lifesteal:'% ライフスティール',atkSpd:'% 攻撃速度',def:'防御',critChance:'% クリティカル',moveSpd:'% 移動速度'};
+            const statNames = {str:'筋力',dex:'敏捷',vit:'体力',int:'知力',dmgPct:'% ダメージ',hp:'HP',mp:'MP',lifesteal:'% ライフスティール',atkSpd:'% 攻撃速度',def:'防御',critChance:'% クリティカル率',critDmg:'% クリティカルダメージ',moveSpd:'% 移動速度'};
             const diffs = Object.entries(cmp.affixDiffs);
             if (diffs.length > 0) {
                 html += `<div style="border-top:1px solid #555;margin:4px 0;padding-top:4px">`;
@@ -8567,6 +8601,18 @@
                 initAudio();
                 G.dead = false;
                 setPaused(false);
+                // Reset buff timers on death
+                player.berserkT = 0; player.shieldT = 0; player.manaShieldT = 0;
+                player.dodgeT = 0; player.counterT = 0; player.stealthT = 0;
+                player.critBuffT = 0; player.auraT = 0; player.speedBuffT = 0;
+                player.poisonBuffT = 0; player.atkSpdBuffT = 0; player.lifestealBuffT = 0;
+                player.undyingT = 0; player.freezeT = 0; player.meteorT = 0;
+                if (player.battleOrdersHP > 0) {
+                    player.maxHP -= player.battleOrdersHP;
+                    player.maxMP -= player.battleOrdersMP;
+                }
+                player.battleOrdersT = 0; player.battleOrdersHP = 0; player.battleOrdersMP = 0;
+                player.recalcStats();
                 player.hp = player.maxHP;
                 player.mp = player.maxMP;
                 DOM.deathScreen.style.display = 'none';
@@ -8952,6 +8998,18 @@
         initAudio();
         G.dead = false;
         setPaused(false);
+        // Reset buff timers on death
+        player.berserkT = 0; player.shieldT = 0; player.manaShieldT = 0;
+        player.dodgeT = 0; player.counterT = 0; player.stealthT = 0;
+        player.critBuffT = 0; player.auraT = 0; player.speedBuffT = 0;
+        player.poisonBuffT = 0; player.atkSpdBuffT = 0; player.lifestealBuffT = 0;
+        player.undyingT = 0; player.freezeT = 0; player.meteorT = 0;
+        if (player.battleOrdersHP > 0) {
+            player.maxHP -= player.battleOrdersHP;
+            player.maxMP -= player.battleOrdersMP;
+        }
+        player.battleOrdersT = 0; player.battleOrdersHP = 0; player.battleOrdersMP = 0;
+        player.recalcStats();
         // Revive in current ACT's town
         player.hp = player.maxHP;
         player.mp = player.maxMP;
@@ -9652,9 +9710,13 @@
         // Rebuild minimap cache when exploration changes
         if (dungeon.minimapDirty || !dungeon.minimapCache) {
             const mmCanvasW = mmSize + 6;
-            const mmCanvas = document.createElement('canvas');
-            mmCanvas.width = mmCanvasW; mmCanvas.height = mmCanvasW;
+            if (!dungeon.minimapCache || dungeon.minimapCache.width !== mmCanvasW) {
+                dungeon.minimapCache = document.createElement('canvas');
+                dungeon.minimapCache.width = mmCanvasW; dungeon.minimapCache.height = mmCanvasW;
+            }
+            const mmCanvas = dungeon.minimapCache;
             const mc = mmCanvas.getContext('2d');
+            mc.clearRect(0, 0, mmCanvasW, mmCanvasW);
             // Stone background
             const mmBgG = mc.createLinearGradient(0, 0, mmCanvasW, mmCanvasW);
             mmBgG.addColorStop(0, 'rgba(8,6,4,0.85)');
@@ -9712,7 +9774,6 @@
                     }
                 }
             }
-            dungeon.minimapCache = mmCanvas;
             dungeon.minimapDirty = false;
         }
         // Draw cached minimap background
@@ -10033,6 +10094,7 @@
             }
 
             G.dead = false;
+            G.portalReturn = null;
             setPaused(false);
             setPanelVisible(DOM.settingsPanel, false);
             G.started = true;
@@ -10344,7 +10406,7 @@
             for (const m of monsters) {
                 if (m.alive && dist(p.x, p.y, m.x, m.y) < p.r + m.r) {
                     const isCrit = Math.random() * 100 < player.getCritChance();
-                    const d = isCrit ? p.dmg * 2 : p.dmg;
+                    const d = isCrit ? p.dmg * player.getCritDamage() / 100 : p.dmg;
                     monsterTakeDmg(m, d, isCrit);
                     emitParticles(p.x, p.y, '#ffaa00', 10, 80, 0.4, 3, 0);
                     projectiles[i] = projectiles[projectiles.length - 1]; projectiles.pop();
@@ -10694,7 +10756,7 @@
             ctx.fillStyle = G.flashColor || '#ffffff';
             ctx.fillRect(0, 0, W, H);
             ctx.globalAlpha = 1;
-            G.flashT = Math.max(0, G.flashT - dt);
+            if (canUpdate) G.flashT = Math.max(0, G.flashT - dt);
         }
 
         drawHUD();
@@ -10802,7 +10864,7 @@
         if (!found) {
         for (const gi of groundItems) {
             if (dist(wx, wy, gi.x, gi.y) < 25) {
-                tt.innerHTML = buildTooltipHTML(gi.item);
+                tt.innerHTML = buildTooltipHTML(gi.item, true);
                 tt.style.display = 'block';
                 tt.style.left = (e.clientX + 15) + 'px';
                 tt.style.top = (e.clientY - 10) + 'px';
