@@ -1844,32 +1844,32 @@
 
     // ========== BOSS DEFINITIONS ==========
     const BOSS_DEFS = {
-        skeleton_king: { name:'骸骨王', icon:'👑💀', hp:500, dmg:35, spd:55, r:22, xp:1000,
+        skeleton_king: { name:'骸骨王', icon:'👑💀', hp:500, dmg:35, spd:55, r:22, xp:1000, defense:15,
             color:'#d4a44a', phases:[
                 {hpPct:1.0, type:'melee'},
                 {hpPct:0.6, type:'summon', count:4, summonType:'skeleton', cd:8},
                 {hpPct:0.3, type:'nova', count:12, cd:5, projSpd:200, projDmg:25, projColor:'#ffffaa'}
             ]},
-        sand_worm: { name:'砂蟲', icon:'🐛', hp:700, dmg:40, spd:50, r:24, xp:1500,
+        sand_worm: { name:'砂蟲', icon:'🐛', hp:700, dmg:40, spd:50, r:24, xp:1500, defense:35,
             color:'#aa8833', phases:[
                 {hpPct:1.0, type:'burrow', cd:6},
                 {hpPct:0.6, type:'poison_spray', cd:4, count:5, projSpd:180, projDmg:20, projColor:'#44cc00'},
                 {hpPct:0.3, type:'quake', cd:5, dmg:30, radius:150}
             ]},
-        archmage: { name:'大魔導師', icon:'🧙', hp:600, dmg:45, spd:65, r:18, xp:2000,
+        archmage: { name:'大魔導師', icon:'🧙', hp:600, dmg:45, spd:65, r:18, xp:2000, defense:60,
             color:'#6644cc', phases:[
                 {hpPct:1.0, type:'teleport_attack', cd:3},
                 {hpPct:0.6, type:'nova', count:8, cd:4, projSpd:220, projDmg:30, projColor:'#aa44ff'},
                 {hpPct:0.3, type:'summon', count:3, summonType:'jungle_shaman', cd:10}
             ]},
-        demon_lord: { name:'魔王', icon:'👿🔥', hp:1000, dmg:55, spd:60, r:26, xp:3000,
+        demon_lord: { name:'魔王', icon:'👿🔥', hp:1000, dmg:55, spd:60, r:26, xp:3000, defense:100,
             color:'#cc2200', phases:[
                 {hpPct:1.0, type:'melee'},
                 {hpPct:0.75, type:'fire_breath', cd:5, count:7, projSpd:200, projDmg:35, projColor:'#ff6600'},
                 {hpPct:0.5, type:'summon', count:3, summonType:'demon', cd:10},
                 {hpPct:0.25, type:'meteor', cd:8, count:5, dmg:50, radius:80}
             ]},
-        ice_queen: { name:'氷の女王', icon:'👸❄', hp:800, dmg:50, spd:60, r:20, xp:2500,
+        ice_queen: { name:'氷の女王', icon:'👸❄', hp:1200, dmg:65, spd:60, r:20, xp:4000, defense:150,
             color:'#88ccff', phases:[
                 {hpPct:1.0, type:'nova', count:6, cd:3, projSpd:200, projDmg:25, projColor:'#aaddff'},
                 {hpPct:0.5, type:'freeze_aura', cd:6, radius:120, dmg:15},
@@ -3198,7 +3198,7 @@
     const ITEM_TYPES = {
         sword:   { name: '剣', icon: '⚔', slot: 'weapon', baseDmg: [5, 12] },
         axe:     { name: '戦斧', icon: '🪓', slot: 'weapon', baseDmg: [8, 16] },
-        staff:   { name: '杖', icon: '🔮', slot: 'weapon', baseDmg: [3, 8] },
+        staff:   { name: '杖', icon: '🔮', slot: 'weapon', baseDmg: [5, 12] },
         shield:  { name: '盾', icon: '🛡', slot: 'offhand', baseDef: [3, 8] },
         helmet:  { name: '兜', icon: '⛑', slot: 'head', baseDef: [2, 5] },
         armor:   { name: '鎧', icon: '🦺', slot: 'body', baseDef: [4, 10] },
@@ -3419,8 +3419,8 @@
             tier: 0,
             sprite: 'wizardM',
             baseStr: 5,
-            baseDex: 10,
-            baseVit: 10,
+            baseDex: 13,
+            baseVit: 12,
             baseInt: 25,
             branches: ['ファイアスペル', 'ライトニング', 'コールドスペル'],
             promotions: ['pyromancer', 'cryomancer'],
@@ -3666,7 +3666,7 @@
                 { id: 'py_meteor', name: 'メテオ', icon: '☄', mp: 40, cd: 7.0, branch: 0, desc: '空から隕石を落とす', prereq: 'py_combustion', effect: 'meteor', baseMult: [3.5, 4.5, 5.5, 7.0, 9.0], range: 120, reqLevel: 18, skillType: 'active', synergies: [{ from: 'py_combustion', bonus: 0.12, type: 'damage' }, { from: 'py_fireball', bonus: 0.08, type: 'damage' }] },
                 { id: 'py_armageddon', name: 'アルマゲドン', icon: '🌠', mp: 50, cd: 10.0, branch: 0, desc: '天から炎の雨を降らせる', prereq: 'py_meteor', effect: 'arrow_rain', baseMult: [3.0, 4.0, 5.0, 6.5, 8.5], range: 150, reqLevel: 24, skillType: 'active', synergies: [{ from: 'py_meteor', bonus: 0.10, type: 'damage' }, { from: 'py_flameheart_p', bonus: 0.04, type: 'damage' }] },
                 { id: 'py_firemastery2', name: 'ファイアマスタリー', icon: '🔥', mp: 45, cd: 12.0, branch: 0, desc: '火炎の力を極限まで高める', prereq: 'py_armageddon', effect: 'buff_atkspd', duration: [6, 8, 10, 14, 18], bonus: [0.4, 0.5, 0.6, 0.8, 1.0], reqLevel: 24, skillType: 'active' },
-                { id: 'py_meteorstorm', name: 'メテオストーム', icon: '🌋', mp: 65, cd: 12.0, branch: 0, desc: '連続隕石で大地を焼く', prereq: 'py_firemastery2', effect: 'meteor', baseMult: [5.5, 7.0, 9.0, 11.0, 14.0], range: 160, reqLevel: 30, skillType: 'active', synergies: [{ from: 'py_meteor', bonus: 0.14, type: 'damage' }, { from: 'py_armageddon', bonus: 0.10, type: 'damage' }] },
+                { id: 'py_meteorstorm', name: 'メテオストーム', icon: '🌋', mp: 65, cd: 12.0, branch: 0, desc: '連続隕石で大地を焼く', prereq: 'py_firemastery2', effect: 'meteor', baseMult: [4.5, 6.0, 8.0, 10.0, 12.0], range: 160, reqLevel: 30, skillType: 'active', synergies: [{ from: 'py_meteor', bonus: 0.14, type: 'damage' }, { from: 'py_armageddon', bonus: 0.10, type: 'damage' }] },
                 // Branch 1: エンチャント
                 { id: 'py_warmth', name: 'ウォームス', icon: '🌡', mp: 10, cd: 8.0, branch: 1, desc: 'マナ回復のオーラを展開', prereq: null, effect: 'buff_aura', duration: [6, 8, 10, 12, 16], regen: [3, 5, 7, 10, 14], reduction: [0.1, 0.15, 0.2, 0.25, 0.3], reqLevel: 1, skillType: 'active' },
                 { id: 'py_enchant', name: 'エンチャント', icon: '✨', mp: 18, cd: 10.0, branch: 1, desc: '武器に炎を付与する', prereq: 'py_warmth', effect: 'buff_berserk', duration: [6, 8, 10, 12, 16], reqLevel: 6, skillType: 'active', synergies: [{ from: 'py_warmth', bonus: 0.06, type: 'duration' }] },
@@ -3686,7 +3686,7 @@
                 { id: 'py_pyromania', name: 'パイロマニア', icon: '🔥', mp: 30, cd: 6.0, branch: 2, desc: '火炎で全てを焼き尽くす', prereq: 'py_lavawalk', effect: 'meteor', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 100, reqLevel: 18, skillType: 'active', synergies: [{ from: 'py_inferno', bonus: 0.10, type: 'damage' }, { from: 'py_firestorm', bonus: 0.08, type: 'damage' }] },
                 { id: 'py_combustion2', name: 'コンバッションII', icon: '💥', mp: 38, cd: 7.0, branch: 2, desc: '強化された爆発で壊滅させる', prereq: 'py_pyromania', effect: 'meteor', baseMult: [3.0, 4.0, 5.0, 6.5, 8.0], range: 110, reqLevel: 18, skillType: 'active', synergies: [{ from: 'py_pyromania', bonus: 0.10, type: 'damage' }] },
                 { id: 'py_hellfire', name: 'ヘルファイア', icon: '🔥', mp: 48, cd: 8.0, branch: 2, desc: '地獄の業火を召喚する', prereq: 'py_combustion2', effect: 'arrow_rain', baseMult: [3.0, 4.0, 5.0, 6.5, 8.5], range: 140, reqLevel: 24, skillType: 'active', synergies: [{ from: 'py_combustion2', bonus: 0.10, type: 'damage' }, { from: 'py_flameheart_p', bonus: 0.04, type: 'damage' }] },
-                { id: 'py_armageddon2', name: 'ファイナルフレア', icon: '🌠', mp: 60, cd: 12.0, branch: 2, desc: '究極の炎で全てを焼却', prereq: 'py_hellfire', effect: 'meteor', baseMult: [6.0, 8.0, 10.0, 12.0, 16.0], range: 170, reqLevel: 30, skillType: 'active', synergies: [{ from: 'py_hellfire', bonus: 0.12, type: 'damage' }, { from: 'py_pyromania', bonus: 0.10, type: 'damage' }] }
+                { id: 'py_armageddon2', name: 'ファイナルフレア', icon: '🌠', mp: 60, cd: 12.0, branch: 2, desc: '究極の炎で全てを焼却', prereq: 'py_hellfire', effect: 'meteor', baseMult: [4.5, 6.0, 8.0, 10.0, 12.0], range: 170, reqLevel: 30, skillType: 'active', synergies: [{ from: 'py_hellfire', bonus: 0.12, type: 'damage' }, { from: 'py_pyromania', bonus: 0.10, type: 'damage' }] }
             ]
         },
         cryomancer: {
@@ -4356,7 +4356,8 @@
         },
 
         getAttackDmg() {
-            let base = this.str * 0.8 + 5;
+            const totalInt = this.getTotalStat('int');
+            let base = Math.max(this.str * 0.8, totalInt * 0.6) + 5;
             const w = this.equipment.weapon;
             if (w && w.baseDmg) base += rand(w.baseDmg[0], w.baseDmg[1]);
             // Affix bonuses
@@ -4381,6 +4382,8 @@
                     if (a.stat === 'def') def += a.value;
                 }
             }
+            const defPct = (this.passiveBonuses && this.passiveBonuses.defensePercent) || 0;
+            if (defPct > 0) def = Math.round(def * (1 + defPct / 100));
             return def;
         },
 
@@ -4453,7 +4456,7 @@
                 this.level++;
                 this.statPoints += 5;
                 this.skillPoints = (this.skillPoints || 0) + 1;
-                this.xpToNext = Math.round(100 * Math.pow(1.3, this.level - 1));
+                this.xpToNext = Math.round(100 * Math.pow(1.25, this.level - 1));
                 this.recalcStats();
                 this.hp = this.maxHP;
                 this.mp = this.maxMP;
@@ -4468,7 +4471,8 @@
             const def = this.getDefense();
             let dmg = Math.max(1, Math.round(raw * (100 / (100 + def))));
             // Dodge check
-            if (this.dodgeT > 0 && Math.random() * 100 < (this.dodgeChance || 0)) {
+            const totalDodge = (this.dodgeT > 0 ? (this.dodgeChance || 0) : 0) + ((this.passiveBonuses && this.passiveBonuses.dodgeChance) || 0);
+            if (totalDodge > 0 && Math.random() * 100 < totalDodge) {
                 addFloatingText(this.x, this.y - 20, 'DODGE!', '#aaffaa');
                 emitParticles(this.x, this.y, '#aaffaa', 5, 40, 0.2, 2, -30);
                 return;
@@ -5311,7 +5315,15 @@
                         const isCrit = Math.random() * 100 < this.getCritChance();
                         const finalDmg = isCrit ? dmg * 2 : dmg;
                         monsterTakeDmg(this.attackTarget, finalDmg, isCrit);
-                        this.attackCooldown = 0.5;
+                        let atkSpdPct = (this.passiveBonuses && this.passiveBonuses.attackSpeed) || 0;
+                        for (const slot of Object.values(this.equipment)) {
+                            if (!slot) continue;
+                            for (const a of slot.affixes) {
+                                if (a.stat === 'atkSpd') atkSpdPct += a.value;
+                            }
+                        }
+                        if (this.atkSpdBuffT > 0) atkSpdPct += this.atkSpdBonus || 0;
+                        this.attackCooldown = 0.5 / (1 + atkSpdPct / 100);
                         this.attackAnimT = 0.2;
                         sfxHit();
 
@@ -5685,26 +5697,26 @@
 
     // ========== MONSTERS ==========
     const MONSTER_DEFS = {
-        skeleton: { name: 'スケルトン', r: 12, hp: 40, dmg: 8, spd: 60, xp: 25, color: '#9a8a6a', loot: 0.4, icon: '💀' },
-        zombie:   { name: 'ゾンビ', r: 14, hp: 70, dmg: 12, spd: 40, xp: 35, color: '#3a4a25', loot: 0.45, icon: '🧟' },
-        imp:      { name: 'インプ', r: 10, hp: 30, dmg: 15, spd: 100, xp: 45, color: '#8a2a2a', loot: 0.5, icon: '👹' },
-        ghost:    { name: 'ゴースト', r: 11, hp: 25, dmg: 10, spd: 110, xp: 55, color: '#555588', loot: 0.55, icon: '👻' },
-        demonlord:{ name: 'デーモンロード', r: 22, hp: 300, dmg: 30, spd: 70, xp: 300, color: '#8a1515', loot: 1.0, icon: '👿' },
+        skeleton: { name: 'スケルトン', r: 12, hp: 40, dmg: 8, spd: 60, xp: 25, color: '#9a8a6a', loot: 0.4, icon: '💀', defense: 10 },
+        zombie:   { name: 'ゾンビ', r: 14, hp: 70, dmg: 12, spd: 40, xp: 35, color: '#3a4a25', loot: 0.45, icon: '🧟', defense: 10 },
+        imp:      { name: 'インプ', r: 10, hp: 30, dmg: 15, spd: 100, xp: 45, color: '#8a2a2a', loot: 0.5, icon: '👹', defense: 10 },
+        ghost:    { name: 'ゴースト', r: 11, hp: 25, dmg: 10, spd: 110, xp: 55, color: '#555588', loot: 0.55, icon: '👻', defense: 10 },
+        demonlord:{ name: 'デーモンロード', r: 22, hp: 300, dmg: 30, spd: 70, xp: 300, color: '#8a1515', loot: 1.0, icon: '👿', defense: 10 },
         // ACT2 monsters
-        mummy:      { name: 'マミー', r: 14, hp: 80, dmg: 14, spd: 45, xp: 40, color: '#a89060', loot: 0.45, icon: '🧟' },
-        scarab:     { name: 'スカラベ', r: 9, hp: 35, dmg: 18, spd: 120, xp: 50, color: '#44662a', loot: 0.4, icon: '🪲' },
-        sand_golem: { name: 'サンドゴーレム', r: 18, hp: 120, dmg: 20, spd: 50, xp: 60, color: '#b8a060', loot: 0.5, icon: '🗿' },
+        mummy:      { name: 'マミー', r: 14, hp: 80, dmg: 14, spd: 45, xp: 40, color: '#a89060', loot: 0.45, icon: '🧟', defense: 25 },
+        scarab:     { name: 'スカラベ', r: 9, hp: 35, dmg: 18, spd: 120, xp: 50, color: '#44662a', loot: 0.4, icon: '🪲', defense: 25 },
+        sand_golem: { name: 'サンドゴーレム', r: 18, hp: 120, dmg: 20, spd: 50, xp: 60, color: '#b8a060', loot: 0.5, icon: '🗿', defense: 25 },
         // ACT3 monsters
-        treeant:        { name: 'トレアント', r: 18, hp: 100, dmg: 16, spd: 40, xp: 55, color: '#2a5a1a', loot: 0.5, icon: '🌳' },
-        poison_spider:  { name: '毒蜘蛛', r: 8, hp: 28, dmg: 20, spd: 130, xp: 55, color: '#44aa22', loot: 0.45, icon: '🕷' },
-        jungle_shaman:  { name: 'ジャングルシャーマン', r: 12, hp: 50, dmg: 22, spd: 70, xp: 65, color: '#558844', loot: 0.55, icon: '🧙' },
+        treeant:        { name: 'トレアント', r: 18, hp: 100, dmg: 16, spd: 40, xp: 55, color: '#2a5a1a', loot: 0.5, icon: '🌳', defense: 50 },
+        poison_spider:  { name: '毒蜘蛛', r: 8, hp: 28, dmg: 20, spd: 130, xp: 55, color: '#44aa22', loot: 0.45, icon: '🕷', defense: 50 },
+        jungle_shaman:  { name: 'ジャングルシャーマン', r: 12, hp: 50, dmg: 22, spd: 70, xp: 65, color: '#558844', loot: 0.55, icon: '🧙', defense: 50 },
         // ACT4 monsters
-        demon:     { name: 'デーモン', r: 16, hp: 130, dmg: 25, spd: 80, xp: 80, color: '#aa2020', loot: 0.5, icon: '👹' },
-        hellhound: { name: 'ヘルハウンド', r: 12, hp: 70, dmg: 22, spd: 140, xp: 70, color: '#cc4400', loot: 0.45, icon: '🐕' },
+        demon:     { name: 'デーモン', r: 16, hp: 130, dmg: 25, spd: 80, xp: 120, color: '#aa2020', loot: 0.5, icon: '👹', defense: 80 },
+        hellhound: { name: 'ヘルハウンド', r: 12, hp: 70, dmg: 22, spd: 140, xp: 100, color: '#cc4400', loot: 0.45, icon: '🐕', defense: 80 },
         // ACT5 monsters
-        frost_zombie: { name: 'フロストゾンビ', r: 14, hp: 90, dmg: 18, spd: 50, xp: 65, color: '#5588aa', loot: 0.45, icon: '🧟' },
-        ice_wraith:   { name: 'アイスレイス', r: 11, hp: 40, dmg: 15, spd: 110, xp: 70, color: '#88bbdd', loot: 0.5, icon: '👻' },
-        yeti:         { name: 'イエティ', r: 20, hp: 150, dmg: 24, spd: 60, xp: 85, color: '#aaccdd', loot: 0.55, icon: '🦍' }
+        frost_zombie: { name: 'フロストゾンビ', r: 14, hp: 140, dmg: 28, spd: 50, xp: 100, color: '#5588aa', loot: 0.45, icon: '🧟', defense: 120 },
+        ice_wraith:   { name: 'アイスレイス', r: 11, hp: 65, dmg: 24, spd: 110, xp: 110, color: '#88bbdd', loot: 0.5, icon: '👻', defense: 120 },
+        yeti:         { name: 'イエティ', r: 20, hp: 220, dmg: 35, spd: 60, xp: 140, color: '#aaccdd', loot: 0.55, icon: '🦍', defense: 120 }
     };
 
     const monsters = [];
@@ -5726,6 +5738,7 @@
                 this.dmg = Math.round(bd.dmg * cm);
                 this.spd = bd.spd;
                 this.r = bd.r;
+                this.defense = Math.round((bd.defense || 0) * cm);
                 this.def = { ...d, name: bd.name, icon: bd.icon, xp: bd.xp, loot: 1.0, color: bd.color };
                 this.bossPhase = 0;
                 this.bossCD = {};
@@ -5739,6 +5752,7 @@
                 this.dmg = Math.round(d.dmg * s * cm);
                 this.spd = d.spd;
                 this.r = d.r;
+                this.defense = Math.round((d.defense || 0) * s);
                 this.drawScale = MONSTER_DRAW_SCALES[type] || 1.3;
                 this.aggroRange = type === 'demonlord' ? 400 : 250;
             }
@@ -5751,6 +5765,8 @@
             this.knockbackX = 0;
             this.knockbackY = 0;
             this.frozenT = 0;
+            this.cursedT = 0;
+            this.curseDmgMult = 1;
             this.origSpd = this.spd;
             this.aggroed = false;
         }
@@ -5773,6 +5789,12 @@
                 this.frozenT -= dt;
                 if (this.frozenT <= 0) {
                     this.spd = this.origSpd; // restore speed
+                }
+            }
+            if (this.cursedT > 0) {
+                this.cursedT -= dt;
+                if (this.cursedT <= 0) {
+                    this.curseDmgMult = 1;
                 }
             }
 
@@ -6379,6 +6401,9 @@
     }
 
     function monsterTakeDmg(m, dmg, isCrit) {
+        if (m.cursedT > 0 && m.curseDmgMult > 1) dmg = Math.round(dmg * m.curseDmgMult);
+        const monDef = m.defense || 0;
+        dmg = Math.max(1, Math.round(dmg * (100 / (100 + monDef))));
         m.hp -= dmg;
         m.hitFlash = 0.1;
         addFloatingText(m.x, m.y - m.r - 10, Math.round(dmg), isCrit ? '#ffff00' : '#ff6666', isCrit);
