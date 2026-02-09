@@ -3573,7 +3573,7 @@
                 { id: 'a_bladesofice', name: 'ブレイズオブアイス', icon: '❄', mp: 28, cd: 3.0, branch: 0, desc: '氷の刃で周囲を凍結', prereq: 'a_dragontalon', effect: 'frost_nova', baseMult: [1.5, 2.0, 2.5, 3.2, 4.0], freeze: [2, 2, 3, 3, 4], reqLevel: 18, skillType: 'active', synergies: [{ from: 'a_dragontalon', bonus: 0.08, type: 'damage' }] },
                 { id: 'a_clawsofthunder', name: 'クロウズオブサンダー', icon: '⚡', mp: 35, cd: 4.0, branch: 0, desc: '雷の爪で連鎖攻撃', prereq: 'a_bladesofice', effect: 'chain_lightning', bounces: [2, 3, 4, 5, 6], baseMult: [1.8, 2.2, 2.8, 3.5, 4.5], reqLevel: 18, skillType: 'active', synergies: [{ from: 'a_fistsoffire', bonus: 0.10, type: 'damage' }] },
                 { id: 'a_bladesentinel', name: 'ブレードセンチネル', icon: '🗡', mp: 42, cd: 6.0, branch: 0, desc: '刃の衛兵を展開する', prereq: 'a_clawsofthunder', effect: 'arrow_rain', baseMult: [2.0, 2.5, 3.2, 4.0, 5.5], range: 100, reqLevel: 24, skillType: 'active', synergies: [{ from: 'a_clawsofthunder', bonus: 0.08, type: 'damage' }, { from: 'a_bladesofice', bonus: 0.06, type: 'damage' }] },
-                { id: 'a_phoenixstrike', name: 'フェニックスストライク', icon: '🔥', mp: 55, cd: 8.0, branch: 0, desc: '不死鳥の一撃で粉砕', prereq: 'a_bladesentinel', effect: 'execute', baseMult: [5.0, 6.5, 8.0, 10.0, 13.0], threshold: [1.0, 1.0, 1.0, 1.0, 1.0], range: 80, reqLevel: 30, skillType: 'active', synergies: [{ from: 'a_dragontalon', bonus: 0.12, type: 'damage' }, { from: 'a_clawsofthunder', bonus: 0.10, type: 'damage' }] },
+                { id: 'a_phoenixstrike', name: 'フェニックスストライク', icon: '🔥', mp: 55, cd: 8.0, branch: 0, desc: '不死鳥の一撃で粉砕', prereq: 'a_bladesentinel', effect: 'execute', baseMult: [5.0, 6.5, 8.0, 10.0, 13.0], threshold: [0.5, 0.55, 0.6, 0.65, 0.75], range: 80, reqLevel: 30, skillType: 'active', synergies: [{ from: 'a_dragontalon', bonus: 0.12, type: 'damage' }, { from: 'a_clawsofthunder', bonus: 0.10, type: 'damage' }] },
                 // Branch 1: シャドウ
                 { id: 'a_burstspeed', name: 'バーストオブスピード', icon: '💨', mp: 12, cd: 8.0, branch: 1, desc: '瞬間的に速度を上昇', prereq: null, effect: 'buff_speed', duration: [5, 7, 9, 12, 15], bonus: [0.3, 0.4, 0.5, 0.6, 0.8], reqLevel: 1, skillType: 'active' },
                 { id: 'a_fade', name: 'フェード', icon: '🌑', mp: 15, cd: 10.0, branch: 1, desc: '闇に溶け被ダメージ軽減', prereq: 'a_burstspeed', effect: 'buff_defense', duration: [6, 8, 10, 12, 16], reduction: [0.3, 0.4, 0.5, 0.55, 0.65], reqLevel: 6, skillType: 'active' },
@@ -4682,7 +4682,7 @@
                     const stunRange = (skDef.range || 120) * (1 + synRange);
                     for (const m of monsters) {
                         if (m.alive && dist(this.x, this.y, m.x, m.y) < stunRange) {
-                            m.frozenT = dur;
+                            m.frozenT = Math.max(m.frozenT || 0, dur);
                             m.spd = 0;
                         }
                     }
@@ -4850,8 +4850,8 @@
                     for (const m of monsters) {
                         if (m.alive && dist(this.x, this.y, m.x, m.y) < 130) {
                             monsterTakeDmg(m, dmg * mult, false);
-                            m.frozenT = freezeDur;
-                            m.spd = MONSTER_DEFS[m.type].spd * 0.2;
+                            m.frozenT = Math.max(m.frozenT || 0, freezeDur);
+                            m.spd = (m.origSpd || MONSTER_DEFS[m.type].spd) * 0.2;
                         }
                     }
                     emitParticles(this.x, this.y, '#88ddff', 30, 130, 0.9, 4, 0, 'ice', lvl); // 寿命1.5倍
@@ -4899,8 +4899,8 @@
                     for (const m of monsters) {
                         if (m.alive && dist(this.x, this.y, m.x, m.y) < skDef.range) {
                             monsterTakeDmg(m, dmg * mult, false);
-                            m.spd = MONSTER_DEFS[m.type].spd * slowFactor;
-                            m.frozenT = 2;
+                            m.spd = (m.origSpd || MONSTER_DEFS[m.type].spd) * slowFactor;
+                            m.frozenT = Math.max(m.frozenT || 0, 2);
                         }
                     }
                     emitParticles(this.x, this.y, '#aa8844', 20, skDef.range, 0.5, 4, 0, 'physical', lvl);
@@ -5098,6 +5098,13 @@
                 case 'battle_orders': {
                     const boBonus = getSkillValue(skDef, 'bonus', lvl);
                     const boDur = getSkillValue(skDef, 'duration', lvl) * (1 + synDur);
+                    // 既存ブーストを除去してから再計算（重複防止）
+                    if (player.battleOrdersHP > 0) {
+                        player.maxHP -= player.battleOrdersHP;
+                        player.maxMP -= player.battleOrdersMP;
+                        player.hp = Math.min(player.hp, player.maxHP);
+                        player.mp = Math.min(player.mp, player.maxMP);
+                    }
                     const hpBoost = Math.round(player.maxHP * boBonus);
                     const mpBoost = Math.round(player.maxMP * boBonus);
                     player.maxHP += hpBoost;
