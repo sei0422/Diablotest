@@ -1300,11 +1300,11 @@
     // Map skill elements to projectile sprite + sparks row
     // Game uses 'cold' internally but assets are named 'ice' - include both
     const OGA_PROJ_MAP = {
-        fire: { sprite: 'proj_fireball', sparksRow: 0 },
-        ice: { sprite: 'proj_icicle', sparksRow: 2 },
-        cold: { sprite: 'proj_icicle', sparksRow: 2 },
+        fire: { sprite: 'proj_fireball', sparksRow: 2 },
+        ice: { sprite: 'proj_icicle', sparksRow: 4 },
+        cold: { sprite: 'proj_icicle', sparksRow: 4 },
         lightning: { sprite: 'proj_fireball', sparksRow: 0 },
-        poison: { sprite: 'proj_icicle', sparksRow: 4 },
+        poison: { sprite: 'proj_icicle', sparksRow: 2 },
     };
     function loadOGASprites() {
         const assets = {
@@ -1375,6 +1375,9 @@
     // Our getFacingDir8 returns same order, so no remap needed for standard FLARE sheets.
     // If sheets use different order, adjust this table:
     const OGA_DIR_REMAP = [0, 1, 2, 3, 4, 5, 6, 7]; // identity (standard FLARE)
+    // Projectile sheets use different direction order: W,SW,S,SE,E,NE,N,NW
+    // Game dir: S(0),SW(1),W(2),NW(3),N(4),NE(5),E(6),SE(7)
+    const OGA_PROJ_DIR_REMAP = [2, 1, 0, 7, 6, 5, 4, 3];
 
     // Draw OGA creature sprite (8-dir, animated walk cycle)
     function drawOGACreature(monsterType, dirIdx, time, dx, dy, dw, dh) {
@@ -1382,12 +1385,13 @@
         if (!creatureKey) return false;
         const img = OGA['creature_' + creatureKey];
         if (!img) return false;
-        // Remap direction and animate walk cycle (8 frames @ 8fps)
-        const row = OGA_DIR_REMAP[dirIdx] || 0;
-        const frameIdx = Math.floor((time * 8) % 8);
-        const sx = frameIdx * OGA_CREATURE_SP;
-        const sy = row * OGA_CREATURE_SP;
-        ctx.drawImage(img, sx, sy, OGA_CREATURE_SP, OGA_CREATURE_SP, dx, dy, dw, dh);
+        const cellSz = (img.width / 8) | 0;
+        // Walk cycle: cols 0-3 (stance + 3 walk frames), 8fps
+        const row = OGA_DIR_REMAP[dirIdx] ?? 0;
+        const frameIdx = Math.floor((time * 8) % 4);
+        const sx = frameIdx * cellSz;
+        const sy = row * cellSz;
+        ctx.drawImage(img, sx, sy, cellSz, cellSz, dx, dy, dw, dh);
         return true;
     }
 
@@ -1397,12 +1401,14 @@
         if (!info) return false;
         const img = OGA[info.sprite];
         if (!img) return false;
-        // Per-projectile desync using spawnOffset so they don't all animate in lockstep
-        const frameIdx = Math.floor(((time + spawnOffset) * 12) % 8);
-        const row = OGA_DIR_REMAP[dirIdx] || 0;
-        const sx = frameIdx * OGA_PROJ_SP;
-        const sy = row * OGA_PROJ_SP;
-        ctx.drawImage(img, sx, sy, OGA_PROJ_SP, OGA_PROJ_SP, dx, dy, dw, dh);
+        const cellSz = (img.width / 8) | 0;
+        const numFrames = (img.width / cellSz) | 0;
+        // Per-projectile desync; use projectile-specific direction remap
+        const frameIdx = Math.floor(((time + spawnOffset) * 12) % numFrames);
+        const row = OGA_PROJ_DIR_REMAP[dirIdx] ?? 0;
+        const sx = frameIdx * cellSz;
+        const sy = row * cellSz;
+        ctx.drawImage(img, sx, sy, cellSz, cellSz, dx, dy, dw, dh);
         return true;
     }
 
@@ -3554,18 +3560,18 @@
                             ctx.fillRect(sx + 18, sy + 25, 4, 3);
                         }
 
-                        // OGA Props decoration (only rows 2-3 have visible content)
+                        // OGA Props decoration (256px cells, rows 0-6 valid)
                         if (ogaLoaded && OGA.props_1x1 && (x * 59 + y * 41) % 151 === 0) {
-                            // Props sheet: only rows 2-3 have pixel content, use first 8 columns
                             const propCol = (x * 13 + y * 7) % 8;
-                            const propRow = 2 + ((x * 3 + y * 11) % 2); // only rows 2,3
-                            const psx = propCol * 64, psy = propRow * 64;
-                            // Slight upscale (64→TILE*1.2) for better visibility
+                            const propRow = (x * 3 + y * 11) % 7; // rows 0-6 all valid
+                            const propCellSz = (OGA.props_1x1.width / 8) | 0; // 256
+                            const psx = propCol * propCellSz, psy = propRow * propCellSz;
                             const propSz = Math.round(TILE * 1.2);
                             const propOff = (TILE - propSz) / 2;
-                            ctx.globalAlpha = 0.6;
-                            ctx.drawImage(OGA.props_1x1, psx, psy, 64, 64, sx + propOff, sy + propOff, propSz, propSz);
-                            ctx.globalAlpha = 1;
+                            const prevAlpha = ctx.globalAlpha;
+                            ctx.globalAlpha *= 0.6;
+                            ctx.drawImage(OGA.props_1x1, psx, psy, propCellSz, propCellSz, sx + propOff, sy + propOff, propSz, propSz);
+                            ctx.globalAlpha = prevAlpha;
                         }
 
                         // Wall shadows
@@ -7567,7 +7573,7 @@
                 const _prevAlpha = ctx.globalAlpha;
                 ctx.globalAlpha *= alphaFlash;
                 // Pass G.time for walk animation; anchor bottom-center at monster feet
-                _drewOGA = drawOGACreature(this.type, _dirIdx, G.time, sx - _drawSize/2, sy - _drawSize * 0.75, _drawSize, _drawSize);
+                _drewOGA = drawOGACreature(this.type, _dirIdx, G.time, sx - _drawSize/2, sy - _drawSize * 0.9, _drawSize, _drawSize);
                 ctx.globalAlpha = _prevAlpha;
             }
             if (!_drewOGA) {
