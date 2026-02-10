@@ -5055,7 +5055,7 @@
                     } else if (this.inventory.length < this.maxInv) {
                         this.inventory.push(gi.item);
                         sfxPickup();
-                        if (gi.item.rarityKey === 'legendary' || gi.item.rarityKey === 'unique') sfxLegendary();
+                        if (gi.item.rarityKey === 'legendary' || gi.item.rarityKey === 'unique' || gi.item.rarityKey === 'runeword') sfxLegendary();
                         addLog(`${gi.item.name} を拾った`, gi.item.rarity.color);
                     } else {
                         addLog('インベントリが一杯です！', '#ff4444');
@@ -7312,7 +7312,7 @@
     }
     function calculateBuyPrice(item) { return calculateSellPrice(item) * 3; }
     function calculateSmithCost(item) {
-        const base = { common:100, magic:250, rare:500, legendary:1000, unique:2000 };
+        const base = { common:100, magic:250, rare:500, legendary:1000, unique:2000, runeword:2500 };
         return base[item.rarityKey] || 100;
     }
     function generateShopItems(act) {
@@ -7913,8 +7913,13 @@
         const cost = calculateSmithCost(item);
         if (G.gold < cost) { addLog('ゴールドが足りない', '#ff4444'); return; }
         G.gold -= cost;
+        // Prevent enhancing runeword items (their affixes are fixed)
+        if (item.runeword) {
+            addLog('ルーンワードアイテムは強化できません', '#ff8844');
+            return;
+        }
         if (Math.random() < 0.5 && item.affixes) {
-            // Add random affix
+            // Add random affix (exclude rune/runeword affix slots)
             const pool = AFFIXES.filter(a => !item.affixes.some(af => af.stat === a.stat));
             if (pool.length > 0) {
                 const a = pool[rand(0, pool.length - 1)];
@@ -7924,8 +7929,10 @@
                 addLog(`鍛冶成功！${a.fmt.replace('{v}', v)} が追加された`, '#88ff88');
             }
         } else if (item.affixes && item.affixes.length > 0) {
-            // Boost existing affix by 20%
-            const af = item.affixes[rand(0, item.affixes.length - 1)];
+            // Boost existing affix by 20% (skip rune-source affixes)
+            const boostable = item.affixes.filter(a => !a.runeSource && !a.runewordSource);
+            if (boostable.length === 0) { addLog('強化可能なアフィックスがない', '#ff8844'); return; }
+            const af = boostable[rand(0, boostable.length - 1)];
             const boost = Math.max(1, Math.round(af.value * 0.2));
             af.value += boost;
             af.text = af.text.replace(/\d+/, af.value);
@@ -8573,7 +8580,7 @@
     };
 
     window.sortInventory = function(mode) {
-        const rarityOrder = ['common','magic','rare','legendary','unique'];
+        const rarityOrder = ['common','magic','rare','legendary','unique','runeword'];
         if (mode === 'rarity') {
             player.inventory.sort((a, b) => rarityOrder.indexOf(b.rarityKey) - rarityOrder.indexOf(a.rarityKey));
         } else if (mode === 'type') {
@@ -10212,7 +10219,7 @@
 
     function drawGroundItems() {
         const TYPE_SPR = {sword:'iSword',axe:'iAxe',staff:'iStaff',shield:'iShield',helmet:'iHelmet',armor:'iArmor',ring:'iRing',amulet:'iAmulet',boots:'iBoots',potion:'iPotion'};
-        const beamRarities = { rare: true, legendary: true, unique: true };
+        const beamRarities = { rare: true, legendary: true, unique: true, runeword: true };
         for (const gi of groundItems) {
             gi.bobT += 0.02;
             const sx = gi.x - G.camX, sy = gi.y - G.camY + Math.sin(gi.bobT) * 3;
@@ -10984,7 +10991,7 @@
                 setKey: item.setKey || null, setName: item.setName || null,
                 requiredLevel: item.requiredLevel || 0, itemLevel: item.itemLevel || 0,
                 sockets: item.sockets || 0,
-                socketedRunes: item.socketedRunes || null,
+                socketedRunes: Array.isArray(item.socketedRunes) ? [...item.socketedRunes] : (item.sockets > 0 ? [] : null),
                 runeword: item.runeword || null,
                 runewordJP: item.runewordJP || null,
                 runeId: item.runeId != null ? item.runeId : null
@@ -11139,12 +11146,16 @@
             player.className = p.className;
             player.skillLevels = p.skillLevels || {};
 
-            // Helper to restore rune runtime references
+            // Helper to restore rune runtime references and fix socket arrays
             const restoreRuneRefs = (item) => {
                 if (!item) return;
                 if (item.typeKey === 'rune' && item.runeId != null) {
                     item.runeDef = RUNE_DEFS[item.runeId];
                     item.typeInfo = ITEM_TYPES.rune;
+                }
+                // Ensure socketed items always have an array (fixes Codex P2 bug)
+                if (item.sockets > 0 && !Array.isArray(item.socketedRunes)) {
+                    item.socketedRunes = [];
                 }
             };
             for (const [slot, item] of Object.entries(p.equipment)) {
@@ -11532,11 +11543,11 @@
 
 // Auto pickup
         if (canUpdate && G.autoPickup) {
-            const rarityOrder = ['normal','magic','rare','legendary','unique'];
+            const rarityOrder = ['normal','common','magic','rare','legendary','unique','runeword'];
             const minRarity = rarityOrder.indexOf(G.autoPickupRarity);
             for (const gi of groundItems) {
                 if (dist(player.x, player.y, gi.x, gi.y) < 60) {
-                    if (gi.item.typeKey === 'potion') { player.pickupNearby(); break; }
+                    if (gi.item.typeKey === 'potion' || gi.item.typeKey === 'rune') { player.pickupNearby(); break; }
                     const itemRarity = rarityOrder.indexOf(gi.item.rarityKey || 'normal');
                     if (itemRarity >= minRarity) { player.pickupNearby(); break; }
                 }
