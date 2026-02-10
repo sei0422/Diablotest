@@ -1298,9 +1298,11 @@
         demonlord: 'ogre',
     };
     // Map skill elements to projectile sprite + sparks row
+    // Game uses 'cold' internally but assets are named 'ice' - include both
     const OGA_PROJ_MAP = {
         fire: { sprite: 'proj_fireball', sparksRow: 0 },
         ice: { sprite: 'proj_icicle', sparksRow: 2 },
+        cold: { sprite: 'proj_icicle', sparksRow: 2 },
         lightning: { sprite: 'proj_fireball', sparksRow: 0 },
         poison: { sprite: 'proj_icicle', sparksRow: 4 },
     };
@@ -1369,38 +1371,49 @@
     }
     loadOGASprites();
 
-    // Draw OGA creature sprite (8-dir, stance frame)
-    function drawOGACreature(monsterType, dirIdx, dx, dy, dw, dh) {
+    // FLARE 8-dir sprite row order: S(0) SW(1) W(2) NW(3) N(4) NE(5) E(6) SE(7)
+    // Our getFacingDir8 returns same order, so no remap needed for standard FLARE sheets.
+    // If sheets use different order, adjust this table:
+    const OGA_DIR_REMAP = [0, 1, 2, 3, 4, 5, 6, 7]; // identity (standard FLARE)
+
+    // Draw OGA creature sprite (8-dir, animated walk cycle)
+    function drawOGACreature(monsterType, dirIdx, time, dx, dy, dw, dh) {
         const creatureKey = OGA_CREATURE_MAP[monsterType];
         if (!creatureKey) return false;
         const img = OGA['creature_' + creatureKey];
         if (!img) return false;
-        // FLARE layout: rows = directions, cols = animation frames
-        // Use frame 0 (stance) for each direction
-        const sx = 0;
-        const sy = dirIdx * OGA_CREATURE_SP;
+        // Remap direction and animate walk cycle (8 frames @ 8fps)
+        const row = OGA_DIR_REMAP[dirIdx] || 0;
+        const frameIdx = Math.floor((time * 8) % 8);
+        const sx = frameIdx * OGA_CREATURE_SP;
+        const sy = row * OGA_CREATURE_SP;
         ctx.drawImage(img, sx, sy, OGA_CREATURE_SP, OGA_CREATURE_SP, dx, dy, dw, dh);
         return true;
     }
 
-    // Draw OGA projectile sprite (8-dir, animated)
-    function drawOGAProjectile(projType, dirIdx, time, dx, dy, dw, dh) {
+    // Draw OGA projectile sprite (8-dir, animated with per-projectile offset)
+    function drawOGAProjectile(projType, dirIdx, time, spawnOffset, dx, dy, dw, dh) {
         const info = OGA_PROJ_MAP[projType];
         if (!info) return false;
         const img = OGA[info.sprite];
         if (!img) return false;
-        const frameIdx = Math.floor((time * 12) % 8); // 12fps animation
+        // Per-projectile desync using spawnOffset so they don't all animate in lockstep
+        const frameIdx = Math.floor(((time + spawnOffset) * 12) % 8);
+        const row = OGA_DIR_REMAP[dirIdx] || 0;
         const sx = frameIdx * OGA_PROJ_SP;
-        const sy = dirIdx * OGA_PROJ_SP;
+        const sy = row * OGA_PROJ_SP;
         ctx.drawImage(img, sx, sy, OGA_PROJ_SP, OGA_PROJ_SP, dx, dy, dw, dh);
         return true;
     }
 
-    // Draw OGA impact sparks
+    // Draw OGA impact sparks (uses OGA_PROJ_MAP.sparksRow for correct element mapping)
     function drawOGASparks(element, time, dx, dy, dw, dh) {
         const img = OGA['fx_sparks'];
         if (!img) return false;
-        const row = element === 'fire' ? 0 : element === 'ice' ? 2 : 4;
+        // Normalize element names: game uses 'cold' but assets use 'ice'
+        const norm = element === 'cold' ? 'ice' : element;
+        const info = OGA_PROJ_MAP[norm];
+        const row = info ? info.sparksRow : 4; // fallback to row 4
         const frameIdx = Math.floor((time * 10) % 4);
         ctx.drawImage(img, frameIdx * 64, row * 64, 64, 64, dx, dy, dw, dh);
         return true;
@@ -3541,15 +3554,17 @@
                             ctx.fillRect(sx + 18, sy + 25, 4, 3);
                         }
 
-                        // OGA Props decoration (isometric 1x1 props)
+                        // OGA Props decoration (only rows 2-3 have visible content)
                         if (ogaLoaded && OGA.props_1x1 && (x * 59 + y * 41) % 151 === 0) {
-                            // Pick a prop from the 32x36 grid (64px cells)
-                            // Use deterministic hash for consistent placement
-                            const propCol = (x * 13 + y * 7) % 8;  // first 8 columns = common props
-                            const propRow = (x * 3 + y * 11) % 6;  // first 6 rows
+                            // Props sheet: only rows 2-3 have pixel content, use first 8 columns
+                            const propCol = (x * 13 + y * 7) % 8;
+                            const propRow = 2 + ((x * 3 + y * 11) % 2); // only rows 2,3
                             const psx = propCol * 64, psy = propRow * 64;
-                            ctx.globalAlpha = 0.7;
-                            ctx.drawImage(OGA.props_1x1, psx, psy, 64, 64, sx, sy, TILE, TILE);
+                            // Slight upscale (64→TILE*1.2) for better visibility
+                            const propSz = Math.round(TILE * 1.2);
+                            const propOff = (TILE - propSz) / 2;
+                            ctx.globalAlpha = 0.6;
+                            ctx.drawImage(OGA.props_1x1, psx, psy, 64, 64, sx + propOff, sy + propOff, propSz, propSz);
                             ctx.globalAlpha = 1;
                         }
 
@@ -7547,10 +7562,12 @@
             let _drewOGA = false;
             if (ogaLoaded && OGA_CREATURE_MAP[this.type]) {
                 const _dirIdx = getMonsterFacingDir(this);
-                const _drawSize = TILE * mScale * 2.0;
+                // Larger draw size: 3x tile for good visibility (256px src → ~96px)
+                const _drawSize = TILE * mScale * 3.0;
                 const _prevAlpha = ctx.globalAlpha;
                 ctx.globalAlpha *= alphaFlash;
-                _drewOGA = drawOGACreature(this.type, _dirIdx, sx - _drawSize/2, sy - _drawSize + TILE * 0.6, _drawSize, _drawSize);
+                // Pass G.time for walk animation; anchor bottom-center at monster feet
+                _drewOGA = drawOGACreature(this.type, _dirIdx, G.time, sx - _drawSize/2, sy - _drawSize * 0.75, _drawSize, _drawSize);
                 ctx.globalAlpha = _prevAlpha;
             }
             if (!_drewOGA) {
@@ -7632,21 +7649,22 @@
             // HP bar (scaled position) - OGA Dark Fantasy HP bar
             if (this.alive && this.hp < this.maxHP) {
                 const bw = mScaledR * 2.2;
-                const hpY = sy - mScaledR - 10;
                 const mHpRatio = this.hp / this.maxHP;
                 if (ogaLoaded && OGA.ui_hpbar_empty && OGA.ui_hpbar) {
-                    // OGA health bar sprites (empty bg + filled overlay)
-                    const barH = 6;
-                    ctx.drawImage(OGA.ui_hpbar_empty, sx - bw/2 - 1, hpY - 1, bw + 2, barH + 2);
+                    // Maintain source aspect ratio (1137:356 ≈ 3.19:1)
+                    const barH = Math.max(6, Math.round(bw / 3.19));
+                    const hpY = sy - mScaledR - barH - 4;
+                    ctx.drawImage(OGA.ui_hpbar_empty, sx - bw/2, hpY, bw, barH);
                     if (mHpRatio > 0) {
                         ctx.save();
                         ctx.beginPath();
                         ctx.rect(sx - bw/2, hpY, bw * mHpRatio, barH);
                         ctx.clip();
-                        ctx.drawImage(OGA.ui_hpbar, sx - bw/2 - 1, hpY - 1, bw + 2, barH + 2);
+                        ctx.drawImage(OGA.ui_hpbar, sx - bw/2, hpY, bw, barH);
                         ctx.restore();
                     }
                 } else {
+                    const hpY = sy - mScaledR - 10;
                     ctx.fillStyle = '#1a1a1a';
                     ctx.fillRect(sx - bw/2, hpY, bw, 4);
                     const hpColor = this.isUnique ? '#ffd700' : this.isChampion ? '#6666ff' :
@@ -7914,19 +7932,23 @@
         ctx.fillStyle = color; ctx.fillText(bd.name || 'BOSS', sx, sy - this.r - 22);
 
         // Boss HP bar (wider) - OGA Dark Fantasy HP bar
-        const barW = 60, barH = 7;
+        const barW = 60;
         const hpPct = clamp(this.hp / this.maxHP, 0, 1);
         if (ogaLoaded && OGA.ui_hpbar_empty && OGA.ui_hpbar) {
-            ctx.drawImage(OGA.ui_hpbar_empty, sx - barW/2 - 1, sy - this.r - 15, barW + 2, barH + 2);
+            // Maintain source aspect ratio (1137:356 ≈ 3.19:1)
+            const barH = Math.round(barW / 3.19);
+            const barY = sy - this.r - barH - 6;
+            ctx.drawImage(OGA.ui_hpbar_empty, sx - barW/2, barY, barW, barH);
             if (hpPct > 0) {
                 ctx.save();
                 ctx.beginPath();
-                ctx.rect(sx - barW/2, sy - this.r - 14, barW * hpPct, barH);
+                ctx.rect(sx - barW/2, barY, barW * hpPct, barH);
                 ctx.clip();
-                ctx.drawImage(OGA.ui_hpbar, sx - barW/2 - 1, sy - this.r - 15, barW + 2, barH + 2);
+                ctx.drawImage(OGA.ui_hpbar, sx - barW/2, barY, barW, barH);
                 ctx.restore();
             }
         } else {
+            const barH = 5;
             ctx.fillStyle = '#333'; ctx.fillRect(sx - barW/2, sy - this.r - 14, barW, barH);
             ctx.fillStyle = hpPct > 0.3 ? '#cc0000' : '#ff4400';
             ctx.fillRect(sx - barW/2, sy - this.r - 14, barW * hpPct, barH);
@@ -8470,8 +8492,11 @@
             // Try OGA projectile sprite first
             if (ogaLoaded && this.attribute && OGA_PROJ_MAP[this.attribute]) {
                 const _dirIdx = getFacingDir8(this.vx, this.vy);
-                const _sprSize = this.r * 6;
-                if (drawOGAProjectile(this.attribute, _dirIdx, G.time, px - _sprSize/2, py - _sprSize/2, _sprSize, _sprSize)) {
+                // Fixed visual size (not tied to collision radius)
+                const _sprSize = Math.max(this.r * 6, 32);
+                // Use life as spawn offset for animation desync between projectiles
+                const _spawnOff = this.life * 7.3;
+                if (drawOGAProjectile(this.attribute, _dirIdx, G.time, _spawnOff, px - _sprSize/2, py - _sprSize/2, _sprSize, _sprSize)) {
                     // Draw glow behind sprite
                     ctx.save();
                     ctx.globalCompositeOperation = 'lighter';
@@ -10061,19 +10086,22 @@
             const item = player.equipment[slot];
             const filled = item ? 'filled' : '';
             let style = item ? `border-color:${item.rarity.color}` : '';
-            // OGA armor icon background for empty slots
+            // OGA armor icon hint for empty slots (uses canvas to clip sprite cell)
+            let slotIconHtml = '';
             if (!item && ogaLoaded && OGA.ui_armor_icons) {
                 const slotPos = OGA_ARMOR_SLOT_MAP[slot];
                 if (slotPos) {
-                    const iconSz = 64;
-                    const bgX = -(slotPos.col * iconSz);
-                    const bgY = -(slotPos.row * iconSz);
-                    style += `;background-image:url(asset/opengameart/armor_icons.png);background-position:${bgX}px ${bgY}px;background-size:320px 320px;opacity:0.4`;
+                    // Scale 64px cells to fit 40px slot height; 5 cells = 200px total
+                    const cellSz = 40;
+                    const bgSz = cellSz * 5;
+                    const bgX = -(slotPos.col * cellSz);
+                    const bgY = -(slotPos.row * cellSz);
+                    slotIconHtml = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none"><div style="width:${cellSz}px;height:${cellSz}px;background:url(asset/opengameart/armor_icons.png) ${bgX}px ${bgY}px / ${bgSz}px ${bgSz}px;opacity:0.3"></div></div>`;
                 }
             }
             html += `<div class="equip-slot ${filled}" style="${style}" onclick="unequipSlot('${slot}')"
                 onmouseenter="showEquipTooltip(event,'${slot}')" onmouseleave="hideTooltip()">
-                ${item ? item.icon : ''}
+                ${item ? item.icon : slotIconHtml}
                 <div class="slot-label">${label}</div>
             </div>`;
         }
@@ -12751,13 +12779,6 @@
 
         // HP Globe (left) - OGA Health Orb integration
         const hpX = 45;
-        // OGA Health Panel decorative background
-        if (ogaLoaded && OGA.ui_health_panel) {
-            const panW = 110, panH = Math.round(110 * 129 / 530);
-            ctx.globalAlpha = 0.85;
-            ctx.drawImage(OGA.ui_health_panel, hpX - panW / 2, globeY - panH / 2, panW, panH);
-            ctx.globalAlpha = 1;
-        }
         ctx.save();
         ctx.beginPath();
         ctx.arc(hpX, globeY, globeR, 0, Math.PI * 2);
@@ -12817,13 +12838,6 @@
 
         // MP Globe (right) - OGA Mana Orb integration
         const mpX = W - 50;
-        // OGA Mana Panel decorative background
-        if (ogaLoaded && OGA.ui_mana_panel) {
-            const panW = 110, panH = Math.round(110 * 129 / 530);
-            ctx.globalAlpha = 0.85;
-            ctx.drawImage(OGA.ui_mana_panel, mpX - panW / 2, globeY - panH / 2, panW, panH);
-            ctx.globalAlpha = 1;
-        }
         ctx.save();
         ctx.beginPath();
         ctx.arc(mpX, globeY, globeR, 0, Math.PI * 2);
@@ -12919,20 +12933,22 @@
             if (ogaLoaded && OGA.ui_spell_slot) {
                 ctx.drawImage(OGA.ui_spell_slot, x - 2, skillY - 2, skillW + 4, skillH + 4);
                 if (sel) {
+                    ctx.save();
                     ctx.shadowColor = '#ffd700';
                     ctx.shadowBlur = 6;
                     ctx.drawImage(OGA.ui_spell_slot, x - 2, skillY - 2, skillW + 4, skillH + 4);
-                    ctx.shadowBlur = 0;
+                    ctx.restore();
                 }
             } else {
                 ctx.strokeStyle = sel ? '#ffd700' : '#5a4a3a';
                 ctx.lineWidth = sel ? 2 : 1;
                 ctx.strokeRect(x, skillY, skillW, skillH);
                 if (sel) {
+                    ctx.save();
                     ctx.shadowColor = '#ffd700';
                     ctx.shadowBlur = 6;
                     ctx.strokeRect(x, skillY, skillW, skillH);
-                    ctx.shadowBlur = 0;
+                    ctx.restore();
                 }
             }
 
