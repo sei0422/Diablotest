@@ -4539,7 +4539,7 @@
         }
         const slvl = player.skillLevels[sk.id] || 1;
         player.skills[skillSelectSlot] = {
-            id: sk.id, name: sk.name, icon: sk.icon,
+            id: sk.id, name: sk.name, icon: sk.icon, effect: sk.effect,
             mp: getSkillMPCost(sk, slvl), cooldown: 0, maxCD: getSkillCooldown(sk, slvl), desc: sk.desc
         };
         showSkillSelectUI();
@@ -4660,7 +4660,7 @@
             // 空きスロットに自動割り当て
             const slvl = player.skillLevels[sk.id] || 1;
             player.skills[emptySlot] = {
-                id: sk.id, name: sk.name, icon: sk.icon,
+                id: sk.id, name: sk.name, icon: sk.icon, effect: sk.effect,
                 mp: getSkillMPCost(sk, slvl), cooldown: 0, maxCD: getSkillCooldown(sk, slvl), desc: sk.desc
             };
             addLog(`${sk.name} をスロット${emptySlot}に設定！`, '#66ff66');
@@ -11748,7 +11748,7 @@
                 const sk = player.skills[i];
                 if (sk) { // 空スロット対応
                     saveData.player.skills[i] = {
-                        id: sk.id, name: sk.name, icon: sk.icon,
+                        id: sk.id, name: sk.name, icon: sk.icon, effect: sk.effect,
                         mp: sk.mp, maxCD: sk.maxCD, desc: sk.desc
                     };
                 }
@@ -11976,7 +11976,8 @@
                         const slvl = player.skillLevels[p.skills[i].id] || 1;
                         const maxCD = skillDef ? getSkillCooldown(skillDef, slvl) : (p.skills[i].maxCD || 0);
                         const mp = skillDef ? getSkillMPCost(skillDef, slvl) : (p.skills[i].mp || 0);
-                        player.skills[i] = { ...p.skills[i], cooldown: 0, maxCD: maxCD, mp: mp };
+                        const effect = p.skills[i].effect || (skillDef ? skillDef.effect : undefined);
+                        player.skills[i] = { ...p.skills[i], cooldown: 0, maxCD: maxCD, mp: mp, effect: effect };
                     }
                 }
             }
