@@ -1747,7 +1747,8 @@
         actTransitionTimer: 0, actTransitionText: '',
         portalCasting: false, portalTimer: 0,
         portalReturn: null, // {act, actFloor, cycle, floor, x, y, dungeon, monsters, groundItems, dungeonSeed}
-        inUber: false, uberBossesDefeated: {}
+        inUber: false, uberBossesDefeated: {},
+        questItems: [] // Separate storage for quest keys (don't consume inventory space)
     };
 
     const SETTINGS = {
@@ -5120,6 +5121,11 @@
                         }
                         sfxPickup();
                         addLog(`${gi.item.name} を拾った`, '#88ff88');
+                    } else if (gi.item.uberKeyId) {
+                        // Quest keys go to separate storage, not inventory
+                        G.questItems.push(gi.item);
+                        sfxPickup(); sfxLegendary();
+                        addLog(`★ ${gi.item.name} を獲得！（キーアイテム欄）`, gi.item.rarity.color);
                     } else if (this.inventory.length < this.maxInv) {
                         this.inventory.push(gi.item);
                         sfxPickup();
@@ -8284,11 +8290,10 @@
     function renderUberPortalUI() {
         const panel = document.getElementById('uberPanel');
         if (!panel) return;
-        // Count keys in inventory + stash
+        // Count keys in questItems
         const keyCount = {};
         for (const keyId of Object.keys(UBER_KEY_DEFS)) keyCount[keyId] = 0;
-        const allItems = [...player.inventory, ...G.stash];
-        for (const item of allItems) {
+        for (const item of G.questItems) {
             if (item.uberKeyId && keyCount[item.uberKeyId] !== undefined) keyCount[item.uberKeyId]++;
         }
         const hasAllKeys = Object.values(keyCount).every(c => c >= 1);
@@ -8315,21 +8320,13 @@
     }
 
     function enterUberTristram() {
-        // Consume one of each key from inventory/stash
+        // Consume one of each key from questItems
         for (const keyId of Object.keys(UBER_KEY_DEFS)) {
             let consumed = false;
-            for (let i = 0; i < player.inventory.length && !consumed; i++) {
-                if (player.inventory[i].uberKeyId === keyId) {
-                    player.inventory.splice(i, 1);
+            for (let i = 0; i < G.questItems.length && !consumed; i++) {
+                if (G.questItems[i].uberKeyId === keyId) {
+                    G.questItems.splice(i, 1);
                     consumed = true;
-                }
-            }
-            if (!consumed) {
-                for (let i = 0; i < G.stash.length && !consumed; i++) {
-                    if (G.stash[i].uberKeyId === keyId) {
-                        G.stash.splice(i, 1);
-                        consumed = true;
-                    }
                 }
             }
             if (!consumed) { addLog('鍵が足りない！', '#ff4444'); return; }
@@ -8821,7 +8818,7 @@
         }
         html += '</div>';
 
-        html += `<div style="color:#aaa;font-size:11px;margin:8px 0 4px">所持品 ${player.inventory.length}/${player.maxInv} (クリック:選択 / ダブルクリック:装備 / 右クリック:捨てる)</div>`;
+        html += `<div style="color:#aaa;font-size:11px;margin:8px 0 4px">所持品 ${player.inventory.length}/${player.maxInv} (右クリック:売却/捨てる / ダブルクリック:装備)</div>`;
         html += `<div style="margin-bottom:4px;display:flex;gap:4px"><button class="toggle-btn" onclick="sortInventory('rarity')" style="font-size:10px;padding:2px 6px">レア度順</button><button class="toggle-btn" onclick="sortInventory('type')" style="font-size:10px;padding:2px 6px">種類順</button><button class="toggle-btn" onclick="sortInventory('name')" style="font-size:10px;padding:2px 6px">名前順</button></div>`;
         html += '<div class="inv-grid">';
         for (let i = 0; i < player.maxInv; i++) {
@@ -8840,6 +8837,17 @@
             }
         }
         html += '</div>';
+        // Quest items section (separate from main inventory)
+        if (G.questItems.length > 0) {
+            html += `<div style="color:#daa520;font-size:11px;margin:8px 0 4px">🗝 キーアイテム</div>`;
+            html += '<div style="display:flex;gap:4px;flex-wrap:wrap">';
+            for (const qi of G.questItems) {
+                const kd = UBER_KEY_DEFS[qi.uberKeyId];
+                const col = kd ? kd.color : '#ffd700';
+                html += `<div style="padding:3px 8px;background:#1a1a10;border:1px solid ${col};border-radius:4px;font-size:11px;color:${col}">${qi.icon} ${qi.name}</div>`;
+            }
+            html += '</div>';
+        }
         el.innerHTML = html;
     }
 
@@ -8863,6 +8871,12 @@
         menu.className = 'inv-context-menu';
         menu.id = 'inv-context-menu';
         let menuHTML = `<div style="color:#ffd700;font-size:11px;padding:4px 14px;cursor:default">${item.name}${(item.qty || 1) > 1 ? ' x' + item.qty : ''}</div>`;
+        // Sell option (available anywhere, not just in town)
+        if (!item.uberKeyId) {
+            const sellPrice = calculateSellPrice(item);
+            const totalSellPrice = isPotion(item) ? sellPrice * (item.qty || 1) : sellPrice;
+            menuHTML += `<div onclick="sellInvItem(${i})" style="color:#ffd700">売却 (+${totalSellPrice}G)</div>`;
+        }
         if (isPotion(item) && (item.qty || 1) > 1) {
             menuHTML += `<div onclick="dropOnePotionInv(${i})">1つ捨てる</div>`;
             menuHTML += `<div onclick="confirmDropInvItem(${i})">全て捨てる</div>`;
@@ -8914,6 +8928,18 @@
         item.qty = (item.qty || 1) - 1;
         if (item.qty <= 0) player.inventory.splice(i, 1);
         addLog(`${item.name} を1つ捨てた`, '#888');
+        window._selectedInvIdx = -1;
+        updateInventoryPanel();
+    };
+    window.sellInvItem = function(i) {
+        closeInvContextMenu();
+        const item = player.inventory[i];
+        if (!item || item.uberKeyId) return;
+        const price = calculateSellPrice(item);
+        const totalPrice = isPotion(item) ? price * (item.qty || 1) : price;
+        G.gold += totalPrice;
+        player.inventory.splice(i, 1);
+        addLog(`${item.name}${isPotion(item) && (item.qty || 1) > 1 ? ' x' + (item.qty || 1) : ''} を売却 (+${totalPrice}G)`, '#ffd700');
         window._selectedInvIdx = -1;
         updateInventoryPanel();
     };
@@ -11332,6 +11358,7 @@
                 autoPickup: G.autoPickup,
                 autoPickupRarity: G.autoPickupRarity,
                 stash: G.stash.map(serializeItem),
+                questItems: G.questItems.map(serializeItem),
                 player: {
                     x: player.x, y: player.y,
                     level: player.level, xp: player.xp, xpToNext: player.xpToNext,
@@ -11435,6 +11462,7 @@
                 G.waypoints = save.waypoints || [1];
                 G.bossesDefeated = save.bossesDefeated || {};
                 G.stash = (save.stash || []).map(it => { it.qty = it.qty || 1; return it; });
+                G.questItems = (save.questItems || []).map(it => { it.qty = it.qty || 1; return it; });
             } else {
                 // v2/v3 migration: map old global floor to ACT system
                 const mapped = globalFloorToAct(save.floor || 1);
@@ -11498,6 +11526,13 @@
 
             // Generate dungeon or town with saved seed
             G.inUber = false; // Uber state is transient, always reset on load
+            // Migrate uber keys from inventory/stash to questItems (backward compat)
+            G.questItems = G.questItems || [];
+            for (const arr of [player.inventory, G.stash]) {
+                for (let i = arr.length - 1; i >= 0; i--) {
+                    if (arr[i].uberKeyId) { G.questItems.push(arr.splice(i, 1)[0]); }
+                }
+            }
             if (G.inTown) {
                 enterTown(G.act);
             } else {
