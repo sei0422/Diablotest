@@ -1869,6 +1869,31 @@
         for (let a = 1; a < act; a++) f += ACT_DEFS[a].floors;
         return f + actFloor;
     }
+    // D2-style monster level table (fixed per area, not scaling)
+    const NORMAL_MLVL_TABLE = {
+        1: [3, 5, 7, 9, 12],
+        2: [14, 16, 18, 20, 22],
+        3: [23, 25, 27, 29, 30],
+        4: [32, 36, 40],
+        5: [42, 46, 50, 55, 60]
+    };
+    function getMonsterLevel(act, actFloor) {
+        const floors = NORMAL_MLVL_TABLE[act] || NORMAL_MLVL_TABLE[1];
+        const base = floors[Math.max(0, Math.min(actFloor - 1, floors.length - 1))] || floors[floors.length - 1];
+        const diff = G.difficulty || 'normal';
+        const diffAdd = diff === 'nightmare' ? 30 : diff === 'hell' ? 60 : 0;
+        return base + diffAdd;
+    }
+    // D2-style XP penalty when player is much higher level than monsters
+    function getXPPenalty(playerLevel, monsterLevel) {
+        const d = playerLevel - monsterLevel;
+        if (d <= 5) return 1.0;
+        if (d <= 10) return 0.8;
+        if (d <= 15) return 0.6;
+        if (d <= 20) return 0.4;
+        if (d <= 25) return 0.2;
+        return 0.1;
+    }
     function getCurrentActDef() { return ACT_DEFS[G.act]; }
     const DIFFICULTY_DEFS = {
         normal:    { name: 'ノーマル', color: '#cccccc', mult: 1.0, xpMult: 1.0, dropBonus: 0, respenalty: 0 },
@@ -1881,32 +1906,32 @@
 
     // ========== BOSS DEFINITIONS ==========
     const BOSS_DEFS = {
-        skeleton_king: { name:'骸骨王', icon:'👑💀', hp:500, dmg:35, spd:55, r:22, xp:1000, defense:15,
+        skeleton_king: { name:'骸骨王', icon:'👑💀', hp:1024, dmg:40, spd:55, r:22, xp:1000, defense:25,
             color:'#d4a44a', phases:[
                 {hpPct:1.0, type:'melee'},
                 {hpPct:0.6, type:'summon', count:4, summonType:'skeleton', cd:8},
                 {hpPct:0.3, type:'nova', count:12, cd:5, projSpd:200, projDmg:25, projColor:'#ffffaa'}
             ]},
-        sand_worm: { name:'砂蟲', icon:'🐛', hp:700, dmg:40, spd:50, r:24, xp:1500, defense:35,
+        sand_worm: { name:'砂蟲', icon:'🐛', hp:2000, dmg:50, spd:50, r:24, xp:1500, defense:90,
             color:'#aa8833', phases:[
                 {hpPct:1.0, type:'burrow', cd:6},
                 {hpPct:0.6, type:'poison_spray', cd:4, count:5, projSpd:180, projDmg:20, projColor:'#44cc00'},
                 {hpPct:0.3, type:'quake', cd:5, dmg:30, radius:150}
             ]},
-        archmage: { name:'大魔導師', icon:'🧙', hp:600, dmg:45, spd:65, r:18, xp:2000, defense:60,
+        archmage: { name:'大魔導師', icon:'🧙', hp:3000, dmg:55, spd:65, r:18, xp:2000, defense:70,
             color:'#6644cc', phases:[
                 {hpPct:1.0, type:'teleport_attack', cd:3},
                 {hpPct:0.6, type:'nova', count:8, cd:4, projSpd:220, projDmg:30, projColor:'#aa44ff'},
                 {hpPct:0.3, type:'summon', count:3, summonType:'jungle_shaman', cd:10}
             ]},
-        demon_lord: { name:'魔王', icon:'👿🔥', hp:850, dmg:50, spd:60, r:26, xp:3000, defense:90,
+        demon_lord: { name:'魔王', icon:'👿🔥', hp:5000, dmg:70, spd:60, r:26, xp:3000, defense:120,
             color:'#cc2200', phases:[
                 {hpPct:1.0, type:'melee'},
                 {hpPct:0.75, type:'fire_breath', cd:5, count:7, projSpd:200, projDmg:35, projColor:'#ff6600'},
                 {hpPct:0.5, type:'summon', count:3, summonType:'demon', cd:10},
                 {hpPct:0.25, type:'meteor', cd:8, count:5, dmg:50, radius:80}
             ]},
-        ice_queen: { name:'氷の女王', icon:'👸❄', hp:1200, dmg:65, spd:60, r:20, xp:4000, defense:150,
+        ice_queen: { name:'氷の女王', icon:'👸❄', hp:8000, dmg:80, spd:60, r:20, xp:4000, defense:150,
             color:'#88ccff', phases:[
                 {hpPct:1.0, type:'nova', count:6, cd:3, projSpd:200, projDmg:25, projColor:'#aaddff'},
                 {hpPct:0.5, type:'freeze_aura', cd:6, radius:120, dmg:15},
@@ -1923,20 +1948,20 @@
         key_destruction: { name: '破壊の鍵', icon: '🗝', color: '#4488ff', desc: '混沌の門を開く鍵の1つ', fromBoss: 'ice_queen' }
     };
     const UBER_BOSS_DEFS = {
-        uber_diablo: { name: 'パンデモニウム・ディアブロ', icon: '👿🔥', hp: 8000, dmg: 120, spd: 70, r: 30, xp: 15000, defense: 300,
+        uber_diablo: { name: 'パンデモニウム・ディアブロ', icon: '👿🔥', hp: 30000, dmg: 180, spd: 70, r: 30, xp: 15000, defense: 400,
             color: '#ff2200', immunities: { fire: 100, lightning: 50 }, phases: [
                 { hpPct: 1.0, type: 'melee' },
                 { hpPct: 0.75, type: 'fire_breath', cd: 4, count: 10, projSpd: 250, projDmg: 80, projColor: '#ff4400' },
                 { hpPct: 0.5, type: 'nova', count: 16, cd: 3, projSpd: 220, projDmg: 60, projColor: '#ff6600' },
                 { hpPct: 0.25, type: 'meteor', cd: 6, count: 8, dmg: 100, radius: 120 }
             ]},
-        uber_mephisto: { name: 'パンデモニウム・メフィスト', icon: '🧙‍♂️💀', hp: 6000, dmg: 100, spd: 80, r: 24, xp: 12000, defense: 250,
+        uber_mephisto: { name: 'パンデモニウム・メフィスト', icon: '🧙‍♂️💀', hp: 22000, dmg: 150, spd: 80, r: 24, xp: 12000, defense: 350,
             color: '#6644cc', immunities: { cold: 100, poison: 50 }, phases: [
                 { hpPct: 1.0, type: 'teleport_attack', cd: 2 },
                 { hpPct: 0.6, type: 'nova', count: 12, cd: 3, projSpd: 240, projDmg: 70, projColor: '#aa44ff' },
                 { hpPct: 0.3, type: 'summon', count: 4, summonType: 'demon', cd: 8 }
             ]},
-        uber_baal: { name: 'パンデモニウム・バール', icon: '👁🌀', hp: 10000, dmg: 140, spd: 65, r: 32, xp: 20000, defense: 350,
+        uber_baal: { name: 'パンデモニウム・バール', icon: '👁🌀', hp: 40000, dmg: 200, spd: 65, r: 32, xp: 20000, defense: 500,
             color: '#88ccff', immunities: { cold: 100, fire: 50 }, phases: [
                 { hpPct: 1.0, type: 'nova', count: 8, cd: 4, projSpd: 200, projDmg: 50, projColor: '#aaddff' },
                 { hpPct: 0.7, type: 'freeze_aura', cd: 5, radius: 150, dmg: 30 },
@@ -3313,11 +3338,26 @@
         unique:    { name: 'ユニーク', color: '#00dd66', affixes: [4,5], mult: 2.5 }
     };
 
-    function pickRarity(r) {
-        return r < 0.40 ? 'common' :
-               r < 0.70 ? 'magic' :
-               r < 0.90 ? 'rare' :
-               r < 0.97 ? 'legendary' : 'unique';
+    // D2-style diminishing returns for Magic Find per quality tier
+    function effMF(mf, factor) {
+        return (mf * factor) / (mf + factor);
+    }
+    function pickRarity(baseRoll, mf, diffDrop) {
+        // Apply quality-specific effective MF (D2 formula: diminishing returns)
+        // Factors: unique=250, legendary=400, rare=600, magic=full MF
+        const applyMF = (effectiveMF) => {
+            const boost = 1 + effectiveMF / 100 + diffDrop;
+            return baseRoll / boost;
+        };
+        const uniqueR = applyMF(effMF(mf, 250));
+        if (uniqueR >= 0.993) return 'unique';     // ~0.7% base
+        const legendR = applyMF(effMF(mf, 400));
+        if (legendR >= 0.96) return 'legendary';    // ~3.3% base
+        const rareR = applyMF(effMF(mf, 600));
+        if (rareR >= 0.85) return 'rare';           // ~11% base
+        const magicR = applyMF(mf);
+        if (magicR >= 0.60) return 'magic';         // ~25% base
+        return 'common';                            // ~60% base
     }
     function getAffixCount(rarity) {
         return Array.isArray(rarity.affixes)
@@ -3685,11 +3725,11 @@
 
         let rarityKey = forceRarity;
         if (!rarityKey) {
-            // Magic Find + Difficulty bonus shift rarity distribution toward better items
+            // Magic Find + Difficulty bonus - D2-style diminishing returns per quality tier
             const mf = (player && player.getMagicFind) ? player.getMagicFind() : 0;
             const diffDrop = DIFFICULTY_DEFS[G.difficulty || 'normal'].dropBonus || 0;
-            const r = Math.random() * Math.max(0.25, 1 - mf / 500 - diffDrop); // MF + difficulty reduces the random roll
-            rarityKey = pickRarity(r);
+            const baseRoll = Math.random();
+            rarityKey = pickRarity(baseRoll, mf, diffDrop);
         }
         const rarity = RARITY[rarityKey];
 
@@ -7549,7 +7589,9 @@
             emitParticles(m.x, m.y, '#ffffff', 4, 80, 0.2, 4, 0);
             const globalF = getGlobalFloor(G.act, G.actFloor, G.cycle);
             const xpMult = m.isUnique ? 5 : m.isChampion ? 3 : 1;
-            player.addXP(Math.round(m.def.xp * (1 + (globalF - 1) * 0.07) * (1 + G.cycle * 0.3) * xpMult));
+            const mlvl = getMonsterLevel(G.act, G.actFloor);
+            const xpPenalty = getXPPenalty(player.level, mlvl);
+            player.addXP(Math.round(m.def.xp * (1 + (globalF - 1) * 0.07) * (1 + G.cycle * 0.3) * xpMult * xpPenalty));
             // Gold drop (champion/unique drop more)
             const goldMult = m.isUnique ? 4 : m.isChampion ? 2.5 : 1;
             const goldAmt = Math.round(rand(Math.max(1, m.def.xp * 0.5), m.def.xp * 1.5) * goldMult);
