@@ -1276,6 +1276,176 @@
     }
     loadHiResSprites();
 
+    // --- OpenGameArt (OGA) Asset Loading ---
+    const OGA = {};
+    let ogaLoaded = false;
+    const OGA_CREATURE_SP = 256; // creature sprite frame size (2048/8)
+    const OGA_PROJ_SP = 64;      // projectile sprite frame size (512/8)
+    // Map game monster types to OGA creature sprite files
+    const OGA_CREATURE_MAP = {
+        skeleton: 'skeleton', skelArcher: 'skeleton',
+        zombie: 'zombie', frost_zombie: 'zombie', ghoul: 'zombie',
+        imp: 'goblin', goblin: 'goblin',
+        lich: 'magician', magician: 'magician',
+        minotaur: 'ogre', ogre: 'ogre', sand_golem: 'ogre',
+        slime: 'slime', poison_spider: 'slime',
+        werewolf: 'werewolf', hellhound: 'werewolf',
+        banshee: 'elemental', wraith: 'elemental', ice_wraith: 'elemental',
+        ghost: 'elemental', elemental: 'elemental',
+        deathKnight: 'skeleton', demon: 'werewolf',
+        mummy: 'zombie', scarab: 'slime',
+        treeant: 'ogre', jungle_shaman: 'magician',
+        demonlord: 'ogre',
+    };
+    // Map skill elements to projectile sprite + sparks row
+    const OGA_PROJ_MAP = {
+        fire: { sprite: 'proj_fireball', sparksRow: 0 },
+        ice: { sprite: 'proj_icicle', sparksRow: 2 },
+        lightning: { sprite: 'proj_fireball', sparksRow: 0 },
+        poison: { sprite: 'proj_icicle', sparksRow: 4 },
+    };
+    function loadOGASprites() {
+        const assets = {
+            // Creatures (2048x2048, 256px cells, 8 dirs × 8 frames)
+            creature_skeleton: 'asset/opengameart/creatures/skeleton.png',
+            creature_zombie: 'asset/opengameart/creatures/zombie.png',
+            creature_elemental: 'asset/opengameart/creatures/elemental.png',
+            creature_goblin: 'asset/opengameart/creatures/goblin.png',
+            creature_ogre: 'asset/opengameart/creatures/ogre.png',
+            creature_slime: 'asset/opengameart/creatures/slime.png',
+            creature_werewolf: 'asset/opengameart/creatures/werewolf.png',
+            creature_magician: 'asset/opengameart/creatures/magician.png',
+            // Projectiles (512x512, 64px cells, 8 dirs × 8 frames)
+            proj_fireball: 'asset/opengameart/fireball_0.png',
+            proj_icicle: 'asset/opengameart/icicle_0.png',
+            // Impact sparks (256x384, 64px cells, 4 frames × 6 rows)
+            fx_sparks: 'asset/opengameart/sparks.png',
+            // Health Orb UI
+            ui_health_panel: 'asset/opengameart/health_orb/HealthPanel.png',
+            ui_mana_panel: 'asset/opengameart/health_orb/ManaPanel.png',
+            ui_orb_border: 'asset/opengameart/health_orb/DarkOrbBorder.png',
+            ui_spell_slot: 'asset/opengameart/health_orb/52x52 SpellSlotBorder.png',
+            // Dark Fantasy UI
+            ui_hpbar: 'asset/opengameart/dark_fantasy_ui/Dark Fantasy UI Pack (CC-BY 4.0 - Of Far Different Nature)/OFDN UI Pack - Health Bar D1.png',
+            ui_hpbar_empty: 'asset/opengameart/dark_fantasy_ui/Dark Fantasy UI Pack (CC-BY 4.0 - Of Far Different Nature)/OFDN UI Pack - Health Bar D2.png',
+            // Armor & Item icons
+            ui_armor_icons: 'asset/opengameart/armor_icons.png',
+            // RPG Item Icons (individual PNGs for ground loot)
+            icon_sword: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/metal sword.png',
+            icon_armor: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/metal chest plate.png',
+            icon_cloak: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Cloak_02.png',
+            icon_potion_red: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Small Potion_00.png',
+            icon_potion_blue: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Small Potion_03.png',
+            icon_gems: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Gems_01.png',
+            icon_necklace: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Necklace_02.png',
+            icon_ring: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Ornament_02.png',
+            icon_book: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Book_00.png',
+            icon_crystal: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Crystal Ball_02.png',
+            icon_rune: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Ruin Stone_01.png',
+            icon_shirt: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Shirt_00.png',
+            icon_wood: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Wood_00.png',
+            icon_coin: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Coin_03.png',
+            icon_essence: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Essence_03.png',
+            // Props
+            props_1x1: 'asset/opengameart/props/props_1x1.png',
+        };
+        let loaded = 0;
+        const total = Object.keys(assets).length;
+        for (const [key, src] of Object.entries(assets)) {
+            const img = new Image();
+            img.onload = () => {
+                OGA[key] = img;
+                if (++loaded === total) {
+                    ogaLoaded = true;
+                    console.log('OGA sprites loaded:', Object.keys(OGA).length, 'assets');
+                }
+            };
+            img.onerror = () => {
+                console.warn('OGA sprite FAIL:', key);
+                if (++loaded === total) { ogaLoaded = true; }
+            };
+            img.src = src + '?v=' + Date.now();
+        }
+    }
+    loadOGASprites();
+
+    // Draw OGA creature sprite (8-dir, stance frame)
+    function drawOGACreature(monsterType, dirIdx, dx, dy, dw, dh) {
+        const creatureKey = OGA_CREATURE_MAP[monsterType];
+        if (!creatureKey) return false;
+        const img = OGA['creature_' + creatureKey];
+        if (!img) return false;
+        // FLARE layout: rows = directions, cols = animation frames
+        // Use frame 0 (stance) for each direction
+        const sx = 0;
+        const sy = dirIdx * OGA_CREATURE_SP;
+        ctx.drawImage(img, sx, sy, OGA_CREATURE_SP, OGA_CREATURE_SP, dx, dy, dw, dh);
+        return true;
+    }
+
+    // Draw OGA projectile sprite (8-dir, animated)
+    function drawOGAProjectile(projType, dirIdx, time, dx, dy, dw, dh) {
+        const info = OGA_PROJ_MAP[projType];
+        if (!info) return false;
+        const img = OGA[info.sprite];
+        if (!img) return false;
+        const frameIdx = Math.floor((time * 12) % 8); // 12fps animation
+        const sx = frameIdx * OGA_PROJ_SP;
+        const sy = dirIdx * OGA_PROJ_SP;
+        ctx.drawImage(img, sx, sy, OGA_PROJ_SP, OGA_PROJ_SP, dx, dy, dw, dh);
+        return true;
+    }
+
+    // Draw OGA impact sparks
+    function drawOGASparks(element, time, dx, dy, dw, dh) {
+        const img = OGA['fx_sparks'];
+        if (!img) return false;
+        const row = element === 'fire' ? 0 : element === 'ice' ? 2 : 4;
+        const frameIdx = Math.floor((time * 10) % 4);
+        ctx.drawImage(img, frameIdx * 64, row * 64, 64, 64, dx, dy, dw, dh);
+        return true;
+    }
+
+    // Map item types to OGA RPG item icon keys for ground loot rendering
+    const OGA_ITEM_ICON_MAP = {
+        sword: 'icon_sword', axe: 'icon_sword', dagger: 'icon_sword',
+        staff: 'icon_wood', wand: 'icon_wood',
+        bow: 'icon_wood', crossbow: 'icon_wood',
+        armor: 'icon_armor', shield: 'icon_armor',
+        helmet: 'icon_shirt', boots: 'icon_cloak',
+        ring: 'icon_ring', amulet: 'icon_necklace',
+        hp1: 'icon_potion_red', hp2: 'icon_potion_red', hp3: 'icon_potion_red',
+        hp4: 'icon_potion_red', hp5: 'icon_potion_red',
+        mp1: 'icon_potion_blue', mp2: 'icon_potion_blue', mp3: 'icon_potion_blue',
+        manaPotion: 'icon_potion_blue', potion: 'icon_potion_red',
+        rejuv: 'icon_essence', fullrejuv: 'icon_essence',
+        rune: 'icon_rune',
+        smallCharm: 'icon_gems', mediumCharm: 'icon_gems', grandCharm: 'icon_crystal',
+    };
+    // Draw an OGA RPG item icon for ground loot
+    function drawOGAItemIcon(typeKey, dx, dy, dw, dh) {
+        const iconKey = OGA_ITEM_ICON_MAP[typeKey];
+        if (!iconKey) return false;
+        const img = OGA[iconKey];
+        if (!img) return false;
+        ctx.drawImage(img, dx, dy, dw, dh);
+        return true;
+    }
+    // Map equip slots to armor_icons.png grid positions (64px cells, 5x5)
+    const OGA_ARMOR_SLOT_MAP = {
+        weapon: { col: 0, row: 0 }, offhand: { col: 1, row: 0 },
+        head: { col: 2, row: 0 }, body: { col: 3, row: 0 },
+        ring: { col: 4, row: 0 }, amulet: { col: 0, row: 1 }, feet: { col: 1, row: 1 },
+    };
+
+    // Get monster facing direction (toward player when aggroed)
+    function getMonsterFacingDir(m) {
+        if (m.aggroed && typeof player !== 'undefined' && player) {
+            return getFacingDir8(player.x - m.x, player.y - m.y);
+        }
+        return 0; // default South
+    }
+
     // Get 8-directional facing index from movement angle
     function getFacingDir8(dx, dy) {
         if (dx === 0 && dy === 0) return 0; // default S
@@ -3369,6 +3539,18 @@
                             ctx.fill();
                             ctx.fillStyle = 'rgba(100,90,75,0.08)';
                             ctx.fillRect(sx + 18, sy + 25, 4, 3);
+                        }
+
+                        // OGA Props decoration (isometric 1x1 props)
+                        if (ogaLoaded && OGA.props_1x1 && (x * 59 + y * 41) % 151 === 0) {
+                            // Pick a prop from the 32x36 grid (64px cells)
+                            // Use deterministic hash for consistent placement
+                            const propCol = (x * 13 + y * 7) % 8;  // first 8 columns = common props
+                            const propRow = (x * 3 + y * 11) % 6;  // first 6 rows
+                            const psx = propCol * 64, psy = propRow * 64;
+                            ctx.globalAlpha = 0.7;
+                            ctx.drawImage(OGA.props_1x1, psx, psy, 64, 64, sx, sy, TILE, TILE);
+                            ctx.globalAlpha = 1;
                         }
 
                         // Wall shadows
@@ -7361,14 +7543,25 @@
                 alphaFlash = 0.5 + 0.5 * (this.hitFlash / 0.1);
             }
 
-            // Type-specific detailed rendering
-            if (this.isBoss) this._drawBoss(sx, sy, alphaFlash);
-            else if (this.type === 'skeleton') this._drawSkeleton(sx, sy, alphaFlash);
-            else if (this.type === 'zombie' || this.type === 'frost_zombie') this._drawZombie(sx, sy, alphaFlash);
-            else if (this.type === 'imp') this._drawImp(sx, sy, alphaFlash);
-            else if (this.type === 'ghost' || this.type === 'ice_wraith') this._drawGhost(sx, sy, alphaFlash);
-            else if (this.type === 'demonlord') this._drawDemonLord(sx, sy, alphaFlash);
-            else this._drawGeneric(sx, sy, alphaFlash);
+            // Type-specific detailed rendering (OGA hi-res sprites first, then fallback)
+            let _drewOGA = false;
+            if (ogaLoaded && OGA_CREATURE_MAP[this.type]) {
+                const _dirIdx = getMonsterFacingDir(this);
+                const _drawSize = TILE * mScale * 2.0;
+                const _prevAlpha = ctx.globalAlpha;
+                ctx.globalAlpha *= alphaFlash;
+                _drewOGA = drawOGACreature(this.type, _dirIdx, sx - _drawSize/2, sy - _drawSize + TILE * 0.6, _drawSize, _drawSize);
+                ctx.globalAlpha = _prevAlpha;
+            }
+            if (!_drewOGA) {
+                if (this.isBoss) this._drawBoss(sx, sy, alphaFlash);
+                else if (this.type === 'skeleton') this._drawSkeleton(sx, sy, alphaFlash);
+                else if (this.type === 'zombie' || this.type === 'frost_zombie') this._drawZombie(sx, sy, alphaFlash);
+                else if (this.type === 'imp') this._drawImp(sx, sy, alphaFlash);
+                else if (this.type === 'ghost' || this.type === 'ice_wraith') this._drawGhost(sx, sy, alphaFlash);
+                else if (this.type === 'demonlord') this._drawDemonLord(sx, sy, alphaFlash);
+                else this._drawGeneric(sx, sy, alphaFlash);
+            }
 
             // Death visual overlay (2-phase)
             if (!this.alive && deathProgress > 0) {
@@ -7436,19 +7629,34 @@
                 ctx.globalAlpha = 1;
             }
 
-            // HP bar (scaled position)
+            // HP bar (scaled position) - OGA Dark Fantasy HP bar
             if (this.alive && this.hp < this.maxHP) {
                 const bw = mScaledR * 2.2;
                 const hpY = sy - mScaledR - 10;
-                ctx.fillStyle = '#1a1a1a';
-                ctx.fillRect(sx - bw/2, hpY, bw, 4);
-                const hpColor = this.isUnique ? '#ffd700' : this.isChampion ? '#6666ff' :
-                    (this.hp / this.maxHP > 0.3 ? '#00aa00' : '#dd3300');
-                ctx.fillStyle = hpColor;
-                ctx.fillRect(sx - bw/2, hpY, bw * (this.hp / this.maxHP), 4);
-                ctx.strokeStyle = '#000';
-                ctx.lineWidth = 0.5;
-                ctx.strokeRect(sx - bw/2, hpY, bw, 4);
+                const mHpRatio = this.hp / this.maxHP;
+                if (ogaLoaded && OGA.ui_hpbar_empty && OGA.ui_hpbar) {
+                    // OGA health bar sprites (empty bg + filled overlay)
+                    const barH = 6;
+                    ctx.drawImage(OGA.ui_hpbar_empty, sx - bw/2 - 1, hpY - 1, bw + 2, barH + 2);
+                    if (mHpRatio > 0) {
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.rect(sx - bw/2, hpY, bw * mHpRatio, barH);
+                        ctx.clip();
+                        ctx.drawImage(OGA.ui_hpbar, sx - bw/2 - 1, hpY - 1, bw + 2, barH + 2);
+                        ctx.restore();
+                    }
+                } else {
+                    ctx.fillStyle = '#1a1a1a';
+                    ctx.fillRect(sx - bw/2, hpY, bw, 4);
+                    const hpColor = this.isUnique ? '#ffd700' : this.isChampion ? '#6666ff' :
+                        (mHpRatio > 0.3 ? '#00aa00' : '#dd3300');
+                    ctx.fillStyle = hpColor;
+                    ctx.fillRect(sx - bw/2, hpY, bw * mHpRatio, 4);
+                    ctx.strokeStyle = '#000';
+                    ctx.lineWidth = 0.5;
+                    ctx.strokeRect(sx - bw/2, hpY, bw, 4);
+                }
                 // Immunity icons above HP bar
                 if (this.immunities) {
                     const immKeys = Object.keys(this.immunities).filter(k => this.immunities[k] >= 100);
@@ -7540,6 +7748,12 @@
             ctx.arc(sx, sy, scaledR * 2, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
+            // OGA sparks overlay for elemental hits
+            if (ogaLoaded && OGA.fx_sparks && this.lastHitElement && this.lastHitElement !== 'physical') {
+                ctx.globalAlpha = flashIntensity * 0.8;
+                drawOGASparks(this.lastHitElement, G.time, sx - scaledR, sy - scaledR, scaledR * 2, scaledR * 2);
+                ctx.globalAlpha = 1;
+            }
         }
     }
 
@@ -7699,14 +7913,26 @@
         ctx.fillStyle = '#000'; ctx.fillText(bd.name || 'BOSS', sx + 1, sy - this.r - 21);
         ctx.fillStyle = color; ctx.fillText(bd.name || 'BOSS', sx, sy - this.r - 22);
 
-        // Boss HP bar (wider)
-        const barW = 60, barH = 5;
+        // Boss HP bar (wider) - OGA Dark Fantasy HP bar
+        const barW = 60, barH = 7;
         const hpPct = clamp(this.hp / this.maxHP, 0, 1);
-        ctx.fillStyle = '#333'; ctx.fillRect(sx - barW/2, sy - this.r - 14, barW, barH);
-        ctx.fillStyle = hpPct > 0.3 ? '#cc0000' : '#ff4400';
-        ctx.fillRect(sx - barW/2, sy - this.r - 14, barW * hpPct, barH);
-        ctx.strokeStyle = '#666'; ctx.lineWidth = 0.5;
-        ctx.strokeRect(sx - barW/2, sy - this.r - 14, barW, barH);
+        if (ogaLoaded && OGA.ui_hpbar_empty && OGA.ui_hpbar) {
+            ctx.drawImage(OGA.ui_hpbar_empty, sx - barW/2 - 1, sy - this.r - 15, barW + 2, barH + 2);
+            if (hpPct > 0) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(sx - barW/2, sy - this.r - 14, barW * hpPct, barH);
+                ctx.clip();
+                ctx.drawImage(OGA.ui_hpbar, sx - barW/2 - 1, sy - this.r - 15, barW + 2, barH + 2);
+                ctx.restore();
+            }
+        } else {
+            ctx.fillStyle = '#333'; ctx.fillRect(sx - barW/2, sy - this.r - 14, barW, barH);
+            ctx.fillStyle = hpPct > 0.3 ? '#cc0000' : '#ff4400';
+            ctx.fillRect(sx - barW/2, sy - this.r - 14, barW * hpPct, barH);
+            ctx.strokeStyle = '#666'; ctx.lineWidth = 0.5;
+            ctx.strokeRect(sx - barW/2, sy - this.r - 14, barW, barH);
+        }
 
         this._drawHitFlash(sx, sy, alphaFlash, this.r * 1.3, color);
     }
@@ -7961,6 +8187,7 @@
         dmg = Math.max(1, Math.round(dmg * (100 / (100 + monDef))));
         m.hp -= dmg;
         m.hitFlash = 0.1;
+        m.lastHitElement = element || 'physical';
         addFloatingText(m.x, m.y - m.r - 10, Math.round(dmg), isCrit ? '#ffff00' : '#ff6666', isCrit);
         // Knockback (hit stagger)
         const hitAngle = Math.atan2(m.y - player.y, m.x - player.x);
@@ -8239,6 +8466,53 @@
         }
         draw(cx, cy) {
             const px = this.x - cx, py = this.y - cy;
+
+            // Try OGA projectile sprite first
+            if (ogaLoaded && this.attribute && OGA_PROJ_MAP[this.attribute]) {
+                const _dirIdx = getFacingDir8(this.vx, this.vy);
+                const _sprSize = this.r * 6;
+                if (drawOGAProjectile(this.attribute, _dirIdx, G.time, px - _sprSize/2, py - _sprSize/2, _sprSize, _sprSize)) {
+                    // Draw glow behind sprite
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'lighter';
+                    ctx.globalAlpha = 0.3;
+                    const _glowR = this.r * 3;
+                    const _grd = ctx.createRadialGradient(px, py, 0, px, py, _glowR);
+                    _grd.addColorStop(0, this.color + 'aa');
+                    _grd.addColorStop(1, this.color + '00');
+                    ctx.fillStyle = _grd;
+                    ctx.beginPath(); ctx.arc(px, py, _glowR, 0, Math.PI * 2); ctx.fill();
+                    ctx.restore();
+                    // Trail
+                    if (this.trail.length > 1) {
+                        ctx.save();
+                        ctx.globalCompositeOperation = 'lighter';
+                        for (let i = 1; i < this.trail.length; i++) {
+                            ctx.globalAlpha = (i / this.trail.length) * 0.3;
+                            ctx.strokeStyle = this.color;
+                            ctx.lineWidth = this.r * (i / this.trail.length);
+                            ctx.beginPath();
+                            ctx.moveTo(this.trail[i-1].x - cx, this.trail[i-1].y - cy);
+                            ctx.lineTo(this.trail[i].x - cx, this.trail[i].y - cy);
+                            ctx.stroke();
+                        }
+                        ctx.restore();
+                    }
+                    ctx.globalAlpha = 1;
+                    // Skip original rendering for attributed projectile
+                    if (this.attribute && ATTRIBUTE_BEHAVIORS[this.attribute]) {
+                        const auraColor = ATTRIBUTE_BEHAVIORS[this.attribute].glowColor;
+                        const auraSize = this.r * (1.5 + Math.sin(G.time * 8) * 0.3);
+                        ctx.globalAlpha = 0.25;
+                        ctx.strokeStyle = auraColor; ctx.lineWidth = 2;
+                        ctx.beginPath(); ctx.arc(px, py, auraSize, 0, Math.PI * 2); ctx.stroke();
+                        ctx.globalAlpha = 1;
+                    }
+                    return;
+                }
+            }
+
+            // Fallback: original rendering
             // Smooth continuous trail line
             if (this.trail.length > 1) {
                 ctx.save();
@@ -9786,7 +10060,17 @@
         for (const [slot, label] of Object.entries(slotNames)) {
             const item = player.equipment[slot];
             const filled = item ? 'filled' : '';
-            const style = item ? `border-color:${item.rarity.color}` : '';
+            let style = item ? `border-color:${item.rarity.color}` : '';
+            // OGA armor icon background for empty slots
+            if (!item && ogaLoaded && OGA.ui_armor_icons) {
+                const slotPos = OGA_ARMOR_SLOT_MAP[slot];
+                if (slotPos) {
+                    const iconSz = 64;
+                    const bgX = -(slotPos.col * iconSz);
+                    const bgY = -(slotPos.row * iconSz);
+                    style += `;background-image:url(asset/opengameart/armor_icons.png);background-position:${bgX}px ${bgY}px;background-size:320px 320px;opacity:0.4`;
+                }
+            }
             html += `<div class="equip-slot ${filled}" style="${style}" onclick="unequipSlot('${slot}')"
                 onmouseenter="showEquipTooltip(event,'${slot}')" onmouseleave="hideTooltip()">
                 ${item ? item.icon : ''}
@@ -11771,12 +12055,17 @@
             ctx.fillStyle = 'rgba(0,0,0,0.2)';
             ctx.beginPath(); ctx.ellipse(sx, sy + 12, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
 
-            // Sprite icon
+            // Sprite icon (try atlas sprite → OGA RPG icon → emoji fallback)
             let sprKey = null;
+            let typeKey = null;
             for (const [tKey, tInfo] of Object.entries(ITEM_TYPES)) {
-                if (tInfo.icon === gi.item.icon) { sprKey = TYPE_SPR[tKey]; break; }
+                if (tInfo.icon === gi.item.icon) { sprKey = TYPE_SPR[tKey]; typeKey = tKey; break; }
             }
-            if (!sprKey || !drawSpr(sprKey, sx - 14, sy - 14, 28, 28)) {
+            let drawn = sprKey && drawSpr(sprKey, sx - 14, sy - 14, 28, 28);
+            if (!drawn && ogaLoaded && typeKey) {
+                drawn = drawOGAItemIcon(typeKey, sx - 14, sy - 14, 28, 28);
+            }
+            if (!drawn) {
                 ctx.font = `14px ${FONT_UI}`;
                 ctx.textAlign = 'center';
                 ctx.fillText(gi.item.icon, sx, sy + 5);
@@ -12460,8 +12749,15 @@
         const globeR = 30;
         const globeY = H - 40;
 
-        // HP Globe (left)
+        // HP Globe (left) - OGA Health Orb integration
         const hpX = 45;
+        // OGA Health Panel decorative background
+        if (ogaLoaded && OGA.ui_health_panel) {
+            const panW = 110, panH = Math.round(110 * 129 / 530);
+            ctx.globalAlpha = 0.85;
+            ctx.drawImage(OGA.ui_health_panel, hpX - panW / 2, globeY - panH / 2, panW, panH);
+            ctx.globalAlpha = 1;
+        }
         ctx.save();
         ctx.beginPath();
         ctx.arc(hpX, globeY, globeR, 0, Math.PI * 2);
@@ -12503,8 +12799,13 @@
         ctx.fillStyle = hpSheen;
         ctx.fillRect(hpX - globeR, globeY - globeR, globeR * 2, globeR * 2);
         ctx.restore();
-        // D2-style frame
-        drawGlobeFrame(hpX, globeY, globeR);
+        // OGA DarkOrbBorder overlay or fallback to canvas frame
+        if (ogaLoaded && OGA.ui_orb_border) {
+            const orbSz = globeR * 2 + 10;
+            ctx.drawImage(OGA.ui_orb_border, hpX - orbSz / 2, globeY - orbSz / 2, orbSz, orbSz);
+        } else {
+            drawGlobeFrame(hpX, globeY, globeR);
+        }
         // Text
         ctx.fillStyle = '#fff';
         ctx.font = `bold 13px ${FONT_UI}`;
@@ -12514,8 +12815,15 @@
         ctx.fillStyle = '#faa';
         ctx.fillText('HP', hpX, globeY + 16);
 
-        // MP Globe (right)
+        // MP Globe (right) - OGA Mana Orb integration
         const mpX = W - 50;
+        // OGA Mana Panel decorative background
+        if (ogaLoaded && OGA.ui_mana_panel) {
+            const panW = 110, panH = Math.round(110 * 129 / 530);
+            ctx.globalAlpha = 0.85;
+            ctx.drawImage(OGA.ui_mana_panel, mpX - panW / 2, globeY - panH / 2, panW, panH);
+            ctx.globalAlpha = 1;
+        }
         ctx.save();
         ctx.beginPath();
         ctx.arc(mpX, globeY, globeR, 0, Math.PI * 2);
@@ -12554,8 +12862,13 @@
         ctx.fillStyle = mpSheen;
         ctx.fillRect(mpX - globeR, globeY - globeR, globeR * 2, globeR * 2);
         ctx.restore();
-        // D2-style frame
-        drawGlobeFrame(mpX, globeY, globeR);
+        // OGA DarkOrbBorder overlay or fallback to canvas frame
+        if (ogaLoaded && OGA.ui_orb_border) {
+            const orbSz = globeR * 2 + 10;
+            ctx.drawImage(OGA.ui_orb_border, mpX - orbSz / 2, globeY - orbSz / 2, orbSz, orbSz);
+        } else {
+            drawGlobeFrame(mpX, globeY, globeR);
+        }
         ctx.fillStyle = '#fff';
         ctx.font = `bold 13px ${FONT_UI}`;
         ctx.textAlign = 'center';
@@ -12602,17 +12915,25 @@
             ctx.fillStyle = sel ? 'rgba(100,80,30,0.9)' : 'rgba(30,25,20,0.8)';
             ctx.fillRect(x, skillY, skillW, skillH);
 
-            // Border
-            ctx.strokeStyle = sel ? '#ffd700' : '#5a4a3a';
-            ctx.lineWidth = sel ? 2 : 1;
-            ctx.strokeRect(x, skillY, skillW, skillH);
-
-            // Glow for selected
-            if (sel) {
-                ctx.shadowColor = '#ffd700';
-                ctx.shadowBlur = 6;
+            // OGA SpellSlotBorder overlay or fallback canvas border
+            if (ogaLoaded && OGA.ui_spell_slot) {
+                ctx.drawImage(OGA.ui_spell_slot, x - 2, skillY - 2, skillW + 4, skillH + 4);
+                if (sel) {
+                    ctx.shadowColor = '#ffd700';
+                    ctx.shadowBlur = 6;
+                    ctx.drawImage(OGA.ui_spell_slot, x - 2, skillY - 2, skillW + 4, skillH + 4);
+                    ctx.shadowBlur = 0;
+                }
+            } else {
+                ctx.strokeStyle = sel ? '#ffd700' : '#5a4a3a';
+                ctx.lineWidth = sel ? 2 : 1;
                 ctx.strokeRect(x, skillY, skillW, skillH);
-                ctx.shadowBlur = 0;
+                if (sel) {
+                    ctx.shadowColor = '#ffd700';
+                    ctx.shadowBlur = 6;
+                    ctx.strokeRect(x, skillY, skillW, skillH);
+                    ctx.shadowBlur = 0;
+                }
             }
 
             // Icon (Canvas-drawn)
