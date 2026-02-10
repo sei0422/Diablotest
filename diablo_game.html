@@ -1872,11 +1872,11 @@
     function getCurrentActDef() { return ACT_DEFS[G.act]; }
     const DIFFICULTY_DEFS = {
         normal:    { name: 'ノーマル', color: '#cccccc', mult: 1.0, xpMult: 1.0, dropBonus: 0, respenalty: 0 },
-        nightmare: { name: 'ナイトメア', color: '#ffaa44', mult: 2.0, xpMult: 1.5, dropBonus: 0.15, respenalty: 20 },
-        hell:      { name: 'ヘル', color: '#ff4444', mult: 3.5, xpMult: 2.0, dropBonus: 0.30, respenalty: 50 }
+        nightmare: { name: 'ナイトメア', color: '#ffaa44', mult: 1.7, xpMult: 1.5, dropBonus: 0.15, respenalty: 20 },
+        hell:      { name: 'ヘル', color: '#ff4444', mult: 2.8, xpMult: 2.0, dropBonus: 0.30, respenalty: 50 }
     };
     function getDifficultyMult() { return DIFFICULTY_DEFS[G.difficulty || 'normal'].mult; }
-    function getCycleMult() { return (1 + G.cycle * 0.8) * getDifficultyMult(); }
+    function getCycleMult() { return (1 + G.cycle * 0.6) * getDifficultyMult(); }
     function isBossFloor() { return G.actFloor === getCurrentActDef().bossFloor; }
 
     // ========== BOSS DEFINITIONS ==========
@@ -1899,7 +1899,7 @@
                 {hpPct:0.6, type:'nova', count:8, cd:4, projSpd:220, projDmg:30, projColor:'#aa44ff'},
                 {hpPct:0.3, type:'summon', count:3, summonType:'jungle_shaman', cd:10}
             ]},
-        demon_lord: { name:'魔王', icon:'👿🔥', hp:1000, dmg:55, spd:60, r:26, xp:3000, defense:100,
+        demon_lord: { name:'魔王', icon:'👿🔥', hp:850, dmg:50, spd:60, r:26, xp:3000, defense:90,
             color:'#cc2200', phases:[
                 {hpPct:1.0, type:'melee'},
                 {hpPct:0.75, type:'fire_breath', cd:5, count:7, projSpd:200, projDmg:35, projColor:'#ff6600'},
@@ -3301,8 +3301,8 @@
         boots:   { name: '靴', icon: '👢', slot: 'feet', baseDef: [1, 4] },
         rune:    { name: 'ルーン', icon: '🔶', slot: null },
         quest_key: { name: '鍵', icon: '🗝', slot: null },
-        potion:  { name: 'HP回復薬', icon: '🧪', slot: null, heal: 50 },
-        manaPotion: { name: 'MP回復薬', icon: '💧', slot: null, healMP: 30 }
+        potion:  { name: 'HP回復薬', icon: '🧪', slot: null, heal: 45 },
+        manaPotion: { name: 'MP回復薬', icon: '💧', slot: null, healMP: 28 }
     };
 
     const RARITY = {
@@ -3314,10 +3314,10 @@
     };
 
     function pickRarity(r) {
-        return r < 0.35 ? 'common' :
-               r < 0.68 ? 'magic' :
+        return r < 0.40 ? 'common' :
+               r < 0.70 ? 'magic' :
                r < 0.90 ? 'rare' :
-               r < 0.98 ? 'legendary' : 'unique';
+               r < 0.97 ? 'legendary' : 'unique';
     }
     function getAffixCount(rarity) {
         return Array.isArray(rarity.affixes)
@@ -3346,7 +3346,7 @@
         { stat: 'allRes', fmt: '+{v}% 全耐性', min: 3, max: 15 },
         { stat: 'blockChance', fmt: '+{v}% ブロック率', min: 5, max: 15 },
         { stat: 'magicFind', fmt: '+{v}% マジックファインド', min: 5, max: 35 },
-        { stat: 'skillBonus', fmt: '+{v} 全スキルレベル', min: 1, max: 2 }
+        { stat: 'skillBonus', fmt: '+{v} 全スキルレベル', min: 1, max: 1 }
     ];
 
     const UNIQUE_NAMES = {
@@ -3688,12 +3688,12 @@
             // Magic Find + Difficulty bonus shift rarity distribution toward better items
             const mf = (player && player.getMagicFind) ? player.getMagicFind() : 0;
             const diffDrop = DIFFICULTY_DEFS[G.difficulty || 'normal'].dropBonus || 0;
-            const r = Math.random() * (1 - mf / 300 - diffDrop); // MF + difficulty reduces the random roll
+            const r = Math.random() * Math.max(0.25, 1 - mf / 500 - diffDrop); // MF + difficulty reduces the random roll
             rarityKey = pickRarity(r);
         }
         const rarity = RARITY[rarityKey];
 
-        const floorMult = 1 + (floor - 1) * 0.2;
+        const floorMult = 1 + (floor - 1) * 0.15;
         const item = {
             typeKey, typeInfo, rarityKey, rarity,
             icon: typeInfo.icon,
@@ -3797,18 +3797,18 @@
                 { id: 'w_whirlwind', name: 'ワールウィンド', icon: '🌀', mp: 30, cd: 3.0, branch: 0, desc: '回転しながら周囲を斬る', prereq: 'w_concentrate', effect: 'whirlwind', baseMult: [1.6, 2.0, 2.6, 3.2, 4.0], range: 120, reqLevel: 18, skillType: 'active', synergies: [{ from: 'w_doubleswing', bonus: 0.08, type: 'damage' }, { from: 'w_concentrate', bonus: 0.08, type: 'damage' }] },
                 { id: 'w_cleave', name: 'クリーブ', icon: '🪓', mp: 35, cd: 4.0, branch: 0, desc: '広範囲を薙ぎ払う', prereq: 'w_whirlwind', effect: 'whirlwind', baseMult: [2.0, 2.6, 3.2, 4.0, 5.0], range: 140, reqLevel: 24, skillType: 'active', synergies: [{ from: 'w_whirlwind', bonus: 0.10, type: 'damage' }] },
                 { id: 'w_warfrenzy', name: 'ウォーフレンジー', icon: '😤', mp: 42, cd: 8.0, branch: 0, desc: '狂乱状態で攻撃力と速度上昇', prereq: 'w_cleave', effect: 'buff_frenzy', duration: [6, 8, 10, 12, 15], atkBonus: [0.4, 0.5, 0.6, 0.8, 1.0], spdBonus: [0.2, 0.3, 0.4, 0.5, 0.6], reqLevel: 30, skillType: 'active' },
-                { id: 'w_furyslash', name: 'フューリースラッシュ', icon: '💀', mp: 55, cd: 10.0, branch: 0, desc: '致命的な処刑の一撃', prereq: 'w_warfrenzy', effect: 'execute', baseMult: [4.0, 5.0, 6.5, 8.0, 10.0], threshold: [0.4, 0.5, 0.55, 0.6, 0.7], range: 70, reqLevel: 30, skillType: 'active', synergies: [{ from: 'w_concentrate', bonus: 0.10, type: 'damage' }, { from: 'w_whirlwind', bonus: 0.10, type: 'damage' }] },
+                { id: 'w_furyslash', name: 'フューリースラッシュ', icon: '💀', mp: 55, cd: 10.0, branch: 0, desc: '致命的な処刑の一撃', prereq: 'w_warfrenzy', effect: 'execute', baseMult: [4.0, 5.0, 6.5, 8.0, 10.0], threshold: [0.35, 0.45, 0.50, 0.55, 0.60], range: 70, reqLevel: 30, skillType: 'active', synergies: [{ from: 'w_concentrate', bonus: 0.10, type: 'damage' }, { from: 'w_whirlwind', bonus: 0.10, type: 'damage' }] },
                 // Branch 1: ウォークライ
                 { id: 'w_howl', name: 'ハウル', icon: '📯', mp: 10, cd: 4.0, branch: 1, desc: '雄叫びで敵を怯ませる', prereq: null, effect: 'stun_aoe', duration: [1.2, 1.6, 2.0, 2.5, 3.0], range: 120, reqLevel: 1, skillType: 'active' },
                 { id: 'w_taunt', name: 'タウント', icon: '😡', mp: 12, cd: 5.0, branch: 1, desc: '敵を挑発し防御力を低下', prereq: 'w_howl', effect: 'debuff_defense', duration: [3, 4, 5, 6, 8], reduction: [0.2, 0.3, 0.4, 0.5, 0.6], range: 130, reqLevel: 6, skillType: 'active', synergies: [{ from: 'w_howl', bonus: 0.06, type: 'duration' }] },
                 { id: 'w_ironskin_p', name: '鉄の肌', icon: '🔰', mp: 0, cd: 0, branch: 1, desc: '防御力を常時上昇', prereq: 'w_howl', reqLevel: 6, skillType: 'passive', passiveEffect: { stat: 'defensePercent', baseBonus: 2, perLevel: 2 } },
                 { id: 'w_shout', name: 'シャウト', icon: '🛡', mp: 18, cd: 6.0, branch: 1, desc: '味方の防御力を上昇させる', prereq: 'w_howl', effect: 'buff_defense', duration: [5, 7, 9, 11, 14], reduction: [0.3, 0.4, 0.5, 0.6, 0.7], reqLevel: 6, skillType: 'active', synergies: [{ from: 'w_ironskin_p', bonus: 0.03, type: 'duration' }] },
                 { id: 'w_finditem', name: 'ファインドアイテム', icon: '💎', mp: 15, cd: 8.0, branch: 1, desc: 'クリティカル率を一時上昇', prereq: 'w_taunt', effect: 'buff_crit', duration: [5, 7, 9, 12, 15], bonus: [10, 15, 20, 30, 40], reqLevel: 12, skillType: 'active' },
-                { id: 'w_battleorders', name: 'バトルオーダー', icon: '⚜', mp: 35, cd: 12.0, branch: 1, desc: '戦闘命令で全能力を強化', prereq: 'w_shout', effect: 'battle_orders', duration: [8, 12, 15, 18, 22], bonus: [0.15, 0.2, 0.3, 0.4, 0.5], reqLevel: 18, skillType: 'active', synergies: [{ from: 'w_shout', bonus: 0.05, type: 'duration' }] },
+                { id: 'w_battleorders', name: 'バトルオーダー', icon: '⚜', mp: 35, cd: 12.0, branch: 1, desc: '戦闘命令で全能力を強化', prereq: 'w_shout', effect: 'battle_orders', duration: [8, 12, 15, 18, 22], bonus: [0.12, 0.18, 0.24, 0.30, 0.36], reqLevel: 18, skillType: 'active', synergies: [{ from: 'w_shout', bonus: 0.05, type: 'duration' }] },
                 { id: 'w_naturalres_p', name: '自然耐性', icon: '💪', mp: 0, cd: 0, branch: 1, desc: '最大HPを常時上昇', prereq: 'w_shout', reqLevel: 12, skillType: 'passive', passiveEffect: { stat: 'maxHP', baseBonus: 5, perLevel: 5 } },
                 { id: 'w_grimward', name: 'グリムウォード', icon: '☠', mp: 40, cd: 10.0, branch: 1, desc: '恐怖の叫びで敵を長時間気絶', prereq: 'w_battleorders', effect: 'stun_aoe', duration: [2.0, 2.5, 3.0, 3.5, 4.5], range: 160, reqLevel: 24, skillType: 'active' },
                 { id: 'w_warcrylv2', name: 'ウォークライII', icon: '📣', mp: 48, cd: 12.0, branch: 1, desc: '強化された戦いの雄叫び', prereq: 'w_grimward', effect: 'stun_aoe', duration: [2.5, 3.0, 3.5, 4.0, 5.0], range: 180, reqLevel: 30, skillType: 'active' },
-                { id: 'w_naturalorder', name: 'ナチュラルオーダー', icon: '⚜', mp: 55, cd: 18.0, branch: 1, desc: '究極の戦闘命令で大幅強化', prereq: 'w_warcrylv2', effect: 'battle_orders', duration: [12, 16, 20, 25, 30], bonus: [0.25, 0.35, 0.45, 0.55, 0.7], reqLevel: 30, skillType: 'active', synergies: [{ from: 'w_battleorders', bonus: 0.08, type: 'duration' }] },
+                { id: 'w_naturalorder', name: 'ナチュラルオーダー', icon: '⚜', mp: 55, cd: 18.0, branch: 1, desc: '究極の戦闘命令で大幅強化', prereq: 'w_warcrylv2', effect: 'battle_orders', duration: [12, 16, 20, 25, 30], bonus: [0.18, 0.25, 0.32, 0.40, 0.50], reqLevel: 30, skillType: 'active', synergies: [{ from: 'w_battleorders', bonus: 0.08, type: 'duration' }] },
                 // Branch 2: マスタリー
                 { id: 'w_leap', name: 'リープアタック', icon: '🦘', mp: 12, cd: 3.0, branch: 2, desc: '敵に跳躍して突撃する', prereq: null, effect: 'charge', baseMult: [1.8, 2.2, 2.8, 3.5, 4.2], range: 200, reqLevel: 1, skillType: 'active' },
                 { id: 'w_stomp', name: 'ストンプ', icon: '👢', mp: 15, cd: 4.0, branch: 2, desc: '地面を踏み鳴らし敵を減速', prereq: 'w_leap', effect: 'ground_slam', baseMult: [1.5, 2.0, 2.5, 3.0, 3.8], range: 100, slow: [0.5, 0.45, 0.4, 0.35, 0.3], reqLevel: 6, skillType: 'active', synergies: [{ from: 'w_leap', bonus: 0.08, type: 'damage' }] },
@@ -3932,7 +3932,7 @@
                 { id: 'p_blessedaim_p', name: '祝福の照準', icon: '🎯', mp: 0, cd: 0, branch: 0, desc: '命中精度とクリティカル率を常時上昇', prereq: 'p_sacrifice', reqLevel: 6, skillType: 'passive', passiveEffect: { stat: 'critChance', baseBonus: 2, perLevel: 1.5 } },
                 { id: 'p_zeal', name: 'ジール', icon: '⚔', mp: 22, cd: 6.0, branch: 0, desc: '素早い連続攻撃を繰り出す', prereq: 'p_smite', effect: 'buff_atkspd', duration: [4, 6, 8, 10, 13], bonus: [0.4, 0.5, 0.6, 0.8, 1.0], reqLevel: 12, skillType: 'active', synergies: [{ from: 'p_sacrifice', bonus: 0.06, type: 'damage' }] },
                 { id: 'p_vengeance', name: 'ヴェンジェンス', icon: '🗡', mp: 28, cd: 3.0, branch: 0, desc: '属性ダメージを付与した一撃', prereq: 'p_zeal', effect: 'melee_burst', baseMult: [3.0, 3.8, 4.5, 5.5, 7.0], range: 60, reqLevel: 18, skillType: 'active', synergies: [{ from: 'p_smite', bonus: 0.10, type: 'damage' }, { from: 'p_blessedaim_p', bonus: 0.03, type: 'damage' }] },
-                { id: 'p_conversion', name: 'コンバージョン', icon: '🙏', mp: 35, cd: 8.0, branch: 0, desc: 'ダメージの一部をHPに変換', prereq: 'p_vengeance', effect: 'self_heal_pct', pct: [0.15, 0.2, 0.25, 0.3, 0.4], reqLevel: 18, skillType: 'active', synergies: [{ from: 'p_prayer', bonus: 0.06, type: 'heal' }] },
+                { id: 'p_conversion', name: 'コンバージョン', icon: '🙏', mp: 35, cd: 8.0, branch: 0, desc: 'ダメージの一部をHPに変換', prereq: 'p_vengeance', effect: 'self_heal_pct', pct: [0.12, 0.16, 0.20, 0.24, 0.30], reqLevel: 18, skillType: 'active', synergies: [{ from: 'p_prayer', bonus: 0.06, type: 'heal' }] },
                 { id: 'p_blessedhammer', name: 'ブレスドハンマー', icon: '🔨', mp: 42, cd: 4.0, branch: 0, desc: '聖なるハンマーを回転させる', prereq: 'p_conversion', effect: 'holy_burst', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 140, reqLevel: 24, skillType: 'active', synergies: [{ from: 'p_smite', bonus: 0.10, type: 'damage' }, { from: 'p_vengeance', bonus: 0.10, type: 'damage' }] },
                 { id: 'p_fistofheavens', name: 'フィストオブヘヴン', icon: '🌟', mp: 55, cd: 8.0, branch: 0, desc: '天から聖なる雷を落とす', prereq: 'p_blessedhammer', effect: 'meteor', baseMult: [4.0, 5.0, 6.5, 8.0, 10.5], range: 130, reqLevel: 30, skillType: 'active', synergies: [{ from: 'p_blessedhammer', bonus: 0.12, type: 'damage' }, { from: 'p_holyshock', bonus: 0.08, type: 'damage' }] },
                 // Branch 1: オフェンスオーラ
@@ -3945,16 +3945,16 @@
                 { id: 'p_fanaticism', name: 'ファナティシズム', icon: '🔱', mp: 42, cd: 12.0, branch: 1, desc: '攻撃速度と攻撃力を強化', prereq: 'p_conviction', effect: 'buff_frenzy', duration: [6, 8, 10, 13, 16], atkBonus: [0.4, 0.5, 0.6, 0.8, 1.0], spdBonus: [0.2, 0.3, 0.4, 0.5, 0.6], reqLevel: 24, skillType: 'active' },
                 { id: 'p_holyfreeze', name: 'ホーリーフリーズ', icon: '❄', mp: 50, cd: 8.0, branch: 1, desc: '冷気の聖域で敵を凍結', prereq: 'p_fanaticism', effect: 'frost_nova', baseMult: [2.0, 2.8, 3.5, 4.5, 6.0], freeze: [2, 3, 4, 5, 6], reqLevel: 30, skillType: 'active', synergies: [{ from: 'p_sanctuary', bonus: 0.10, type: 'damage' }, { from: 'p_holyshock', bonus: 0.08, type: 'freeze' }] },
                 // Branch 2: ディフェンスオーラ
-                { id: 'p_prayer', name: 'プレイヤー', icon: '💚', mp: 12, cd: 8.0, branch: 2, desc: 'HPを徐々に回復する祈り', prereq: null, effect: 'self_heal_pct', pct: [0.15, 0.2, 0.25, 0.3, 0.4], reqLevel: 1, skillType: 'active' },
-                { id: 'p_cleansing', name: 'クレンジング', icon: '💧', mp: 15, cd: 8.0, branch: 2, desc: '状態異常を浄化する', prereq: 'p_prayer', effect: 'self_heal_pct', pct: [0.18, 0.22, 0.28, 0.35, 0.45], reqLevel: 6, skillType: 'active', synergies: [{ from: 'p_prayer', bonus: 0.08, type: 'heal' }] },
-                { id: 'p_defiance', name: 'ディファイアンス', icon: '🛡', mp: 18, cd: 8.0, branch: 2, desc: '防御力上昇のオーラ', prereq: 'p_prayer', effect: 'buff_defense', duration: [5, 7, 9, 12, 15], reduction: [0.35, 0.45, 0.55, 0.6, 0.7], reqLevel: 6, skillType: 'active' },
+                { id: 'p_prayer', name: 'プレイヤー', icon: '💚', mp: 12, cd: 8.0, branch: 2, desc: 'HPを徐々に回復する祈り', prereq: null, effect: 'self_heal_pct', pct: [0.10, 0.14, 0.18, 0.22, 0.28], reqLevel: 1, skillType: 'active' },
+                { id: 'p_cleansing', name: 'クレンジング', icon: '💧', mp: 15, cd: 8.0, branch: 2, desc: '状態異常を浄化する', prereq: 'p_prayer', effect: 'self_heal_pct', pct: [0.12, 0.16, 0.20, 0.24, 0.30], reqLevel: 6, skillType: 'active', synergies: [{ from: 'p_prayer', bonus: 0.08, type: 'heal' }] },
+                { id: 'p_defiance', name: 'ディファイアンス', icon: '🛡', mp: 18, cd: 8.0, branch: 2, desc: '防御力上昇のオーラ', prereq: 'p_prayer', effect: 'buff_defense', duration: [5, 7, 9, 12, 15], reduction: [0.20, 0.25, 0.30, 0.35, 0.45], reqLevel: 6, skillType: 'active' },
                 { id: 'p_holyshield_p', name: '聖盾', icon: '🛡', mp: 0, cd: 0, branch: 2, desc: '防御力を常時上昇', prereq: 'p_defiance', reqLevel: 12, skillType: 'passive', passiveEffect: { stat: 'defensePercent', baseBonus: 3, perLevel: 2 } },
                 { id: 'p_vigor', name: 'ヴィガー', icon: '🏃', mp: 20, cd: 10.0, branch: 2, desc: '移動速度上昇のオーラ', prereq: 'p_cleansing', effect: 'buff_speed', duration: [6, 8, 10, 12, 16], bonus: [0.3, 0.4, 0.5, 0.6, 0.8], reqLevel: 12, skillType: 'active' },
                 { id: 'p_meditation', name: 'メディテーション', icon: '🧘', mp: 25, cd: 10.0, branch: 2, desc: 'マナを大幅に回復する瞑想', prereq: 'p_vigor', effect: 'buff_aura', duration: [6, 8, 10, 14, 18], regen: [4, 6, 8, 12, 16], reduction: [0.15, 0.2, 0.25, 0.3, 0.4], reqLevel: 18, skillType: 'active' },
                 { id: 'p_meditmastery_p', name: '瞑想の極意', icon: '🧘', mp: 0, cd: 0, branch: 2, desc: 'マナ自然回復を常時上昇', prereq: 'p_meditation', reqLevel: 18, skillType: 'passive', passiveEffect: { stat: 'manaRegen', baseBonus: 1, perLevel: 0.8 } },
-                { id: 'p_redemption', name: 'リデンプション', icon: '🌟', mp: 30, cd: 12.0, branch: 2, desc: '周囲のHPとMPを回復', prereq: 'p_meditation', effect: 'self_heal_pct', pct: [0.25, 0.3, 0.35, 0.4, 0.5], reqLevel: 18, skillType: 'active', synergies: [{ from: 'p_prayer', bonus: 0.10, type: 'heal' }, { from: 'p_cleansing', bonus: 0.06, type: 'heal' }] },
-                { id: 'p_resist', name: 'レジスト', icon: '🔰', mp: 35, cd: 12.0, branch: 2, desc: '全耐性を上昇させる', prereq: 'p_defiance', effect: 'buff_defense', duration: [8, 10, 12, 16, 20], reduction: [0.5, 0.55, 0.6, 0.7, 0.8], reqLevel: 24, skillType: 'active', synergies: [{ from: 'p_defiance', bonus: 0.08, type: 'duration' }, { from: 'p_holyshield_p', bonus: 0.03, type: 'damage' }] },
-                { id: 'p_salvation', name: 'サルベーション', icon: '✨', mp: 50, cd: 18.0, branch: 2, desc: '究極の防御オーラを展開', prereq: 'p_resist', effect: 'buff_aura', duration: [10, 12, 15, 20, 25], regen: [5, 8, 12, 16, 22], reduction: [0.3, 0.35, 0.4, 0.5, 0.6], reqLevel: 30, skillType: 'active', synergies: [{ from: 'p_meditation', bonus: 0.10, type: 'duration' }, { from: 'p_redemption', bonus: 0.08, type: 'heal' }] }
+                { id: 'p_redemption', name: 'リデンプション', icon: '🌟', mp: 30, cd: 12.0, branch: 2, desc: '周囲のHPとMPを回復', prereq: 'p_meditation', effect: 'self_heal_pct', pct: [0.18, 0.22, 0.26, 0.30, 0.36], reqLevel: 18, skillType: 'active', synergies: [{ from: 'p_prayer', bonus: 0.10, type: 'heal' }, { from: 'p_cleansing', bonus: 0.06, type: 'heal' }] },
+                { id: 'p_resist', name: 'レジスト', icon: '🔰', mp: 35, cd: 12.0, branch: 2, desc: '全耐性を上昇させる', prereq: 'p_defiance', effect: 'buff_defense', duration: [8, 10, 12, 16, 20], reduction: [0.25, 0.30, 0.35, 0.40, 0.50], reqLevel: 24, skillType: 'active', synergies: [{ from: 'p_defiance', bonus: 0.08, type: 'duration' }, { from: 'p_holyshield_p', bonus: 0.03, type: 'damage' }] },
+                { id: 'p_salvation', name: 'サルベーション', icon: '✨', mp: 50, cd: 18.0, branch: 2, desc: '究極の防御オーラを展開', prereq: 'p_resist', effect: 'buff_aura', duration: [10, 12, 15, 20, 25], regen: [5, 8, 12, 16, 22], reduction: [0.20, 0.25, 0.30, 0.35, 0.40], reqLevel: 30, skillType: 'active', synergies: [{ from: 'p_meditation', bonus: 0.10, type: 'duration' }, { from: 'p_redemption', bonus: 0.08, type: 'heal' }] }
             ]
         },
         berserker: {
@@ -3979,17 +3979,17 @@
                 { id: 'b_whirlwind', name: 'ワールウィンド', icon: '🌀', mp: 35, cd: 3.0, branch: 0, desc: '回転しながら斬り刻む', prereq: 'b_concentrate', effect: 'whirlwind', baseMult: [2.0, 2.5, 3.2, 4.0, 5.5], range: 150, reqLevel: 18, skillType: 'active', synergies: [{ from: 'b_doubleswing', bonus: 0.10, type: 'damage' }, { from: 'b_concentrate', bonus: 0.08, type: 'damage' }] },
                 { id: 'b_cleave', name: 'クリーブ', icon: '🪓', mp: 38, cd: 4.0, branch: 0, desc: '広範囲を豪快に薙ぎ払う', prereq: 'b_whirlwind', effect: 'whirlwind', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 160, reqLevel: 18, skillType: 'active', synergies: [{ from: 'b_whirlwind', bonus: 0.10, type: 'damage' }] },
                 { id: 'b_warfrenzy', name: 'ウォーフレンジー', icon: '🔥', mp: 45, cd: 8.0, branch: 0, desc: '戦闘狂の攻撃力と速度上昇', prereq: 'b_cleave', effect: 'buff_frenzy', duration: [8, 10, 12, 15, 18], atkBonus: [0.6, 0.7, 0.8, 1.0, 1.2], spdBonus: [0.3, 0.4, 0.5, 0.6, 0.8], reqLevel: 24, skillType: 'active', synergies: [{ from: 'b_frenzy', bonus: 0.06, type: 'duration' }] },
-                { id: 'b_executioner', name: 'エクセキューショナー', icon: '💀', mp: 55, cd: 10.0, branch: 0, desc: '処刑人の致命的一撃', prereq: 'b_warfrenzy', effect: 'execute', baseMult: [5.0, 6.5, 8.0, 10.0, 13.0], threshold: [0.5, 0.55, 0.6, 0.65, 0.75], range: 70, reqLevel: 30, skillType: 'active', synergies: [{ from: 'b_concentrate', bonus: 0.12, type: 'damage' }, { from: 'b_whirlwind', bonus: 0.08, type: 'damage' }] },
+                { id: 'b_executioner', name: 'エクセキューショナー', icon: '💀', mp: 55, cd: 10.0, branch: 0, desc: '処刑人の致命的一撃', prereq: 'b_warfrenzy', effect: 'execute', baseMult: [5.0, 6.5, 8.0, 10.0, 13.0], threshold: [0.40, 0.45, 0.50, 0.55, 0.60], range: 70, reqLevel: 30, skillType: 'active', synergies: [{ from: 'b_concentrate', bonus: 0.12, type: 'damage' }, { from: 'b_whirlwind', bonus: 0.08, type: 'damage' }] },
                 // Branch 1: ウォークライ
                 { id: 'b_warcry', name: 'ウォークライ', icon: '📯', mp: 14, cd: 5.0, branch: 1, desc: '戦いの雄叫びで敵を気絶', prereq: null, effect: 'stun_aoe', duration: [1.5, 2.0, 2.5, 3.0, 3.5], range: 130, reqLevel: 1, skillType: 'active' },
                 { id: 'b_taunt', name: 'タウント', icon: '😡', mp: 12, cd: 5.0, branch: 1, desc: '挑発して防御力を低下', prereq: 'b_warcry', effect: 'debuff_defense', duration: [3, 4, 5, 6, 8], reduction: [0.25, 0.35, 0.45, 0.55, 0.65], range: 140, reqLevel: 6, skillType: 'active', synergies: [{ from: 'b_warcry', bonus: 0.06, type: 'duration' }] },
                 { id: 'b_howl', name: 'ハウル', icon: '📣', mp: 16, cd: 6.0, branch: 1, desc: '咆哮で敵を怯ませる', prereq: 'b_warcry', effect: 'stun_aoe', duration: [1.8, 2.2, 2.8, 3.5, 4.0], range: 150, reqLevel: 6, skillType: 'active', synergies: [{ from: 'b_warcry', bonus: 0.08, type: 'duration' }] },
                 { id: 'b_ironwill_p', name: '鉄の意志', icon: '💪', mp: 0, cd: 0, branch: 1, desc: '最大HPを常時上昇', prereq: 'b_warcry', reqLevel: 6, skillType: 'passive', passiveEffect: { stat: 'maxHP', baseBonus: 8, perLevel: 6 } },
-                { id: 'b_findpotion', name: 'ファインドポーション', icon: '🧪', mp: 15, cd: 8.0, branch: 1, desc: '回復効果を得る', prereq: 'b_taunt', effect: 'self_heal_pct', pct: [0.15, 0.2, 0.25, 0.3, 0.4], reqLevel: 12, skillType: 'active' },
+                { id: 'b_findpotion', name: 'ファインドポーション', icon: '🧪', mp: 15, cd: 8.0, branch: 1, desc: '回復効果を得る', prereq: 'b_taunt', effect: 'self_heal_pct', pct: [0.10, 0.14, 0.18, 0.22, 0.28], reqLevel: 12, skillType: 'active' },
                 { id: 'b_battlecmd', name: 'バトルコマンド', icon: '🎖', mp: 25, cd: 10.0, branch: 1, desc: '戦闘指揮で味方を強化', prereq: 'b_howl', effect: 'buff_atkspd', duration: [5, 7, 9, 12, 15], bonus: [0.4, 0.5, 0.6, 0.8, 1.0], reqLevel: 12, skillType: 'active', synergies: [{ from: 'b_warcry', bonus: 0.06, type: 'duration' }] },
-                { id: 'b_battleorders', name: 'バトルオーダー', icon: '⚜', mp: 40, cd: 15.0, branch: 1, desc: '戦闘命令で全能力を強化', prereq: 'b_battlecmd', effect: 'battle_orders', duration: [10, 14, 18, 22, 28], bonus: [0.2, 0.3, 0.4, 0.5, 0.6], reqLevel: 18, skillType: 'active', synergies: [{ from: 'b_battlecmd', bonus: 0.08, type: 'duration' }, { from: 'b_howl', bonus: 0.06, type: 'duration' }] },
+                { id: 'b_battleorders', name: 'バトルオーダー', icon: '⚜', mp: 40, cd: 15.0, branch: 1, desc: '戦闘命令で全能力を強化', prereq: 'b_battlecmd', effect: 'battle_orders', duration: [10, 14, 18, 22, 28], bonus: [0.15, 0.22, 0.30, 0.38, 0.45], reqLevel: 18, skillType: 'active', synergies: [{ from: 'b_battlecmd', bonus: 0.08, type: 'duration' }, { from: 'b_howl', bonus: 0.06, type: 'duration' }] },
                 { id: 'b_grimward', name: 'グリムウォード', icon: '☠', mp: 45, cd: 10.0, branch: 1, desc: '恐怖の呪いで敵を気絶', prereq: 'b_battleorders', effect: 'stun_aoe', duration: [2.5, 3.0, 3.5, 4.0, 5.0], range: 170, reqLevel: 24, skillType: 'active', synergies: [{ from: 'b_warcry', bonus: 0.08, type: 'duration' }] },
-                { id: 'b_battlecommand2', name: 'バトルコマンドII', icon: '🏆', mp: 55, cd: 18.0, branch: 1, desc: '究極の戦闘指揮で大幅強化', prereq: 'b_grimward', effect: 'battle_orders', duration: [12, 16, 20, 25, 32], bonus: [0.3, 0.4, 0.5, 0.6, 0.75], reqLevel: 30, skillType: 'active', synergies: [{ from: 'b_battleorders', bonus: 0.10, type: 'duration' }] },
+                { id: 'b_battlecommand2', name: 'バトルコマンドII', icon: '🏆', mp: 55, cd: 18.0, branch: 1, desc: '究極の戦闘指揮で大幅強化', prereq: 'b_grimward', effect: 'battle_orders', duration: [12, 16, 20, 25, 32], bonus: [0.22, 0.30, 0.38, 0.46, 0.55], reqLevel: 30, skillType: 'active', synergies: [{ from: 'b_battleorders', bonus: 0.10, type: 'duration' }] },
                 // Branch 2: マスタリー
                 { id: 'b_leap', name: 'リープアタック', icon: '🦘', mp: 14, cd: 3.0, branch: 2, desc: '跳躍して突撃する', prereq: null, effect: 'charge', baseMult: [2.0, 2.5, 3.0, 3.8, 4.5], range: 220, reqLevel: 1, skillType: 'active' },
                 { id: 'b_stomp', name: 'ストンプ', icon: '👢', mp: 16, cd: 4.0, branch: 2, desc: '地面を叩きつけ敵を減速', prereq: 'b_leap', effect: 'ground_slam', baseMult: [1.8, 2.2, 2.8, 3.5, 4.2], range: 110, slow: [0.5, 0.45, 0.4, 0.35, 0.3], reqLevel: 6, skillType: 'active', synergies: [{ from: 'b_leap', bonus: 0.08, type: 'damage' }] },
@@ -4000,7 +4000,7 @@
                 { id: 'b_swordmastery', name: 'ソードマスタリー', icon: '⚔', mp: 30, cd: 12.0, branch: 2, desc: '攻撃速度を大幅に上昇', prereq: 'b_increasedspeed', effect: 'buff_atkspd', duration: [6, 8, 10, 13, 16], bonus: [0.45, 0.55, 0.65, 0.8, 1.0], reqLevel: 18, skillType: 'active' },
                 { id: 'b_bloodlust_p', name: '血の渇望', icon: '🩸', mp: 0, cd: 0, branch: 2, desc: 'ライフスティールを常時上昇', prereq: 'b_natres', reqLevel: 18, skillType: 'passive', passiveEffect: { stat: 'lifeSteal', baseBonus: 1, perLevel: 0.8 } },
                 { id: 'b_berserk', name: 'バーサーク', icon: '👹', mp: 40, cd: 8.0, branch: 2, desc: '狂戦士化で攻撃力大幅上昇', prereq: 'b_natres', effect: 'buff_berserk', duration: [6, 8, 10, 13, 16], reqLevel: 24, skillType: 'active', synergies: [{ from: 'b_frenzy', bonus: 0.08, type: 'duration' }] },
-                { id: 'b_ironfist', name: 'アイアンフィスト', icon: '🤜', mp: 55, cd: 10.0, branch: 2, desc: '鉄拳で粉砕する究極の一撃', prereq: 'b_berserk', effect: 'execute', baseMult: [4.5, 6.0, 7.5, 9.5, 12.0], threshold: [0.45, 0.5, 0.55, 0.6, 0.7], range: 65, reqLevel: 30, skillType: 'active', synergies: [{ from: 'b_concentrate', bonus: 0.12, type: 'damage' }, { from: 'b_weaponmastery_p', bonus: 0.04, type: 'damage' }] }
+                { id: 'b_ironfist', name: 'アイアンフィスト', icon: '🤜', mp: 55, cd: 10.0, branch: 2, desc: '鉄拳で粉砕する究極の一撃', prereq: 'b_berserk', effect: 'execute', baseMult: [4.5, 6.0, 7.5, 9.5, 12.0], threshold: [0.35, 0.45, 0.50, 0.55, 0.60], range: 65, reqLevel: 30, skillType: 'active', synergies: [{ from: 'b_concentrate', bonus: 0.12, type: 'damage' }, { from: 'b_weaponmastery_p', bonus: 0.04, type: 'damage' }] }
             ]
         },
         assassin: {
@@ -4026,7 +4026,7 @@
                 { id: 'a_bladesofice', name: 'ブレイズオブアイス', icon: '❄', mp: 28, cd: 3.0, branch: 0, desc: '氷の刃で周囲を凍結', prereq: 'a_dragontalon', effect: 'frost_nova', baseMult: [1.5, 2.0, 2.5, 3.2, 4.0], freeze: [2, 2, 3, 3, 4], reqLevel: 18, skillType: 'active', synergies: [{ from: 'a_dragontalon', bonus: 0.08, type: 'damage' }] },
                 { id: 'a_clawsofthunder', name: 'クロウズオブサンダー', icon: '⚡', mp: 35, cd: 4.0, branch: 0, desc: '雷の爪で連鎖攻撃', prereq: 'a_bladesofice', effect: 'chain_lightning', bounces: [2, 3, 4, 5, 6], baseMult: [1.8, 2.2, 2.8, 3.5, 4.5], reqLevel: 18, skillType: 'active', synergies: [{ from: 'a_fistsoffire', bonus: 0.10, type: 'damage' }] },
                 { id: 'a_bladesentinel', name: 'ブレードセンチネル', icon: '🗡', mp: 42, cd: 6.0, branch: 0, desc: '刃の衛兵を展開する', prereq: 'a_clawsofthunder', effect: 'arrow_rain', baseMult: [2.0, 2.5, 3.2, 4.0, 5.5], range: 100, reqLevel: 24, skillType: 'active', synergies: [{ from: 'a_clawsofthunder', bonus: 0.08, type: 'damage' }, { from: 'a_bladesofice', bonus: 0.06, type: 'damage' }] },
-                { id: 'a_phoenixstrike', name: 'フェニックスストライク', icon: '🔥', mp: 55, cd: 8.0, branch: 0, desc: '不死鳥の一撃で粉砕', prereq: 'a_bladesentinel', effect: 'execute', baseMult: [5.0, 6.5, 8.0, 10.0, 13.0], threshold: [0.5, 0.55, 0.6, 0.65, 0.75], range: 80, reqLevel: 30, skillType: 'active', synergies: [{ from: 'a_dragontalon', bonus: 0.12, type: 'damage' }, { from: 'a_clawsofthunder', bonus: 0.10, type: 'damage' }] },
+                { id: 'a_phoenixstrike', name: 'フェニックスストライク', icon: '🔥', mp: 55, cd: 8.0, branch: 0, desc: '不死鳥の一撃で粉砕', prereq: 'a_bladesentinel', effect: 'execute', baseMult: [5.0, 6.5, 8.0, 10.0, 13.0], threshold: [0.40, 0.45, 0.50, 0.55, 0.60], range: 80, reqLevel: 30, skillType: 'active', synergies: [{ from: 'a_dragontalon', bonus: 0.12, type: 'damage' }, { from: 'a_clawsofthunder', bonus: 0.10, type: 'damage' }] },
                 // Branch 1: シャドウ
                 { id: 'a_burstspeed', name: 'バーストオブスピード', icon: '💨', mp: 12, cd: 8.0, branch: 1, desc: '瞬間的に速度を上昇', prereq: null, effect: 'buff_speed', duration: [5, 7, 9, 12, 15], bonus: [0.3, 0.4, 0.5, 0.6, 0.8], reqLevel: 1, skillType: 'active' },
                 { id: 'a_fade', name: 'フェード', icon: '🌑', mp: 15, cd: 10.0, branch: 1, desc: '闇に溶け被ダメージ軽減', prereq: 'a_burstspeed', effect: 'buff_defense', duration: [6, 8, 10, 12, 16], reduction: [0.3, 0.4, 0.5, 0.55, 0.65], reqLevel: 6, skillType: 'active' },
@@ -4848,7 +4848,7 @@
             // Set bonus damage
             dmgPct += (this.setBonuses && this.setBonuses.dmgPct) || 0;
             let finalDmg = Math.round(base * (1 + dmgPct / 100));
-            if (this.berserkT > 0) finalDmg = Math.round(finalDmg * 2);
+            if (this.berserkT > 0) finalDmg = Math.round(finalDmg * 1.5);
             return finalDmg;
         },
 
@@ -5024,7 +5024,7 @@
                 this.level++;
                 this.statPoints += 5;
                 this.skillPoints = (this.skillPoints || 0) + 1;
-                this.xpToNext = Math.round(100 * Math.pow(1.25, this.level - 1));
+                this.xpToNext = Math.round(120 * Math.pow(1.28, this.level - 1));
                 this.recalcStats();
                 this.hp = this.maxHP;
                 this.mp = this.maxMP;
@@ -5062,9 +5062,9 @@
             }
             // Berserk increases damage taken
             if (this.berserkT > 0) dmg = Math.round(dmg * 1.3);
-            // Magic Shield reduces damage by 50%
+            // Magic Shield reduces damage (uses skill-based reduction)
             if (this.shieldT > 0) {
-                dmg = Math.max(1, Math.round(dmg * 0.5));
+                dmg = Math.max(1, Math.round(dmg * (1 - (this.shieldReduction || 0.35))));
                 emitParticles(this.x, this.y, '#8888ff', 4, 40, 0.2, 2, -30);
             }
             // Mana Shield - absorb damage with MP
@@ -5582,7 +5582,6 @@
                 }
                 case 'buff_frenzy': {
                     const dur = getSkillValue(skDef, 'duration', lvl) * (1 + synDur);
-                    this.berserkT = dur;
                     this.speedBuffT = dur;
                     this.speedBuffBonus = getSkillValue(skDef, 'spdBonus', lvl);
                     this.atkSpdBuffT = dur;
@@ -5600,7 +5599,7 @@
                     for (const m of monsters) {
                         if (m.alive && dist(this.x, this.y, m.x, m.y) < (skDef.range || 70)) {
                             const hpRatio = m.hp / m.maxHP;
-                            const finalMult = hpRatio <= thresh ? mult * 1.5 : mult;
+                            const finalMult = hpRatio <= thresh ? mult * 1.25 : mult;
                             monsterTakeDmg(m, dmg * finalMult, hpRatio <= thresh);
                             hit = true;
                             break;
@@ -6295,10 +6294,10 @@
 
     // ========== MERCENARY SYSTEM (D2-style) ==========
     const MERCENARY_DEFS = {
-        rogue:     { name:'Rogue',     nameJP:'弓兵',   baseHP:120, baseStr:10, baseDex:18, baseInt:8,  baseDef:8,  attackType:'ranged', attackRange:180, baseSpeed:160, icon:'🏹', color:'#c98b6b', hpPerLevel:12, dmgPerLevel:3, defPerLevel:1.2, hireCost:400, reviveCostBase:200 },
-        fighter:   { name:'Fighter',   nameJP:'戦士',   baseHP:220, baseStr:18, baseDex:8,  baseInt:6,  baseDef:18, attackType:'melee',  attackRange:45,  baseSpeed:140, icon:'🛡', color:'#6c8aa6', hpPerLevel:20, dmgPerLevel:4, defPerLevel:2.0, hireCost:600, reviveCostBase:300 },
-        mage:      { name:'Mage',      nameJP:'魔法使い', baseHP:90,  baseStr:6,  baseDex:10, baseInt:22, baseDef:6,  attackType:'magic',  attackRange:160, baseSpeed:150, icon:'🧙', color:'#9a6bd6', hpPerLevel:9,  dmgPerLevel:5, defPerLevel:0.8, hireCost:700, reviveCostBase:350 },
-        priestess: { name:'Priestess', nameJP:'聖女',   baseHP:140, baseStr:8,  baseDex:12, baseInt:18, baseDef:10, attackType:'magic',  attackRange:120, baseSpeed:150, icon:'✨', color:'#e6c36a', hpPerLevel:13, dmgPerLevel:3, defPerLevel:1.1, hireCost:650, reviveCostBase:325 }
+        rogue:     { name:'Rogue',     nameJP:'弓兵',   baseHP:120, baseStr:10, baseDex:18, baseInt:8,  baseDef:8,  attackType:'ranged', attackRange:180, baseSpeed:160, icon:'🏹', color:'#c98b6b', hpPerLevel:12, dmgPerLevel:2, defPerLevel:1.2, hireCost:400, reviveCostBase:200 },
+        fighter:   { name:'Fighter',   nameJP:'戦士',   baseHP:220, baseStr:18, baseDex:8,  baseInt:6,  baseDef:18, attackType:'melee',  attackRange:45,  baseSpeed:140, icon:'🛡', color:'#6c8aa6', hpPerLevel:20, dmgPerLevel:3, defPerLevel:2.0, hireCost:600, reviveCostBase:300 },
+        mage:      { name:'Mage',      nameJP:'魔法使い', baseHP:90,  baseStr:6,  baseDex:10, baseInt:22, baseDef:6,  attackType:'magic',  attackRange:160, baseSpeed:150, icon:'🧙', color:'#9a6bd6', hpPerLevel:9,  dmgPerLevel:4, defPerLevel:0.8, hireCost:700, reviveCostBase:350 },
+        priestess: { name:'Priestess', nameJP:'聖女',   baseHP:140, baseStr:8,  baseDex:12, baseInt:18, baseDef:10, attackType:'magic',  attackRange:120, baseSpeed:150, icon:'✨', color:'#e6c36a', hpPerLevel:13, dmgPerLevel:2, defPerLevel:1.1, hireCost:650, reviveCostBase:325 }
     };
     const MERC_ACT_MULT = [0, 1.0, 1.3, 1.6, 2.0, 2.5];
     function getMercHireCost(typeKey) { return Math.round((MERCENARY_DEFS[typeKey]?.hireCost || 500) * (MERC_ACT_MULT[G.act] || 1)); }
@@ -6312,7 +6311,7 @@
             dex: Math.round(def.baseDex + (lvl - 1) * 2),
             int: Math.round(def.baseInt + (lvl - 1) * 2),
             defense: Math.round(def.baseDef + def.defPerLevel * (lvl - 1)),
-            baseDmg: Math.round((def.baseStr * 0.7 + def.baseDex * 0.4 + def.baseInt * 0.6) + def.dmgPerLevel * (lvl - 1))
+            baseDmg: Math.round((def.baseStr * 0.55 + def.baseDex * 0.35 + def.baseInt * 0.45) + def.dmgPerLevel * (lvl - 1))
         };
     }
 
@@ -6826,9 +6825,9 @@
                                 player.speedDebuffT = aff.slowOnHit;
                             }
                         }
-                        // Mercenary tank: 40% chance to redirect melee attack to merc (fighter: 60%)
+                        // Mercenary tank: 25% chance to redirect melee attack to merc (fighter: 40%)
                         if (mercenary && mercenary.alive && dist(this.x, this.y, mercenary.x, mercenary.y) < this.r + mercenary.radius + 15) {
-                            const tauntChance = mercenary.type === 'fighter' ? 0.6 : 0.4;
+                            const tauntChance = mercenary.type === 'fighter' ? 0.4 : 0.25;
                             if (Math.random() < tauntChance) { mercenary.takeDmg(meleeDmg); this.atkCD = 1.0; return; }
                         }
                         player.takeDamage(meleeDmg, meleeElement);
@@ -7550,7 +7549,7 @@
             emitParticles(m.x, m.y, '#ffffff', 4, 80, 0.2, 4, 0);
             const globalF = getGlobalFloor(G.act, G.actFloor, G.cycle);
             const xpMult = m.isUnique ? 5 : m.isChampion ? 3 : 1;
-            player.addXP(Math.round(m.def.xp * (1 + (globalF - 1) * 0.1) * (1 + G.cycle * 0.3) * xpMult));
+            player.addXP(Math.round(m.def.xp * (1 + (globalF - 1) * 0.07) * (1 + G.cycle * 0.3) * xpMult));
             // Gold drop (champion/unique drop more)
             const goldMult = m.isUnique ? 4 : m.isChampion ? 2.5 : 1;
             const goldAmt = Math.round(rand(Math.max(1, m.def.xp * 0.5), m.def.xp * 1.5) * goldMult);
@@ -7562,12 +7561,12 @@
                 dropItem(m.x, m.y, generateItem(globalF, 'legendary'));
             } else if (m.isChampion) {
                 for (let i = 0; i < rand(2, 3); i++) dropItem(m.x, m.y, generateItem(globalF, Math.random() < 0.3 ? 'rare' : 'magic'));
-            } else if (Math.random() < m.def.loot) {
-                const count = (m.isBoss || m.type === 'demonlord') ? rand(3, 5) : 1;
+            } else if (Math.random() < m.def.loot * 0.7) {
+                const count = (m.isBoss || m.type === 'demonlord') ? rand(2, 4) : 1;
                 for (let i = 0; i < count; i++) dropItem(m.x, m.y, generateItem(globalF));
             }
-            if (Math.random() < 0.25) dropItem(m.x, m.y, generatePotion('potion'));
-            if (Math.random() < 0.10) dropItem(m.x, m.y, generatePotion('manaPotion'));
+            if (Math.random() < 0.15) dropItem(m.x, m.y, generatePotion('potion'));
+            if (Math.random() < 0.06) dropItem(m.x, m.y, generatePotion('manaPotion'));
             // Rune drops (8% base, champion 20%, unique 35%, boss guaranteed)
             const runeChance = m.isBoss ? 1.0 : m.isUnique ? 0.35 : m.isChampion ? 0.20 : 0.08;
             if (Math.random() < runeChance) {
@@ -7714,12 +7713,16 @@
     // ========== SHOP / ECONOMY ==========
     function calculateSellPrice(item) {
         const base = { common:10, magic:30, rare:80, legendary:200, unique:500, runeword:800 };
-        return base[item.rarityKey] || 10;
+        const b = base[item.rarityKey] || 10;
+        const lvl = item.itemLevel || 1;
+        return Math.round(b * (1 + (lvl - 1) * 0.12));
     }
     function calculateBuyPrice(item) { return calculateSellPrice(item) * 3; }
     function calculateSmithCost(item) {
         const base = { common:100, magic:250, rare:500, legendary:1000, unique:2000, runeword:2500 };
-        return base[item.rarityKey] || 100;
+        const b = base[item.rarityKey] || 100;
+        const lvl = item.itemLevel || 1;
+        return Math.round(b * (1 + (lvl - 1) * 0.15));
     }
     function generateShopItems(act) {
         const items = [];
@@ -8349,7 +8352,7 @@
             const pool = AFFIXES.filter(a => !item.affixes.some(af => af.stat === a.stat));
             if (pool.length > 0) {
                 const a = pool[rand(0, pool.length - 1)];
-                const floorMult = 1 + (G.floor - 1) * 0.2;
+                const floorMult = 1 + (G.floor - 1) * 0.15;
                 const v = Math.round(rand(a.min, a.max) * floorMult);
                 item.affixes.push({ stat: a.stat, value: v, text: a.fmt.replace('{v}', v) });
                 addLog(`鍛冶成功！${a.fmt.replace('{v}', v)} が追加された`, '#88ff88');
@@ -12755,7 +12758,7 @@
             for (let ci = 0; ci < numItems; ci++) {
                 dropItem(player.x, player.y, generateItem(G.floor));
             }
-            if (Math.random() < 0.5) dropItem(player.x, player.y, generatePotion());
+            if (Math.random() < 0.35) dropItem(player.x, player.y, generatePotion());
             addLog('宝箱を開けた！', '#ffd700');
             emitParticles(player.x, player.y, '#ffd700', 15, 60, 0.5, 3, -40);
         }
