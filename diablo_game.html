@@ -1302,45 +1302,61 @@
         else node.connect(audioCtx.destination);
     }
 
-    // Background music - dark ambient drone
-    function startBGM() {
-        if (bgmNodes) return;
+    // ACT-specific BGM themes (Web Audio synthesized)
+    const ACT_BGM_THEMES = {
+        1: { sub: 36.7, pad: 73.4, tension: 108, filterFreq: 200, lfoSpeed: 0.08, vol: 0.025, padType: 'triangle' }, // Cathedral: dark, low
+        2: { sub: 41.2, pad: 82.4, tension: 123, filterFreq: 300, lfoSpeed: 0.06, vol: 0.022, padType: 'sine' },      // Desert: open, warm
+        3: { sub: 32.7, pad: 65.4, tension: 98, filterFreq: 250, lfoSpeed: 0.1, vol: 0.028, padType: 'triangle' },    // Jungle: dense, low
+        4: { sub: 27.5, pad: 55.0, tension: 82, filterFreq: 180, lfoSpeed: 0.12, vol: 0.03, padType: 'sawtooth' },    // Hell: heavy, dissonant
+        5: { sub: 49.0, pad: 98.0, tension: 147, filterFreq: 350, lfoSpeed: 0.05, vol: 0.02, padType: 'sine' },       // Ice: high, ethereal
+        town: { sub: 55.0, pad: 110, tension: 165, filterFreq: 400, lfoSpeed: 0.04, vol: 0.015, padType: 'sine' }     // Town: calm, warm
+    };
+    let currentBGMAct = null;
+
+    function startBGM(act) {
+        const targetAct = act || G.act || 1;
+        const themeKey = G.inTown ? 'town' : targetAct;
+        if (bgmNodes && currentBGMAct === themeKey) return;
+        stopBGM();
+        if (!audioCtx || audioCtx.state === 'suspended') return;
+        const theme = ACT_BGM_THEMES[themeKey] || ACT_BGM_THEMES[1];
+        currentBGMAct = themeKey;
         const t = audioCtx.currentTime;
         const bgmGain = audioCtx.createGain();
-        bgmGain.gain.value = 0.025;
+        bgmGain.gain.value = theme.vol;
 
         // Sub bass drone
         const sub = audioCtx.createOscillator();
         sub.type = 'sine';
-        sub.frequency.value = 36.7; // Low D
+        sub.frequency.value = theme.sub;
         sub.connect(bgmGain);
         sub.start(t);
 
         // Dark pad
         const pad1 = audioCtx.createOscillator();
-        pad1.type = 'triangle';
-        pad1.frequency.value = 73.4; // D2
+        pad1.type = theme.padType;
+        pad1.frequency.value = theme.pad;
         const padFilter = audioCtx.createBiquadFilter();
         padFilter.type = 'lowpass';
-        padFilter.frequency.value = 200;
+        padFilter.frequency.value = theme.filterFreq;
         pad1.connect(padFilter);
         padFilter.connect(bgmGain);
         pad1.start(t);
 
-        // Dissonant fifth for tension
+        // Dissonant tension note
         const pad2 = audioCtx.createOscillator();
         pad2.type = 'sine';
-        pad2.frequency.value = 108; // ~Ab2 (tritone tension)
+        pad2.frequency.value = theme.tension;
         const pad2G = audioCtx.createGain();
         pad2G.gain.value = 0.4;
         pad2.connect(pad2G);
         pad2G.connect(bgmGain);
         pad2.start(t);
 
-        // Slow LFO for eerie pulsing
+        // Slow LFO for pulsing
         const lfo = audioCtx.createOscillator();
         lfo.type = 'sine';
-        lfo.frequency.value = 0.08; // Very slow
+        lfo.frequency.value = theme.lfoSpeed;
         const lfoGain = audioCtx.createGain();
         lfoGain.gain.value = 0.012;
         lfo.connect(lfoGain);
@@ -1357,6 +1373,7 @@
             try { node.disconnect?.(); } catch (e) { /* ignore */ }
         }
         bgmNodes = null;
+        currentBGMAct = null;
     }
 
     function setSoundEnabled(enabled) {
@@ -1601,40 +1618,49 @@
     // Ambient dungeon - layered environmental sounds
     let lastAmbientTime = 0;
     let ambientDripTimer = 0;
+    // ACT-specific ambient sound sets
+    const ACT_AMBIENT = {
+        1: [ // Cathedral: drips, chains, stone, ghosts
+            () => { const f=1500+Math.random()*1000; playSound(f,'sine',0.06,0.025); setTimeout(()=>playSound(f*0.7,'sine',0.05,0.015),100+Math.random()*80); },
+            () => { for(let i=0;i<3;i++) setTimeout(()=>playNoise(0.02,0.015,4000+Math.random()*2000),i*60); },
+            () => { playSweep(60,40,0.3,'sawtooth',0.008); },
+            () => { playSweep(200,150,0.6,'sine',0.01); setTimeout(()=>playSweep(170,130,0.4,'sine',0.006),300); }
+        ],
+        2: [ // Desert: wind, sand, distant rumble
+            () => { playNoise(1.0,0.015,600); playSweep(300,100,0.8,'sine',0.004); },
+            () => { playNoise(0.3,0.01,1200); },
+            () => { playNoise(0.5,0.015,250); playSound(30,'sine',0.4,0.008); },
+            () => { playSweep(800,400,0.5,'sine',0.003); }
+        ],
+        3: [ // Jungle: insects, birds, rain, frogs
+            () => { for(let i=0;i<5;i++) setTimeout(()=>playSound(3000+Math.random()*2000,'sine',0.02,0.008),i*40); },
+            () => { playSweep(2000,1500,0.3,'sine',0.006); setTimeout(()=>playSweep(1800,1200,0.25,'sine',0.004),200); },
+            () => { for(let i=0;i<8;i++) setTimeout(()=>playNoise(0.01,0.004,6000),i*30+Math.random()*20); },
+            () => { playSound(150,'square',0.1,0.008); setTimeout(()=>playSound(120,'square',0.08,0.006),200); }
+        ],
+        4: [ // Hell: fire, screams, explosions, lava
+            () => { playNoise(0.8,0.02,200); playSound(25,'sawtooth',0.6,0.01); },
+            () => { playSweep(400,100,0.5,'sawtooth',0.012); },
+            () => { playNoise(0.2,0.025,150); playSound(40,'sine',0.3,0.015); },
+            () => { playSweep(600,200,0.4,'sine',0.008); setTimeout(()=>playSweep(500,150,0.3,'sine',0.005),150); }
+        ],
+        5: [ // Ice: wind, cracking ice, crystals, howl
+            () => { playNoise(1.2,0.012,1000); playSweep(500,300,0.8,'sine',0.003); },
+            () => { playSound(2500,'sine',0.03,0.015); setTimeout(()=>playSound(3000,'sine',0.02,0.01),100); },
+            () => { for(let i=0;i<3;i++) setTimeout(()=>playSound(4000+Math.random()*1000,'sine',0.01,0.006),i*80); },
+            () => { playSweep(300,150,0.8,'sine',0.008); }
+        ]
+    };
+
     function sfxAmbient() {
         if (!audioCtx) return;
         const now = audioCtx.currentTime;
         if (now - lastAmbientTime < 3 + Math.random() * 6) return;
         lastAmbientTime = now;
-        const r = Math.random();
-        if (r < 0.25) {
-            // Water drip with multiple echoes
-            const freq = 1500 + Math.random() * 1000;
-            playSound(freq, 'sine', 0.06, 0.025);
-            setTimeout(() => playSound(freq * 0.7, 'sine', 0.05, 0.015), 100 + Math.random() * 80);
-            setTimeout(() => playSound(freq * 0.5, 'sine', 0.04, 0.008), 250 + Math.random() * 100);
-        } else if (r < 0.4) {
-            // Distant rumble / earthquake
-            playNoise(0.5, 0.015, 250);
-            playSound(30, 'sine', 0.4, 0.008);
-        } else if (r < 0.55) {
-            // Wind through corridors
-            playNoise(0.8, 0.012, 800);
-            playSweep(400, 200, 0.6, 'sine', 0.005);
-        } else if (r < 0.7) {
-            // Distant chain rattle
-            for (let i = 0; i < 3; i++) {
-                setTimeout(() => playNoise(0.02, 0.015, 4000 + Math.random() * 2000), i * 60);
-            }
-        } else if (r < 0.85) {
-            // Stone creak
-            playSweep(60, 40, 0.3, 'sawtooth', 0.008);
-            setTimeout(() => playNoise(0.05, 0.005, 300), 200);
-        } else {
-            // Distant moan / ghost
-            playSweep(200, 150, 0.6, 'sine', 0.01);
-            setTimeout(() => playSweep(170, 130, 0.4, 'sine', 0.006), 300);
-        }
+        const act = G.act || 1;
+        const sounds = ACT_AMBIENT[act] || ACT_AMBIENT[1];
+        const idx = Math.floor(Math.random() * sounds.length);
+        sounds[idx]();
     }
 
     // --- Constants ---
@@ -1712,7 +1738,7 @@
         spawnTimer: 0, // 敵リスポーンタイマー
         spawnInterval: 8, // 8秒ごとに敵を追加出現
         // ACT/チャプターシステム
-        act: 1, actFloor: 1, cycle: 0, inTown: false,
+        act: 1, actFloor: 1, cycle: 0, inTown: false, difficulty: 'normal', // 'normal' | 'nightmare' | 'hell'
         gold: 0, quests: {}, questKillCounts: {},
         waypoints: [1], stash: [], maxStash: 48,
         shopItems: [], bossesDefeated: {},
@@ -1840,7 +1866,13 @@
         return f + actFloor;
     }
     function getCurrentActDef() { return ACT_DEFS[G.act]; }
-    function getCycleMult() { return 1 + G.cycle * 0.8; }
+    const DIFFICULTY_DEFS = {
+        normal:    { name: 'ノーマル', color: '#cccccc', mult: 1.0, xpMult: 1.0, dropBonus: 0, respenalty: 0 },
+        nightmare: { name: 'ナイトメア', color: '#ffaa44', mult: 2.0, xpMult: 1.5, dropBonus: 0.15, respenalty: 20 },
+        hell:      { name: 'ヘル', color: '#ff4444', mult: 3.5, xpMult: 2.0, dropBonus: 0.30, respenalty: 50 }
+    };
+    function getDifficultyMult() { return DIFFICULTY_DEFS[G.difficulty || 'normal'].mult; }
+    function getCycleMult() { return (1 + G.cycle * 0.8) * getDifficultyMult(); }
     function isBossFloor() { return G.actFloor === getCurrentActDef().bossFloor; }
 
     // ========== BOSS DEFINITIONS ==========
@@ -3366,9 +3398,10 @@
 
         let rarityKey = forceRarity;
         if (!rarityKey) {
-            // Magic Find shifts rarity distribution toward better items
+            // Magic Find + Difficulty bonus shift rarity distribution toward better items
             const mf = (player && player.getMagicFind) ? player.getMagicFind() : 0;
-            const r = Math.random() * (1 - mf / 300); // MF reduces the random roll, making better rarity more likely
+            const diffDrop = DIFFICULTY_DEFS[G.difficulty || 'normal'].dropBonus || 0;
+            const r = Math.random() * (1 - mf / 300 - diffDrop); // MF + difficulty reduces the random roll
             rarityKey = pickRarity(r);
         }
         const rarity = RARITY[rarityKey];
@@ -4586,7 +4619,9 @@
             }
             // Set bonus allRes
             res += (this.setBonuses && this.setBonuses.allRes) || 0;
-            return Math.min(res, 75); // Cap at 75% like D2
+            // Difficulty penalty (Nightmare: -20, Hell: -50)
+            res -= (DIFFICULTY_DEFS[G.difficulty || 'normal'].respenalty || 0);
+            return Math.min(Math.max(res, -100), 75); // Cap at 75%, can go negative
         },
 
         getBlockChance() {
@@ -4662,6 +4697,8 @@
         },
 
         addXP(amount) {
+            // Difficulty XP multiplier
+            amount = Math.round(amount * (DIFFICULTY_DEFS[G.difficulty || 'normal'].xpMult || 1));
             this.xp += amount;
             while (this.xp >= this.xpToNext) {
                 this.xp -= this.xpToNext;
@@ -7122,6 +7159,8 @@
         const actDef = getCurrentActDef();
         G.floor = getGlobalFloor(G.act, G.actFloor, G.cycle);
         G.inTown = false;
+        // Switch to dungeon BGM for current ACT
+        if (audioCtx && SETTINGS.sound) startBGM(G.act);
 
         generateTileTextures(actDef.tileTheme); tileTexturesReady = true;
 
@@ -7272,6 +7311,8 @@
         G.actFloor = 0; // 0 = town
         G.inTown = true;
         G.floor = getGlobalFloor(act, 1, G.cycle); // for scaling reference
+        // Switch to town BGM
+        if (audioCtx && SETTINGS.sound) startBGM(act);
 
         generateTileTextures(ACT_DEFS[act].tileTheme); tileTexturesReady = true;
 
@@ -7742,6 +7783,7 @@
             <div class="stat-row"><span class="stat-label">☠ 毒耐性</span><span class="stat-value" style="color:#44cc22">${player.getResistance('poison')}%</span></div>
             <hr style="border-color:#333;margin:6px 0">
             <div style="color:#ccc;font-size:11px;margin-bottom:4px">🗺 探索情報</div>
+            <div class="stat-row"><span class="stat-label">難易度</span><span class="stat-value" style="color:${DIFFICULTY_DEFS[G.difficulty||'normal'].color}">${DIFFICULTY_DEFS[G.difficulty||'normal'].name}</span></div>
             <div class="stat-row"><span class="stat-label">現在地</span><span class="stat-value" style="color:#aa88ff">ACT${G.act} ${G.inTown ? '町' : '第' + G.actFloor + '層'}${G.cycle > 0 ? ' (' + (G.cycle+1) + '周目)' : ''}</span></div>
             <div class="stat-row"><span class="stat-label">ゴールド</span><span class="stat-value" style="color:#ffd700">${G.gold}G</span></div>
             <div class="stat-row"><span class="stat-label">残り敵数</span><span class="stat-value" style="color:#ff6666">${monsters.filter(m=>m.alive).length}</span></div>
@@ -9453,8 +9495,35 @@
     }
 
     function confirmClassSelect() {
-        selectClass(CLASS_KEYS[G.selectedClassIdx]);
+        // Show difficulty selection after class is chosen
+        G.titlePhase = 'difficultySelect';
+        DOM.classSelect.style.display = 'none';
+        showDifficultySelect();
     }
+
+    function showDifficultySelect() {
+        let html = `<div style="text-align:center;color:#ffd700;font-size:20px;margin-bottom:20px;font-family:serif">⚔ 難易度を選択 ⚔</div>`;
+        html += `<div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">`;
+        for (const [key, def] of Object.entries(DIFFICULTY_DEFS)) {
+            const desc = key === 'normal' ? '初心者向け。標準的な難易度。' :
+                         key === 'nightmare' ? '敵が強化。報酬も増加。耐性-20。' :
+                         '最高難度。敵が極めて強い。耐性-50。';
+            html += `<div onclick="window.selectDifficulty('${key}')" style="cursor:pointer;padding:16px 24px;border:2px solid ${def.color};border-radius:8px;background:rgba(0,0,0,0.7);min-width:140px;transition:all 0.2s" onmouseover="this.style.boxShadow='0 0 20px ${def.color}40';this.style.transform='translateY(-3px)'" onmouseout="this.style.boxShadow='none';this.style.transform='none'">
+                <div style="color:${def.color};font-size:16px;font-weight:bold;margin-bottom:6px">${def.name}</div>
+                <div style="color:#aaa;font-size:11px">${desc}</div>
+                <div style="color:#888;font-size:10px;margin-top:6px">敵x${def.mult} / XPx${def.xpMult}</div>
+            </div>`;
+        }
+        html += `</div>`;
+        DOM.classSelect.innerHTML = html;
+        DOM.classSelect.style.display = 'block';
+    }
+
+    window.selectDifficulty = function(diff) {
+        G.difficulty = diff;
+        DOM.classSelect.style.display = 'none';
+        selectClass(CLASS_KEYS[G.selectedClassIdx]);
+    };
 
     // Click handlers still work
     DOM.titleStartText.addEventListener('click', (e) => {
@@ -10137,24 +10206,61 @@
             }
         }
 
-        // Potion counts (left: HP, right: MP)
+        // Potion Belt (D2-style: 4 slots - 2 HP left, 2 MP right)
         const hpPotCount = getPotionCount(player.inventory, 'potion');
         const mpPotCount = getPotionCount(player.inventory, 'manaPotion');
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'middle';
-        ctx.font = `12px ${FONT_UI}`;
+        const beltSlotW = 28, beltSlotH = 28, beltGap = 2;
+        const beltY = skillY + 2;
+
+        // HP potion belt (left side)
+        const hpBeltX = skillStartX - beltSlotW * 2 - beltGap - 20;
+        for (let i = 0; i < 2; i++) {
+            const bx = hpBeltX + i * (beltSlotW + beltGap);
+            ctx.fillStyle = hpPotCount > i ? 'rgba(0,60,0,0.8)' : 'rgba(20,15,10,0.6)';
+            ctx.fillRect(bx, beltY, beltSlotW, beltSlotH);
+            ctx.strokeStyle = hpPotCount > i ? '#00aa00' : '#3a3228';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(bx, beltY, beltSlotW, beltSlotH);
+            if (hpPotCount > i) {
+                ctx.font = '16px serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#fff';
+                ctx.fillText('🧪', bx + beltSlotW / 2, beltY + beltSlotH / 2);
+            }
+        }
+        ctx.textAlign = 'center';
+        ctx.font = `bold 10px ${FONT_UI}`;
         ctx.fillStyle = '#00ff00';
-        ctx.fillText(`🧪 x${hpPotCount}`, skillStartX - 16, skillY + skillH / 2 - 6);
-        ctx.font = `bold 9px ${FONT_UI}`;
+        ctx.fillText(`x${hpPotCount}`, hpBeltX + beltSlotW + beltGap / 2, beltY + beltSlotH + 10);
+        ctx.font = `bold 8px ${FONT_UI}`;
         ctx.fillStyle = '#888';
-        ctx.fillText('(Q)', skillStartX - 16, skillY + skillH / 2 + 10);
-        ctx.textAlign = 'left';
-        ctx.font = `12px ${FONT_UI}`;
+        ctx.fillText('(Q)', hpBeltX + beltSlotW + beltGap / 2, beltY - 6);
+
+        // MP potion belt (right side)
+        const mpBeltX = skillStartX + skillTotalW + 20;
+        for (let i = 0; i < 2; i++) {
+            const bx = mpBeltX + i * (beltSlotW + beltGap);
+            ctx.fillStyle = mpPotCount > i ? 'rgba(0,20,60,0.8)' : 'rgba(20,15,10,0.6)';
+            ctx.fillRect(bx, beltY, beltSlotW, beltSlotH);
+            ctx.strokeStyle = mpPotCount > i ? '#4488ff' : '#3a3228';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(bx, beltY, beltSlotW, beltSlotH);
+            if (mpPotCount > i) {
+                ctx.font = '16px serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#fff';
+                ctx.fillText('💧', bx + beltSlotW / 2, beltY + beltSlotH / 2);
+            }
+        }
+        ctx.textAlign = 'center';
+        ctx.font = `bold 10px ${FONT_UI}`;
         ctx.fillStyle = '#4488ff';
-        ctx.fillText(`💧 x${mpPotCount}`, skillStartX + skillTotalW + 16, skillY + skillH / 2 - 6);
-        ctx.font = `bold 9px ${FONT_UI}`;
+        ctx.fillText(`x${mpPotCount}`, mpBeltX + beltSlotW + beltGap / 2, beltY + beltSlotH + 10);
+        ctx.font = `bold 8px ${FONT_UI}`;
         ctx.fillStyle = '#888';
-        ctx.fillText('(W)', skillStartX + skillTotalW + 16, skillY + skillH / 2 + 10);
+        ctx.fillText('(W)', mpBeltX + beltSlotW + beltGap / 2, beltY - 6);
 
         // XP bar
         const xpW = skillTotalW + 60;
@@ -10444,7 +10550,7 @@
                 version: 4,
                 timestamp: Date.now(),
                 floor: G.floor,
-                act: G.act, actFloor: G.actFloor, cycle: G.cycle, inTown: G.inTown,
+                act: G.act, actFloor: G.actFloor, cycle: G.cycle, inTown: G.inTown, difficulty: G.difficulty || 'normal',
                 gold: G.gold, quests: G.quests, questKillCounts: G.questKillCounts,
                 waypoints: G.waypoints, bossesDefeated: G.bossesDefeated,
                 time: G.time,
@@ -10576,6 +10682,7 @@
                 G.act = save.act || 1;
                 G.actFloor = save.actFloor || 1;
                 G.cycle = save.cycle || 0;
+                G.difficulty = save.difficulty || 'normal';
                 G.inTown = save.inTown || false;
                 G.gold = save.gold || 0;
                 G.quests = save.quests || {};
