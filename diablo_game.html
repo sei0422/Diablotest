@@ -6760,9 +6760,11 @@
                         const angle = Math.PI * 2 * i / activePhase.count;
                         const tx = m.x + Math.cos(angle) * 300;
                         const ty = m.y + Math.sin(angle) * 300;
-                        enemyProjectiles.push(new EnemyProjectile(m.x, m.y, tx, ty,
+                        const ep = new EnemyProjectile(m.x, m.y, tx, ty,
                             Math.round(activePhase.projDmg * getCycleMult()),
-                            activePhase.projColor, activePhase.projSpd, 5));
+                            activePhase.projColor, activePhase.projSpd, 5);
+                        ep.element = activePhase.element || null;
+                        enemyProjectiles.push(ep);
                     }
                     addLog(`${bd.name}が全方位攻撃！`, '#ff4444');
                 }
@@ -6776,9 +6778,11 @@
                         const a = baseAngle - spread / 2 + spread * i / (activePhase.count - 1);
                         const tx = m.x + Math.cos(a) * 300;
                         const ty = m.y + Math.sin(a) * 300;
-                        enemyProjectiles.push(new EnemyProjectile(m.x, m.y, tx, ty,
+                        const ep = new EnemyProjectile(m.x, m.y, tx, ty,
                             Math.round(activePhase.projDmg * getCycleMult()),
-                            activePhase.projColor, activePhase.projSpd, 6));
+                            activePhase.projColor, activePhase.projSpd, 6);
+                        ep.element = activePhase.element || 'fire';
+                        enemyProjectiles.push(ep);
                     }
                     addLog(`${bd.name}が炎のブレスを吐いた！`, '#ff4444');
                 }
@@ -6792,9 +6796,11 @@
                         const a = baseA - sp / 2 + sp * i / (activePhase.count - 1);
                         const tx = m.x + Math.cos(a) * 300;
                         const ty = m.y + Math.sin(a) * 300;
-                        enemyProjectiles.push(new EnemyProjectile(m.x, m.y, tx, ty,
+                        const ep = new EnemyProjectile(m.x, m.y, tx, ty,
                             Math.round(activePhase.projDmg * getCycleMult()),
-                            activePhase.projColor, activePhase.projSpd, 5));
+                            activePhase.projColor, activePhase.projSpd, 5);
+                        ep.element = activePhase.element || 'poison';
+                        enemyProjectiles.push(ep);
                     }
                 }
                 break;
@@ -6822,7 +6828,7 @@
                         m.x = player.x + (Math.random() - 0.5) * 100;
                         m.y = player.y + (Math.random() - 0.5) * 100;
                         emitParticles(m.x, m.y, '#aa8833', 25, 100, 0.6, 5, -40);
-                        player.takeDamage(Math.round(20 * getCycleMult()));
+                        player.takeDamage(Math.round(20 * getCycleMult()), 'fire');
                         addLog(`${bd.name}が地中から出現！`, '#ff8800');
                     }
                 }
@@ -6831,7 +6837,7 @@
                 if (cd <= 0 && pdist < activePhase.radius + 50) {
                     m.bossCD[cdKey] = activePhase.cd;
                     if (pdist < activePhase.radius) {
-                        player.takeDamage(Math.round(activePhase.dmg * getCycleMult()));
+                        player.takeDamage(Math.round(activePhase.dmg * getCycleMult()), 'fire');
                     }
                     G.shakeT = 0.5; G.shakeAmt = 10;
                     emitParticles(m.x, m.y, '#886644', 30, 120, 0.6, 5, -50);
@@ -6842,7 +6848,7 @@
                 if (cd <= 0) {
                     m.bossCD[cdKey] = activePhase.cd;
                     if (pdist < activePhase.radius) {
-                        player.takeDamage(Math.round(activePhase.dmg * getCycleMult()));
+                        player.takeDamage(Math.round(activePhase.dmg * getCycleMult()), 'cold');
                         addLog('凍結オーラのダメージ！', '#88ddff');
                     }
                     emitParticles(m.x, m.y, '#aaddff', 20, 100, 0.5, 4, -30);
@@ -6857,7 +6863,7 @@
                         setTimeout(() => {
                             if (!G.started || G.dead || !m.alive) return;
                             const hitD = dist(bx, by, player.x, player.y);
-                            if (hitD < 40) player.takeDamage(Math.round(activePhase.dmg * getCycleMult()));
+                            if (hitD < 40) player.takeDamage(Math.round(activePhase.dmg * getCycleMult()), 'cold');
                             emitParticles(bx, by, '#aaddff', 10, 60, 0.4, 3, -30);
                         }, i * 300);
                     }
@@ -6874,7 +6880,7 @@
                             if (!G.started || G.dead || !m.alive) return;
                             const hitD = dist(mx, my, player.x, player.y);
                             if (hitD < activePhase.radius) {
-                                player.takeDamage(Math.round(activePhase.dmg * getCycleMult()));
+                                player.takeDamage(Math.round(activePhase.dmg * getCycleMult()), 'fire');
                             }
                             emitParticles(mx, my, '#ff6600', 25, 100, 0.6, 5, -40);
                             G.shakeT = 0.2; G.shakeAmt = 6;
@@ -9501,7 +9507,10 @@
         showDifficultySelect();
     }
 
+    let _classSelectOriginalHTML = null;
     function showDifficultySelect() {
+        // Save class select DOM before overwriting
+        _classSelectOriginalHTML = DOM.classSelect.innerHTML;
         let html = `<div style="text-align:center;color:#ffd700;font-size:20px;margin-bottom:20px;font-family:serif">⚔ 難易度を選択 ⚔</div>`;
         html += `<div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">`;
         for (const [key, def] of Object.entries(DIFFICULTY_DEFS)) {
@@ -9521,6 +9530,11 @@
 
     window.selectDifficulty = function(diff) {
         G.difficulty = diff;
+        // Restore class select DOM
+        if (_classSelectOriginalHTML) {
+            DOM.classSelect.innerHTML = _classSelectOriginalHTML;
+            _classSelectOriginalHTML = null;
+        }
         DOM.classSelect.style.display = 'none';
         selectClass(CLASS_KEYS[G.selectedClassIdx]);
     };
@@ -10547,7 +10561,7 @@
     function saveGame(slot = G.saveSlot) {
         try {
             const saveData = {
-                version: 4,
+                version: 5,
                 timestamp: Date.now(),
                 floor: G.floor,
                 act: G.act, actFloor: G.actFloor, cycle: G.cycle, inTown: G.inTown, difficulty: G.difficulty || 'normal',
@@ -10564,7 +10578,9 @@
                     typeInfo: item.typeInfo,
                     baseDmg: item.baseDmg, baseDef: item.baseDef,
                     affixes: item.affixes || [], desc: item.desc || '',
-                    icon: item.icon, qty: item.qty || 1
+                    icon: item.icon, qty: item.qty || 1,
+                    setKey: item.setKey || null, setName: item.setName || null,
+                    requiredLevel: item.requiredLevel || 0, itemLevel: item.itemLevel || 0
                 })),
                 player: {
                     x: player.x, y: player.y,
@@ -10590,7 +10606,9 @@
                     typeInfo: item.typeInfo,
                     baseDmg: item.baseDmg, baseDef: item.baseDef,
                     affixes: item.affixes || [], desc: item.desc || '',
-                    icon: item.icon
+                    icon: item.icon,
+                    setKey: item.setKey || null, setName: item.setName || null,
+                    requiredLevel: item.requiredLevel || 0, itemLevel: item.itemLevel || 0
                 } : null;
             }
             for (const item of player.inventory) {
@@ -10600,6 +10618,8 @@
                     typeInfo: item.typeInfo,
                     baseDmg: item.baseDmg, baseDef: item.baseDef,
                     affixes: item.affixes || [], desc: item.desc || '',
+                    setKey: item.setKey || null, setName: item.setName || null,
+                    requiredLevel: item.requiredLevel || 0, itemLevel: item.itemLevel || 0,
                     icon: item.icon, qty: item.qty || 1
                 });
             }
@@ -10628,6 +10648,8 @@
                     typeInfo: gi.item.typeInfo,
                     baseDmg: gi.item.baseDmg, baseDef: gi.item.baseDef,
                     affixes: gi.item.affixes || [], desc: gi.item.desc || '',
+                    setKey: gi.item.setKey || null, setName: gi.item.setName || null,
+                    requiredLevel: gi.item.requiredLevel || 0, itemLevel: gi.item.itemLevel || 0,
                     icon: gi.item.icon, qty: gi.item.qty || 1
                 }
             }));
