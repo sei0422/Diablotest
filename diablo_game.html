@@ -1897,8 +1897,8 @@
     function getCurrentActDef() { return ACT_DEFS[G.act]; }
     const DIFFICULTY_DEFS = {
         normal:    { name: 'ノーマル', color: '#cccccc', mult: 1.0, xpMult: 1.0, dropBonus: 0, respenalty: 0 },
-        nightmare: { name: 'ナイトメア', color: '#ffaa44', mult: 1.7, xpMult: 1.5, dropBonus: 0.15, respenalty: 20 },
-        hell:      { name: 'ヘル', color: '#ff4444', mult: 2.8, xpMult: 2.0, dropBonus: 0.30, respenalty: 50 }
+        nightmare: { name: 'ナイトメア', color: '#ffaa44', mult: 1.7, xpMult: 1.5, dropBonus: 0.15, respenalty: 40 },
+        hell:      { name: 'ヘル', color: '#ff4444', mult: 2.8, xpMult: 2.0, dropBonus: 0.30, respenalty: 100 }
     };
     function getDifficultyMult() { return DIFFICULTY_DEFS[G.difficulty || 'normal'].mult; }
     function getCycleMult() { return (1 + G.cycle * 0.6) * getDifficultyMult(); }
@@ -3326,8 +3326,22 @@
         boots:   { name: '靴', icon: '👢', slot: 'feet', baseDef: [1, 4] },
         rune:    { name: 'ルーン', icon: '🔶', slot: null },
         quest_key: { name: '鍵', icon: '🗝', slot: null },
-        potion:  { name: 'HP回復薬', icon: '🧪', slot: null, heal: 45 },
-        manaPotion: { name: 'MP回復薬', icon: '💧', slot: null, healMP: 28 }
+        // Tiered HP potions (D2-style, heal over time)
+        hp1: { name: '下級HP薬', icon: '🧪', slot: null, potionType: 'hp', tier: 1, heal: 45, healDur: 7 },
+        hp2: { name: 'HP薬', icon: '🧪', slot: null, potionType: 'hp', tier: 2, heal: 90, healDur: 6 },
+        hp3: { name: '上級HP薬', icon: '🧪', slot: null, potionType: 'hp', tier: 3, heal: 150, healDur: 5 },
+        hp4: { name: '強力HP薬', icon: '🧪', slot: null, potionType: 'hp', tier: 4, heal: 210, healDur: 4.5 },
+        hp5: { name: '超HP薬', icon: '🧪', slot: null, potionType: 'hp', tier: 5, heal: 320, healDur: 4 },
+        // Tiered MP potions (D2-style, restore over time)
+        mp1: { name: '下級MP薬', icon: '💧', slot: null, potionType: 'mp', tier: 1, healMP: 30, healDur: 5 },
+        mp2: { name: 'MP薬', icon: '💧', slot: null, potionType: 'mp', tier: 2, healMP: 60, healDur: 5 },
+        mp3: { name: '上級MP薬', icon: '💧', slot: null, potionType: 'mp', tier: 3, healMP: 120, healDur: 5 },
+        // Rejuvenation potions (instant)
+        rejuv: { name: '回復のポーション', icon: '💜', slot: null, potionType: 'rejuv', rejuvPct: 0.35 },
+        fullrejuv: { name: '完全回復のポーション', icon: '💎', slot: null, potionType: 'rejuv', rejuvPct: 1.0 },
+        // Legacy aliases (backward compat for old saves)
+        potion: { name: 'HP回復薬', icon: '🧪', slot: null, potionType: 'hp', tier: 1, heal: 45, healDur: 7 },
+        manaPotion: { name: 'MP回復薬', icon: '💧', slot: null, potionType: 'mp', tier: 1, healMP: 30, healDur: 5 }
     };
 
     const RARITY = {
@@ -3719,7 +3733,7 @@
     }
 
     function generateItem(floor, forceRarity = null) {
-        const typeKeys = Object.keys(ITEM_TYPES).filter(k => k !== 'potion' && k !== 'manaPotion' && k !== 'rune' && k !== 'quest_key');
+        const typeKeys = Object.keys(ITEM_TYPES).filter(k => !ALL_POTION_TYPES.includes(k) && k !== 'rune' && k !== 'quest_key');
         const typeKey = typeKeys[rand(0, typeKeys.length - 1)];
         const typeInfo = ITEM_TYPES[typeKey];
 
@@ -3794,9 +3808,25 @@
     }
 
     const MAX_POTION_STACK = 20;
+    const HP_POTION_TYPES = ['hp1','hp2','hp3','hp4','hp5'];
+    const MP_POTION_TYPES = ['mp1','mp2','mp3'];
+    const REJUV_TYPES = ['rejuv','fullrejuv'];
+    const ALL_POTION_TYPES = [...HP_POTION_TYPES, ...MP_POTION_TYPES, ...REJUV_TYPES, 'potion', 'manaPotion'];
+    // Which potion tier drops/sells per act
+    const HP_POTION_TIER_BY_ACT = { 1:'hp1', 2:'hp2', 3:'hp3', 4:'hp4', 5:'hp5' };
+    const MP_POTION_TIER_BY_ACT = { 1:'mp1', 2:'mp2', 3:'mp3', 4:'mp3', 5:'mp3' };
 
     function isPotion(item) {
-        return item.typeKey === 'potion' || item.typeKey === 'manaPotion';
+        return ALL_POTION_TYPES.includes(item.typeKey);
+    }
+    function isHPPotion(item) {
+        return HP_POTION_TYPES.includes(item.typeKey) || item.typeKey === 'potion';
+    }
+    function isMPPotion(item) {
+        return MP_POTION_TYPES.includes(item.typeKey) || item.typeKey === 'manaPotion';
+    }
+    function isRejuvPotion(item) {
+        return REJUV_TYPES.includes(item.typeKey);
     }
 
     function findPotionStack(inventory, typeKey) {
@@ -3806,10 +3836,22 @@
     function getPotionCount(inventory, typeKey) {
         return inventory.filter(it => it.typeKey === typeKey).reduce((s, it) => s + (it.qty || 1), 0);
     }
+    function getHPPotionCount(inventory) {
+        return inventory.filter(it => isHPPotion(it) || isRejuvPotion(it)).reduce((s, it) => s + (it.qty || 1), 0);
+    }
+    function getMPPotionCount(inventory) {
+        return inventory.filter(it => isMPPotion(it) || isRejuvPotion(it)).reduce((s, it) => s + (it.qty || 1), 0);
+    }
 
-    function generatePotion(type = 'potion') {
-        const ti = ITEM_TYPES[type];
-        return { typeKey: type, typeInfo: ti, rarityKey: 'common', rarity: RARITY.common,
+    function generatePotion(potionCategory = 'hp', act = G.act || 1) {
+        let typeKey;
+        if (potionCategory === 'hp') typeKey = HP_POTION_TIER_BY_ACT[act] || 'hp1';
+        else if (potionCategory === 'mp') typeKey = MP_POTION_TIER_BY_ACT[act] || 'mp1';
+        else if (potionCategory === 'rejuv') typeKey = 'rejuv';
+        else if (potionCategory === 'fullrejuv') typeKey = 'fullrejuv';
+        else typeKey = potionCategory; // direct typeKey
+        const ti = ITEM_TYPES[typeKey] || ITEM_TYPES.hp1;
+        return { typeKey: typeKey, typeInfo: ti, rarityKey: 'common', rarity: RARITY.common,
                  icon: ti.icon, name: ti.name, affixes: [], baseDmg: null, baseDef: null, qty: 1 };
     }
 
@@ -4858,6 +4900,8 @@
         atkSpdBuffT: 0, atkSpdBonus: 0,
         lifestealBuffT: 0, lifestealBuffPct: 0,
         undyingT: 0,
+        potionHealT: 0, potionHealPerSec: 0,
+        potionManaT: 0, potionManaPerSec: 0,
         stealthT: 0,
         critBuffT: 0, critBuffBonus: 0,
         auraT: 0, auraRegen: 0, auraReduction: 0,
@@ -5220,31 +5264,77 @@
         },
 
         useHPPotion() {
-            const idx = this.inventory.findIndex(it => it.typeKey === 'potion');
+            // Find best HP potion: prefer rejuv first, then highest tier HP
+            let idx = this.inventory.findIndex(it => isRejuvPotion(it));
+            if (idx === -1) {
+                // Search from hp5 down to hp1, then legacy 'potion'
+                for (const tk of [...HP_POTION_TYPES].reverse().concat(['potion'])) {
+                    idx = this.inventory.findIndex(it => it.typeKey === tk);
+                    if (idx !== -1) break;
+                }
+            }
             if (idx === -1) { addLog('HP回復薬がない', '#ff4444'); return; }
             if (this.hp >= this.maxHP) { addLog('HPは満タン', '#888'); return; }
             const item = this.inventory[idx];
-            const heal = item.typeInfo.heal || 50;
-            this.hp = Math.min(this.maxHP, this.hp + heal);
-            addFloatingText(this.x, this.y - 20, `+${heal} HP`, '#00ff00');
-            emitParticles(this.x, this.y, '#00ff00', 8, 40, 0.5, 2, -50);
-            sfxHeal();
-            addLog(`HP回復薬を使った (+${heal} HP)`, '#00ff00');
+            if (isRejuvPotion(item)) {
+                // Rejuvenation: instant
+                const pct = item.typeInfo.rejuvPct || 0.35;
+                const heal = Math.round(this.maxHP * pct);
+                const mana = Math.round(this.maxMP * pct);
+                this.hp = Math.min(this.maxHP, this.hp + heal);
+                this.mp = Math.min(this.maxMP, this.mp + mana);
+                addFloatingText(this.x, this.y - 20, `+${heal} HP +${mana} MP`, '#dd44ff');
+                emitParticles(this.x, this.y, '#dd44ff', 10, 50, 0.5, 3, -50);
+                sfxHeal();
+                addLog(`${item.name}を使った (+${heal} HP +${mana} MP)`, '#dd44ff');
+            } else {
+                // Over-time HP heal (D2-style)
+                const heal = item.typeInfo.heal || 45;
+                const dur = item.typeInfo.healDur || 7;
+                this.potionHealT = dur;
+                this.potionHealPerSec = heal / dur;
+                addFloatingText(this.x, this.y - 20, `HP回復中...`, '#00ff00');
+                emitParticles(this.x, this.y, '#00ff00', 6, 40, 0.4, 2, -50);
+                sfxHeal();
+                addLog(`${item.name}を使った (${heal} HP / ${dur}秒)`, '#00ff00');
+            }
             item.qty = (item.qty || 1) - 1;
             if (item.qty <= 0) this.inventory.splice(idx, 1);
         },
 
         useMPPotion() {
-            const idx = this.inventory.findIndex(it => it.typeKey === 'manaPotion');
+            // Find best MP potion: prefer rejuv first, then highest tier MP
+            let idx = this.inventory.findIndex(it => isRejuvPotion(it));
+            if (idx === -1) {
+                for (const tk of [...MP_POTION_TYPES].reverse().concat(['manaPotion'])) {
+                    idx = this.inventory.findIndex(it => it.typeKey === tk);
+                    if (idx !== -1) break;
+                }
+            }
             if (idx === -1) { addLog('MP回復薬がない', '#ff4444'); return; }
             if (this.mp >= this.maxMP) { addLog('MPは満タン', '#888'); return; }
             const item = this.inventory[idx];
-            const heal = item.typeInfo.healMP || 30;
-            this.mp = Math.min(this.maxMP, this.mp + heal);
-            addFloatingText(this.x, this.y - 20, `+${heal} MP`, '#4488ff');
-            emitParticles(this.x, this.y, '#4488ff', 8, 40, 0.5, 2, -50);
-            sfxHeal();
-            addLog(`MP回復薬を使った (+${heal} MP)`, '#4488ff');
+            if (isRejuvPotion(item)) {
+                const pct = item.typeInfo.rejuvPct || 0.35;
+                const heal = Math.round(this.maxHP * pct);
+                const mana = Math.round(this.maxMP * pct);
+                this.hp = Math.min(this.maxHP, this.hp + heal);
+                this.mp = Math.min(this.maxMP, this.mp + mana);
+                addFloatingText(this.x, this.y - 20, `+${heal} HP +${mana} MP`, '#dd44ff');
+                emitParticles(this.x, this.y, '#dd44ff', 10, 50, 0.5, 3, -50);
+                sfxHeal();
+                addLog(`${item.name}を使った (+${heal} HP +${mana} MP)`, '#dd44ff');
+            } else {
+                // Over-time MP restore (D2-style)
+                const heal = item.typeInfo.healMP || 30;
+                const dur = item.typeInfo.healDur || 5;
+                this.potionManaT = dur;
+                this.potionManaPerSec = heal / dur;
+                addFloatingText(this.x, this.y - 20, `MP回復中...`, '#4488ff');
+                emitParticles(this.x, this.y, '#4488ff', 6, 40, 0.4, 2, -50);
+                sfxHeal();
+                addLog(`${item.name}を使った (${heal} MP / ${dur}秒)`, '#4488ff');
+            }
             item.qty = (item.qty || 1) - 1;
             if (item.qty <= 0) this.inventory.splice(idx, 1);
         },
@@ -5850,6 +5940,18 @@
             }
             this.hp = Math.min(this.maxHP, this.hp + (0.5 + this.vit * 0.02) * dt);
 
+            // Potion over-time healing (D2-style)
+            if (this.potionHealT > 0) {
+                this.hp = Math.min(this.maxHP, this.hp + (this.potionHealPerSec || 0) * dt);
+                this.potionHealT -= dt;
+                if (this.potionHealT <= 0) { this.potionHealT = 0; this.potionHealPerSec = 0; }
+            }
+            if (this.potionManaT > 0) {
+                this.mp = Math.min(this.maxMP, this.mp + (this.potionManaPerSec || 0) * dt);
+                this.potionManaT -= dt;
+                if (this.potionManaT <= 0) { this.potionManaT = 0; this.potionManaPerSec = 0; }
+            }
+
             // Skill cooldowns
             for (const sk of Object.values(this.skills)) {
                 if (sk.cooldown > 0) sk.cooldown = Math.max(0, sk.cooldown - dt);
@@ -6382,6 +6484,8 @@
             this.def = MERCENARY_DEFS[typeKey];
             this.name = this.def.nameJP;
             this.level = player.level;
+            this.xp = 0;
+            this.xpToNext = Math.round(80 * Math.pow(1.25, this.level - 1));
             this.x = x; this.y = y;
             this.radius = 12;
             this.alive = true;
@@ -6392,6 +6496,18 @@
             this.hp = 1; this.maxHP = 1;
             this.str = 0; this.dex = 0; this.int = 0; this.defense = 0; this.baseDmg = 1;
             this.recalcStats(true);
+        }
+        addXP(amount) {
+            if (!this.alive) return;
+            this.xp += amount;
+            while (this.xp >= this.xpToNext) {
+                this.xp -= this.xpToNext;
+                this.level++;
+                this.xpToNext = Math.round(80 * Math.pow(1.25, this.level - 1));
+                this.recalcStats(false);
+                this.hp = this.maxHP; // Full heal on level up
+                addLog(`${this.name}がLv.${this.level}に上がった！`, '#e6c36a');
+            }
         }
         recalcStats(resetHP) {
             const prevPct = this.maxHP > 0 ? this.hp / this.maxHP : 1;
@@ -6868,7 +6984,12 @@
                         // Mercenary tank: 25% chance to redirect melee attack to merc (fighter: 40%)
                         if (mercenary && mercenary.alive && dist(this.x, this.y, mercenary.x, mercenary.y) < this.r + mercenary.radius + 15) {
                             const tauntChance = mercenary.type === 'fighter' ? 0.4 : 0.25;
-                            if (Math.random() < tauntChance) { mercenary.takeDmg(meleeDmg); this.atkCD = 1.0; return; }
+                            if (Math.random() < tauntChance) {
+                                // D2-style: bosses deal massive damage to mercs
+                                const mercDmgMult = this.isBoss ? 7 : (this.isChampion || this.isUnique) ? 2 : 1;
+                                mercenary.takeDmg(meleeDmg * mercDmgMult);
+                                this.atkCD = 1.0; return;
+                            }
                         }
                         player.takeDamage(meleeDmg, meleeElement);
                         this.atkCD = 1.0;
@@ -7591,7 +7712,13 @@
             const xpMult = m.isUnique ? 5 : m.isChampion ? 3 : 1;
             const mlvl = getMonsterLevel(G.act, G.actFloor);
             const xpPenalty = getXPPenalty(player.level, mlvl);
-            player.addXP(Math.round(m.def.xp * (1 + (globalF - 1) * 0.07) * (1 + G.cycle * 0.3) * xpMult * xpPenalty));
+            const baseXP = Math.round(m.def.xp * (1 + (globalF - 1) * 0.07) * (1 + G.cycle * 0.3) * xpMult * xpPenalty);
+            player.addXP(baseXP);
+            // Mercenary independent XP (50% of player XP, own level penalty)
+            if (mercenary && mercenary.alive) {
+                const mercPenalty = getXPPenalty(mercenary.level, mlvl);
+                mercenary.addXP(Math.round(baseXP * 0.5 * mercPenalty));
+            }
             // Gold drop (champion/unique drop more)
             const goldMult = m.isUnique ? 4 : m.isChampion ? 2.5 : 1;
             const goldAmt = Math.round(rand(Math.max(1, m.def.xp * 0.5), m.def.xp * 1.5) * goldMult);
@@ -7607,8 +7734,10 @@
                 const count = (m.isBoss || m.type === 'demonlord') ? rand(2, 4) : 1;
                 for (let i = 0; i < count; i++) dropItem(m.x, m.y, generateItem(globalF));
             }
-            if (Math.random() < 0.15) dropItem(m.x, m.y, generatePotion('potion'));
-            if (Math.random() < 0.06) dropItem(m.x, m.y, generatePotion('manaPotion'));
+            if (Math.random() < 0.15) dropItem(m.x, m.y, generatePotion('hp'));
+            if (Math.random() < 0.06) dropItem(m.x, m.y, generatePotion('mp'));
+            // Rare rejuvenation drop from champion/unique/boss
+            if ((m.isChampion || m.isUnique || m.isBoss) && Math.random() < 0.08) dropItem(m.x, m.y, generatePotion('rejuv'));
             // Rune drops (8% base, champion 20%, unique 35%, boss guaranteed)
             const runeChance = m.isBoss ? 1.0 : m.isUnique ? 0.35 : m.isChampion ? 0.20 : 0.08;
             if (Math.random() < runeChance) {
@@ -7773,9 +7902,10 @@
             const forceRarity = Math.random() < 0.3 ? 'magic' : (Math.random() < 0.1 ? 'rare' : null);
             items.push(generateItem(globalF, forceRarity));
         }
-        // Always include potions
-        for (let i = 0; i < 3; i++) items.push(generatePotion('potion'));
-        for (let i = 0; i < 3; i++) items.push(generatePotion('manaPotion'));
+        // Always include potions (tiered by act)
+        for (let i = 0; i < 3; i++) items.push(generatePotion('hp', act));
+        for (let i = 0; i < 3; i++) items.push(generatePotion('mp', act));
+        if (act >= 3) items.push(generatePotion('rejuv'));
         return items;
     }
 
@@ -8464,6 +8594,7 @@
             html += `<div style="color:${def.color};font-size:13px;font-weight:bold">${def.icon} ${escapeHtml(mercenary.name)} (${def.nameJP}) Lv.${mercenary.level}</div>`;
             if (mercenary.alive) {
                 html += `<div style="color:#ccc;font-size:11px;margin:4px 0">HP: ${mercenary.hp}/${mercenary.maxHP} | 攻撃: ${mercenary.getAttackDmg()} | 防御: ${mercenary.getDefense()}</div>`;
+                html += `<div style="color:#aa88ff;font-size:10px;margin:2px 0">XP: ${mercenary.xp || 0}/${mercenary.xpToNext || '?'}</div>`;
                 html += `<div style="color:#aaa;font-size:10px">タイプ: ${def.attackType === 'melee' ? '近接' : def.attackType === 'ranged' ? '遠隔' : '魔法'} | 射程: ${def.attackRange}</div>`;
                 // Equipment
                 const wName = mercenary.equipment.weapon ? escapeHtml(mercenary.equipment.weapon.name) : '(なし)';
@@ -9405,12 +9536,24 @@
             return html;
         }
         if (isPotion(item)) {
-            let html = `<div class="tt-name" style="color:#cccccc">${escapeHtml(item.name)}</div>`;
+            const ti = item.typeInfo || ITEM_TYPES[item.typeKey];
+            let html = `<div class="tt-name" style="color:${isRejuvPotion(item) ? '#dd44ff' : '#cccccc'}">${escapeHtml(item.name)}</div>`;
             if ((item.qty || 1) > 1) html += `<div style="color:#aaa;font-size:11px">所持数: ${item.qty}</div>`;
-            if (item.typeKey === 'potion') html += `<div style="color:#00ff00;margin:4px 0">HP +${item.typeInfo.heal || 50} 回復</div>`;
-            if (item.typeKey === 'manaPotion') html += `<div style="color:#4488ff;margin:4px 0">MP +${item.typeInfo.healMP || 30} 回復</div>`;
-            const key = item.typeKey === 'potion' ? 'Q' : 'W';
-            html += `<div style="color:#888;font-size:10px;margin-top:4px">${key}キーで使用 | 右クリックで捨てる</div>`;
+            if (isRejuvPotion(item)) {
+                const pct = Math.round((ti.rejuvPct || 0.35) * 100);
+                html += `<div style="color:#dd44ff;margin:4px 0">HP・MP ${pct}% 即時回復</div>`;
+                html += `<div style="color:#888;font-size:10px;margin-top:4px">Q/Wキーで使用 | 右クリックで捨てる</div>`;
+            } else if (isHPPotion(item)) {
+                const heal = ti.heal || 45;
+                const dur = ti.healDur || 7;
+                html += `<div style="color:#00ff00;margin:4px 0">HP +${heal} (${dur}秒間)</div>`;
+                html += `<div style="color:#888;font-size:10px;margin-top:4px">Qキーで使用 | 右クリックで捨てる</div>`;
+            } else if (isMPPotion(item)) {
+                const heal = ti.healMP || 30;
+                const dur = ti.healDur || 5;
+                html += `<div style="color:#4488ff;margin:4px 0">MP +${heal} (${dur}秒間)</div>`;
+                html += `<div style="color:#888;font-size:10px;margin-top:4px">Wキーで使用 | 右クリックで捨てる</div>`;
+            }
             return html;
         }
         const slot = item.typeInfo.slot;
@@ -10980,7 +11123,7 @@
     }
 
     function drawGroundItems() {
-        const TYPE_SPR = {sword:'iSword',axe:'iAxe',staff:'iStaff',shield:'iShield',helmet:'iHelmet',armor:'iArmor',ring:'iRing',amulet:'iAmulet',boots:'iBoots',potion:'iPotion'};
+        const TYPE_SPR = {sword:'iSword',axe:'iAxe',staff:'iStaff',shield:'iShield',helmet:'iHelmet',armor:'iArmor',ring:'iRing',amulet:'iAmulet',boots:'iBoots',potion:'iPotion',hp1:'iPotion',hp2:'iPotion',hp3:'iPotion',hp4:'iPotion',hp5:'iPotion',mp1:'iPotion',mp2:'iPotion',mp3:'iPotion',rejuv:'iPotion',fullrejuv:'iPotion',manaPotion:'iPotion'};
         const beamRarities = { rare: true, legendary: true, unique: true, runeword: true };
         for (const gi of groundItems) {
             gi.bobT += 0.02;
@@ -11756,8 +11899,8 @@
         }
 
         // Potion Belt (D2-style: 4 slots - 2 HP left, 2 MP right)
-        const hpPotCount = getPotionCount(player.inventory, 'potion');
-        const mpPotCount = getPotionCount(player.inventory, 'manaPotion');
+        const hpPotCount = getHPPotionCount(player.inventory);
+        const mpPotCount = getMPPotionCount(player.inventory);
         const beltSlotW = 28, beltSlotH = 28, beltGap = 2;
         const beltY = skillY + 2;
 
@@ -12208,6 +12351,7 @@
             if (mercenary) {
                 saveData.mercenary = {
                     type: mercenary.type, level: mercenary.level,
+                    xp: mercenary.xp || 0, xpToNext: mercenary.xpToNext || 100,
                     hp: mercenary.hp, maxHP: mercenary.maxHP, alive: mercenary.alive,
                     weapon: mercenary.equipment.weapon ? serializeItem(mercenary.equipment.weapon) : null,
                     armor: mercenary.equipment.armor ? serializeItem(mercenary.equipment.armor) : null
@@ -12317,6 +12461,10 @@
                 if (item.typeKey === 'rune' && item.runeId != null) {
                     item.runeDef = RUNE_DEFS[item.runeId];
                     item.typeInfo = ITEM_TYPES.rune;
+                }
+                // Restore potion typeInfo from ITEM_TYPES (backward compat)
+                if (ITEM_TYPES[item.typeKey] && ITEM_TYPES[item.typeKey].potionType) {
+                    item.typeInfo = ITEM_TYPES[item.typeKey];
                 }
                 // Ensure socketed items always have an array (fixes Codex P2 bug)
                 if (item.sockets > 0 && !Array.isArray(item.socketedRunes)) {
@@ -12439,6 +12587,8 @@
             if (save.mercenary && save.mercenary.type && MERCENARY_DEFS[save.mercenary.type]) {
                 mercenary = new Mercenary(save.mercenary.type, player.x + 40, player.y);
                 mercenary.level = save.mercenary.level || player.level;
+                mercenary.xp = save.mercenary.xp || 0;
+                mercenary.xpToNext = save.mercenary.xpToNext || Math.round(80 * Math.pow(1.25, mercenary.level - 1));
                 mercenary.alive = save.mercenary.alive !== false;
                 mercenary.recalcStats(false);
                 if (typeof save.mercenary.hp === 'number') mercenary.hp = Math.min(save.mercenary.hp, mercenary.maxHP);
@@ -12778,14 +12928,14 @@
             const minRarity = rarityOrder.indexOf(G.autoPickupRarity);
             for (const gi of groundItems) {
                 if (dist(player.x, player.y, gi.x, gi.y) < 60) {
-                    if (gi.item.typeKey === 'potion' || gi.item.typeKey === 'rune') { player.pickupNearby(); break; }
+                    if (isPotion(gi.item) || gi.item.typeKey === 'rune') { player.pickupNearby(); break; }
                     const itemRarity = rarityOrder.indexOf(gi.item.rarityKey || 'normal');
                     if (itemRarity >= minRarity) { player.pickupNearby(); break; }
                 }
             }
         } else if (canUpdate) {
             for (const gi of groundItems) {
-                if (gi.item.typeKey === 'potion' && dist(player.x, player.y, gi.x, gi.y) < 40) {
+                if (isPotion(gi.item) && dist(player.x, player.y, gi.x, gi.y) < 40) {
                     player.pickupNearby(); break;
                 }
             }
@@ -12800,7 +12950,7 @@
             for (let ci = 0; ci < numItems; ci++) {
                 dropItem(player.x, player.y, generateItem(G.floor));
             }
-            if (Math.random() < 0.35) dropItem(player.x, player.y, generatePotion());
+            if (Math.random() < 0.35) dropItem(player.x, player.y, generatePotion('hp'));
             addLog('宝箱を開けた！', '#ffd700');
             emitParticles(player.x, player.y, '#ffd700', 15, 60, 0.5, 3, -40);
         }
