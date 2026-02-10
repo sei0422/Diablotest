@@ -1350,6 +1350,24 @@
             icon_essence: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Essence_03.png',
             // Props
             props_1x1: 'asset/opengameart/props/props_1x1.png',
+            // Animated Coins (256x32 each = 8 frames of 32x32)
+            coin_gold: 'asset/opengameart/coins/coin_gold.png',
+            coin_silver: 'asset/opengameart/coins/coin_silver.png',
+            coin_copper: 'asset/opengameart/coins/coin_copper.png',
+            // Experience Bar (itsmars - 4 layers)
+            ui_exp_back: 'asset/opengameart/ui/exp_bar/itsmars Experience Bar/itsmars_exp_back.png',
+            ui_exp_fill: 'asset/opengameart/ui/exp_bar/itsmars Experience Bar/itsmars_exp_fill.png',
+            ui_exp_highlight: 'asset/opengameart/ui/exp_bar/itsmars Experience Bar/itsmars_exp_highlight.png',
+            ui_exp_shadow: 'asset/opengameart/ui/exp_bar/itsmars Experience Bar/itsmars_exp_shadow.png',
+            // VFX Impact (16-frame strips, 2048x512 = 128px cells)
+            vfx_impact_blood: 'asset/opengameart/vfx/rpg_vfx_pack/16_frames/vfx_sequence_x16_blood.png',
+            vfx_impact_earth: 'asset/opengameart/vfx/rpg_vfx_pack/16_frames/vfx_sequence_x16_earth.png',
+            // VFX Balls (8-frame, 1024x1024)
+            vfx_ball_set: 'asset/opengameart/vfx/rpg_vfx_pack/8_frames/vfx_sequence_x8_ball_set_1.png',
+            // Spell animations
+            spell_fireball: 'asset/opengameart/spell_anims/fireball.png',
+            spell_flash_freeze: 'asset/opengameart/spell_anims/flash_freeze.png',
+            spell_flash_heal: 'asset/opengameart/spell_anims/flash_heal.png',
         };
         let loaded = 0;
         const total = Object.keys(assets).length;
@@ -7778,6 +7796,24 @@
                 drawOGASparks(this.lastHitElement, G.time, sx - scaledR, sy - scaledR, scaledR * 2, scaledR * 2);
                 ctx.globalAlpha = 1;
             }
+            // VFX impact overlay (16-frame strip, blood for physical, earth for others)
+            if (ogaLoaded) {
+                const vfxImg = (this.lastHitElement === 'physical' || !this.lastHitElement)
+                    ? OGA.vfx_impact_blood : OGA.vfx_impact_earth;
+                if (vfxImg) {
+                    const vfxCellSz = (vfxImg.height / 4) | 0; // 128px (4 rows of variants)
+                    const vfxFrames = (vfxImg.width / vfxCellSz) | 0; // 16
+                    const vfxFrame = Math.floor((1 - flashIntensity) * vfxFrames);
+                    if (vfxFrame < vfxFrames) {
+                        ctx.globalAlpha = flashIntensity * 0.7;
+                        const vfxRow = (this.type.charCodeAt(0) || 0) % 4;
+                        const vfxSz = scaledR * 3;
+                        ctx.drawImage(vfxImg, vfxFrame * vfxCellSz, vfxRow * vfxCellSz, vfxCellSz, vfxCellSz,
+                            sx - vfxSz / 2, sy - vfxSz / 2, vfxSz, vfxSz);
+                        ctx.globalAlpha = 1;
+                    }
+                }
+            }
         }
     }
 
@@ -12089,15 +12125,27 @@
             ctx.fillStyle = 'rgba(0,0,0,0.2)';
             ctx.beginPath(); ctx.ellipse(sx, sy + 12, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
 
-            // Sprite icon (try atlas sprite → OGA RPG icon → emoji fallback)
-            let sprKey = null;
-            let typeKey = null;
-            for (const [tKey, tInfo] of Object.entries(ITEM_TYPES)) {
-                if (tInfo.icon === gi.item.icon) { sprKey = TYPE_SPR[tKey]; typeKey = tKey; break; }
+            // Sprite icon (try animated coin → atlas sprite → OGA RPG icon → emoji fallback)
+            let drawn = false;
+            // Animated gold/silver/copper coins for gold-like items
+            if (ogaLoaded && gi.item.icon === '💰' && OGA.coin_gold) {
+                const coinImg = OGA.coin_gold;
+                const coinCellSz = coinImg.height; // 32px
+                const coinFrames = (coinImg.width / coinCellSz) | 0; // 8
+                const coinFrame = Math.floor((gi.bobT * 8) % coinFrames);
+                ctx.drawImage(coinImg, coinFrame * coinCellSz, 0, coinCellSz, coinCellSz, sx - 16, sy - 16, 32, 32);
+                drawn = true;
             }
-            let drawn = sprKey && drawSpr(sprKey, sx - 14, sy - 14, 28, 28);
-            if (!drawn && ogaLoaded && typeKey) {
-                drawn = drawOGAItemIcon(typeKey, sx - 14, sy - 14, 28, 28);
+            if (!drawn) {
+                let sprKey = null;
+                let typeKey = null;
+                for (const [tKey, tInfo] of Object.entries(ITEM_TYPES)) {
+                    if (tInfo.icon === gi.item.icon) { sprKey = TYPE_SPR[tKey]; typeKey = tKey; break; }
+                }
+                drawn = sprKey && drawSpr(sprKey, sx - 14, sy - 14, 28, 28);
+                if (!drawn && ogaLoaded && typeKey) {
+                    drawn = drawOGAItemIcon(typeKey, sx - 14, sy - 14, 28, 28);
+                }
             }
             if (!drawn) {
                 ctx.font = `14px ${FONT_UI}`;
@@ -13050,18 +13098,39 @@
         ctx.fillStyle = '#888';
         ctx.fillText('(W)', mpBeltX + beltSlotW + beltGap / 2, beltY - 6);
 
-        // XP bar
+        // XP bar (OGA itsmars experience bar or fallback)
         const xpW = skillTotalW + 60;
-        const xpH = 6;
+        const xpH = ogaLoaded && OGA.ui_exp_back ? 10 : 6;
         const xpX = W / 2 - xpW / 2;
-        const xpY = skillY - 12;
-        ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        ctx.fillRect(xpX, xpY, xpW, xpH);
-        ctx.fillStyle = '#8844ff';
-        ctx.fillRect(xpX, xpY, xpW * (player.xp / player.xpToNext), xpH);
-        ctx.strokeStyle = '#555';
-        ctx.lineWidth = 0.5;
-        ctx.strokeRect(xpX, xpY, xpW, xpH);
+        const xpY = skillY - (ogaLoaded && OGA.ui_exp_back ? 14 : 12);
+        const xpPctVal = clamp(player.xp / player.xpToNext, 0, 1);
+        if (ogaLoaded && OGA.ui_exp_back && OGA.ui_exp_fill) {
+            // Layer 1: Shadow
+            if (OGA.ui_exp_shadow) ctx.drawImage(OGA.ui_exp_shadow, xpX, xpY + 1, xpW, xpH);
+            // Layer 2: Back
+            ctx.drawImage(OGA.ui_exp_back, xpX, xpY, xpW, xpH);
+            // Layer 3: Fill (clipped to XP%)
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(xpX, xpY, xpW * xpPctVal, xpH);
+            ctx.clip();
+            ctx.drawImage(OGA.ui_exp_fill, xpX, xpY + 1, xpW, xpH - 2);
+            ctx.restore();
+            // Layer 4: Highlight
+            if (OGA.ui_exp_highlight) {
+                ctx.globalAlpha = 0.5;
+                ctx.drawImage(OGA.ui_exp_highlight, xpX, xpY, xpW, xpH);
+                ctx.globalAlpha = 1;
+            }
+        } else {
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.fillRect(xpX, xpY, xpW, xpH);
+            ctx.fillStyle = '#8844ff';
+            ctx.fillRect(xpX, xpY, xpW * xpPctVal, xpH);
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 0.5;
+            ctx.strokeRect(xpX, xpY, xpW, xpH);
+        }
         ctx.fillStyle = '#aaa';
         ctx.font = `9px ${FONT_UI}`;
         ctx.textAlign = 'center';
