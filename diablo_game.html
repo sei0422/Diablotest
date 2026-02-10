@@ -4268,6 +4268,7 @@
         promotionPending = false;
         setPaused(false);
         DOM.promotionOverlay.style.display = 'none';
+        preRenderSkillIcons(); // Re-cache for new class skills
         addLog(`${newDef.name}にクラスチェンジ！`, '#ffd700');
         sfxLevelUp();
         emitParticles(player.x, player.y, '#ffd700', 30, 100, 1.0, 5, -40);
@@ -10349,6 +10350,8 @@
         player.recalcStats();
         player.hp = player.maxHP;
         player.mp = player.maxMP;
+        // Pre-render skill icons now that class is chosen
+        preRenderSkillIcons();
         // Start in ACT1 town
         enterTown(1);
     };
@@ -11046,6 +11049,7 @@
         return _skillIconDataURLCache[key];
     }
     function preRenderSkillIcons() {
+        if (!G.playerClass || !CLASS_DEFS[G.playerClass]) return;
         const skills = getAllAvailableSkills();
         if (!skills || skills.length === 0) return;
         const sizes = [18, 20, 28, 40];
@@ -11964,6 +11968,8 @@
             const savedDate = new Date(save.timestamp);
             addLog(`セーブ日時: ${savedDate.toLocaleString('ja-JP')}`, '#888');
             if (isPanelVisible(DOM.settingsPanel)) renderSettingsUI();
+            // Pre-render skill icons now that class is loaded
+            preRenderSkillIcons();
             return true;
         } catch (e) {
             addLog('ロードに失敗: ' + e.message, '#ff4444');
@@ -12696,9 +12702,6 @@
         document.body.appendChild(wrap);
         return results.every(r => r.ok);
     }
-
-    // Pre-render skill icons for HTML panels
-    preRenderSkillIcons();
 
     // Start the loop
     const TEST_MODE = new URLSearchParams(window.location.search).has('test');
