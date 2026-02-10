@@ -7957,7 +7957,6 @@
     window.sellItem = function(idx) {
         const item = player.inventory[idx];
         if (!item) return;
-        if (item.uberKeyId) { addLog('この鍵は売却できない！', '#ff4444'); return; }
         const price = calculateSellPrice(item);
         const totalPrice = isPotion(item) ? price * (item.qty || 1) : price;
         G.gold += totalPrice;
