@@ -7743,6 +7743,7 @@
         G.act = act;
         G.actFloor = 0; // 0 = town
         G.inTown = true;
+        G.inUber = false;
         G.floor = getGlobalFloor(act, 1, G.cycle); // for scaling reference
         // Switch to town BGM
         if (audioCtx && SETTINGS.sound) startBGM(act);
@@ -7819,9 +7820,10 @@
         G.cycle = pr.cycle;
         G.floor = pr.floor;
         G.inTown = false;
+        G.inUber = pr.inUber || false;
         G.dungeonSeed = pr.dungeonSeed;
 
-        const actDef = getCurrentActDef();
+        const actDef = G.inUber ? ACT_DEFS[4] : getCurrentActDef();
         generateTileTextures(actDef.tileTheme); tileTexturesReady = true;
 
         // Restore saved dungeon state
@@ -7853,7 +7855,7 @@
         // Close portal after use
         G.portalReturn = null;
 
-        addLog(`ACT${G.act} 第${G.actFloor}層に戻った`, '#aaaaff');
+        addLog(G.inUber ? 'パンデモニウムに戻った' : `ACT${G.act} 第${G.actFloor}層に戻った`, '#aaaaff');
     }
 
     // ========== TOWN UI SYSTEM ==========
@@ -8336,6 +8338,9 @@
         // Reset uber boss tracking
         G.uberBossesDefeated = {};
         G.inUber = true;
+        // Set act/floor for proper XP/loot scaling and lighting
+        G.act = 5;
+        G.actFloor = ACT_DEFS[5].floors;
         // Generate uber floor using ACT4 theme (hell/pandemonium)
         G.floor = 99;
         G.inTown = false;
@@ -11698,7 +11703,8 @@
                         act: G.act, actFloor: G.actFloor, cycle: G.cycle,
                         floor: G.floor, x: player.x, y: player.y,
                         dungeon: dungeon, monsters: [...monsters],
-                        groundItems: [...groundItems], dungeonSeed: G.dungeonSeed
+                        groundItems: [...groundItems], dungeonSeed: G.dungeonSeed,
+                        inUber: G.inUber
                     };
                     addLog('町へ帰還した！', '#88ff88');
                     enterTown(G.act);
