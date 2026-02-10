@@ -5047,6 +5047,12 @@
                     if (a.stat === stat) val += a.value;
                 }
             }
+            // Charm stat bonuses
+            for (const charm of this.charmInv) {
+                for (const a of (charm.affixes || [])) {
+                    if (a.stat === stat) val += a.value;
+                }
+            }
             return val;
         },
 
@@ -8287,7 +8293,8 @@
                 { x: px - 6, y: py + 2 }, { x: px + pw + 1, y: py + 2 },
                 { x: px - 6, y: py + ph - 6 }, { x: px + pw + 1, y: py + ph - 6 },
                 { x: px + pw/2 - 2, y: py - 6 },
-                { x: px + pw/2 - 8, y: py + ph + 1 }, { x: px + pw/2 + 4, y: py + ph + 1 }
+                { x: px + pw/2 - 8, y: py + ph + 1 }, { x: px + pw/2 + 4, y: py + ph + 1 },
+                { x: px + pw/2 + 7, y: py - 6 }
             ];
             for (const ap of alcovePositions) {
                 for (let y = ap.y; y < ap.y + 5; y++)
@@ -8960,26 +8967,53 @@
         if (G.gold < cost) { addLog('ゴールドが足りない', '#ff4444'); return; }
         if (player.inventory.length >= player.maxInv) { addLog('インベントリが一杯', '#ff4444'); return; }
         G.gold -= cost;
-        // Reveal true identity with D2-style rarity reroll
+        // D2-style rarity reroll
         const r = Math.random();
         let finalRarityKey;
         if (r < 0.001) finalRarityKey = 'unique';
         else if (r < 0.011) finalRarityKey = 'legendary';
         else if (r < 0.111) finalRarityKey = 'rare';
         else finalRarityKey = 'magic';
-        // Re-generate with revealed rarity
+        // Generate proper item of the SAME type with rolled rarity
         const globalF = getGlobalFloor(G.act, 1, G.cycle);
-        const revealed = generateItem(globalF, finalRarityKey);
-        // Keep same type as the mystery item
-        revealed.typeKey = item.typeKey;
-        revealed.typeInfo = item.typeInfo;
-        revealed.baseDmg = item.baseDmg;
-        revealed.baseDef = item.baseDef;
-        revealed.slot = item.slot;
+        const rarity = RARITY[finalRarityKey];
+        const floorMult = 1 + (globalF - 1) * 0.15;
+        const typeKey = item.typeKey;
+        const typeInfo = item.typeInfo;
+        const revealed = {
+            typeKey, typeInfo, rarityKey: finalRarityKey, rarity,
+            icon: typeInfo.icon, affixes: [],
+            baseDmg: typeInfo.baseDmg ? [Math.round(typeInfo.baseDmg[0] * rarity.mult * floorMult), Math.round(typeInfo.baseDmg[1] * rarity.mult * floorMult)] : null,
+            baseDef: typeInfo.baseDef ? Math.round((typeInfo.baseDef[0] + rand(0, typeInfo.baseDef[1] - typeInfo.baseDef[0])) * rarity.mult * floorMult) : null,
+        };
+        const areaLevel = getMonsterLevel(G.act, G.actFloor);
+        revealed.itemLevel = areaLevel;
+        const baseReq = Math.max(1, Math.ceil(areaLevel / 2));
+        revealed.requiredLevel = finalRarityKey === 'unique' ? baseReq + 4 : finalRarityKey === 'legendary' ? baseReq + 2 : baseReq;
+        // Name
+        if (finalRarityKey === 'unique' && UNIQUE_NAMES[typeKey]) {
+            const names = UNIQUE_NAMES[typeKey];
+            revealed.name = names[rand(0, names.length - 1)];
+        } else {
+            const prefixes = ['呪われし', '聖なる', '古代の', '鍛えられし', '朽ちた', '輝く', '血染めの', '影の', '蒼き', '灼熱の'];
+            const prefix = finalRarityKey !== 'common' ? prefixes[rand(0, prefixes.length-1)] + ' ' : '';
+            revealed.name = prefix + typeInfo.name;
+        }
+        // Affixes
+        const affixCount = getAffixCount(rarity);
+        const pool = [...AFFIXES];
+        for (let i = 0; i < affixCount && pool.length > 0; i++) {
+            const ai = rand(0, pool.length - 1);
+            const a = pool.splice(ai, 1)[0];
+            const v = Math.round(rand(a.min, a.max) * floorMult);
+            revealed.affixes.push({ stat: a.stat, value: v, text: a.fmt.replace('{v}', v) });
+        }
+        // Sockets
+        const sockCount = rollSockets(typeKey, finalRarityKey);
+        if (sockCount > 0) { revealed.sockets = sockCount; revealed.socketedRunes = []; }
         player.inventory.push(revealed);
         G.gambleItems.splice(idx, 1);
-        const rarityColor = revealed.rarity.color;
-        addLog(`ギャンブル成功！ ${revealed.name} [${revealed.rarity.name}]`, rarityColor);
+        addLog(`ギャンブル成功！ ${revealed.name} [${revealed.rarity.name}]`, revealed.rarity.color);
         renderGamblingUI();
     };
     window.gambleRefresh = function() {
@@ -9801,8 +9835,11 @@
     window.showPotionTooltip = function(e, i) {
         const item = player.potionInv[i];
         if (!item) return;
-        const html = getItemTooltipHTML(item, false);
-        showTooltipAt(e, html);
+        const tt = DOM.tooltip;
+        tt.innerHTML = buildTooltipHTML(item, false);
+        tt.style.display = 'block';
+        tt.style.left = (e.clientX + 15) + 'px';
+        tt.style.top = (e.clientY - 10) + 'px';
     };
     window.showPotionContextMenu = function(e, i) {
         e.preventDefault();
@@ -9856,8 +9893,11 @@
     window.showCharmTooltip = function(e, i) {
         const item = player.charmInv[i];
         if (!item) return;
-        const html = getItemTooltipHTML(item, false);
-        showTooltipAt(e, html);
+        const tt = DOM.tooltip;
+        tt.innerHTML = buildTooltipHTML(item, false);
+        tt.style.display = 'block';
+        tt.style.left = (e.clientX + 15) + 'px';
+        tt.style.top = (e.clientY - 10) + 'px';
     };
     window.showCharmContextMenu = function(e, i) {
         e.preventDefault();
