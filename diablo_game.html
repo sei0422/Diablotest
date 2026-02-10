@@ -3244,6 +3244,7 @@
         ring:    { name: '指輪', icon: '💍', slot: 'ring', baseDef: [0, 1] },
         amulet:  { name: '護符', icon: '📿', slot: 'amulet', baseDef: [0, 1] },
         boots:   { name: '靴', icon: '👢', slot: 'feet', baseDef: [1, 4] },
+        rune:    { name: 'ルーン', icon: '🔶', slot: null },
         potion:  { name: 'HP回復薬', icon: '🧪', slot: null, heal: 50 },
         manaPotion: { name: 'MP回復薬', icon: '💧', slot: null, healMP: 30 }
     };
@@ -3391,8 +3392,238 @@
         return bonuses;
     }
 
+    // ========== RUNE & RUNEWORD SYSTEM ==========
+    const RUNE_DEFS = [
+        { id: 0,  name: 'El',   icon: '᚛', color: '#cccccc', tier: 1, effect: { stat: 'def',        value: 2  }, desc: '+2 防御' },
+        { id: 1,  name: 'Eld',  icon: '᚜', color: '#cccccc', tier: 1, effect: { stat: 'dmgPct',     value: 5  }, desc: '+5% ダメージ' },
+        { id: 2,  name: 'Tir',  icon: '᚝', color: '#cccccc', tier: 1, effect: { stat: 'mp',         value: 10 }, desc: '+10 MP' },
+        { id: 3,  name: 'Nef',  icon: '᚞', color: '#cccccc', tier: 1, effect: { stat: 'def',        value: 5  }, desc: '+5 防御' },
+        { id: 4,  name: 'Ith',  icon: '᚟', color: '#6688ff', tier: 2, effect: { stat: 'dmgPct',     value: 8  }, desc: '+8% ダメージ' },
+        { id: 5,  name: 'Ral',  icon: 'ᚠ', color: '#ff6633', tier: 2, effect: { stat: 'fireRes',    value: 10 }, desc: '+10% 火炎耐性' },
+        { id: 6,  name: 'Ort',  icon: 'ᚡ', color: '#ffdd44', tier: 2, effect: { stat: 'lightRes',   value: 10 }, desc: '+10% 雷耐性' },
+        { id: 7,  name: 'Thul', icon: 'ᚢ', color: '#66ccff', tier: 2, effect: { stat: 'coldRes',    value: 10 }, desc: '+10% 冷気耐性' },
+        { id: 8,  name: 'Amn',  icon: 'ᚣ', color: '#ff8800', tier: 2, effect: { stat: 'lifesteal',  value: 3  }, desc: '+3% ライフスティール' },
+        { id: 9,  name: 'Sol',  icon: 'ᚤ', color: '#ff8800', tier: 2, effect: { stat: 'hp',         value: 20 }, desc: '+20 HP' },
+        { id: 10, name: 'Um',   icon: 'ᚥ', color: '#ff8800', tier: 3, effect: { stat: 'allRes',     value: 8  }, desc: '+8% 全耐性' },
+        { id: 11, name: 'Mal',  icon: 'ᚦ', color: '#ff4444', tier: 3, effect: { stat: 'critChance', value: 3  }, desc: '+3% クリティカル率' },
+        { id: 12, name: 'Ist',  icon: 'ᚧ', color: '#ff4444', tier: 3, effect: { stat: 'magicFind',  value: 15 }, desc: '+15% マジックファインド' },
+        { id: 13, name: 'Lo',   icon: 'ᚨ', color: '#ff4444', tier: 3, effect: { stat: 'critDmg',    value: 10 }, desc: '+10% クリティカルダメージ' },
+        { id: 14, name: 'Zod',  icon: 'ᚩ', color: '#00dd66', tier: 3, effect: { stat: 'skillBonus', value: 1  }, desc: '+1 全スキルレベル' }
+    ];
+
+    const MAX_SOCKETS = { sword: 4, axe: 4, staff: 4, shield: 3, helmet: 3, armor: 4 };
+
+    const RUNEWORD_DEFS = [
+        {
+            name: 'Spirit',  nameJP: '精霊',
+            runes: [2, 7, 6, 8],  // Tir + Thul + Ort + Amn
+            sockets: 4,
+            validTypes: ['sword', 'shield'],
+            bonuses: [
+                { stat: 'skillBonus', value: 2, text: '+2 全スキルレベル' },
+                { stat: 'critChance', value: 10, text: '+10% クリティカル率' },
+                { stat: 'hp', value: 50, text: '+50 HP' },
+                { stat: 'mp', value: 50, text: '+50 MP' }
+            ]
+        },
+        {
+            name: 'Insight',  nameJP: '洞察',
+            runes: [5, 2, 2, 9],  // Ral + Tir + Tir + Sol
+            sockets: 4,
+            validTypes: ['staff'],
+            bonuses: [
+                { stat: 'skillBonus', value: 1, text: '+1 全スキルレベル' },
+                { stat: 'mp', value: 200, text: '+200 MP' },
+                { stat: 'dmgPct', value: 15, text: '+15% ダメージ' }
+            ]
+        },
+        {
+            name: 'Stealth',  nameJP: '隠密',
+            runes: [2, 4],  // Tir + Ith
+            sockets: 2,
+            validTypes: ['armor'],
+            bonuses: [
+                { stat: 'moveSpd', value: 15, text: '+15% 移動速度' },
+                { stat: 'atkSpd', value: 10, text: '+10% 攻撃速度' },
+                { stat: 'def', value: 15, text: '+15 防御' }
+            ]
+        },
+        {
+            name: 'Lore',  nameJP: '知識',
+            runes: [6, 9],  // Ort + Sol
+            sockets: 2,
+            validTypes: ['helmet'],
+            bonuses: [
+                { stat: 'skillBonus', value: 1, text: '+1 全スキルレベル' },
+                { stat: 'hp', value: 30, text: '+30 HP' },
+                { stat: 'lightRes', value: 15, text: '+15% 雷耐性' }
+            ]
+        },
+        {
+            name: 'Rhyme',  nameJP: '韻律',
+            runes: [8, 10],  // Amn + Um
+            sockets: 2,
+            validTypes: ['shield'],
+            bonuses: [
+                { stat: 'blockChance', value: 15, text: '+15% ブロック率' },
+                { stat: 'allRes', value: 15, text: '+15% 全耐性' },
+                { stat: 'magicFind', value: 15, text: '+15% マジックファインド' }
+            ]
+        },
+        {
+            name: 'Enigma',  nameJP: '謎',
+            runes: [10, 12, 14],  // Um + Ist + Zod
+            sockets: 3,
+            validTypes: ['armor'],
+            bonuses: [
+                { stat: 'skillBonus', value: 2, text: '+2 全スキルレベル' },
+                { stat: 'moveSpd', value: 25, text: '+25% 移動速度' },
+                { stat: 'hp', value: 80, text: '+80 HP' },
+                { stat: 'magicFind', value: 20, text: '+20% マジックファインド' }
+            ]
+        },
+        {
+            name: 'Fury',  nameJP: '憤怒',
+            runes: [11, 13, 12],  // Mal + Lo + Ist
+            sockets: 3,
+            validTypes: ['sword', 'axe'],
+            bonuses: [
+                { stat: 'dmgPct', value: 25, text: '+25% ダメージ' },
+                { stat: 'critChance', value: 8, text: '+8% クリティカル率' },
+                { stat: 'critDmg', value: 25, text: '+25% クリティカルダメージ' },
+                { stat: 'atkSpd', value: 10, text: '+10% 攻撃速度' }
+            ]
+        },
+        {
+            name: 'Silence',  nameJP: '静寂',
+            runes: [1, 8, 11, 12],  // Eld + Amn + Mal + Ist
+            sockets: 4,
+            validTypes: ['sword', 'axe', 'staff'],
+            bonuses: [
+                { stat: 'dmgPct', value: 20, text: '+20% ダメージ' },
+                { stat: 'lifesteal', value: 5, text: '+5% ライフスティール' },
+                { stat: 'allRes', value: 15, text: '+15% 全耐性' },
+                { stat: 'magicFind', value: 15, text: '+15% マジックファインド' }
+            ]
+        },
+        {
+            name: 'Ancients Pledge',  nameJP: '古の誓い',
+            runes: [5, 6, 7],  // Ral + Ort + Thul
+            sockets: 3,
+            validTypes: ['shield'],
+            bonuses: [
+                { stat: 'fireRes', value: 25, text: '+25% 火炎耐性' },
+                { stat: 'lightRes', value: 25, text: '+25% 雷耐性' },
+                { stat: 'coldRes', value: 25, text: '+25% 冷気耐性' },
+                { stat: 'def', value: 20, text: '+20 防御' }
+            ]
+        },
+        {
+            name: 'Venom',  nameJP: '猛毒',
+            runes: [7, 13, 14],  // Thul + Lo + Zod
+            sockets: 3,
+            validTypes: ['sword', 'axe'],
+            bonuses: [
+                { stat: 'dmgPct', value: 30, text: '+30% ダメージ' },
+                { stat: 'critDmg', value: 20, text: '+20% クリティカルダメージ' },
+                { stat: 'poisonRes', value: 20, text: '+20% 毒耐性' },
+                { stat: 'atkSpd', value: 15, text: '+15% 攻撃速度' }
+            ]
+        }
+    ];
+
+    function rollSockets(typeKey, rarityKey) {
+        const maxSock = MAX_SOCKETS[typeKey];
+        if (!maxSock) return 0;
+        const chance = rarityKey === 'common' ? 0.30 :
+                       rarityKey === 'magic' ? 0.15 :
+                       rarityKey === 'rare' ? 0.10 : 0.05;
+        if (Math.random() >= chance) return 0;
+        const cap = rarityKey === 'common' ? maxSock :
+                    rarityKey === 'magic' ? Math.min(2, maxSock) :
+                    rarityKey === 'rare' ? Math.min(2, maxSock) : 1;
+        return rand(1, cap);
+    }
+
+    function generateRune(floor) {
+        // Higher floors → higher tier runes possible
+        const tierWeights = floor < 5 ? [80, 20, 0] :
+                            floor < 10 ? [50, 40, 10] :
+                            floor < 15 ? [30, 45, 25] : [15, 40, 45];
+        const roll = Math.random() * 100;
+        const tier = roll < tierWeights[0] ? 1 : roll < tierWeights[0] + tierWeights[1] ? 2 : 3;
+        const pool = RUNE_DEFS.filter(r => r.tier === tier);
+        const def = pool[rand(0, pool.length - 1)];
+        return {
+            typeKey: 'rune', typeInfo: ITEM_TYPES.rune,
+            rarityKey: tier === 3 ? 'legendary' : tier === 2 ? 'magic' : 'common',
+            rarity: tier === 3 ? { name: '高級ルーン', color: '#ff8800' } :
+                    tier === 2 ? { name: 'ルーン', color: '#6688ff' } :
+                                 { name: 'ルーン', color: '#cccccc' },
+            name: `${def.name}のルーン`,
+            icon: '🔶',
+            runeId: def.id,
+            runeDef: def,
+            affixes: [],
+            baseDmg: null, baseDef: null,
+            itemLevel: 0, requiredLevel: 0
+        };
+    }
+
+    function isRune(item) { return item && item.typeKey === 'rune'; }
+
+    function insertRuneIntoItem(item, runeItem) {
+        if (!item.sockets || !item.socketedRunes) return false;
+        if (item.socketedRunes.length >= item.sockets) return false;
+        if (item.runeword) return false; // Already has runeword
+        // Push the rune data
+        item.socketedRunes.push({ runeId: runeItem.runeId, name: runeItem.runeDef.name });
+        // Add rune individual bonus to affixes
+        const rd = RUNE_DEFS[runeItem.runeId];
+        item.affixes.push({
+            stat: rd.effect.stat, value: rd.effect.value,
+            text: rd.desc, runeSource: rd.name
+        });
+        // Check if runeword formed
+        checkAndApplyRuneword(item);
+        return true;
+    }
+
+    function checkAndApplyRuneword(item) {
+        if (!item.socketedRunes || item.socketedRunes.length === 0) return;
+        const insertedIds = item.socketedRunes.map(r => r.runeId);
+        for (const rw of RUNEWORD_DEFS) {
+            if (rw.sockets !== item.sockets) continue;
+            if (insertedIds.length !== rw.runes.length) continue;
+            if (!rw.validTypes.includes(item.typeKey)) continue;
+            // Check exact rune order
+            let match = true;
+            for (let i = 0; i < rw.runes.length; i++) {
+                if (insertedIds[i] !== rw.runes[i]) { match = false; break; }
+            }
+            if (!match) continue;
+            // Runeword formed! Replace individual rune affixes with runeword bonuses
+            item.affixes = item.affixes.filter(a => !a.runeSource);
+            for (const b of rw.bonuses) {
+                item.affixes.push({
+                    stat: b.stat, value: b.value, text: b.text,
+                    runewordSource: rw.name
+                });
+            }
+            item.runeword = rw.name;
+            item.runewordJP = rw.nameJP;
+            // Override name and rarity display
+            item.name = `${rw.nameJP}【${rw.name}】`;
+            item.rarity = { name: 'ルーンワード', color: '#daa520' };
+            item.rarityKey = 'runeword';
+            addLog(`★ ルーンワード『${rw.nameJP}【${rw.name}】』が発動！ ★`, '#daa520');
+            sfxLegendary();
+            return;
+        }
+    }
+
     function generateItem(floor, forceRarity = null) {
-        const typeKeys = Object.keys(ITEM_TYPES).filter(k => k !== 'potion' && k !== 'manaPotion');
+        const typeKeys = Object.keys(ITEM_TYPES).filter(k => k !== 'potion' && k !== 'manaPotion' && k !== 'rune');
         const typeKey = typeKeys[rand(0, typeKeys.length - 1)];
         const typeInfo = ITEM_TYPES[typeKey];
 
@@ -3454,6 +3685,13 @@
             const a = pool.splice(idx, 1)[0];
             const v = Math.round(rand(a.min, a.max) * floorMult);
             item.affixes.push({ stat: a.stat, value: v, text: a.fmt.replace('{v}', v) });
+        }
+
+        // Roll sockets (only for socketable types)
+        const sockCount = rollSockets(typeKey, rarityKey);
+        if (sockCount > 0) {
+            item.sockets = sockCount;
+            item.socketedRunes = [];
         }
 
         return item;
@@ -6969,6 +7207,19 @@
             }
             if (Math.random() < 0.25) dropItem(m.x, m.y, generatePotion('potion'));
             if (Math.random() < 0.10) dropItem(m.x, m.y, generatePotion('manaPotion'));
+            // Rune drops (8% base, champion 20%, unique 35%, boss guaranteed)
+            const runeChance = m.isBoss ? 1.0 : m.isUnique ? 0.35 : m.isChampion ? 0.20 : 0.08;
+            if (Math.random() < runeChance) {
+                const runeItem = generateRune(globalF);
+                dropItem(m.x, m.y, runeItem);
+                if (runeItem.runeDef.tier === 3) {
+                    addLog(`★ 高級ルーン『${runeItem.runeDef.name}』がドロップ！`, '#ff8800');
+                    sfxLegendary();
+                }
+            }
+            if (m.isBoss) { // Boss drops extra rune
+                dropItem(m.x, m.y, generateRune(globalF));
+            }
             // Boss defeat with screen shake + white flash
             if (m.isBoss && m.bossKey) {
                 G.shakeT = 0.6; G.shakeAmt = 15;
@@ -7056,7 +7307,7 @@
 
     // ========== SHOP / ECONOMY ==========
     function calculateSellPrice(item) {
-        const base = { common:10, magic:30, rare:80, legendary:200, unique:500 };
+        const base = { common:10, magic:30, rare:80, legendary:200, unique:500, runeword:800 };
         return base[item.rarityKey] || 10;
     }
     function calculateBuyPrice(item) { return calculateSellPrice(item) * 3; }
@@ -7530,8 +7781,13 @@
         renderShopUI();
     };
 
+    let smithTab = 'enhance'; // 'enhance' or 'socket'
+    let socketTargetSource = null; // {source, key} for selected socket target
+
     function openBlacksmithUI(npc) {
         G.townUIMode = 'blacksmith';
+        smithTab = 'enhance';
+        socketTargetSource = null;
         const panel = document.getElementById('blacksmithPanel');
         if (!panel) return;
         panel.style.display = 'block';
@@ -7541,29 +7797,113 @@
         const panel = document.getElementById('blacksmithPanel');
         if (!panel) return;
         let html = `<div class="panel-header">⚒ ${G.activeNPC ? G.activeNPC.name : '鍛冶屋'} <span style="float:right;color:#ffd700">💰 ${G.gold}G</span></div>`;
-        html += `<p style="font-size:11px;color:#aaa;margin:4px 0">装備を選んで強化（50%でアフィックス追加 / 50%で既存+20%）</p>`;
-        html += '<div class="shop-grid">';
-        // Show equipped items + inventory equipment
-        const allEquip = [];
-        for (const [slot, item] of Object.entries(player.equipment)) {
-            if (item) allEquip.push({ item, source: 'equip', slot });
+        // Tabs
+        html += `<div style="display:flex;gap:4px;margin:4px 0">`;
+        html += `<button class="town-btn" style="flex:1;${smithTab === 'enhance' ? 'background:#555' : ''}" onclick="switchSmithTab('enhance')">⚒ 強化</button>`;
+        html += `<button class="town-btn" style="flex:1;${smithTab === 'socket' ? 'background:#555' : ''}" onclick="switchSmithTab('socket')">🔶 ルーン装着</button>`;
+        html += `</div>`;
+
+        if (smithTab === 'enhance') {
+            html += `<p style="font-size:11px;color:#aaa;margin:4px 0">装備を選んで強化（50%でアフィックス追加 / 50%で既存+20%）</p>`;
+            html += '<div class="shop-grid">';
+            const allEquip = [];
+            for (const [slot, item] of Object.entries(player.equipment)) {
+                if (item && !isRune(item)) allEquip.push({ item, source: 'equip', slot });
+            }
+            for (let i = 0; i < player.inventory.length; i++) {
+                const item = player.inventory[i];
+                if (!isPotion(item) && !isRune(item)) allEquip.push({ item, source: 'inv', idx: i });
+            }
+            for (const eq of allEquip) {
+                const cost = calculateSmithCost(eq.item);
+                const canAfford = G.gold >= cost;
+                html += `<div class="shop-item ${canAfford ? '' : 'disabled'}" onclick="smithItem('${eq.source}','${eq.source === 'equip' ? eq.slot : eq.idx}')" title="${eq.item.name}">
+                    <span style="font-size:18px">${eq.item.icon}</span>
+                    <span style="color:${eq.item.rarity.color};font-size:11px">${eq.item.name}</span>
+                    <span style="color:#ffd700;font-size:10px">${cost}G</span>
+                </div>`;
+            }
+            html += '</div>';
+        } else {
+            // Socket / Rune insertion tab
+            html += renderSocketTab();
         }
-        for (let i = 0; i < player.inventory.length; i++) {
-            const item = player.inventory[i];
-            if (item.typeKey !== 'potion') allEquip.push({ item, source: 'inv', idx: i });
-        }
-        for (const eq of allEquip) {
-            const cost = calculateSmithCost(eq.item);
-            const canAfford = G.gold >= cost;
-            html += `<div class="shop-item ${canAfford ? '' : 'disabled'}" onclick="smithItem('${eq.source}','${eq.source === 'equip' ? eq.slot : eq.idx}')" title="${eq.item.name}">
-                <span style="font-size:18px">${eq.item.icon}</span>
-                <span style="color:${eq.item.rarity.color};font-size:11px">${eq.item.name}</span>
-                <span style="color:#ffd700;font-size:10px">${cost}G</span>
-            </div>`;
-        }
-        html += '</div>';
         html += `<button class="town-btn" onclick="closeTownUI()" style="margin-top:8px">閉じる</button>`;
         panel.innerHTML = html;
+    }
+
+    function renderSocketTab() {
+        let html = '';
+        if (!socketTargetSource) {
+            // Step 1: Select a socketed item
+            html += `<p style="font-size:11px;color:#daa520;margin:4px 0">🔶 ルーンを装着する装備を選択：</p>`;
+            html += '<div class="shop-grid">';
+            const socketable = [];
+            for (const [slot, item] of Object.entries(player.equipment)) {
+                if (item && item.sockets > 0) socketable.push({ item, source: 'equip', slot });
+            }
+            for (let i = 0; i < player.inventory.length; i++) {
+                const item = player.inventory[i];
+                if (item.sockets > 0) socketable.push({ item, source: 'inv', idx: i });
+            }
+            if (socketable.length === 0) {
+                html += `<div style="color:#888;padding:12px;text-align:center">ソケット付きの装備がありません</div>`;
+            }
+            for (const eq of socketable) {
+                const filled = eq.item.socketedRunes ? eq.item.socketedRunes.length : 0;
+                const total = eq.item.sockets;
+                const full = filled >= total || eq.item.runeword;
+                const socketStr = eq.item.runeword ? `★ ${eq.item.runeword}` :
+                    Array.from({length: total}, (_, i) => i < filled ? '🔶' : '◇').join('');
+                html += `<div class="shop-item ${full ? 'disabled' : ''}" onclick="selectSocketTarget('${eq.source}','${eq.source === 'equip' ? eq.slot : eq.idx}')" title="${eq.item.name}">
+                    <span style="font-size:18px">${eq.item.icon}</span>
+                    <span style="color:${eq.item.rarity.color};font-size:11px">${eq.item.name}</span>
+                    <span style="font-size:10px;color:#daa520">${socketStr}</span>
+                </div>`;
+            }
+            html += '</div>';
+            // Show runeword recipes hint
+            html += `<div style="border-top:1px solid #444;margin-top:8px;padding-top:6px">`;
+            html += `<p style="font-size:10px;color:#daa520;margin:2px 0">📜 ルーンワード一覧（順序通りに装着で発動）：</p>`;
+            for (const rw of RUNEWORD_DEFS) {
+                const runeNames = rw.runes.map(id => RUNE_DEFS[id].name).join(' + ');
+                const types = rw.validTypes.map(t => ITEM_TYPES[t].name).join('/');
+                html += `<div style="font-size:9px;color:#888;margin:1px 0"><span style="color:#daa520">${rw.nameJP}【${rw.name}】</span> = ${runeNames} (${rw.sockets}穴 ${types})</div>`;
+            }
+            html += `</div>`;
+        } else {
+            // Step 2: Select a rune from inventory
+            const item = socketTargetSource.source === 'equip'
+                ? player.equipment[socketTargetSource.key]
+                : player.inventory[parseInt(socketTargetSource.key)];
+            if (!item) { socketTargetSource = null; return renderSocketTab(); }
+            const filled = item.socketedRunes ? item.socketedRunes.length : 0;
+            const total = item.sockets;
+            const socketStr = Array.from({length: total}, (_, i) => {
+                if (i < filled) return `<span style="color:#daa520">${RUNE_DEFS[item.socketedRunes[i].runeId].name}</span>`;
+                return '<span style="color:#555">空</span>';
+            }).join(' ');
+            html += `<p style="font-size:11px;color:${item.rarity.color};margin:4px 0">${item.icon} ${item.name} [${socketStr}] (${filled}/${total})</p>`;
+            html += `<p style="font-size:11px;color:#aaa;margin:2px 0">装着するルーンを選択（⚠ 一度装着すると外せません）：</p>`;
+            html += '<div class="shop-grid">';
+            const runes = [];
+            for (let i = 0; i < player.inventory.length; i++) {
+                if (isRune(player.inventory[i])) runes.push({ rune: player.inventory[i], idx: i });
+            }
+            if (runes.length === 0) {
+                html += `<div style="color:#888;padding:12px;text-align:center">ルーンを持っていません</div>`;
+            }
+            for (const r of runes) {
+                const rd = r.rune.runeDef || RUNE_DEFS[r.rune.runeId];
+                html += `<div class="shop-item" onclick="insertRuneUI(${r.idx})" title="${rd.desc}">
+                    <span style="font-size:16px;color:${rd.color}">🔶 ${rd.name}</span>
+                    <span style="font-size:10px;color:#aaa">${rd.desc}</span>
+                </div>`;
+            }
+            html += '</div>';
+            html += `<button class="town-btn" onclick="selectSocketTarget(null)" style="margin-top:4px;font-size:11px">← 戻る</button>`;
+        }
+        return html;
     }
     window.smithItem = function(source, key) {
         let item;
@@ -7594,6 +7934,35 @@
             addLog('鍛冶に失敗...何も起きなかった', '#ff8844');
         }
         player.recalcStats();
+        renderBlacksmithUI();
+    };
+    window.switchSmithTab = function(tab) {
+        smithTab = tab;
+        socketTargetSource = null;
+        renderBlacksmithUI();
+    };
+    window.selectSocketTarget = function(source, key) {
+        if (source === null) { socketTargetSource = null; }
+        else { socketTargetSource = { source, key }; }
+        renderBlacksmithUI();
+    };
+    window.insertRuneUI = function(runeIdx) {
+        if (!socketTargetSource) return;
+        const item = socketTargetSource.source === 'equip'
+            ? player.equipment[socketTargetSource.key]
+            : player.inventory[parseInt(socketTargetSource.key)];
+        const runeItem = player.inventory[runeIdx];
+        if (!item || !runeItem || !isRune(runeItem)) return;
+        if (!item.sockets || !item.socketedRunes) { addLog('この装備にはソケットがない', '#ff4444'); return; }
+        if (item.socketedRunes.length >= item.sockets) { addLog('ソケットが一杯です', '#ff4444'); return; }
+        if (item.runeword) { addLog('ルーンワードが既に完成しています', '#ff4444'); return; }
+        const success = insertRuneIntoItem(item, runeItem);
+        if (success) {
+            const rd = runeItem.runeDef || RUNE_DEFS[runeItem.runeId];
+            addLog(`${rd.name}のルーンを${item.name}に装着！`, '#daa520');
+            player.inventory.splice(runeIdx, 1);
+            player.recalcStats();
+        }
         renderBlacksmithUI();
     };
 
@@ -8250,6 +8619,24 @@
 
     function buildTooltipHTML(item, showComparison) {
         if (!item) return '';
+        // Rune tooltip
+        if (isRune(item)) {
+            const rd = item.runeDef || RUNE_DEFS[item.runeId];
+            let html = `<div class="tt-name" style="color:${rd.color}">🔶 ${rd.name}のルーン</div>`;
+            html += `<div class="tt-type" style="color:#daa520">ルーン (Tier ${rd.tier})</div>`;
+            html += `<div style="color:#aaa;margin:4px 0;font-size:11px">装着効果: <span style="color:#0f0">${rd.desc}</span></div>`;
+            // Show runewords this rune is part of
+            const rws = RUNEWORD_DEFS.filter(rw => rw.runes.includes(rd.id));
+            if (rws.length > 0) {
+                html += `<div style="border-top:1px solid #444;margin:6px 0;padding-top:4px;font-size:10px;color:#daa520">使用ルーンワード:</div>`;
+                for (const rw of rws) {
+                    const names = rw.runes.map(id => RUNE_DEFS[id].name).join('+');
+                    html += `<div style="font-size:9px;color:#888">${rw.nameJP}【${rw.name}】= ${names}</div>`;
+                }
+            }
+            html += `<div style="color:#888;font-size:10px;margin-top:4px">鍛冶屋でソケット装備に装着 | 右クリックで捨てる</div>`;
+            return html;
+        }
         if (isPotion(item)) {
             let html = `<div class="tt-name" style="color:#cccccc">${item.name}</div>`;
             if ((item.qty || 1) > 1) html += `<div style="color:#aaa;font-size:11px">所持数: ${item.qty}</div>`;
@@ -8287,7 +8674,33 @@
             html += `<div style="color:#ffaa00;font-size:11px;margin:2px 0">DPS: ${dps}</div>`;
         }
         if (item.baseDef) html += `<div style="color:#fff;margin:4px 0">防御: +${item.baseDef}${cmp ? diffSpan(cmp.defDiff, '') : ''}</div>`;
-        for (const a of item.affixes) html += `<div class="tt-affix">${a.text}</div>`;
+        // Socket display
+        if (item.sockets > 0) {
+            const filled = item.socketedRunes ? item.socketedRunes.length : 0;
+            let sockHtml = `<div style="color:#daa520;margin:4px 0;font-size:11px">ソケット [${filled}/${item.sockets}]: `;
+            for (let i = 0; i < item.sockets; i++) {
+                if (i < filled) {
+                    const rn = item.socketedRunes[i];
+                    sockHtml += `<span style="color:#daa520">🔶${RUNE_DEFS[rn.runeId].name}</span> `;
+                } else {
+                    sockHtml += `<span style="color:#555">◇空</span> `;
+                }
+            }
+            sockHtml += `</div>`;
+            html += sockHtml;
+        }
+        // Affixes: separate regular, rune, and runeword
+        const regularAffixes = item.affixes.filter(a => !a.runeSource && !a.runewordSource);
+        const runeAffixes = item.affixes.filter(a => a.runeSource);
+        const rwAffixes = item.affixes.filter(a => a.runewordSource);
+        for (const a of regularAffixes) html += `<div class="tt-affix">${a.text}</div>`;
+        if (runeAffixes.length > 0) {
+            for (const a of runeAffixes) html += `<div class="tt-affix" style="color:#daa520">${a.text} (${a.runeSource})</div>`;
+        }
+        if (rwAffixes.length > 0) {
+            html += `<div style="border-top:1px solid #daa520;margin:4px 0;padding-top:4px;color:#daa520;font-weight:bold">★ ルーンワード: ${item.runeword}</div>`;
+            for (const a of rwAffixes) html += `<div class="tt-affix" style="color:#daa520">${a.text}</div>`;
+        }
         // Required level
         if (item.requiredLevel) {
             const canEquip = player.level >= item.requiredLevel;
@@ -10560,8 +10973,24 @@
     // ========== SAVE / LOAD SYSTEM ==========
     function saveGame(slot = G.saveSlot) {
         try {
+            // Helper to serialize an item including socket/rune data
+            const serializeItem = (item) => ({
+                name: item.name, typeKey: item.typeKey,
+                rarityKey: item.rarityKey, rarity: item.rarity,
+                typeInfo: item.typeInfo,
+                baseDmg: item.baseDmg, baseDef: item.baseDef,
+                affixes: item.affixes || [], desc: item.desc || '',
+                icon: item.icon, qty: item.qty || 1,
+                setKey: item.setKey || null, setName: item.setName || null,
+                requiredLevel: item.requiredLevel || 0, itemLevel: item.itemLevel || 0,
+                sockets: item.sockets || 0,
+                socketedRunes: item.socketedRunes || null,
+                runeword: item.runeword || null,
+                runewordJP: item.runewordJP || null,
+                runeId: item.runeId != null ? item.runeId : null
+            });
             const saveData = {
-                version: 5,
+                version: 6,
                 timestamp: Date.now(),
                 floor: G.floor,
                 act: G.act, actFloor: G.actFloor, cycle: G.cycle, inTown: G.inTown, difficulty: G.difficulty || 'normal',
@@ -10572,16 +11001,7 @@
                 dungeonSeed: G.dungeonSeed,
                 autoPickup: G.autoPickup,
                 autoPickupRarity: G.autoPickupRarity,
-                stash: G.stash.map(item => ({
-                    name: item.name, typeKey: item.typeKey,
-                    rarityKey: item.rarityKey, rarity: item.rarity,
-                    typeInfo: item.typeInfo,
-                    baseDmg: item.baseDmg, baseDef: item.baseDef,
-                    affixes: item.affixes || [], desc: item.desc || '',
-                    icon: item.icon, qty: item.qty || 1,
-                    setKey: item.setKey || null, setName: item.setName || null,
-                    requiredLevel: item.requiredLevel || 0, itemLevel: item.itemLevel || 0
-                })),
+                stash: G.stash.map(serializeItem),
                 player: {
                     x: player.x, y: player.y,
                     level: player.level, xp: player.xp, xpToNext: player.xpToNext,
@@ -10600,28 +11020,10 @@
                 }
             };
             for (const [slot, item] of Object.entries(player.equipment)) {
-                saveData.player.equipment[slot] = item ? {
-                    name: item.name, typeKey: item.typeKey,
-                    rarityKey: item.rarityKey, rarity: item.rarity,
-                    typeInfo: item.typeInfo,
-                    baseDmg: item.baseDmg, baseDef: item.baseDef,
-                    affixes: item.affixes || [], desc: item.desc || '',
-                    icon: item.icon,
-                    setKey: item.setKey || null, setName: item.setName || null,
-                    requiredLevel: item.requiredLevel || 0, itemLevel: item.itemLevel || 0
-                } : null;
+                saveData.player.equipment[slot] = item ? serializeItem(item) : null;
             }
             for (const item of player.inventory) {
-                saveData.player.inventory.push({
-                    name: item.name, typeKey: item.typeKey,
-                    rarityKey: item.rarityKey, rarity: item.rarity,
-                    typeInfo: item.typeInfo,
-                    baseDmg: item.baseDmg, baseDef: item.baseDef,
-                    affixes: item.affixes || [], desc: item.desc || '',
-                    setKey: item.setKey || null, setName: item.setName || null,
-                    requiredLevel: item.requiredLevel || 0, itemLevel: item.itemLevel || 0,
-                    icon: item.icon, qty: item.qty || 1
-                });
+                saveData.player.inventory.push(serializeItem(item));
             }
             saveData.player.skills = {};
             for (let i = 1; i <= 6; i++) {
@@ -10642,16 +11044,7 @@
             // Save ground items
             saveData.groundItems = groundItems.map(gi => ({
                 x: gi.x, y: gi.y,
-                item: {
-                    name: gi.item.name, typeKey: gi.item.typeKey,
-                    rarityKey: gi.item.rarityKey, rarity: gi.item.rarity,
-                    typeInfo: gi.item.typeInfo,
-                    baseDmg: gi.item.baseDmg, baseDef: gi.item.baseDef,
-                    affixes: gi.item.affixes || [], desc: gi.item.desc || '',
-                    setKey: gi.item.setKey || null, setName: gi.item.setName || null,
-                    requiredLevel: gi.item.requiredLevel || 0, itemLevel: gi.item.itemLevel || 0,
-                    icon: gi.item.icon, qty: gi.item.qty || 1
-                }
+                item: serializeItem(gi.item)
             }));
             // Save remaining chest positions (unopened only)
             saveData.remainingChests = [];
@@ -10746,10 +11139,21 @@
             player.className = p.className;
             player.skillLevels = p.skillLevels || {};
 
+            // Helper to restore rune runtime references
+            const restoreRuneRefs = (item) => {
+                if (!item) return;
+                if (item.typeKey === 'rune' && item.runeId != null) {
+                    item.runeDef = RUNE_DEFS[item.runeId];
+                    item.typeInfo = ITEM_TYPES.rune;
+                }
+            };
             for (const [slot, item] of Object.entries(p.equipment)) {
+                if (item) restoreRuneRefs(item);
                 player.equipment[slot] = item;
             }
-            player.inventory = (p.inventory || []).map(it => { it.qty = it.qty || 1; return it; });
+            player.inventory = (p.inventory || []).map(it => { it.qty = it.qty || 1; restoreRuneRefs(it); return it; });
+            // Restore stash rune refs
+            for (const it of G.stash) restoreRuneRefs(it);
 
             player.recalcStats();
             player.hp = Math.min(p.hp, player.maxHP);
@@ -10781,6 +11185,7 @@
             if (save.groundItems && save.groundItems.length > 0) {
                 for (const sgi of save.groundItems) {
                     sgi.item.qty = sgi.item.qty || 1;
+                    restoreRuneRefs(sgi.item);
                     groundItems.push(new GroundItem(sgi.x, sgi.y, sgi.item));
                 }
             }
