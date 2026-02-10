@@ -609,7 +609,7 @@
         .skill-node.passive { border-color: #4488cc; background: rgba(20,30,50,0.8); }
         .skill-node.passive.unlocked { border-color: #66aaff; }
         .skill-node.passive.maxed { border-color: #88ccff; box-shadow: 0 0 6px rgba(100,180,255,0.3); }
-        .skill-node .sn-icon { font-size: 20px; }
+        .skill-node .sn-icon { display: flex; align-items: center; justify-content: center; gap: 2px; min-height: 20px; }
         .skill-node .sn-name { color: #daa520; font-size: 12px; font-weight: bold; }
         .skill-node.passive .sn-name { color: #66aaff; }
         .skill-node .sn-level { color: #888; font-size: 10px; }
@@ -807,7 +807,7 @@
             transform: scale(1.08);
         }
         .skill-node-tree.dim-node { opacity: 0.2; }
-        .skill-node-tree .snt-icon { font-size: 28px; line-height: 1; font-family: var(--font-emoji); }
+        .skill-node-tree .snt-icon { display: flex; align-items: center; justify-content: center; gap: 2px; min-height: 28px; }
         .skill-node-tree .snt-name {
             color: #daa520;
             font-size: 10px;
@@ -4427,7 +4427,7 @@
             const swapFrom = skillSwapFrom === i;
             html += `<div class="skill-slot-pick ${sel ? 'selected' : ''} ${swapFrom ? 'swap-from' : ''}" onclick="pickSlot(${i})" draggable="true"
                 ondragstart="onSkillSlotDragStart(event,${i})" ondragover="onSkillSlotDragOver(event)" ondrop="onSkillSlotDrop(event,${i})">
-                <div class="emoji-font" style="font-size:20px">${sk ? sk.icon : '□'}</div>
+                <div style="display:flex;align-items:center;justify-content:center;width:20px;height:20px">${sk ? `<img src="${getSkillIconDataURL(sk,20)}" width="20" height="20">` : '□'}</div>
                 <div style="font-size:8px;color:#aaa">${i}</div>
             </div>`;
         }
@@ -4463,7 +4463,7 @@
                 const locked = lvl < 1;
                 const displayMP = lvl > 0 ? getSkillMPCost(sk, lvl) : sk.mp;
                 html += `<div class="skill-pick-item ${locked ? 'locked' : ''}" onclick="${locked ? '' : `assignSkill('${sk.id}')`}" onmouseenter="showSkillTooltip(event,'${sk.id}')" onmouseleave="hideTooltip()">
-                    <div class="emoji-font" style="font-size:18px">${sk.icon}</div>
+                    <div style="display:flex;align-items:center;justify-content:center;width:18px;height:18px"><img src="${getSkillIconDataURL(sk,18)}" width="18" height="18"></div>
                     <div style="font-size:9px;color:${locked ? '#666' : '#ffd700'}">${sk.name}</div>
                     <div style="font-size:8px;color:${locked ? '#444' : '#88f'}">Lv.${lvl} MP:${displayMP}</div>
                 </div>`;
@@ -8222,7 +8222,7 @@
     function renderWaypointUI() {
         const panel = document.getElementById('waypointPanel');
         if (!panel) return;
-        let html = `<div class="panel-header">🌀 ウェイポイント</div>`;
+        let html = `<div class="panel-header"><img src="${getWaypointIconDataURL(20)}" width="20" height="20" style="vertical-align:middle"> ウェイポイント</div>`;
         html += '<div style="display:flex;flex-direction:column;gap:4px">';
         for (let a = 1; a <= 5; a++) {
             const discovered = G.waypoints.includes(a);
@@ -8619,7 +8619,7 @@
                 const sk = player.skills[i];
                 if (sk && sk.id) {
                     const lvl = player.skillLevels[sk.id] || 0;
-                    h += `<div style="margin:2px 0;color:#ccc;font-size:11px"><span class="help-key">${i}</span> ${sk.icon} ${sk.name} Lv.${lvl} <span style="color:#4488ff">${sk.mp}MP</span></div>`;
+                    h += `<div style="margin:2px 0;color:#ccc;font-size:11px;display:flex;align-items:center;gap:4px"><span class="help-key">${i}</span> <img src="${getSkillIconDataURL(sk,18)}" width="18" height="18" style="vertical-align:middle"> ${sk.name} Lv.${lvl} <span style="color:#4488ff">${sk.mp}MP</span></div>`;
                 } else {
                     h += `<div style="margin:2px 0;color:#666;font-size:11px"><span class="help-key">${i}</span> 未設定</div>`;
                 }
@@ -9152,7 +9152,7 @@
         const isPassive = sk.skillType === 'passive';
         const nameColor = isPassive ? '#66aaff' : '#ffd700';
         const typeLabel = isPassive ? '◆パッシブ' : '';
-        const name = `${sk.icon || ''} ${sk.name || ''}`.trim();
+        const name = `<img src="${getSkillIconDataURL(sk,20)}" width="20" height="20" style="vertical-align:middle"> ${sk.name || ''}`.trim();
         const lvl = player.skillLevels[sk.id] || 0;
 
         // Show scaled MP/CD for current level
@@ -9270,7 +9270,7 @@
                 <span style="color:#888;font-size:11px">入替先 (ショートカット側):</span>
                 ${[1,2,3,4,5,6].map(n => {
                     const sk = player.skills[n];
-                    const label = sk ? `${n}:${sk.icon || ''} ${sk.name || ''}` : `${n}:空`;
+                    const label = sk ? `${n}:<img src="${getSkillIconDataURL(sk,18)}" width="18" height="18" style="vertical-align:middle"> ${sk.name || ''}` : `${n}:空`;
                     return `<button class="toggle-btn" style="margin-left:4px" onclick="treeSwapTo(${n})">${label}</button>`;
                 }).join('')}
             </div>`;
@@ -9363,7 +9363,7 @@
                 const mpCdHtml = isPassive ? '' : `<div style="color:#4488ff;font-size:9px;margin-top:2px">${mpDisplay} ${cdDisplay}</div>`;
 
                 h += '<div class="skill-node ' + stateClass + '" onmouseenter="showSkillTooltip(event,\'' + sk.id + '\')" onmouseleave="hideTooltip()">' +
-                    '<div class="sn-icon emoji-font">' + (isPassive ? '◆' : '') + sk.icon + '</div>' +
+                    '<div class="sn-icon">' + (isPassive ? '◆' : '') + '<img src="' + getSkillIconDataURL(sk,20) + '" width="20" height="20">' + '</div>' +
                     '<div class="sn-name">' + sk.name + '</div>' +
                     '<div class="sn-level">Lv.' + lvl + '/' + maxLvl + '</div>' +
                     progressBar +
@@ -9439,7 +9439,7 @@
                     h += `<div class="skill-node-tree ${stateClass}" data-skill-id="${sk.id}" data-prereqs="${prereqIds}" data-synergy-from="${synergyFromIds}" data-tree-id="${treeId}"` +
                         ` onmouseenter="onTreeNodeHover(event,'${sk.id}','${treeId}')" onmouseleave="onTreeNodeLeave('${treeId}')"` +
                         ` onclick="onTreeNodeClick(event,'${sk.id}')" oncontextmenu="onTreeNodeRightClick(event,'${sk.id}')">` +
-                        `<div class="snt-icon">${isPassive ? '◆' : ''}${sk.icon}</div>` +
+                        `<div class="snt-icon">${isPassive ? '◆' : ''}<img src="${getSkillIconDataURL(sk,28)}" width="28" height="28"></div>` +
                         `<div class="snt-name">${sk.name}</div>` +
                         `<div class="snt-level">Lv.${lvl}/${maxLvl}</div>` +
                         `<div class="snt-progress"><div class="snt-progress-bar ${barClass}" style="width:${pct}%"></div></div>` +
@@ -10670,15 +10670,289 @@
         }
     }
 
-    // Canvas-drawn skill icons (pixel-art style, replaces emoji)
-    function _drawSkillIcon(ctx, sk, cx, cy, size) {
-        const eff = sk.effect || '';
+    // Canvas-drawn skill icon shapes (pixel-art style, replaces emoji)
+    // Draws icon centered at origin (caller must translate). eff = effect string, size = icon diameter.
+    function _drawSkillIconShape(ctx, eff, size) {
         const half = size / 2;
-        ctx.save();
-        ctx.translate(cx, cy);
-        // Color based on effect type
-        if (eff.includes('fire') || eff.includes('pyro')) {
-            // Flame icon
+        // --- Specific effect matches first ---
+        if (eff === 'chain_lightning') {
+            ctx.strokeStyle = '#ffdd44'; ctx.lineWidth = Math.max(1.5, size/10); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(-half*0.2, -half*0.8);
+            ctx.lineTo(half*0.15, -half*0.2);
+            ctx.lineTo(-half*0.1, -half*0.05);
+            ctx.lineTo(half*0.25, half*0.7);
+            ctx.stroke();
+            ctx.strokeStyle = '#fff8cc'; ctx.lineWidth = Math.max(0.8, size/18);
+            ctx.beginPath();
+            ctx.moveTo(-half*0.15, -half*0.7);
+            ctx.lineTo(half*0.1, -half*0.15);
+            ctx.lineTo(-half*0.05, 0);
+            ctx.lineTo(half*0.2, half*0.6);
+            ctx.stroke();
+        } else if (eff === 'frost_nova') {
+            ctx.strokeStyle = '#88ddff'; ctx.lineWidth = Math.max(1.2, size/12);
+            ctx.beginPath(); ctx.arc(0, 0, half*0.45, 0, Math.PI*2); ctx.stroke();
+            for (let a = 0; a < 8; a++) {
+                const ang = a * Math.PI / 4;
+                ctx.beginPath();
+                ctx.moveTo(Math.cos(ang)*half*0.45, Math.sin(ang)*half*0.45);
+                ctx.lineTo(Math.cos(ang)*half*0.85, Math.sin(ang)*half*0.85);
+                ctx.stroke();
+            }
+            ctx.fillStyle = '#ccf0ff'; ctx.beginPath(); ctx.arc(0, 0, half*0.15, 0, Math.PI*2); ctx.fill();
+        } else if (eff === 'frozen_orb') {
+            const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, half*0.4);
+            grad.addColorStop(0, '#ddeeff'); grad.addColorStop(1, '#66aacc');
+            ctx.fillStyle = grad;
+            ctx.beginPath(); ctx.arc(0, 0, half*0.4, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = '#aaeeff'; ctx.lineWidth = Math.max(1, size/14);
+            for (let a = 0; a < 6; a++) {
+                const ang = a * Math.PI / 3 + Math.PI/6;
+                ctx.beginPath();
+                ctx.moveTo(Math.cos(ang)*half*0.4, Math.sin(ang)*half*0.4);
+                ctx.lineTo(Math.cos(ang)*half*0.8, Math.sin(ang)*half*0.8);
+                ctx.stroke();
+                ctx.fillStyle = '#ccf0ff';
+                ctx.beginPath(); ctx.arc(Math.cos(ang)*half*0.8, Math.sin(ang)*half*0.8, Math.max(1,size/20), 0, Math.PI*2); ctx.fill();
+            }
+        } else if (eff === 'consecrate') {
+            ctx.strokeStyle = '#ff8844'; ctx.lineWidth = Math.max(1.5, size/10);
+            ctx.beginPath(); ctx.arc(0, 0, half*0.65, 0, Math.PI*2); ctx.stroke();
+            ctx.fillStyle = 'rgba(255,136,68,0.25)';
+            ctx.beginPath(); ctx.arc(0, 0, half*0.6, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = '#ffaa66'; ctx.lineWidth = Math.max(1, size/14);
+            ctx.beginPath(); ctx.moveTo(0, -half*0.35); ctx.lineTo(0, half*0.35); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(-half*0.35, 0); ctx.lineTo(half*0.35, 0); ctx.stroke();
+        } else if (eff === 'meteor') {
+            ctx.fillStyle = '#ff6622';
+            ctx.beginPath(); ctx.arc(half*0.1, half*0.15, half*0.35, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#ffcc44';
+            ctx.beginPath(); ctx.arc(half*0.05, half*0.1, half*0.18, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = 'rgba(255,100,30,0.5)';
+            ctx.beginPath();
+            ctx.moveTo(-half*0.15, -half*0.05);
+            ctx.lineTo(-half*0.6, -half*0.7);
+            ctx.lineTo(-half*0.2, -half*0.5);
+            ctx.lineTo(-half*0.35, -half*0.8);
+            ctx.lineTo(half*0.05, -half*0.2);
+            ctx.closePath(); ctx.fill();
+        } else if (eff === 'teleport') {
+            ctx.strokeStyle = '#66aaff'; ctx.lineWidth = Math.max(1.5, size/10); ctx.lineCap = 'round';
+            for (let i = 0; i < 2; i++) {
+                ctx.beginPath();
+                const startAng = i * Math.PI;
+                for (let t = 0; t <= 1; t += 0.05) {
+                    const ang = startAng + t * Math.PI * 1.8;
+                    const r = half * 0.15 + t * half * 0.55;
+                    const px = Math.cos(ang) * r, py = Math.sin(ang) * r;
+                    t === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+                }
+                ctx.stroke();
+            }
+            ctx.fillStyle = '#aaccff'; ctx.beginPath(); ctx.arc(0, 0, half*0.12, 0, Math.PI*2); ctx.fill();
+        } else if (eff === 'mana_shield') {
+            ctx.strokeStyle = '#4488ff'; ctx.lineWidth = Math.max(1.5, size/10);
+            ctx.beginPath();
+            for (let a = 0; a < 6; a++) {
+                const ang = a * Math.PI / 3 - Math.PI/6;
+                const px = Math.cos(ang) * half * 0.65, py = Math.sin(ang) * half * 0.65;
+                a === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+            }
+            ctx.closePath(); ctx.stroke();
+            ctx.fillStyle = 'rgba(68,136,255,0.15)'; ctx.fill();
+            ctx.fillStyle = 'rgba(100,170,255,0.3)';
+            ctx.beginPath(); ctx.arc(0, 0, half*0.25, 0, Math.PI*2); ctx.fill();
+        } else if (eff === 'holy_burst') {
+            ctx.fillStyle = '#ffdd88';
+            ctx.fillRect(-half*0.12, -half*0.7, half*0.24, half*1.4);
+            ctx.fillRect(-half*0.7, -half*0.12, half*1.4, half*0.24);
+            ctx.fillStyle = '#fff8dd';
+            ctx.beginPath(); ctx.arc(0, 0, half*0.2, 0, Math.PI*2); ctx.fill();
+        } else if (eff === 'multi_shot') {
+            ctx.strokeStyle = '#ccaa66'; ctx.lineWidth = Math.max(1.2, size/12); ctx.lineCap = 'round';
+            const angles = [-0.35, 0, 0.35];
+            for (const da of angles) {
+                const ang = -Math.PI/2 + da;
+                ctx.beginPath();
+                ctx.moveTo(0, half*0.3);
+                ctx.lineTo(Math.cos(ang)*half*0.75, Math.sin(ang)*half*0.75 + half*0.1);
+                ctx.stroke();
+                ctx.fillStyle = '#aaaaaa';
+                const tx = Math.cos(ang)*half*0.75, ty = Math.sin(ang)*half*0.75 + half*0.1;
+                ctx.beginPath(); ctx.arc(tx, ty, Math.max(1.2, size/16), 0, Math.PI*2); ctx.fill();
+            }
+        } else if (eff === 'arrow_rain') {
+            ctx.strokeStyle = '#ccaa66'; ctx.lineWidth = Math.max(1, size/14); ctx.lineCap = 'round';
+            const arrows = [[-half*0.4, -half*0.3], [0, -half*0.6], [half*0.35, -half*0.15], [-half*0.15, half*0.1], [half*0.15, half*0.3]];
+            for (const [ax, ay] of arrows) {
+                ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax + half*0.08, ay + half*0.35); ctx.stroke();
+                ctx.fillStyle = '#aaaaaa';
+                ctx.beginPath();
+                ctx.moveTo(ax + half*0.08, ay + half*0.35);
+                ctx.lineTo(ax + half*0.15, ay + half*0.25);
+                ctx.lineTo(ax, ay + half*0.25);
+                ctx.fill();
+            }
+        } else if (eff === 'debuff_defense') {
+            ctx.fillStyle = '#ff6644';
+            ctx.beginPath(); ctx.moveTo(0, -half*0.7);
+            ctx.lineTo(half*0.55, -half*0.35); ctx.lineTo(half*0.45, half*0.4);
+            ctx.lineTo(0, half*0.7); ctx.lineTo(-half*0.45, half*0.4);
+            ctx.lineTo(-half*0.55, -half*0.35); ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = '#220000'; ctx.lineWidth = Math.max(1.2, size/12);
+            ctx.beginPath();
+            ctx.moveTo(-half*0.05, -half*0.5);
+            ctx.lineTo(half*0.1, -half*0.1);
+            ctx.lineTo(-half*0.1, half*0.2);
+            ctx.lineTo(half*0.05, half*0.5);
+            ctx.stroke();
+        } else if (eff === 'summon_minion') {
+            ctx.fillStyle = '#88aacc';
+            ctx.beginPath();
+            ctx.moveTo(0, -half*0.7);
+            ctx.quadraticCurveTo(half*0.5, -half*0.6, half*0.45, -half*0.1);
+            ctx.lineTo(half*0.45, half*0.4);
+            ctx.lineTo(half*0.25, half*0.25); ctx.lineTo(half*0.1, half*0.45);
+            ctx.lineTo(-half*0.1, half*0.25); ctx.lineTo(-half*0.25, half*0.45);
+            ctx.lineTo(-half*0.45, half*0.3);
+            ctx.lineTo(-half*0.45, -half*0.1);
+            ctx.quadraticCurveTo(-half*0.5, -half*0.6, 0, -half*0.7);
+            ctx.fill();
+            ctx.fillStyle = '#ccddee';
+            ctx.beginPath(); ctx.arc(-half*0.15, -half*0.25, half*0.08, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(half*0.15, -half*0.25, half*0.08, 0, Math.PI*2); ctx.fill();
+        } else if (eff === 'self_heal_pct') {
+            ctx.fillStyle = '#44cc44';
+            ctx.fillRect(-half*0.15, -half*0.6, half*0.3, half*1.2);
+            ctx.fillRect(-half*0.6, -half*0.15, half*1.2, half*0.3);
+            ctx.fillStyle = '#88ee88';
+            ctx.fillRect(-half*0.08, -half*0.5, half*0.16, half*1.0);
+            ctx.fillRect(-half*0.5, -half*0.08, half*1.0, half*0.16);
+        } else if (eff === 'buff_frenzy') {
+            ctx.strokeStyle = '#ff4444'; ctx.lineWidth = Math.max(1.5, size/10); ctx.lineCap = 'round';
+            const xs = [-half*0.3, 0, half*0.3];
+            for (const bx of xs) {
+                ctx.beginPath(); ctx.moveTo(bx, half*0.5); ctx.lineTo(bx, -half*0.3); ctx.stroke();
+                ctx.fillStyle = '#ff4444';
+                ctx.beginPath();
+                ctx.moveTo(bx, -half*0.65);
+                ctx.lineTo(bx - half*0.12, -half*0.3);
+                ctx.lineTo(bx + half*0.12, -half*0.3);
+                ctx.fill();
+            }
+        } else if (eff === 'buff_berserk') {
+            ctx.fillStyle = '#ff6644';
+            ctx.beginPath();
+            ctx.moveTo(0, -half*0.8);
+            ctx.quadraticCurveTo(half*0.6, -half*0.4, half*0.4, half*0.1);
+            ctx.quadraticCurveTo(half*0.5, half*0.5, half*0.15, half*0.6);
+            ctx.lineTo(0, half*0.3); ctx.lineTo(-half*0.15, half*0.6);
+            ctx.quadraticCurveTo(-half*0.5, half*0.5, -half*0.4, half*0.1);
+            ctx.quadraticCurveTo(-half*0.6, -half*0.4, 0, -half*0.8);
+            ctx.fill();
+            ctx.fillStyle = '#ffaa44';
+            ctx.beginPath();
+            ctx.moveTo(0, -half*0.4);
+            ctx.quadraticCurveTo(half*0.25, -half*0.1, half*0.15, half*0.2);
+            ctx.lineTo(-half*0.15, half*0.2);
+            ctx.quadraticCurveTo(-half*0.25, -half*0.1, 0, -half*0.4);
+            ctx.fill();
+        } else if (eff === 'buff_atkspd') {
+            ctx.strokeStyle = '#ffaa44'; ctx.lineWidth = Math.max(1.5, size/10); ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(-half*0.6, -half*0.4); ctx.lineTo(half*0.4, -half*0.4); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(-half*0.5, 0); ctx.lineTo(half*0.6, 0); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(-half*0.6, half*0.4); ctx.lineTo(half*0.4, half*0.4); ctx.stroke();
+            ctx.fillStyle = '#ffaa44';
+            ctx.beginPath();
+            ctx.moveTo(half*0.7, 0);
+            ctx.lineTo(half*0.4, -half*0.15);
+            ctx.lineTo(half*0.4, half*0.15);
+            ctx.fill();
+        } else if (eff === 'buff_crit') {
+            ctx.strokeStyle = '#ffdd44'; ctx.lineWidth = Math.max(1.2, size/12);
+            ctx.beginPath(); ctx.arc(0, 0, half*0.45, 0, Math.PI*2); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, -half*0.7); ctx.lineTo(0, half*0.7); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(-half*0.7, 0); ctx.lineTo(half*0.7, 0); ctx.stroke();
+            ctx.fillStyle = '#ffdd44';
+            ctx.beginPath(); ctx.arc(0, 0, half*0.12, 0, Math.PI*2); ctx.fill();
+        } else if (eff === 'buff_dodge') {
+            ctx.strokeStyle = '#88ccff'; ctx.lineWidth = Math.max(1.2, size/12); ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(-half*0.6, -half*0.3);
+            ctx.quadraticCurveTo(0, -half*0.5, half*0.5, -half*0.15);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(-half*0.5, half*0.05);
+            ctx.quadraticCurveTo(half*0.1, -half*0.15, half*0.6, half*0.1);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(-half*0.4, half*0.4);
+            ctx.quadraticCurveTo(half*0.2, half*0.2, half*0.5, half*0.45);
+            ctx.stroke();
+        } else if (eff === 'buff_speed') {
+            ctx.strokeStyle = '#aaddff'; ctx.lineWidth = Math.max(1.2, size/12); ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.arc(-half*0.15, -half*0.25, half*0.3, -Math.PI*0.8, Math.PI*0.3); ctx.stroke();
+            ctx.beginPath(); ctx.arc(half*0.15, half*0.15, half*0.25, -Math.PI*0.5, Math.PI*0.6); ctx.stroke();
+            ctx.beginPath(); ctx.arc(-half*0.3, half*0.3, half*0.15, -Math.PI*0.3, Math.PI*0.7); ctx.stroke();
+        } else if (eff === 'buff_counter') {
+            ctx.strokeStyle = '#cc6644'; ctx.lineWidth = Math.max(1.2, size/12);
+            ctx.beginPath(); ctx.arc(0, 0, half*0.4, 0, Math.PI*2); ctx.stroke();
+            for (let a = 0; a < 8; a++) {
+                const ang = a * Math.PI / 4;
+                const ix = Math.cos(ang)*half*0.4, iy = Math.sin(ang)*half*0.4;
+                const ox = Math.cos(ang)*half*0.75, oy = Math.sin(ang)*half*0.75;
+                ctx.fillStyle = '#cc6644';
+                ctx.beginPath();
+                ctx.moveTo(ox, oy);
+                ctx.lineTo(ix + Math.cos(ang+0.5)*half*0.12, iy + Math.sin(ang+0.5)*half*0.12);
+                ctx.lineTo(ix + Math.cos(ang-0.5)*half*0.12, iy + Math.sin(ang-0.5)*half*0.12);
+                ctx.fill();
+            }
+        } else if (eff === 'buff_poison') {
+            ctx.fillStyle = '#44cc44';
+            const drops = [[0, -half*0.3], [-half*0.3, half*0.15], [half*0.3, half*0.15]];
+            for (const [dx, dy] of drops) {
+                ctx.beginPath();
+                ctx.moveTo(dx, dy - half*0.25);
+                ctx.quadraticCurveTo(dx + half*0.18, dy, dx, dy + half*0.15);
+                ctx.quadraticCurveTo(dx - half*0.18, dy, dx, dy - half*0.25);
+                ctx.fill();
+            }
+        } else if (eff === 'shadow_strike') {
+            ctx.fillStyle = '#8866bb';
+            ctx.beginPath();
+            ctx.moveTo(half*0.5, -half*0.7);
+            ctx.lineTo(half*0.65, -half*0.5);
+            ctx.lineTo(-half*0.4, half*0.6);
+            ctx.lineTo(-half*0.55, half*0.45);
+            ctx.closePath(); ctx.fill();
+            ctx.fillStyle = 'rgba(80,40,120,0.4)';
+            ctx.beginPath();
+            ctx.moveTo(-half*0.55, half*0.45);
+            ctx.quadraticCurveTo(-half*0.7, half*0.7, -half*0.3, half*0.7);
+            ctx.lineTo(-half*0.4, half*0.6);
+            ctx.closePath(); ctx.fill();
+        } else if (eff === 'smoke_screen') {
+            ctx.fillStyle = 'rgba(136,136,136,0.6)';
+            ctx.beginPath(); ctx.arc(-half*0.2, -half*0.1, half*0.3, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(half*0.2, 0, half*0.35, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(-half*0.05, half*0.25, half*0.25, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = 'rgba(170,170,170,0.4)';
+            ctx.beginPath(); ctx.arc(0, -half*0.15, half*0.2, 0, Math.PI*2); ctx.fill();
+        } else if (eff === 'place_trap') {
+            ctx.strokeStyle = '#cc8844'; ctx.lineWidth = Math.max(1.2, size/12);
+            ctx.beginPath(); ctx.arc(0, 0, half*0.3, 0, Math.PI*2); ctx.stroke();
+            for (let a = 0; a < 8; a++) {
+                const ang = a * Math.PI / 4;
+                const ix = Math.cos(ang)*half*0.3, iy = Math.sin(ang)*half*0.3;
+                const ox = Math.cos(ang)*half*0.55, oy = Math.sin(ang)*half*0.55;
+                ctx.beginPath(); ctx.moveTo(ix, iy); ctx.lineTo(ox, oy); ctx.stroke();
+            }
+            ctx.fillStyle = '#cc8844';
+            ctx.beginPath(); ctx.arc(0, 0, half*0.12, 0, Math.PI*2); ctx.fill();
+        // --- Generic includes-based matches ---
+        } else if (eff.includes('fire') || eff.includes('pyro')) {
             ctx.fillStyle = '#ff6622';
             ctx.beginPath();
             ctx.moveTo(0, -half); ctx.quadraticCurveTo(half*0.7, -half*0.3, half*0.5, half*0.4);
@@ -10690,7 +10964,6 @@
             ctx.lineTo(-half*0.2, half*0.3);
             ctx.quadraticCurveTo(-half*0.3, 0, 0, -half*0.3); ctx.fill();
         } else if (eff.includes('cold') || eff.includes('freeze') || eff.includes('ice') || eff.includes('blizzard')) {
-            // Ice crystal
             ctx.strokeStyle = '#88ddff'; ctx.lineWidth = 2;
             for (let a = 0; a < 6; a++) {
                 const ang = a * Math.PI / 3;
@@ -10699,28 +10972,24 @@
             }
             ctx.fillStyle = '#ccf0ff'; ctx.beginPath(); ctx.arc(0, 0, 2, 0, Math.PI * 2); ctx.fill();
         } else if (eff.includes('melee') || eff.includes('bash') || eff.includes('execute')) {
-            // Sword slash
             ctx.strokeStyle = '#cccccc'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
             ctx.beginPath(); ctx.moveTo(-half*0.6, half*0.6); ctx.lineTo(half*0.5, -half*0.5); ctx.stroke();
             ctx.fillStyle = '#aaa'; ctx.beginPath(); ctx.moveTo(half*0.3, -half*0.7);
             ctx.lineTo(half*0.6, -half*0.4); ctx.lineTo(half*0.5, -half*0.5); ctx.fill();
             ctx.fillStyle = '#886633'; ctx.fillRect(-half*0.7, half*0.4, half*0.4, half*0.3);
         } else if (eff.includes('whirlwind')) {
-            // Spinning blades
             ctx.strokeStyle = '#aaddff'; ctx.lineWidth = 2;
             for (let a = 0; a < 3; a++) {
                 const ang = a * Math.PI * 2 / 3;
                 ctx.beginPath(); ctx.arc(0, 0, half * 0.6, ang, ang + 1.2); ctx.stroke();
             }
         } else if (eff.includes('projectile') || eff.includes('shot') || eff.includes('arrow')) {
-            // Arrow
             ctx.strokeStyle = '#ccaa66'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
             ctx.beginPath(); ctx.moveTo(-half*0.6, half*0.3); ctx.lineTo(half*0.5, -half*0.5); ctx.stroke();
             ctx.fillStyle = '#aaaaaa';
             ctx.beginPath(); ctx.moveTo(half*0.5, -half*0.5);
             ctx.lineTo(half*0.7, -half*0.2); ctx.lineTo(half*0.2, -half*0.2); ctx.fill();
         } else if (eff.includes('buff') || eff.includes('battle_orders') || eff.includes('heal')) {
-            // Shield/aura glow
             ctx.fillStyle = '#66aa44';
             ctx.beginPath(); ctx.moveTo(0, -half*0.7);
             ctx.lineTo(half*0.6, -half*0.3); ctx.lineTo(half*0.5, half*0.4);
@@ -10728,7 +10997,6 @@
             ctx.lineTo(-half*0.6, -half*0.3); ctx.closePath(); ctx.fill();
             ctx.strokeStyle = '#88cc66'; ctx.lineWidth = 1; ctx.stroke();
         } else if (eff.includes('stun') || eff.includes('ground_slam')) {
-            // Impact star
             ctx.fillStyle = '#ffdd44';
             for (let a = 0; a < 5; a++) {
                 const ang = a * Math.PI * 2 / 5 - Math.PI/2;
@@ -10738,26 +11006,110 @@
                 ctx.fill();
             }
         } else if (eff.includes('charge') || eff.includes('leap')) {
-            // Leap arrow
             ctx.strokeStyle = '#ffaa44'; ctx.lineWidth = 2; ctx.lineCap = 'round';
             ctx.beginPath(); ctx.moveTo(-half*0.5, half*0.4);
             ctx.quadraticCurveTo(0, -half*0.8, half*0.5, half*0.4); ctx.stroke();
             ctx.fillStyle = '#ffaa44';
             ctx.beginPath(); ctx.moveTo(half*0.3, half*0.1); ctx.lineTo(half*0.7, half*0.5);
             ctx.lineTo(half*0.3, half*0.6); ctx.fill();
-        } else if (sk.skillType === 'passive') {
-            // Passive: glowing circle
+        } else if (eff === '_passive') {
             ctx.strokeStyle = '#8888cc'; ctx.lineWidth = 1.5;
             ctx.beginPath(); ctx.arc(0, 0, half * 0.6, 0, Math.PI * 2); ctx.stroke();
             ctx.fillStyle = '#6666aa'; ctx.globalAlpha = 0.3;
             ctx.beginPath(); ctx.arc(0, 0, half * 0.5, 0, Math.PI * 2); ctx.fill();
             ctx.globalAlpha = 1;
         } else {
-            // Fallback: emoji
-            ctx.font = `${size}px ${FONT_EMOJI}`;
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText(sk.icon, 0, 0);
+            // Default: diamond shape
+            ctx.fillStyle = '#aaaaaa';
+            ctx.beginPath();
+            ctx.moveTo(0, -half*0.6);
+            ctx.lineTo(half*0.45, 0);
+            ctx.lineTo(0, half*0.6);
+            ctx.lineTo(-half*0.45, 0);
+            ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = '#888888'; ctx.lineWidth = 1; ctx.stroke();
         }
+    }
+
+    // data URL cache for skill icons used in HTML panels
+    const _skillIconDataURLCache = {};
+    function getSkillIconDataURL(sk, size) {
+        const eff = sk.effect || (sk.skillType === 'passive' ? '_passive' : '_default');
+        const key = eff + '_' + size;
+        if (_skillIconDataURLCache[key]) return _skillIconDataURLCache[key];
+        const cvs = document.createElement('canvas');
+        cvs.width = size; cvs.height = size;
+        const c = cvs.getContext('2d');
+        c.translate(size / 2, size / 2);
+        _drawSkillIconShape(c, eff, size);
+        _skillIconDataURLCache[key] = cvs.toDataURL();
+        return _skillIconDataURLCache[key];
+    }
+    function preRenderSkillIcons() {
+        const skills = getAllAvailableSkills();
+        if (!skills || skills.length === 0) return;
+        const sizes = [18, 20, 28, 40];
+        const effs = new Set();
+        for (const sk of skills) {
+            effs.add(sk.effect || (sk.skillType === 'passive' ? '_passive' : '_default'));
+        }
+        for (const eff of effs) {
+            for (const sz of sizes) {
+                const key = eff + '_' + sz;
+                if (_skillIconDataURLCache[key]) continue;
+                const cvs = document.createElement('canvas');
+                cvs.width = sz; cvs.height = sz;
+                const c = cvs.getContext('2d');
+                c.translate(sz / 2, sz / 2);
+                _drawSkillIconShape(c, eff, sz);
+                _skillIconDataURLCache[key] = cvs.toDataURL();
+            }
+        }
+    }
+
+    // Waypoint icon Canvas drawing (blue swirl portal)
+    function _drawWaypointIcon(ctx, cx, cy, size) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        const half = size / 2;
+        const glow = ctx.createRadialGradient(0, 0, half*0.2, 0, 0, half*0.9);
+        glow.addColorStop(0, 'rgba(100,170,255,0.5)');
+        glow.addColorStop(1, 'rgba(100,170,255,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath(); ctx.arc(0, 0, half*0.9, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#66aaff'; ctx.lineWidth = Math.max(2, size/10); ctx.lineCap = 'round';
+        for (let i = 0; i < 3; i++) {
+            ctx.beginPath();
+            const startAng = i * Math.PI * 2 / 3;
+            for (let t = 0; t <= 1; t += 0.04) {
+                const ang = startAng + t * Math.PI * 1.6;
+                const r = half * 0.1 + t * half * 0.55;
+                const px = Math.cos(ang) * r, py = Math.sin(ang) * r;
+                t === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+        }
+        ctx.fillStyle = '#ccddff';
+        ctx.beginPath(); ctx.arc(0, 0, half*0.12, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+    }
+    function getWaypointIconDataURL(size) {
+        const key = '_waypoint_' + size;
+        if (_skillIconDataURLCache[key]) return _skillIconDataURLCache[key];
+        const cvs = document.createElement('canvas');
+        cvs.width = size; cvs.height = size;
+        const c = cvs.getContext('2d');
+        _drawWaypointIcon(c, size/2, size/2, size);
+        _skillIconDataURLCache[key] = cvs.toDataURL();
+        return _skillIconDataURLCache[key];
+    }
+
+    // Canvas-drawn skill icon (uses _drawSkillIconShape, no emoji fallback)
+    function _drawSkillIcon(ctx, sk, cx, cy, size) {
+        const eff = sk.effect || (sk.skillType === 'passive' ? '_passive' : '_default');
+        ctx.save();
+        ctx.translate(cx, cy);
+        _drawSkillIconShape(ctx, eff, size);
         ctx.restore();
     }
 
@@ -10952,10 +11304,10 @@
                 ctx.shadowBlur = 0;
             }
 
-            // Icon (Canvas-drawn when possible, emoji fallback)
+            // Icon (Canvas-drawn)
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            if (sk && sk.icon) {
+            if (sk) {
                 const icx = x + skillW / 2, icy = skillY + skillH / 2 - 4;
                 _drawSkillIcon(ctx, sk, icx, icy, 16);
             } else {
@@ -12046,11 +12398,16 @@
                     // Idle bob animation
                     const bob = Math.sin(G.time * 1.5 + npc.x * 0.1) * 1.5;
                     drawSpr(npc.sprite, nx - npcSprSize/2, ny - npcSprSize + 4 + bob, npcSprSize, npcSprSize, false, true);
+                } else if (npc.type === 'waypoint') {
+                    // Waypoint: Canvas-drawn portal icon
+                    _drawWaypointIcon(ctx, nx, ny - 8, 28);
                 } else {
-                    // Waypoint or missing sprite: emoji fallback
-                    ctx.font = `24px ${FONT_EMOJI}`;
-                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                    ctx.fillText(npc.icon, nx, ny - 8);
+                    // Other missing sprite: diamond fallback
+                    ctx.fillStyle = '#aaaaaa';
+                    ctx.beginPath();
+                    ctx.moveTo(nx, ny - 20); ctx.lineTo(nx + 10, ny - 8);
+                    ctx.lineTo(nx, ny + 4); ctx.lineTo(nx - 10, ny - 8);
+                    ctx.closePath(); ctx.fill();
                 }
                 // NPC name
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -12339,6 +12696,9 @@
         document.body.appendChild(wrap);
         return results.every(r => r.ok);
     }
+
+    // Pre-render skill icons for HTML panels
+    preRenderSkillIcons();
 
     // Start the loop
     const TEST_MODE = new URLSearchParams(window.location.search).has('test');
