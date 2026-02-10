@@ -1107,6 +1107,7 @@
     <div id="waypointPanel" class="ui-panel town-panel" style="display:none"></div>
     <div id="questPanel" class="ui-panel town-panel" style="display:none"></div>
     <div id="uberPanel" class="ui-panel town-panel" style="display:none"></div>
+    <div id="mercenaryPanel" class="ui-panel town-panel" style="display:none"></div>
 
     <script>
     // ========================================
@@ -1986,28 +1987,32 @@
             { id:'smith_1', name:'鍛冶屋グリスウォルド', icon:'⚒', sprite:'npcBlacksmith', type:'blacksmith', dialog:['武器を鍛えてやろう。','良い鉄を使えば、切れ味が違う。'] },
             { id:'stash_1', name:'倉庫番カイン', icon:'📦', sprite:'npcScholar', type:'stash', dialog:['預かり物はここに置いていけ。','倉庫はいつでも使えるぞ。'] },
             { id:'quest_1', name:'長老アカラ', icon:'👵', sprite:'npcElderlyW', type:'quest', dialog:['勇者よ、地下聖堂の魔物を退治してくれ。','骸骨王が復活したのだ...'] },
-            { id:'wp_1', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] }
+            { id:'wp_1', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] },
+            { id:'merc_1', name:'傭兵ギルド長カシア', icon:'⚔', sprite:'npcWarClericF', type:'mercenary', dialog:['傭兵を雇いたいか？腕利きが揃ってるよ。'] }
         ],
         2: [
             { id:'merchant_2', name:'商人エルジクス', icon:'🧑‍💼', sprite:'npcShopkeep', type:'shop', dialog:['砂漠の品は珍しいぞ。','水よりも価値のある物がある。'] },
             { id:'smith_2', name:'鍛冶屋ファーラ', icon:'⚒', sprite:'npcBlacksmith', type:'blacksmith', dialog:['砂漠の鉄は硬いが...鍛えがいがある。'] },
             { id:'stash_2', name:'倉庫番メシフ', icon:'📦', sprite:'npcPeasant1', type:'stash', dialog:['荷物はここに預けろ。'] },
             { id:'quest_2', name:'賢者ドロガン', icon:'🧔', sprite:'npcDesertSage', type:'quest', dialog:['砂漠の地下に巨大な蟲がいる...退治してくれ。'] },
-            { id:'wp_2', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] }
+            { id:'wp_2', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] },
+            { id:'merc_2', name:'傭兵隊長グレイズ', icon:'⚔', sprite:'npcWarClericM', type:'mercenary', dialog:['砂漠で鍛えた兵がいる。雇うか？'] }
         ],
         3: [
             { id:'merchant_3', name:'商人アシェラ', icon:'🧑‍💼', sprite:'npcShopkeep', type:'shop', dialog:['密林の収穫品だ、見てくれ。'] },
             { id:'smith_3', name:'鍛冶屋ヘファスト', icon:'⚒', sprite:'npcBlacksmith', type:'blacksmith', dialog:['神殿の金属は特殊だ...鍛え直してやろう。'] },
             { id:'stash_3', name:'倉庫番ナタリヤ', icon:'📦', sprite:'npcWarClericF', type:'stash', dialog:['安全に保管してあるわ。'] },
             { id:'quest_3', name:'巫女オーマス', icon:'🧙‍♀', sprite:'npcWarClericM', type:'quest', dialog:['大魔導師が神殿を支配している...倒してくれ。'] },
-            { id:'wp_3', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] }
+            { id:'wp_3', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] },
+            { id:'merc_3', name:'傭兵長アシェラ', icon:'⚔', sprite:'npcWarClericF', type:'mercenary', dialog:['密林の戦士を紹介しよう。'] }
         ],
         4: [
             { id:'merchant_4', name:'商人ジャメラ', icon:'🧑‍💼', sprite:'npcShopkeep', type:'shop', dialog:['地獄でも商売は続く...'] },
             { id:'smith_4', name:'鍛冶屋ハルバ', icon:'⚒', sprite:'npcBlacksmith', type:'blacksmith', dialog:['地獄の炎で鍛えた武器は一味違う。'] },
             { id:'stash_4', name:'倉庫番ティラエル', icon:'📦', sprite:'templar', type:'stash', dialog:['ここなら安全だ。'] },
             { id:'quest_4', name:'天使ハラティ', icon:'👼', sprite:'priest', type:'quest', dialog:['魔王を倒さねば世界が滅ぶ...頼む。'] },
-            { id:'wp_4', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] }
+            { id:'wp_4', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] },
+            { id:'merc_4', name:'傭兵ギルド長ティリエル', icon:'⚔', sprite:'templar', type:'mercenary', dialog:['地獄でも戦える兵士がいる。'] }
         ],
         5: [
             { id:'merchant_5', name:'商人アーニャ', icon:'🧑‍💼', sprite:'npcShopkeep', type:'shop', dialog:['氷の品は貴重よ。'] },
@@ -2015,7 +2020,8 @@
             { id:'stash_5', name:'倉庫番ニーラサック', icon:'📦', sprite:'npcElderlyM', type:'stash', dialog:['預かるぞ。'] },
             { id:'quest_5', name:'賢者マラス', icon:'🧓', sprite:'npcElderlyM', type:'quest', dialog:['氷の女王が山を支配している...最後の戦いだ。'] },
             { id:'wp_5', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] },
-            { id:'uber_5', name:'闇商人ナイルス', icon:'🌀', sprite:'npcScholar', type:'uber_portal', dialog:['3つの鍵を集めたか？パンデモニウムへの門を開こう...'], requireDifficulty: true }
+            { id:'uber_5', name:'闘技場の門番', icon:'🌀', sprite:'npcScholar', type:'uber_portal', dialog:['3つの鍵を集めたか？パンデモニウムへの門を開こう...'], requireDifficulty: true },
+            { id:'merc_5', name:'傭兵長ラーズク', icon:'⚔', sprite:'npcWarClericM', type:'mercenary', dialog:['氷の戦士を紹介しよう。'] }
         ]
     };
 
@@ -6287,6 +6293,214 @@
 
     };
 
+    // ========== MERCENARY SYSTEM (D2-style) ==========
+    const MERCENARY_DEFS = {
+        rogue:     { name:'Rogue',     nameJP:'弓兵',   baseHP:120, baseStr:10, baseDex:18, baseInt:8,  baseDef:8,  attackType:'ranged', attackRange:180, baseSpeed:160, icon:'🏹', color:'#c98b6b', hpPerLevel:12, dmgPerLevel:3, defPerLevel:1.2, hireCost:400, reviveCostBase:200 },
+        fighter:   { name:'Fighter',   nameJP:'戦士',   baseHP:220, baseStr:18, baseDex:8,  baseInt:6,  baseDef:18, attackType:'melee',  attackRange:45,  baseSpeed:140, icon:'🛡', color:'#6c8aa6', hpPerLevel:20, dmgPerLevel:4, defPerLevel:2.0, hireCost:600, reviveCostBase:300 },
+        mage:      { name:'Mage',      nameJP:'魔法使い', baseHP:90,  baseStr:6,  baseDex:10, baseInt:22, baseDef:6,  attackType:'magic',  attackRange:160, baseSpeed:150, icon:'🧙', color:'#9a6bd6', hpPerLevel:9,  dmgPerLevel:5, defPerLevel:0.8, hireCost:700, reviveCostBase:350 },
+        priestess: { name:'Priestess', nameJP:'聖女',   baseHP:140, baseStr:8,  baseDex:12, baseInt:18, baseDef:10, attackType:'magic',  attackRange:120, baseSpeed:150, icon:'✨', color:'#e6c36a', hpPerLevel:13, dmgPerLevel:3, defPerLevel:1.1, hireCost:650, reviveCostBase:325 }
+    };
+    const MERC_ACT_MULT = [0, 1.0, 1.3, 1.6, 2.0, 2.5];
+    function getMercHireCost(typeKey) { return Math.round((MERCENARY_DEFS[typeKey]?.hireCost || 500) * (MERC_ACT_MULT[G.act] || 1)); }
+    function getMercReviveCost() { return mercenary ? Math.round(getMercHireCost(mercenary.type) * 0.5) : 0; }
+
+    function calcMercStats(def, level) {
+        const lvl = Math.max(1, level);
+        return {
+            maxHP: Math.round(def.baseHP + def.hpPerLevel * (lvl - 1)),
+            str: Math.round(def.baseStr + (lvl - 1) * 2),
+            dex: Math.round(def.baseDex + (lvl - 1) * 2),
+            int: Math.round(def.baseInt + (lvl - 1) * 2),
+            defense: Math.round(def.baseDef + def.defPerLevel * (lvl - 1)),
+            baseDmg: Math.round((def.baseStr * 0.7 + def.baseDex * 0.4 + def.baseInt * 0.6) + def.dmgPerLevel * (lvl - 1))
+        };
+    }
+
+    const mercProjectiles = [];
+    class MercProjectile {
+        constructor(x, y, tx, ty, dmg, color, spd, r, element) {
+            this.x = x; this.y = y; this.dmg = dmg; this.color = color; this.r = r || 5;
+            this.element = element || null; this.life = 2.5;
+            const d = Math.hypot(tx - x, ty - y) || 1;
+            this.vx = (tx - x) / d * spd; this.vy = (ty - y) / d * spd;
+        }
+        update(dt) { this.x += this.vx * dt; this.y += this.vy * dt; this.life -= dt; emitParticles(this.x, this.y, this.color, 1, 18, 0.2, 2, 0); }
+        draw(cx, cy) {
+            const sx = this.x - cx, sy = this.y - cy;
+            if (sx < -20 || sx > W + 20 || sy < -20 || sy > H + 20) return;
+            ctx.globalAlpha = 0.9; ctx.fillStyle = this.color;
+            ctx.beginPath(); ctx.arc(sx, sy, this.r, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(sx, sy, this.r * 0.45, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    let mercenary = null;
+
+    class Mercenary {
+        constructor(typeKey, x, y) {
+            this.type = typeKey;
+            this.def = MERCENARY_DEFS[typeKey];
+            this.name = this.def.nameJP;
+            this.level = player.level;
+            this.x = x; this.y = y;
+            this.radius = 12;
+            this.alive = true;
+            this.target = null;
+            this.attackCooldown = 0;
+            this.healCD = 0; this.buffCD = 0;
+            this.equipment = { weapon: null, armor: null };
+            this.hp = 1; this.maxHP = 1;
+            this.str = 0; this.dex = 0; this.int = 0; this.defense = 0; this.baseDmg = 1;
+            this.recalcStats(true);
+        }
+        recalcStats(resetHP) {
+            const prevPct = this.maxHP > 0 ? this.hp / this.maxHP : 1;
+            const s = calcMercStats(this.def, this.level);
+            this.maxHP = s.maxHP; this.str = s.str; this.dex = s.dex; this.int = s.int;
+            this.defense = s.defense; this.baseDmg = s.baseDmg;
+            // Equipment stat bonuses
+            for (const eq of Object.values(this.equipment)) {
+                if (!eq) continue;
+                for (const a of (eq.affixes || [])) {
+                    if (a.stat === 'str') this.str += a.value;
+                    if (a.stat === 'dex') this.dex += a.value;
+                    if (a.stat === 'int') this.int += a.value;
+                    if (a.stat === 'hp') this.maxHP += a.value;
+                    if (a.stat === 'def') this.defense += a.value;
+                }
+            }
+            this.hp = resetHP ? this.maxHP : Math.min(this.maxHP, Math.max(1, Math.round(this.maxHP * prevPct)));
+        }
+        getAttackDmg() {
+            let dmg = this.baseDmg;
+            const w = this.equipment.weapon;
+            if (w && w.baseDmg) dmg += rand(w.baseDmg[0], w.baseDmg[1]);
+            return Math.max(1, Math.round(dmg));
+        }
+        getDefense() {
+            let def = this.defense;
+            const a = this.equipment.armor;
+            if (a && a.baseDef) def += a.baseDef;
+            return Math.max(0, def);
+        }
+        takeDmg(raw) {
+            const def = this.getDefense();
+            const dmg = Math.max(1, Math.round(raw * (100 / (100 + def))));
+            this.hp -= dmg;
+            addFloatingText(this.x, this.y - 20, dmg, '#ff6666');
+            emitParticles(this.x, this.y, '#ff0000', 6, 60, 0.4, 3);
+            if (this.hp <= 0) {
+                this.hp = 0; this.alive = false;
+                emitParticles(this.x, this.y, '#888', 12, 60, 0.5, 3, -20);
+                addLog(`${this.name}が倒れた！町で復活させよう`, '#ff4444');
+            }
+        }
+        _moveToward(tx, ty, speed, dt) {
+            const dx = tx - this.x, dy = ty - this.y, d = Math.hypot(dx, dy);
+            if (d < 1) return;
+            const mx = dx / d, my = dy / d, step = speed * dt;
+            const nx = this.x + mx * step, ny = this.y + my * step;
+            if (canWalk(nx, ny, 10)) { this.x = nx; this.y = ny; }
+            else if (canWalk(this.x + mx * step, this.y, 10)) { this.x += mx * step; }
+            else if (canWalk(this.x, this.y + my * step, 10)) { this.y += my * step; }
+        }
+        _findTarget() {
+            let near = null, nearD = 1e9;
+            for (const m of monsters) {
+                if (!m.alive) continue;
+                const d = dist(this.x, this.y, m.x, m.y);
+                if (d < 200 && d < nearD) { nearD = d; near = m; }
+            }
+            this.target = near;
+        }
+        update(dt) {
+            if (!this.alive) return;
+            // Level sync
+            if (this.level !== player.level) { this.level = player.level; this.recalcStats(false); }
+            this.attackCooldown = Math.max(0, this.attackCooldown - dt);
+            if (this.target && !this.target.alive) this.target = null;
+            if (!this.target) this._findTarget();
+            // Low HP: retreat
+            if (this.hp < this.maxHP * 0.3) {
+                const pd = dist(this.x, this.y, player.x, player.y);
+                if (pd > 60) this._moveToward(player.x, player.y, this.def.baseSpeed, dt);
+                this.target = null;
+                this._tryHealBuff(dt);
+                return;
+            }
+            // Combat
+            if (this.target) {
+                const t = this.target, d = dist(this.x, this.y, t.x, t.y);
+                const range = this.def.attackRange;
+                if (this.def.attackType !== 'melee') {
+                    if (d < range * 0.7) this._moveToward(this.x + (this.x - t.x) * 0.5, this.y + (this.y - t.y) * 0.5, this.def.baseSpeed, dt);
+                    else if (d > range * 1.2) this._moveToward(t.x, t.y, this.def.baseSpeed, dt);
+                } else { if (d > range) this._moveToward(t.x, t.y, this.def.baseSpeed, dt); }
+                if (d <= range && this.attackCooldown <= 0) {
+                    const dmg = this.getAttackDmg();
+                    const isCrit = Math.random() * 100 < (5 + this.dex * 0.05);
+                    const finalDmg = isCrit ? Math.round(dmg * 1.5) : dmg;
+                    if (this.def.attackType === 'melee') {
+                        monsterTakeDmg(t, finalDmg, isCrit);
+                        this.attackCooldown = 0.8; sfxHit();
+                        emitParticles(t.x, t.y, '#ffcc88', 4, 40, 0.2, 2, 0);
+                    } else {
+                        const elem = this.type === 'mage' ? 'lightning' : null;
+                        mercProjectiles.push(new MercProjectile(this.x, this.y, t.x, t.y, finalDmg, this.def.color, 320, 5, elem));
+                        this.attackCooldown = this.type === 'mage' ? 1.3 : 1.1;
+                        emitParticles(this.x, this.y, this.def.color, 3, 30, 0.2, 2, 0);
+                    }
+                }
+            } else {
+                // Follow player
+                const pd = dist(this.x, this.y, player.x, player.y);
+                if (pd > 120) this._moveToward(player.x, player.y, this.def.baseSpeed, dt);
+                this._tryHealBuff(dt);
+            }
+        }
+        _tryHealBuff(dt) {
+            if (this.type !== 'priestess') return;
+            this.healCD = Math.max(0, this.healCD - dt);
+            this.buffCD = Math.max(0, this.buffCD - dt);
+            const pd = dist(this.x, this.y, player.x, player.y);
+            if (pd < 120 && this.healCD <= 0 && player.hp < player.maxHP) {
+                const heal = Math.round(player.maxHP * (0.05 + this.level * 0.001));
+                player.hp = Math.min(player.maxHP, player.hp + heal);
+                addFloatingText(player.x, player.y - 24, '+' + heal, '#00ff88');
+                emitParticles(player.x, player.y, '#88ffcc', 10, 50, 0.4, 3, -20);
+                sfxHeal(); this.healCD = 3.0;
+            }
+        }
+        draw(cx, cy) {
+            if (!this.alive) return;
+            const sx = this.x - cx, sy = this.y - cy;
+            if (sx < -60 || sx > W + 60 || sy < -60 || sy > H + 60) return;
+            // Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath(); ctx.ellipse(sx, sy + 10, 10, 5, 0, 0, Math.PI * 2); ctx.fill();
+            // Body circle
+            ctx.fillStyle = this.def.color;
+            ctx.beginPath(); ctx.arc(sx, sy, this.radius, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.arc(sx, sy, this.radius, 0, Math.PI * 2); ctx.stroke();
+            // Icon
+            ctx.font = `16px ${FONT_EMOJI}`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(this.def.icon, sx, sy - 1);
+            // Name + level
+            ctx.font = `bold 9px ${FONT_UI}`;
+            ctx.fillStyle = this.def.color;
+            ctx.fillText(`${this.name} Lv.${this.level}`, sx, sy - this.radius - 14);
+            // HP bar
+            const bw = 30, bh = 4;
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(sx - bw / 2, sy - this.radius - 10, bw, bh);
+            ctx.fillStyle = (this.hp / this.maxHP > 0.3) ? '#00aa00' : '#dd3300';
+            ctx.fillRect(sx - bw / 2, sy - this.radius - 10, bw * (this.hp / this.maxHP), bh);
+        }
+    }
+
     // ========== MONSTERS ==========
     // ========== MONSTER IMMUNITY SYSTEM ==========
     // Immunities: 100% = immune (0 damage), 50-99% = resistant, <50% = normal
@@ -6605,13 +6819,17 @@
                     if (d < this.r + player.radius + 10 && this.atkCD <= 0) {
                         let meleeDmg = this.dmg;
                         let meleeElement = null;
-                        // Champion cold enchanted: slow on melee hit
                         for (const affKey of (this.championAffixes || [])) {
                             const aff = CHAMPION_AFFIXES[affKey];
                             if (aff && aff.element) meleeElement = aff.element;
                             if (aff && aff.slowOnHit && player.speedDebuffT === undefined) {
                                 player.speedDebuffT = aff.slowOnHit;
                             }
+                        }
+                        // Mercenary tank: 40% chance to redirect melee attack to merc (fighter: 60%)
+                        if (mercenary && mercenary.alive && dist(this.x, this.y, mercenary.x, mercenary.y) < this.r + mercenary.radius + 15) {
+                            const tauntChance = mercenary.type === 'fighter' ? 0.6 : 0.4;
+                            if (Math.random() < tauntChance) { mercenary.takeDmg(meleeDmg); this.atkCD = 1.0; return; }
                         }
                         player.takeDamage(meleeDmg, meleeElement);
                         this.atkCD = 1.0;
@@ -7631,6 +7849,7 @@
         G.consecrations = [];
         G.minions = [];
         G.spawnTimer = 0;
+        mercProjectiles.length = 0;
 
         if (!opts.skipEntities) {
             // Normal flow: set player at start room, spawn fresh monsters/items
@@ -7641,6 +7860,8 @@
             player.targetY = player.y;
             player.moving = false;
             player.attacking = false;
+            // Teleport mercenary
+            if (mercenary && mercenary.alive) { mercenary.x = player.x + 40; mercenary.y = player.y; mercenary.target = null; }
             monsters.length = 0;
             groundItems.length = 0;
 
@@ -7785,6 +8006,13 @@
         player.moving = false;
         player.attacking = false;
 
+        // Teleport mercenary to player and clear merc projectiles
+        mercProjectiles.length = 0;
+        if (mercenary && mercenary.alive) {
+            mercenary.x = player.x + 40; mercenary.y = player.y;
+            mercenary.target = null;
+        }
+
         // Full heal
         player.hp = player.maxHP;
         player.mp = player.maxMP;
@@ -7875,7 +8103,7 @@
         G.townUIMode = null;
         G.activeNPC = null;
         G.dialogState = 0;
-        const panels = ['dialogPanel','shopPanel','blacksmithPanel','stashPanel','waypointPanel','questPanel','uberPanel'];
+        const panels = ['dialogPanel','shopPanel','blacksmithPanel','stashPanel','waypointPanel','questPanel','uberPanel','mercenaryPanel'];
         for (const id of panels) {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
@@ -7897,6 +8125,7 @@
             case 'quest': openQuestUI(npc); break;
             case 'waypoint': openWaypointUI(npc); break;
             case 'uber_portal': openUberPortalUI(npc); break;
+            case 'mercenary': openMercenaryUI(npc); break;
         }
     }
 
@@ -8168,6 +8397,138 @@
             player.recalcStats();
         }
         renderBlacksmithUI();
+    };
+
+    // ========== MERCENARY UI ==========
+    function openMercenaryUI(npc) {
+        G.townUIMode = 'mercenary';
+        const panel = document.getElementById('mercenaryPanel');
+        if (!panel) return;
+        panel.style.display = 'block';
+        renderMercenaryUI();
+    }
+    function renderMercenaryUI() {
+        const panel = document.getElementById('mercenaryPanel');
+        if (!panel) return;
+        let html = `<div class="panel-header">⚔ ${G.activeNPC ? escapeHtml(G.activeNPC.name) : '傭兵ギルド'} <span style="float:right;color:#ffd700">💰 ${G.gold}G</span></div>`;
+
+        if (mercenary) {
+            // Current mercenary info
+            const def = mercenary.def;
+            html += `<div style="border:1px solid ${def.color};border-radius:6px;padding:8px;margin:6px 0;background:rgba(0,0,0,0.4)">`;
+            html += `<div style="color:${def.color};font-size:13px;font-weight:bold">${def.icon} ${escapeHtml(mercenary.name)} (${def.nameJP}) Lv.${mercenary.level}</div>`;
+            if (mercenary.alive) {
+                html += `<div style="color:#ccc;font-size:11px;margin:4px 0">HP: ${mercenary.hp}/${mercenary.maxHP} | 攻撃: ${mercenary.getAttackDmg()} | 防御: ${mercenary.getDefense()}</div>`;
+                html += `<div style="color:#aaa;font-size:10px">タイプ: ${def.attackType === 'melee' ? '近接' : def.attackType === 'ranged' ? '遠隔' : '魔法'} | 射程: ${def.attackRange}</div>`;
+                // Equipment
+                const wName = mercenary.equipment.weapon ? escapeHtml(mercenary.equipment.weapon.name) : '(なし)';
+                const aName = mercenary.equipment.armor ? escapeHtml(mercenary.equipment.armor.name) : '(なし)';
+                const wCol = mercenary.equipment.weapon ? mercenary.equipment.weapon.rarity.color : '#888';
+                const aCol = mercenary.equipment.armor ? mercenary.equipment.armor.rarity.color : '#888';
+                html += `<div style="margin:6px 0;font-size:11px">`;
+                html += `<div>🗡 武器: <span style="color:${wCol}">${wName}</span> ${mercenary.equipment.weapon ? '<button class="sn-btn" onclick="mercUnequip(\'weapon\')">外す</button>' : ''}</div>`;
+                html += `<div>🛡 防具: <span style="color:${aCol}">${aName}</span> ${mercenary.equipment.armor ? '<button class="sn-btn" onclick="mercUnequip(\'armor\')">外す</button>' : ''}</div>`;
+                html += `</div>`;
+                // Give equipment from inventory
+                html += `<div style="color:#aaa;font-size:10px;margin:4px 0">インベントリから装備を渡す：</div>`;
+                html += `<div class="shop-grid">`;
+                for (let i = 0; i < player.inventory.length; i++) {
+                    const item = player.inventory[i];
+                    if (!item.typeKey) continue;
+                    const slot = (item.typeInfo && (item.typeInfo.slot === 'weapon' || item.typeInfo.slot === 'offhand')) ? 'weapon' : ((item.typeInfo && (item.typeInfo.slot === 'body' || item.typeInfo.slot === 'head')) ? 'armor' : null);
+                    if (!slot) continue;
+                    html += `<div class="shop-item" onclick="mercEquip(${i},'${slot}')"><span style="font-size:16px">${item.icon}</span><span style="color:${item.rarity.color};font-size:10px">${escapeHtml(item.name)}</span></div>`;
+                }
+                html += `</div>`;
+                html += `<button class="town-btn" style="background:#664444;margin-top:6px" onclick="dismissMerc()">解雇する</button>`;
+            } else {
+                // Dead: revive option
+                const cost = getMercReviveCost();
+                const canRevive = G.gold >= cost;
+                html += `<div style="color:#ff4444;font-size:12px;margin:6px 0">☠ ${escapeHtml(mercenary.name)}は倒れている</div>`;
+                html += `<button class="town-btn ${canRevive ? '' : 'disabled'}" onclick="reviveMerc()" style="margin:4px 0">${canRevive ? `復活させる (${cost}G)` : `ゴールド不足 (${cost}G必要)`}</button>`;
+            }
+            html += `</div>`;
+        } else {
+            // Hire new mercenary
+            html += `<div style="color:#ccc;font-size:12px;margin:6px 0">傭兵を雇おう。ダンジョンで一緒に戦ってくれる。</div>`;
+            html += `<div class="shop-grid">`;
+            for (const [key, def] of Object.entries(MERCENARY_DEFS)) {
+                const cost = getMercHireCost(key);
+                const canHire = G.gold >= cost;
+                const stats = calcMercStats(def, player.level);
+                html += `<div class="shop-item ${canHire ? '' : 'disabled'}" onclick="hireMerc('${key}')" style="border-color:${def.color}">
+                    <div style="font-size:20px">${def.icon}</div>
+                    <div style="color:${def.color};font-size:12px;font-weight:bold">${def.nameJP}</div>
+                    <div style="color:#aaa;font-size:9px">${def.attackType === 'melee' ? '近接' : def.attackType === 'ranged' ? '遠隔' : '魔法'}攻撃</div>
+                    <div style="color:#ccc;font-size:9px">HP:${stats.maxHP} 攻:${stats.baseDmg} 防:${stats.defense}</div>
+                    <div style="color:#ffd700;font-size:10px">${cost}G</div>
+                </div>`;
+            }
+            html += `</div>`;
+        }
+        html += `<button class="town-btn" onclick="closeTownUI()" style="margin-top:8px">閉じる</button>`;
+        panel.innerHTML = html;
+    }
+    window.hireMerc = function(typeKey) {
+        const cost = getMercHireCost(typeKey);
+        if (G.gold < cost) { addLog('ゴールドが足りない', '#ff4444'); return; }
+        G.gold -= cost;
+        mercenary = new Mercenary(typeKey, player.x + 40, player.y);
+        addLog(`${mercenary.name}を雇った！`, mercenary.def.color);
+        renderMercenaryUI();
+    };
+    window.reviveMerc = function() {
+        if (!mercenary) return;
+        const cost = getMercReviveCost();
+        if (G.gold < cost) { addLog('ゴールドが足りない', '#ff4444'); return; }
+        G.gold -= cost;
+        mercenary.alive = true;
+        mercenary.recalcStats(true);
+        mercenary.x = player.x + 40; mercenary.y = player.y;
+        addLog(`${mercenary.name}が復活した！`, mercenary.def.color);
+        renderMercenaryUI();
+    };
+    window.dismissMerc = function() {
+        if (!mercenary) return;
+        // Return equipment to player inventory
+        for (const slot of ['weapon', 'armor']) {
+            if (mercenary.equipment[slot]) {
+                if (player.inventory.length < player.maxInv) {
+                    player.inventory.push(mercenary.equipment[slot]);
+                } else {
+                    groundItems.push({ x: player.x, y: player.y, item: mercenary.equipment[slot] });
+                }
+            }
+        }
+        addLog(`${mercenary.name}を解雇した`, '#888');
+        mercenary = null;
+        renderMercenaryUI();
+    };
+    window.mercEquip = function(invIdx, slot) {
+        if (!mercenary || !mercenary.alive) return;
+        const item = player.inventory[invIdx];
+        if (!item) return;
+        // Return old equipment
+        if (mercenary.equipment[slot]) {
+            player.inventory.push(mercenary.equipment[slot]);
+        }
+        mercenary.equipment[slot] = item;
+        player.inventory.splice(invIdx, 1);
+        mercenary.recalcStats(false);
+        addLog(`${escapeHtml(item.name)}を${mercenary.name}に装備させた`, item.rarity.color);
+        renderMercenaryUI();
+    };
+    window.mercUnequip = function(slot) {
+        if (!mercenary) return;
+        const item = mercenary.equipment[slot];
+        if (!item) return;
+        if (player.inventory.length >= player.maxInv) { addLog('インベントリが一杯', '#ff4444'); return; }
+        player.inventory.push(item);
+        mercenary.equipment[slot] = null;
+        mercenary.recalcStats(false);
+        addLog(`${escapeHtml(item.name)}を取り戻した`, '#aaa');
+        renderMercenaryUI();
     };
 
     function openStashUI(npc) {
@@ -11619,6 +11980,33 @@
             ctx.fillText(`FPS ${fps.toFixed(0)}`, mmX - 6, 14);
         }
 
+        // Mercenary HUD (below minimap)
+        if (mercenary) {
+            const mx = W - 170, my = 110;
+            ctx.globalAlpha = 0.85;
+            ctx.fillStyle = 'rgba(10,8,5,0.8)';
+            ctx.fillRect(mx, my, 160, 32);
+            ctx.strokeStyle = mercenary.def.color; ctx.lineWidth = 1;
+            ctx.strokeRect(mx, my, 160, 32);
+            ctx.globalAlpha = 1;
+            ctx.font = `bold 10px ${FONT_UI}`;
+            ctx.textAlign = 'left';
+            ctx.fillStyle = mercenary.def.color;
+            ctx.fillText(`${mercenary.def.icon} ${mercenary.name} Lv.${mercenary.level}`, mx + 4, my + 12);
+            if (mercenary.alive) {
+                const bx = mx + 4, by = my + 18, bw = 152, bh = 8;
+                ctx.fillStyle = '#1a1a1a'; ctx.fillRect(bx, by, bw, bh);
+                ctx.fillStyle = (mercenary.hp / mercenary.maxHP > 0.3) ? '#00aa44' : '#dd3300';
+                ctx.fillRect(bx, by, bw * (mercenary.hp / mercenary.maxHP), bh);
+                ctx.font = `9px ${FONT_UI}`; ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
+                ctx.fillText(`${mercenary.hp}/${mercenary.maxHP}`, bx + bw / 2, by + 7);
+            } else {
+                ctx.font = `9px ${FONT_UI}`; ctx.fillStyle = '#ff4444'; ctx.textAlign = 'center';
+                ctx.fillText('☠ 倒れている（町で復活）', mx + 80, my + 24);
+            }
+            ctx.textAlign = 'left';
+        }
+
         // Persistent shortcut display (top-left)
         ctx.globalAlpha = 0.6;
         ctx.font = `10px ${FONT_UI}`;
@@ -11771,6 +12159,15 @@
                 x: gi.x, y: gi.y,
                 item: serializeItem(gi.item)
             }));
+            // Save mercenary
+            if (mercenary) {
+                saveData.mercenary = {
+                    type: mercenary.type, level: mercenary.level,
+                    hp: mercenary.hp, maxHP: mercenary.maxHP, alive: mercenary.alive,
+                    weapon: mercenary.equipment.weapon ? serializeItem(mercenary.equipment.weapon) : null,
+                    armor: mercenary.equipment.armor ? serializeItem(mercenary.equipment.armor) : null
+                };
+            }
             // Save remaining chest positions (unopened only)
             saveData.remainingChests = [];
             for (let ty = 0; ty < MAP_H; ty++) {
@@ -11992,6 +12389,19 @@
             const savedDate = new Date(save.timestamp);
             addLog(`セーブ日時: ${savedDate.toLocaleString('ja-JP')}`, '#888');
             if (isPanelVisible(DOM.settingsPanel)) renderSettingsUI();
+            // Restore mercenary
+            mercenary = null;
+            if (save.mercenary && save.mercenary.type && MERCENARY_DEFS[save.mercenary.type]) {
+                mercenary = new Mercenary(save.mercenary.type, player.x + 40, player.y);
+                mercenary.level = save.mercenary.level || player.level;
+                mercenary.alive = save.mercenary.alive !== false;
+                mercenary.recalcStats(false);
+                if (typeof save.mercenary.hp === 'number') mercenary.hp = Math.min(save.mercenary.hp, mercenary.maxHP);
+                if (!mercenary.alive) mercenary.hp = 0;
+                if (save.mercenary.weapon) mercenary.equipment.weapon = save.mercenary.weapon;
+                if (save.mercenary.armor) mercenary.equipment.armor = save.mercenary.armor;
+                mercenary.recalcStats(false);
+            }
             // Pre-render skill icons now that class is loaded
             preRenderSkillIcons();
             return true;
@@ -12130,6 +12540,22 @@
             }
 
             if (!G.inTown) {
+                // Mercenary update
+                if (mercenary && mercenary.alive) mercenary.update(dt);
+                // Mercenary projectiles
+                for (let mi = mercProjectiles.length - 1; mi >= 0; mi--) {
+                    const mp = mercProjectiles[mi];
+                    mp.update(dt);
+                    if (mp.life <= 0) { mercProjectiles[mi] = mercProjectiles[mercProjectiles.length - 1]; mercProjectiles.pop(); continue; }
+                    for (const m of monsters) {
+                        if (m.alive && dist(mp.x, mp.y, m.x, m.y) < mp.r + (m.r || 12)) {
+                            monsterTakeDmg(m, mp.dmg, false, mp.element);
+                            emitParticles(mp.x, mp.y, mp.color, 6, 50, 0.3, 2, 0);
+                            mercProjectiles[mi] = mercProjectiles[mercProjectiles.length - 1]; mercProjectiles.pop();
+                            break;
+                        }
+                    }
+                }
                 for (const m of monsters) {
                     m.update(dt, player);
                     if (m.isBoss && m.alive) updateBossAI(m, dt);
@@ -12140,6 +12566,13 @@
                     const ep = enemyProjectiles[i];
                     ep.update(dt);
                     if (ep.life <= 0) { enemyProjectiles[i] = enemyProjectiles[enemyProjectiles.length - 1]; enemyProjectiles.pop(); continue; }
+                    // Hit mercenary
+                    if (mercenary && mercenary.alive && dist(ep.x, ep.y, mercenary.x, mercenary.y) < ep.r + mercenary.radius) {
+                        mercenary.takeDmg(ep.dmg);
+                        emitParticles(ep.x, ep.y, ep.color, 6, 50, 0.3, 2, 0);
+                        enemyProjectiles[i] = enemyProjectiles[enemyProjectiles.length - 1]; enemyProjectiles.pop();
+                        continue;
+                    }
                     // Hit player
                     if (dist(ep.x, ep.y, player.x, player.y) < ep.r + player.radius) {
                         player.takeDamage(ep.dmg, ep.element || null);
@@ -12417,6 +12850,9 @@
         for (const p of projectiles) p.draw(G.camX, G.camY);
         for (const ep of enemyProjectiles) ep.draw(G.camX, G.camY);
         for (const m of monsters) m.draw(G.camX, G.camY);
+        // Draw mercenary
+        if (mercenary && mercenary.alive) mercenary.draw(G.camX, G.camY);
+        for (const mp of mercProjectiles) mp.draw(G.camX, G.camY);
         // Draw town NPCs
         if (G.inTown) {
             const npcSprSize = 48; // rendered sprite size
