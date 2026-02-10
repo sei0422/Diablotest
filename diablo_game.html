@@ -2033,6 +2033,9 @@
     function _rng() { return _useSeededRng ? mulberry32() : Math.random(); }
 
     // --- Utility ---
+    function escapeHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
     const rand = (a, b) => Math.floor(_rng() * (b - a + 1)) + a;
     const randf = (a, b) => _rng() * (b - a) + a;
     const dist = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1);
@@ -2047,7 +2050,7 @@
     let logDirty = false;
     let lastLogRender = 0;
     function addLog(msg, color = '#daa520') {
-        logMessages.push({ msg, color, time: G.time });
+        logMessages.push({ msg: escapeHtml(msg), color, time: G.time });
         if (logMessages.length > 8) logMessages.shift();
         logDirty = true;
     }
@@ -4824,7 +4827,8 @@
 
         getAttackDmg() {
             const totalInt = this.getTotalStat('int');
-            let base = Math.max(this.str * 0.8, totalInt * 0.6) + 5;
+            const totalStr = this.getTotalStat('str');
+            let base = Math.max(totalStr * 0.8, totalInt * 0.6) + 5;
             const w = this.equipment.weapon;
             if (w && w.baseDmg) base += rand(w.baseDmg[0], w.baseDmg[1]);
             // Affix bonuses
@@ -4870,8 +4874,9 @@
         },
 
         getCritChance() {
-            let c = this.critChance + this.dex * 0.3;
-            if (this.stealthT > 0) c = 100;
+            let c = this.critChance + this.getTotalStat('dex') * 0.3;
+            const inStealth = this.stealthT > 0;
+            if (inStealth) c = 100;
             if (this.critBuffT > 0) c += (this.critBuffBonus || 0);
             for (const slot of Object.values(this.equipment)) {
                 if (!slot) continue;
@@ -4883,7 +4888,7 @@
             c += (this.passiveBonuses && this.passiveBonuses.critChance) || 0;
             // Set bonus
             c += (this.setBonuses && this.setBonuses.critChance) || 0;
-            return Math.min(c, 80); // Cap at 80%
+            return inStealth ? 100 : Math.min(c, 80); // Stealth guarantees 100%, otherwise cap at 80%
         },
 
         getCritDamage() {
@@ -7914,9 +7919,9 @@
                 const item = G.shopItems[i];
                 const price = calculateBuyPrice(item);
                 const canBuy = G.gold >= price;
-                html += `<div class="shop-item ${canBuy ? '' : 'disabled'}" onclick="buyItem(${i})" title="${item.name}">
+                html += `<div class="shop-item ${canBuy ? '' : 'disabled'}" onclick="buyItem(${i})" title="${escapeHtml(item.name)}">
                     <span style="font-size:18px">${item.icon}</span>
-                    <span style="color:${item.rarity.color};font-size:11px">${item.name}</span>
+                    <span style="color:${item.rarity.color};font-size:11px">${escapeHtml(item.name)}</span>
                     <span style="color:#ffd700;font-size:10px">${price}G</span>
                 </div>`;
             }
@@ -7926,9 +7931,9 @@
             for (let i = 0; i < player.inventory.length; i++) {
                 const item = player.inventory[i];
                 const price = calculateSellPrice(item);
-                html += `<div class="shop-item" onclick="sellItem(${i})" title="${item.name}">
+                html += `<div class="shop-item" onclick="sellItem(${i})" title="${escapeHtml(item.name)}">
                     <span style="font-size:18px">${item.icon}</span>
-                    <span style="color:${item.rarity.color};font-size:11px">${item.name}</span>
+                    <span style="color:${item.rarity.color};font-size:11px">${escapeHtml(item.name)}</span>
                     <span style="color:#ffd700;font-size:10px">${price}G</span>
                 </div>`;
             }
@@ -8009,9 +8014,9 @@
             for (const eq of allEquip) {
                 const cost = calculateSmithCost(eq.item);
                 const canAfford = G.gold >= cost;
-                html += `<div class="shop-item ${canAfford ? '' : 'disabled'}" onclick="smithItem('${eq.source}','${eq.source === 'equip' ? eq.slot : eq.idx}')" title="${eq.item.name}">
+                html += `<div class="shop-item ${canAfford ? '' : 'disabled'}" onclick="smithItem('${eq.source}','${eq.source === 'equip' ? eq.slot : eq.idx}')" title="${escapeHtml(eq.item.name)}">
                     <span style="font-size:18px">${eq.item.icon}</span>
-                    <span style="color:${eq.item.rarity.color};font-size:11px">${eq.item.name}</span>
+                    <span style="color:${eq.item.rarity.color};font-size:11px">${escapeHtml(eq.item.name)}</span>
                     <span style="color:#ffd700;font-size:10px">${cost}G</span>
                 </div>`;
             }
@@ -8047,9 +8052,9 @@
                 const full = filled >= total || eq.item.runeword;
                 const socketStr = eq.item.runeword ? `★ ${eq.item.runeword}` :
                     Array.from({length: total}, (_, i) => i < filled ? '🔶' : '◇').join('');
-                html += `<div class="shop-item ${full ? 'disabled' : ''}" onclick="selectSocketTarget('${eq.source}','${eq.source === 'equip' ? eq.slot : eq.idx}')" title="${eq.item.name}">
+                html += `<div class="shop-item ${full ? 'disabled' : ''}" onclick="selectSocketTarget('${eq.source}','${eq.source === 'equip' ? eq.slot : eq.idx}')" title="${escapeHtml(eq.item.name)}">
                     <span style="font-size:18px">${eq.item.icon}</span>
-                    <span style="color:${eq.item.rarity.color};font-size:11px">${eq.item.name}</span>
+                    <span style="color:${eq.item.rarity.color};font-size:11px">${escapeHtml(eq.item.name)}</span>
                     <span style="font-size:10px;color:#daa520">${socketStr}</span>
                 </div>`;
             }
@@ -8184,7 +8189,7 @@
             html += `<div class="shop-item" onclick="stashDeposit(${i})"
                 onmouseenter="showInvTooltip(event,${i})" onmouseleave="hideTooltip()">
                 <span style="font-size:16px">${item.icon}</span>
-                <span style="color:${item.rarity.color};font-size:10px">${item.name}</span>
+                <span style="color:${item.rarity.color};font-size:10px">${escapeHtml(item.name)}</span>
             </div>`;
         }
         html += `</div></div>`;
@@ -8195,7 +8200,7 @@
             html += `<div class="shop-item" onclick="stashWithdraw(${i})"
                 onmouseenter="showStashTooltip(event,${i})" onmouseleave="hideTooltip()">
                 <span style="font-size:16px">${item.icon}</span>
-                <span style="color:${item.rarity.color};font-size:10px">${item.name}</span>
+                <span style="color:${item.rarity.color};font-size:10px">${escapeHtml(item.name)}</span>
             </div>`;
         }
         html += `</div></div></div>`;
@@ -8479,7 +8484,7 @@
             <div class="stat-row"><span class="stat-label">難易度</span><span class="stat-value" style="color:${DIFFICULTY_DEFS[G.difficulty||'normal'].color}">${DIFFICULTY_DEFS[G.difficulty||'normal'].name}</span></div>
             <div class="stat-row"><span class="stat-label">現在地</span><span class="stat-value" style="color:${G.inUber ? '#ff4400' : '#aa88ff'}">${G.inUber ? 'パンデモニウム' : 'ACT' + G.act + ' ' + (G.inTown ? '町' : '第' + G.actFloor + '層')}${G.cycle > 0 ? ' (' + (G.cycle+1) + '周目)' : ''}</span></div>
             <div class="stat-row"><span class="stat-label">ゴールド</span><span class="stat-value" style="color:#ffd700">${G.gold}G</span></div>
-            <div class="stat-row"><span class="stat-label">残り敵数</span><span class="stat-value" style="color:#ff6666">${monsters.filter(m=>m.alive).length}</span></div>
+            <div class="stat-row"><span class="stat-label">残り敵数</span><span class="stat-value" style="color:#ff6666">${monsters.reduce((n,m)=>n+(m.alive?1:0),0)}</span></div>
             <div class="stat-row"><span class="stat-label">所持アイテム</span><span class="stat-value">${player.inventory.length}/${player.maxInv}</span></div>
             <div class="stat-row"><span class="stat-label">総キル数</span><span class="stat-value" style="color:#ff6666">${G.totalKills || 0}</span></div>
         `;
@@ -8689,8 +8694,8 @@
             h += `<div class="help-sub-title">レベルアップ</div>`;
             h += `<div style="color:#ccc;font-size:11px;margin:4px 0">敵を倒してXPを獲得。一定量でレベルアップ。</div>`;
             h += `<div style="color:#ccc;font-size:11px;margin:4px 0">レベルアップ報酬：</div>`;
-            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">ステータスポイント +3 → <span class="help-key">C</span>画面で STR/DEX/VIT/INT に振り分け</div>`;
-            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">スキルポイント +5 → <span class="help-key">T</span>画面でスキル習得/強化</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">ステータスポイント +5 → <span class="help-key">C</span>画面で STR/DEX/VIT/INT に振り分け</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">スキルポイント +1 → <span class="help-key">T</span>画面でスキル習得/強化</div>`;
 
             h += `<div class="help-sub-title">ステータス</div>`;
             h += `<div style="color:#ff8844;font-size:11px;margin:2px 0"><b>STR（力）</b> ─ 物理攻撃力に直結</div>`;
@@ -8845,7 +8850,7 @@
             for (const qi of G.questItems) {
                 const kd = UBER_KEY_DEFS[qi.uberKeyId];
                 const col = kd ? kd.color : '#ffd700';
-                html += `<div style="padding:3px 8px;background:#1a1a10;border:1px solid ${col};border-radius:4px;font-size:11px;color:${col}">${qi.icon} ${qi.name}</div>`;
+                html += `<div style="padding:3px 8px;background:#1a1a10;border:1px solid ${col};border-radius:4px;font-size:11px;color:${col}">${qi.icon} ${escapeHtml(qi.name)}</div>`;
             }
             html += '</div>';
         }
@@ -8871,7 +8876,7 @@
         const menu = document.createElement('div');
         menu.className = 'inv-context-menu';
         menu.id = 'inv-context-menu';
-        let menuHTML = `<div style="color:#ffd700;font-size:11px;padding:4px 14px;cursor:default">${item.name}${(item.qty || 1) > 1 ? ' x' + item.qty : ''}</div>`;
+        let menuHTML = `<div style="color:#ffd700;font-size:11px;padding:4px 14px;cursor:default">${escapeHtml(item.name)}${(item.qty || 1) > 1 ? ' x' + item.qty : ''}</div>`;
         // Sell option (available anywhere, not just in town)
         if (!item.uberKeyId) {
             const sellPrice = calculateSellPrice(item);
@@ -8987,14 +8992,14 @@
         // Uber key tooltip
         if (item.uberKeyId) {
             const kd = UBER_KEY_DEFS[item.uberKeyId];
-            let html = `<div class="tt-name" style="color:${kd ? kd.color : '#ffd700'}">${kd ? kd.icon : '🗝'} ${item.name}</div>`;
+            let html = `<div class="tt-name" style="color:${kd ? kd.color : '#ffd700'}">${kd ? kd.icon : '🗝'} ${escapeHtml(item.name)}</div>`;
             html += `<div class="tt-type" style="color:#daa520">クエストアイテム</div>`;
             html += `<div style="color:#aaa;margin:4px 0;font-size:11px">${item.desc || ''}</div>`;
             html += `<div style="color:#888;font-size:10px;margin-top:4px">ACT5の闇商人に持っていけ</div>`;
             return html;
         }
         if (isPotion(item)) {
-            let html = `<div class="tt-name" style="color:#cccccc">${item.name}</div>`;
+            let html = `<div class="tt-name" style="color:#cccccc">${escapeHtml(item.name)}</div>`;
             if ((item.qty || 1) > 1) html += `<div style="color:#aaa;font-size:11px">所持数: ${item.qty}</div>`;
             if (item.typeKey === 'potion') html += `<div style="color:#00ff00;margin:4px 0">HP +${item.typeInfo.heal || 50} 回復</div>`;
             if (item.typeKey === 'manaPotion') html += `<div style="color:#4488ff;margin:4px 0">MP +${item.typeInfo.healMP || 30} 回復</div>`;
@@ -9016,7 +9021,7 @@
             const v = Number.isInteger(val) ? val : val.toFixed(1);
             return ` <span style="color:${c};font-size:11px">${arrow} ${sign}${v}${unit}</span>`;
         };
-        let html = `<div class="tt-name" style="color:${item.rarity.color}">${item.name}</div>`;
+        let html = `<div class="tt-name" style="color:${item.rarity.color}">${escapeHtml(item.name)}</div>`;
         html += `<div class="tt-type">${item.typeInfo.name} — ${item.rarity.name}</div>`;
         if (item.baseDmg) {
             html += `<div style="color:#fff;margin:4px 0">ダメージ: ${item.baseDmg[0]}-${item.baseDmg[1]}${cmp ? diffSpan(cmp.dmgDiff, '') : ''}</div>`;
@@ -9049,13 +9054,13 @@
         const regularAffixes = item.affixes.filter(a => !a.runeSource && !a.runewordSource);
         const runeAffixes = item.affixes.filter(a => a.runeSource);
         const rwAffixes = item.affixes.filter(a => a.runewordSource);
-        for (const a of regularAffixes) html += `<div class="tt-affix">${a.text}</div>`;
+        for (const a of regularAffixes) html += `<div class="tt-affix">${escapeHtml(a.text)}</div>`;
         if (runeAffixes.length > 0) {
-            for (const a of runeAffixes) html += `<div class="tt-affix" style="color:#daa520">${a.text} (${a.runeSource})</div>`;
+            for (const a of runeAffixes) html += `<div class="tt-affix" style="color:#daa520">${escapeHtml(a.text)} (${escapeHtml(a.runeSource)})</div>`;
         }
         if (rwAffixes.length > 0) {
-            html += `<div style="border-top:1px solid #daa520;margin:4px 0;padding-top:4px;color:#daa520;font-weight:bold">★ ルーンワード: ${item.runeword}</div>`;
-            for (const a of rwAffixes) html += `<div class="tt-affix" style="color:#daa520">${a.text}</div>`;
+            html += `<div style="border-top:1px solid #daa520;margin:4px 0;padding-top:4px;color:#daa520;font-weight:bold">★ ルーンワード: ${escapeHtml(item.runeword)}</div>`;
+            for (const a of rwAffixes) html += `<div class="tt-affix" style="color:#daa520">${escapeHtml(a.text)}</div>`;
         }
         // Required level
         if (item.requiredLevel) {
@@ -11749,10 +11754,17 @@
                 }
             }
             // Save only alive monsters (dead ones stay dead on load, skip if in town)
-            saveData.monsters = G.inTown ? [] : monsters.filter(m => m.alive && !m.isBoss).map(m => ({
+            saveData.monsters = G.inTown ? [] : monsters.filter(m => m.alive).map(m => ({
                 x: m.x, y: m.y, type: m.type,
                 hp: m.hp, maxHP: m.maxHP, dmg: m.dmg,
-                aggroed: m.aggroed
+                aggroed: m.aggroed,
+                isBoss: m.isBoss || false,
+                isChampion: m.isChampion || false,
+                isUnique: m.isUnique || false,
+                defense: m.defense || 0,
+                spd: m.spd || 0,
+                immunities: Array.isArray(m.immunities) ? [...m.immunities] : [],
+                bossKey: m.bossKey != null ? m.bossKey : null
             }));
             // Save ground items
             saveData.groundItems = groundItems.map(gi => ({
@@ -11786,6 +11798,10 @@
             const raw = localStorage.getItem(getSaveKey(slot));
             if (!raw) { addLog('セーブデータが見つかりません', '#ff4444'); return false; }
             const save = JSON.parse(raw);
+            if (!save || typeof save !== 'object' || !save.player || typeof save.player !== 'object') {
+                addLog('セーブデータが壊れています', '#ff4444');
+                return false;
+            }
             if (!save.version || save.version < 2) {
                 addLog('古いセーブデータです。新しくゲームを始めてください', '#ff4444');
                 return false;
@@ -11902,6 +11918,13 @@
                 for (const sm of save.monsters) {
                     const m = new Monster(sm.x, sm.y, sm.type, G.floor);
                     m.hp = sm.hp; m.maxHP = sm.maxHP; m.dmg = sm.dmg;
+                    m.isBoss = !!sm.isBoss;
+                    m.isChampion = !!sm.isChampion;
+                    m.isUnique = !!sm.isUnique;
+                    if (sm.defense != null) m.defense = sm.defense;
+                    if (sm.spd != null) m.spd = sm.spd;
+                    m.immunities = Array.isArray(sm.immunities) ? [...sm.immunities] : [];
+                    if (sm.bossKey != null) m.bossKey = sm.bossKey;
                     m.alive = true; m.aggroed = sm.aggroed || false;
                     monsters.push(m);
                 }
@@ -12597,9 +12620,14 @@
             ctx.globalAlpha = 1;
         }
 
-        // Update UI panels if open
-        if (isPanelVisible(DOM.statsPanel)) updateStatsPanel();
-        if (isPanelVisible(DOM.inventoryPanel)) updateInventoryPanel();
+        // Update UI panels if open (throttled to ~5 Hz to avoid DOM churn)
+        if (!G._panelThrottle) G._panelThrottle = 0;
+        G._panelThrottle -= dt;
+        if (G._panelThrottle <= 0) {
+            G._panelThrottle = 0.2;
+            if (isPanelVisible(DOM.statsPanel)) updateStatsPanel();
+            if (isPanelVisible(DOM.inventoryPanel)) updateInventoryPanel();
+        }
     }
 
     // Handle resize
