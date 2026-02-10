@@ -1070,7 +1070,7 @@
         <p>Enter / クリックで復活...</p>
     </div>
     <div id="controls-help">
-        左クリック:移動/攻撃 | 右クリック:スキル | 1~6:スキル選択 | R:スキル編集 | Space:拾う/階段 | I:インベントリ | C:ステータス | H:ヘルプ
+        左クリック:移動/攻撃 | 右クリック:スキル | 1~6:スキル選択 | R:スキル編集 | Space:拾う/階段 | I:インベントリ | C:ステータス | TAB:マップ | H:ヘルプ
     </div>
     <button id="skillEditBtn" class="toggle-btn" tabindex="-1" style="position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:300;opacity:0.9">
         スキル編集 (R)
@@ -1750,6 +1750,7 @@
         portalCasting: false, portalTimer: 0,
         portalReturn: null, // {act, actFloor, cycle, floor, x, y, dungeon, monsters, groundItems, dungeonSeed}
         inUber: false, uberBossesDefeated: {},
+        showOverlayMap: false,
         questItems: [] // Separate storage for quest keys (don't consume inventory space)
     };
 
@@ -9617,6 +9618,7 @@
                 ['ダンジョン', [
                     ['Space', 'アイテム拾い ＆ 階段を降りる'],
                     ['E', '階段を降りる（専用キー）'],
+                    ['TAB', 'オーバーレイマップ表示/非表示'],
                 ]],
                 ['アイテム', [
                     ['G', '自動拾いの ON / OFF'],
@@ -10997,6 +10999,9 @@
 
         if (promotionPending) return;
 
+        // Overlay Map toggle
+        if (e.code === 'Tab') { e.preventDefault(); G.showOverlayMap = !G.showOverlayMap; return; }
+
         // Save/Load
         if (e.code === 'F5') { e.preventDefault(); saveGame(); return; }
         if (e.code === 'F8') { e.preventDefault(); loadGame(); return; }
@@ -12156,6 +12161,154 @@
         ctx.restore();
     }
 
+    // ========== OVERLAY MAP (TAB key) ==========
+    function drawOverlayMap() {
+        if (!G.showOverlayMap) return;
+        const mapPixW = MAP_W * TILE, mapPixH = MAP_H * TILE;
+        // Scale to fit ~70% of screen
+        const maxDim = Math.min(W, H) * 0.7;
+        const scale = maxDim / Math.max(mapPixW, mapPixH);
+        const drawW = mapPixW * scale, drawH = mapPixH * scale;
+        const ox = (W - drawW) / 2, oy = (H - drawH) / 2;
+
+        ctx.save();
+        ctx.globalAlpha = 0.75;
+
+        // Dark background
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(0, 0, W, H);
+
+        // Draw explored tiles
+        const tileW = TILE * scale;
+        for (let ty = 0; ty < MAP_H; ty++) {
+            for (let tx = 0; tx < MAP_W; tx++) {
+                if (!dungeon.explored[dungeon.idx(tx, ty)]) continue;
+                const tile = dungeon.get(tx, ty);
+                if (tile === 0) continue; // wall
+                const dx = ox + tx * tileW, dy = oy + ty * tileW;
+                if (tile === 2) {
+                    ctx.fillStyle = '#aa88ff'; // stairs
+                } else if (tile === 3) {
+                    ctx.fillStyle = '#886622'; // chest
+                } else {
+                    ctx.fillStyle = '#2a2040'; // floor
+                }
+                ctx.fillRect(dx, dy, Math.ceil(tileW), Math.ceil(tileW));
+            }
+        }
+
+        // Wall outlines for explored areas (draw walls adjacent to explored floor)
+        ctx.fillStyle = '#0d0a15';
+        for (let ty = 0; ty < MAP_H; ty++) {
+            for (let tx = 0; tx < MAP_W; tx++) {
+                if (dungeon.get(tx, ty) !== 0) continue;
+                // Check if any neighbor is explored floor
+                let adj = false;
+                for (let ddy = -1; ddy <= 1 && !adj; ddy++) {
+                    for (let ddx = -1; ddx <= 1 && !adj; ddx++) {
+                        const nx = tx + ddx, ny = ty + ddy;
+                        if (nx >= 0 && nx < MAP_W && ny >= 0 && ny < MAP_H) {
+                            if (dungeon.explored[dungeon.idx(nx, ny)] && dungeon.get(nx, ny) >= 1) adj = true;
+                        }
+                    }
+                }
+                if (adj) {
+                    ctx.fillRect(ox + tx * tileW, oy + ty * tileW, Math.ceil(tileW), Math.ceil(tileW));
+                }
+            }
+        }
+
+        // Monsters (red dots) - only within vision range
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = '#ff3333';
+        for (const m of monsters) {
+            if (m.alive && dist(player.x, player.y, m.x, m.y) < 400) {
+                const mx = ox + m.x * scale, my = oy + m.y * scale;
+                const r = m.isBoss ? 5 : (m.isChampion || m.isUnique) ? 4 : 2.5;
+                ctx.beginPath(); ctx.arc(mx, my, r, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+
+        // Town NPCs (blue dots)
+        if (G.inTown) {
+            ctx.fillStyle = '#4488ff';
+            for (const npc of townNPCs) {
+                const nx = ox + npc.x * scale, ny = oy + npc.y * scale;
+                ctx.beginPath(); ctx.arc(nx, ny, 4, 0, Math.PI * 2); ctx.fill();
+                // NPC name label
+                ctx.fillStyle = '#88bbff';
+                ctx.font = `9px ${FONT_UI}`;
+                ctx.textAlign = 'center';
+                ctx.fillText(npc.name, nx, ny - 7);
+                ctx.fillStyle = '#4488ff';
+            }
+        }
+
+        // Stairs icon
+        if (dungeon.stairsX && dungeon.stairsY) {
+            const sx = ox + dungeon.stairsX * TILE * scale + tileW / 2;
+            const sy = oy + dungeon.stairsY * TILE * scale + tileW / 2;
+            ctx.fillStyle = '#ffdd44';
+            ctx.beginPath(); ctx.arc(sx, sy, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+
+        // Mercenary (green dot)
+        if (typeof mercenary !== 'undefined' && mercenary && mercenary.alive) {
+            ctx.fillStyle = '#44ff44';
+            const mx = ox + mercenary.x * scale, my = oy + mercenary.y * scale;
+            ctx.beginPath(); ctx.arc(mx, my, 3, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // Player (white pulsing dot)
+        ctx.globalAlpha = 1.0;
+        const pulse = 3 + Math.sin(G.time * 4) * 1.5;
+        const px = ox + player.x * scale, py = oy + player.y * scale;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(px, py, pulse, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Legend
+        ctx.globalAlpha = 0.9;
+        ctx.textAlign = 'left';
+        ctx.font = `11px ${FONT_UI}`;
+        const legendX = ox + 6, legendY = oy + drawH + 16;
+        const legends = [
+            ['#ffffff', '● プレイヤー'],
+            ['#ff3333', '● 敵'],
+            ['#ffdd44', '● 階段'],
+        ];
+        if (G.inTown) legends.push(['#4488ff', '● NPC']);
+        if (typeof mercenary !== 'undefined' && mercenary && mercenary.alive) legends.push(['#44ff44', '● 傭兵']);
+        let lx = legendX;
+        for (const [color, text] of legends) {
+            ctx.fillStyle = color;
+            ctx.fillText(text, lx, legendY);
+            lx += ctx.measureText(text).width + 16;
+        }
+
+        // Title
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#daa520';
+        ctx.font = `bold 14px ${FONT_UI}`;
+        const title = G.inTown ? `${ACT_DEFS[G.act].townName} マップ` : `ACT${G.act} 第${G.actFloor}層`;
+        ctx.fillText(title, W / 2, oy - 10);
+        ctx.fillStyle = '#888';
+        ctx.font = `10px ${FONT_UI}`;
+        ctx.fillText('TABで閉じる', W / 2, oy - 26);
+
+        // Border
+        ctx.strokeStyle = '#654321';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(ox - 2, oy - 2, drawW + 4, drawH + 4);
+
+        ctx.restore();
+    }
+
     function drawHUD() {
         // ===== BOTTOM BAR BACKGROUND (stone texture + metal trim) =====
         const barH = 80;
@@ -12689,6 +12842,7 @@
             ['E', 'NPC会話/階段'],
             ['I', '装備'],
             ['C', 'ステータス'],
+            ['TAB', 'マップ'],
             ['Esc', '閉じる'],
             ['F5', `セーブ(S${G.saveSlot})`],
             ['F8', `ロード(S${G.saveSlot})`]
@@ -12699,6 +12853,7 @@
             ['Space', '拾う'],
             ['E', '階段'],
             ['V', '帰還'],
+            ['TAB', 'マップ'],
             ['I', '装備'],
             ['C', 'ステータス'],
             ['T', 'スキルツリー'],
@@ -13703,6 +13858,7 @@
         }
 
         drawHUD();
+        drawOverlayMap();
         drawLog();
 
         // Town portal casting overlay
