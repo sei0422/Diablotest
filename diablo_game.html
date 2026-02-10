@@ -1881,8 +1881,10 @@
         const floors = NORMAL_MLVL_TABLE[act] || NORMAL_MLVL_TABLE[1];
         const base = floors[Math.max(0, Math.min(actFloor - 1, floors.length - 1))] || floors[floors.length - 1];
         const diff = G.difficulty || 'normal';
-        const diffAdd = diff === 'nightmare' ? 30 : diff === 'hell' ? 60 : 0;
-        return base + diffAdd;
+        // D2-style: NM = base+40 (cap 70), Hell = base+80 (cap 85)
+        if (diff === 'nightmare') return Math.min(70, base + 40);
+        if (diff === 'hell') return Math.min(85, base + 80);
+        return base;
     }
     // D2-style XP penalty when player is much higher level than monsters
     function getXPPenalty(playerLevel, monsterLevel) {
@@ -3756,9 +3758,10 @@
             baseDef: typeInfo.baseDef ? Math.round((typeInfo.baseDef[0] + rand(0, typeInfo.baseDef[1] - typeInfo.baseDef[0])) * rarity.mult * floorMult) : null,
         };
 
-        // Item level & required level
-        item.itemLevel = floor;
-        const baseReq = Math.max(1, Math.ceil(floor / 2));
+        // Item level & required level (D2-style: ilvl = area monster level)
+        const areaLevel = getMonsterLevel(G.act, G.actFloor);
+        item.itemLevel = areaLevel;
+        const baseReq = Math.max(1, Math.ceil(areaLevel / 2));
         item.requiredLevel = rarityKey === 'unique' ? baseReq + 4 : rarityKey === 'legendary' ? baseReq + 2 : baseReq;
 
         // Name & set item detection
@@ -5119,7 +5122,16 @@
             }
         },
 
-        takeDamage(raw, element) {
+        takeDamage(raw, element, attackerLevel, attackerAR) {
+            // D2-style hit check (monster attacking player) - only for melee/physical
+            if (attackerLevel && attackerAR) {
+                const pDef = this.getDefense();
+                const hitChance = calcHitChance(attackerLevel, attackerAR, this.level, pDef);
+                if (Math.random() * 100 >= hitChance) {
+                    addFloatingText(this.x, this.y - 20, 'MISS', '#888888');
+                    return;
+                }
+            }
             const def = this.getDefense();
             let dmg = Math.max(1, Math.round(raw * (100 / (100 + def))));
             // Elemental resistance reduction
@@ -6561,25 +6573,27 @@
             else if (canWalk(this.x, this.y + my * step, 10)) { this.y += my * step; }
         }
         _findTarget() {
-            let near = null, nearD = 1e9;
+            // Prioritize player's attack target (nearby enemy closest to player's facing)
+            let best = null, bestD = 1e9;
             for (const m of monsters) {
                 if (!m.alive) continue;
-                const d = dist(this.x, this.y, m.x, m.y);
-                if (d < 200 && d < nearD) { nearD = d; near = m; }
+                const dm = dist(this.x, this.y, m.x, m.y);
+                const dp = dist(player.x, player.y, m.x, m.y);
+                // Prefer enemies near player (within 250px) and aggro'd
+                const priority = m.aggroed ? dp * 0.7 : dp;
+                if (dm < 250 && priority < bestD) { bestD = priority; best = m; }
             }
-            this.target = near;
+            this.target = best;
         }
         update(dt) {
             if (!this.alive) return;
-            // Level sync
-            if (this.level !== player.level) { this.level = player.level; this.recalcStats(false); }
             this.attackCooldown = Math.max(0, this.attackCooldown - dt);
             if (this.target && !this.target.alive) this.target = null;
             if (!this.target) this._findTarget();
-            // Low HP: retreat
+            // Low HP: retreat toward player at boosted speed
             if (this.hp < this.maxHP * 0.3) {
                 const pd = dist(this.x, this.y, player.x, player.y);
-                if (pd > 60) this._moveToward(player.x, player.y, this.def.baseSpeed, dt);
+                if (pd > 40) this._moveToward(player.x, player.y, this.def.baseSpeed * 1.4, dt);
                 this.target = null;
                 this._tryHealBuff(dt);
                 return;
@@ -6588,10 +6602,33 @@
             if (this.target) {
                 const t = this.target, d = dist(this.x, this.y, t.x, t.y);
                 const range = this.def.attackRange;
-                if (this.def.attackType !== 'melee') {
-                    if (d < range * 0.7) this._moveToward(this.x + (this.x - t.x) * 0.5, this.y + (this.y - t.y) * 0.5, this.def.baseSpeed, dt);
-                    else if (d > range * 1.2) this._moveToward(t.x, t.y, this.def.baseSpeed, dt);
-                } else { if (d > range) this._moveToward(t.x, t.y, this.def.baseSpeed, dt); }
+                if (this.def.attackType === 'melee') {
+                    // Fighter: position between player and enemy
+                    if (d > range) {
+                        const midX = (player.x + t.x) / 2, midY = (player.y + t.y) / 2;
+                        const toEnemy = dist(midX, midY, t.x, t.y);
+                        if (toEnemy > range * 0.5) {
+                            this._moveToward(t.x, t.y, this.def.baseSpeed, dt);
+                        } else {
+                            this._moveToward(midX, midY, this.def.baseSpeed, dt);
+                        }
+                    }
+                } else {
+                    // Ranged/magic: stay behind player relative to enemy
+                    const dx = player.x - t.x, dy = player.y - t.y;
+                    const dd = Math.hypot(dx, dy) || 1;
+                    const idealX = player.x + (dx / dd) * 60;
+                    const idealY = player.y + (dy / dd) * 60;
+                    if (d < range * 0.5) {
+                        // Too close, retreat behind player
+                        this._moveToward(idealX, idealY, this.def.baseSpeed, dt);
+                    } else if (d > range * 1.1) {
+                        this._moveToward(t.x, t.y, this.def.baseSpeed, dt);
+                    } else if (dist(this.x, this.y, idealX, idealY) > 50) {
+                        // Reposition to ideal spot
+                        this._moveToward(idealX, idealY, this.def.baseSpeed * 0.6, dt);
+                    }
+                }
                 if (d <= range && this.attackCooldown <= 0) {
                     const dmg = this.getAttackDmg();
                     const isCrit = Math.random() * 100 < (5 + this.dex * 0.05);
@@ -6608,9 +6645,9 @@
                     }
                 }
             } else {
-                // Follow player
+                // Follow player (keep ~80px distance)
                 const pd = dist(this.x, this.y, player.x, player.y);
-                if (pd > 120) this._moveToward(player.x, player.y, this.def.baseSpeed, dt);
+                if (pd > 100) this._moveToward(player.x, player.y, this.def.baseSpeed, dt);
                 this._tryHealBuff(dt);
             }
         }
@@ -6739,6 +6776,7 @@
             this.type = type;
             this.bossKey = bossKey || null;
             this.isBoss = !!bossKey;
+            this.level = getMonsterLevel(G.act, G.actFloor);
             const d = MONSTER_DEFS[type] || MONSTER_DEFS.skeleton;
             this.def = d;
             const s = 1 + (floor - 1) * 0.3;
@@ -6991,7 +7029,8 @@
                                 this.atkCD = 1.0; return;
                             }
                         }
-                        player.takeDamage(meleeDmg, meleeElement);
+                        const monAR = (this.dmg || 10) * 2 + (this.level || 1) * 5;
+                        player.takeDamage(meleeDmg, meleeElement, this.level || 1, monAR);
                         this.atkCD = 1.0;
                     }
                 }
@@ -7640,12 +7679,32 @@
         }
     }
 
+    // D2-style hit chance: 100 * 2*aLvl/(aLvl+dLvl) * AR/(AR+Def), clamped 5-95%
+    function calcHitChance(attackerLevel, attackRating, defenderLevel, defense) {
+        const lvlFactor = 2 * attackerLevel / (attackerLevel + defenderLevel + 1);
+        const arFactor = attackRating / (attackRating + defense + 1);
+        return Math.min(95, Math.max(5, Math.round(100 * lvlFactor * arFactor)));
+    }
+    function getPlayerAR() {
+        const totalDex = player.getTotalStat('dex');
+        const totalStr = player.getTotalStat('str');
+        return totalStr * 2 + totalDex * 4 + player.level * 5;
+    }
+
     function monsterTakeDmg(m, dmg, isCrit, element) {
+        // D2-style hit check (player attacking monster)
+        const playerAR = getPlayerAR();
+        const mDef = m.defense || 0;
+        const mLvl = m.level || getMonsterLevel(G.act, G.actFloor);
+        const hitChance = calcHitChance(player.level, playerAR, mLvl, mDef);
+        if (Math.random() * 100 >= hitChance) {
+            addFloatingText(m.x, m.y - m.r - 10, 'MISS', '#888888');
+            return;
+        }
         // Monster immunity/resistance check
         if (element && m.immunities && m.immunities[element]) {
             const res = m.immunities[element];
             if (res >= 100) {
-                // Fully immune - show "IMMUNE" text
                 addFloatingText(m.x, m.y - m.r - 10, 'IMMUNE', IMMUNITY_COLORS[element] || '#888');
                 return;
             } else if (res > 0) {
