@@ -1106,6 +1106,7 @@
     <div id="stashPanel" class="ui-panel town-panel" style="display:none;width:520px"></div>
     <div id="waypointPanel" class="ui-panel town-panel" style="display:none"></div>
     <div id="questPanel" class="ui-panel town-panel" style="display:none"></div>
+    <div id="uberPanel" class="ui-panel town-panel" style="display:none"></div>
 
     <script>
     // ========================================
@@ -1745,7 +1746,8 @@
         activeNPC: null, dialogState: 0, townUIMode: null,
         actTransitionTimer: 0, actTransitionText: '',
         portalCasting: false, portalTimer: 0,
-        portalReturn: null // {act, actFloor, cycle, floor, x, y, dungeon, monsters, groundItems, dungeonSeed}
+        portalReturn: null, // {act, actFloor, cycle, floor, x, y, dungeon, monsters, groundItems, dungeonSeed}
+        inUber: false, uberBossesDefeated: {}
     };
 
     const SETTINGS = {
@@ -1910,6 +1912,48 @@
             ]}
     };
 
+    // ========== UBER BOSS SYSTEM ==========
+    // 3 Uber Keys drop from Act bosses on Nightmare/Hell difficulty
+    // Combine all 3 keys at the Uber NPC to open a portal to the Uber Tristram
+    const UBER_KEY_DEFS = {
+        key_terror:   { name: '恐怖の鍵', icon: '🗝', color: '#ff4444', desc: '混沌の門を開く鍵の1つ', fromBoss: 'demon_lord' },
+        key_hate:     { name: '憎悪の鍵', icon: '🗝', color: '#44ff44', desc: '混沌の門を開く鍵の1つ', fromBoss: 'archmage' },
+        key_destruction: { name: '破壊の鍵', icon: '🗝', color: '#4488ff', desc: '混沌の門を開く鍵の1つ', fromBoss: 'ice_queen' }
+    };
+    const UBER_BOSS_DEFS = {
+        uber_diablo: { name: 'パンデモニウム・ディアブロ', icon: '👿🔥', hp: 8000, dmg: 120, spd: 70, r: 30, xp: 15000, defense: 300,
+            color: '#ff2200', immunities: { fire: 100, lightning: 50 }, phases: [
+                { hpPct: 1.0, type: 'melee' },
+                { hpPct: 0.75, type: 'fire_breath', cd: 4, count: 10, projSpd: 250, projDmg: 80, projColor: '#ff4400' },
+                { hpPct: 0.5, type: 'nova', count: 16, cd: 3, projSpd: 220, projDmg: 60, projColor: '#ff6600' },
+                { hpPct: 0.25, type: 'meteor', cd: 6, count: 8, dmg: 100, radius: 120 }
+            ]},
+        uber_mephisto: { name: 'パンデモニウム・メフィスト', icon: '🧙‍♂️💀', hp: 6000, dmg: 100, spd: 80, r: 24, xp: 12000, defense: 250,
+            color: '#6644cc', immunities: { cold: 100, poison: 50 }, phases: [
+                { hpPct: 1.0, type: 'teleport_attack', cd: 2 },
+                { hpPct: 0.6, type: 'nova', count: 12, cd: 3, projSpd: 240, projDmg: 70, projColor: '#aa44ff' },
+                { hpPct: 0.3, type: 'summon', count: 4, summonType: 'demon', cd: 8 }
+            ]},
+        uber_baal: { name: 'パンデモニウム・バール', icon: '👁🌀', hp: 10000, dmg: 140, spd: 65, r: 32, xp: 20000, defense: 350,
+            color: '#88ccff', immunities: { cold: 100, fire: 50 }, phases: [
+                { hpPct: 1.0, type: 'nova', count: 8, cd: 4, projSpd: 200, projDmg: 50, projColor: '#aaddff' },
+                { hpPct: 0.7, type: 'freeze_aura', cd: 5, radius: 150, dmg: 30 },
+                { hpPct: 0.4, type: 'summon', count: 5, summonType: 'frost_zombie', cd: 7 },
+                { hpPct: 0.2, type: 'blizzard', cd: 6, count: 16, dmg: 70, radius: 250 }
+            ]}
+    };
+    // Torch reward for uber completion
+    const UBER_TORCH_DEF = {
+        name: 'ヘルファイアトーチ', icon: '🔥', typeKey: 'amulet',
+        rarityKey: 'unique', desc: 'パンデモニウムの戦いの証',
+        affixes: [
+            { stat: 'allResist', value: 20, desc: '全耐性+20' },
+            { stat: 'life', value: 150, desc: 'ライフ+150' },
+            { stat: 'exp', value: 10, desc: '経験値+10%' },
+            { stat: 'dmg%', value: 15, desc: 'ダメージ+15%' }
+        ]
+    };
+
     // ========== QUEST DEFINITIONS ==========
     const QUEST_DEFS = {
         q_act1_main: { act:1, name:'骸骨王の討伐', type:'kill_boss', target:'skeleton_king',
@@ -1969,7 +2013,8 @@
             { id:'smith_5', name:'鍛冶屋ラーズク', icon:'⚒', sprite:'npcBlacksmith', type:'blacksmith', dialog:['凍てつく金属...だが鍛えられる。'] },
             { id:'stash_5', name:'倉庫番ニーラサック', icon:'📦', sprite:'npcElderlyM', type:'stash', dialog:['預かるぞ。'] },
             { id:'quest_5', name:'賢者マラス', icon:'🧓', sprite:'npcElderlyM', type:'quest', dialog:['氷の女王が山を支配している...最後の戦いだ。'] },
-            { id:'wp_5', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] }
+            { id:'wp_5', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] },
+            { id:'uber_5', name:'闇商人ナイルス', icon:'🌀', sprite:'npcScholar', type:'uber_portal', dialog:['3つの鍵を集めたか？パンデモニウムへの門を開こう...'], requireDifficulty: true }
         ]
     };
 
@@ -3245,6 +3290,7 @@
         amulet:  { name: '護符', icon: '📿', slot: 'amulet', baseDef: [0, 1] },
         boots:   { name: '靴', icon: '👢', slot: 'feet', baseDef: [1, 4] },
         rune:    { name: 'ルーン', icon: '🔶', slot: null },
+        quest_key: { name: '鍵', icon: '🗝', slot: null },
         potion:  { name: 'HP回復薬', icon: '🧪', slot: null, heal: 50 },
         manaPotion: { name: 'MP回復薬', icon: '💧', slot: null, healMP: 30 }
     };
@@ -3623,7 +3669,7 @@
     }
 
     function generateItem(floor, forceRarity = null) {
-        const typeKeys = Object.keys(ITEM_TYPES).filter(k => k !== 'potion' && k !== 'manaPotion' && k !== 'rune');
+        const typeKeys = Object.keys(ITEM_TYPES).filter(k => k !== 'potion' && k !== 'manaPotion' && k !== 'rune' && k !== 'quest_key');
         const typeKey = typeKeys[rand(0, typeKeys.length - 1)];
         const typeInfo = ITEM_TYPES[typeKey];
 
@@ -4285,6 +4331,28 @@
         // Linear increase: +3.16% per level beyond 1
         const increase = 1 + (level - 1) * 0.0316;
         return Math.round(baseMP * increase);
+    }
+
+    // Derive element from skill definition for immunity checks
+    function getSkillElement(skDef) {
+        if (!skDef || !skDef.id) return null;
+        const id = skDef.id;
+        // Fire skills
+        if (id.includes('fire') || id.includes('immolation') || id.includes('inferno') ||
+            id.includes('meteor') || id.includes('combustion') || id.includes('py_') ||
+            id.includes('blaze') || id.includes('armageddon') || id.includes('hellfire') ||
+            id.includes('flare') || id.includes('pyro')) return 'fire';
+        // Cold skills
+        if (id.includes('frost') || id.includes('ice') || id.includes('cold') ||
+            id.includes('glacial') || id.includes('blizzard') || id.includes('freez') ||
+            id.includes('winter') || id.includes('absolutezero') || id.includes('cy_')) return 'cold';
+        // Lightning skills
+        if (id.includes('lightning') || id.includes('ltfury') || id.includes('thunder') ||
+            id.includes('charged') || id === 's_nova') return 'lightning';
+        // Poison skills
+        if (id.includes('poison') || id.includes('plague') || id.includes('venom')) return 'poison';
+        // Physical/Holy = null (bypasses immunity)
+        return null;
     }
 
     // ========== SYNERGY ENGINE ==========
@@ -5339,7 +5407,7 @@
                                 '#88ccff', 1, 20, 0.3, 2, 0, 'lightning', lvl
                             );
                         }
-                        monsterTakeDmg(best, dmg * mult * (b === 0 ? 1 : 0.7), false);
+                        monsterTakeDmg(best, dmg * mult * (b === 0 ? 1 : 0.7), false, 'lightning');
                         lastX = best.x; lastY = best.y;
                     }
                     break;
@@ -5349,6 +5417,7 @@
                     this.meteorT = 0.8;
                     G.meteorX = wx; G.meteorY = wy;
                     G.meteorDmg = dmg * getSkillValue(skDef, 'baseMult', lvl) * (1 + synDmg);
+                    G.meteorElement = getSkillElement(skDef) || 'fire';
                     G.meteorColor = '#ff4400';
                     for (let a = 0; a < Math.PI * 2; a += 0.3) {
                         emitParticles(wx + Math.cos(a) * skDef.range, wy + Math.sin(a) * skDef.range, '#ff6600', 2, 20, 0.8, 2, 0, 'fire', lvl);
@@ -5361,9 +5430,10 @@
                     this.freezeT = 0.5;
                     const mult = getSkillValue(skDef, 'baseMult', lvl) * (1 + synDmg);
                     const freezeDur = getSkillValue(skDef, 'freeze', lvl) * (1 + synFreeze);
+                    const frostElem = getSkillElement(skDef);
                     for (const m of monsters) {
                         if (m.alive && dist(this.x, this.y, m.x, m.y) < 130) {
-                            monsterTakeDmg(m, dmg * mult, false);
+                            monsterTakeDmg(m, dmg * mult, false, frostElem);
                             m.frozenT = Math.max(m.frozenT || 0, freezeDur);
                             m.spd = (m.origSpd || MONSTER_DEFS[m.type].spd) * 0.2;
                         }
@@ -5804,7 +5874,7 @@
                         if (m.alive && dist(mx, my, m.x, m.y) < 100) {
                             const isCrit = Math.random() * 100 < this.getCritChance();
                             const d = isCrit ? G.meteorDmg * 2 : G.meteorDmg;
-                            monsterTakeDmg(m, d, isCrit);
+                            monsterTakeDmg(m, d, isCrit, G.meteorElement || 'fire');
                         }
                     }
                     addLog('メテオ着弾！', '#ff4400');
@@ -6206,6 +6276,41 @@
     };
 
     // ========== MONSTERS ==========
+    // ========== MONSTER IMMUNITY SYSTEM ==========
+    // Immunities: 100% = immune (0 damage), 50-99% = resistant, <50% = normal
+    // Nightmare: some monsters gain resistances. Hell: some gain full immunity.
+    const MONSTER_IMMUNITIES = {
+        // ACT1: undead = cold resistant, physical normal
+        skeleton:      { hell: { cold: 100 }, nightmare: { cold: 50 } },
+        zombie:        { hell: { cold: 100, poison: 75 }, nightmare: { cold: 50 } },
+        // ACT2: desert = fire resistant
+        mummy:         { hell: { fire: 100 }, nightmare: { fire: 50 } },
+        scarab:        { hell: { poison: 100 }, nightmare: { poison: 50 } },
+        sand_golem:    { hell: { fire: 100, lightning: 75 }, nightmare: { fire: 50 } },
+        // ACT3: jungle = poison resistant
+        treeant:       { hell: { fire: 100 }, nightmare: { fire: 50 } },
+        poison_spider: { hell: { poison: 100 }, nightmare: { poison: 50 } },
+        jungle_shaman: { hell: { lightning: 100 }, nightmare: { lightning: 50 } },
+        // ACT4: hell = fire resistant
+        demon:         { hell: { fire: 100 }, nightmare: { fire: 50 } },
+        hellhound:     { hell: { fire: 100, cold: 75 }, nightmare: { fire: 50 } },
+        imp:           { hell: { fire: 100 }, nightmare: { fire: 50 } },
+        // ACT5: ice = cold resistant
+        frost_zombie:  { hell: { cold: 100 }, nightmare: { cold: 50 } },
+        ice_wraith:    { hell: { cold: 100, lightning: 75 }, nightmare: { cold: 50 } },
+        yeti:          { hell: { cold: 100 }, nightmare: { cold: 50 } }
+    };
+    const IMMUNITY_ICONS = { fire: '🔥', cold: '❄', lightning: '⚡', poison: '☠' };
+    const IMMUNITY_COLORS = { fire: '#ff4400', cold: '#44aaff', lightning: '#ffdd00', poison: '#44cc00' };
+
+    function getMonsterImmunities(monsterType) {
+        const diff = G.difficulty || 'normal';
+        if (diff === 'normal') return {};
+        const entry = MONSTER_IMMUNITIES[monsterType];
+        if (!entry) return {};
+        return entry[diff] || {};
+    }
+
     const MONSTER_DEFS = {
         skeleton: { name: 'スケルトン', r: 12, hp: 40, dmg: 8, spd: 60, xp: 25, color: '#9a8a6a', loot: 0.4, icon: '💀', defense: 10 },
         zombie:   { name: 'ゾンビ', r: 14, hp: 70, dmg: 12, spd: 40, xp: 35, color: '#3a4a25', loot: 0.45, icon: '🧟', defense: 10 },
@@ -6283,6 +6388,7 @@
                 this.drawScale = MONSTER_DRAW_SCALES[type] || 1.3;
                 this.aggroRange = type === 'demonlord' ? 400 : 250;
             }
+            this.immunities = getMonsterImmunities(type);
             this.alive = true;
             this.deathT = 0;
             this.atkCD = 0;
@@ -6669,6 +6775,20 @@
                 ctx.strokeStyle = '#000';
                 ctx.lineWidth = 0.5;
                 ctx.strokeRect(sx - bw/2, hpY, bw, 4);
+                // Immunity icons above HP bar
+                if (this.immunities) {
+                    const immKeys = Object.keys(this.immunities).filter(k => this.immunities[k] >= 100);
+                    if (immKeys.length > 0) {
+                        ctx.font = '8px monospace';
+                        ctx.textAlign = 'center';
+                        const totalW = immKeys.length * 12;
+                        for (let ii = 0; ii < immKeys.length; ii++) {
+                            const ik = immKeys[ii];
+                            ctx.fillStyle = IMMUNITY_COLORS[ik] || '#888';
+                            ctx.fillText(IMMUNITY_ICONS[ik] || '?', sx - totalW/2 + ii * 12 + 6, hpY - 2);
+                        }
+                    }
+                }
             }
 
             // Name plate (scaled position)
@@ -6858,7 +6978,7 @@
     }
 
     _drawBoss(sx, sy, alphaFlash) {
-        const bd = BOSS_DEFS[this.bossKey] || {};
+        const bd = BOSS_DEFS[this.bossKey] || UBER_BOSS_DEFS[this.bossKey] || {};
         const bossScale = this.drawScale || 2.2;
         const bw = TILE * bossScale, bh = TILE * bossScale;
         const color = bd.color || '#ff0000';
@@ -6949,7 +7069,7 @@
     // ========== BOSS AI ==========
     function updateBossAI(m, dt) {
         if (!m.isBoss || !m.alive) return;
-        const bd = BOSS_DEFS[m.bossKey];
+        const bd = BOSS_DEFS[m.bossKey] || UBER_BOSS_DEFS[m.bossKey];
         if (!bd) return;
 
         // Determine current phase based on HP%
@@ -7130,7 +7250,18 @@
         }
     }
 
-    function monsterTakeDmg(m, dmg, isCrit) {
+    function monsterTakeDmg(m, dmg, isCrit, element) {
+        // Monster immunity/resistance check
+        if (element && m.immunities && m.immunities[element]) {
+            const res = m.immunities[element];
+            if (res >= 100) {
+                // Fully immune - show "IMMUNE" text
+                addFloatingText(m.x, m.y - m.r - 10, 'IMMUNE', IMMUNITY_COLORS[element] || '#888');
+                return;
+            } else if (res > 0) {
+                dmg = Math.max(1, Math.round(dmg * (1 - res / 100)));
+            }
+        }
         if (m.cursedT > 0 && m.curseDmgMult > 1) dmg = Math.round(dmg * m.curseDmgMult);
         const monDef = m.defense || 0;
         dmg = Math.max(1, Math.round(dmg * (100 / (100 + monDef))));
@@ -7227,6 +7358,51 @@
                 emitParticles(m.x, m.y, '#ffffff', 12, 120, 0.4, 5, 0);
                 G.bossesDefeated[m.bossKey] = (G.bossesDefeated[m.bossKey] || 0) + 1;
                 checkQuestProgress('boss_killed', m.bossKey);
+                // Uber key drop from Act bosses on Nightmare/Hell
+                if (G.difficulty !== 'normal') {
+                    const keyChance = G.difficulty === 'hell' ? 0.33 : 0.10;
+                    for (const [keyId, keyDef] of Object.entries(UBER_KEY_DEFS)) {
+                        if (keyDef.fromBoss === m.bossKey && Math.random() < keyChance) {
+                            const keyItem = {
+                                name: keyDef.name, typeKey: 'quest_key', icon: keyDef.icon,
+                                rarityKey: 'unique', rarity: { name: 'ユニーク', color: '#ffd700' },
+                                typeInfo: { name: keyDef.name, icon: keyDef.icon, slot: null },
+                                baseDmg: 0, baseDef: 0, affixes: [], desc: keyDef.desc,
+                                uberKeyId: keyId, qty: 1, requiredLevel: 0, itemLevel: 0
+                            };
+                            dropItem(m.x, m.y, keyItem);
+                            sfxLegendary();
+                            addLog(`★ ${keyDef.name} がドロップ！`, keyDef.color);
+                        }
+                    }
+                }
+                // Uber boss defeat: drop Hellfire Torch
+                if (m.isUber) {
+                    G.uberBossesDefeated = G.uberBossesDefeated || {};
+                    G.uberBossesDefeated[m.bossKey] = true;
+                    // Check if all 3 uber bosses defeated
+                    const allUbersDead = ['uber_diablo', 'uber_mephisto', 'uber_baal'].every(
+                        k => G.uberBossesDefeated[k]
+                    );
+                    if (allUbersDead) {
+                        // Drop Hellfire Torch
+                        const torch = {
+                            name: UBER_TORCH_DEF.name, typeKey: UBER_TORCH_DEF.typeKey,
+                            icon: UBER_TORCH_DEF.icon,
+                            rarityKey: 'unique', rarity: { name: 'ユニーク', color: '#ffd700' },
+                            typeInfo: ITEM_TYPES[UBER_TORCH_DEF.typeKey],
+                            baseDmg: 0, baseDef: 0, desc: UBER_TORCH_DEF.desc,
+                            affixes: UBER_TORCH_DEF.affixes.map(a => ({ ...a })),
+                            qty: 1, requiredLevel: 50, itemLevel: 99, sockets: 0
+                        };
+                        dropItem(m.x, m.y, torch);
+                        sfxLegendary();
+                        G.shakeT = 1.0; G.shakeAmt = 20;
+                        G.flashT = 0.5; G.flashAlpha = 0.8; G.flashColor = '#ffd700';
+                        addLog(`★★★ ヘルファイアトーチを獲得！★★★`, '#ffd700');
+                        addLog('パンデモニウムの試練を制覇した！', '#ff8800');
+                    }
+                }
                 addLog(`★ ${m.def.name} を討伐した！★`, '#ffd700');
             } else if (m.isUnique) {
                 addLog(`★ ユニークモンスター ${m.uniqueName} を討伐！(+${Math.round(m.def.xp * xpMult)} XP)`, '#ffd700');
@@ -7685,7 +7861,7 @@
         G.townUIMode = null;
         G.activeNPC = null;
         G.dialogState = 0;
-        const panels = ['dialogPanel','shopPanel','blacksmithPanel','stashPanel','waypointPanel','questPanel'];
+        const panels = ['dialogPanel','shopPanel','blacksmithPanel','stashPanel','waypointPanel','questPanel','uberPanel'];
         for (const id of panels) {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
@@ -7694,6 +7870,11 @@
 
     function openNPCInteraction(npc) {
         closeTownUI();
+        // Skip NPCs requiring higher difficulty
+        if (npc.requireDifficulty && G.difficulty === 'normal') {
+            addLog(`${npc.name}：まだ早い...もっと強くなってから来い。`, '#888888');
+            return;
+        }
         G.activeNPC = npc;
         switch (npc.type) {
             case 'shop': openShopUI(npc); break;
@@ -7701,6 +7882,7 @@
             case 'stash': openStashUI(npc); break;
             case 'quest': openQuestUI(npc); break;
             case 'waypoint': openWaypointUI(npc); break;
+            case 'uber_portal': openUberPortalUI(npc); break;
         }
     }
 
@@ -7773,6 +7955,7 @@
     window.sellItem = function(idx) {
         const item = player.inventory[idx];
         if (!item) return;
+        if (item.uberKeyId) { addLog('この鍵は売却できない！', '#ff4444'); return; }
         const price = calculateSellPrice(item);
         const totalPrice = isPotion(item) ? price * (item.qty || 1) : price;
         G.gold += totalPrice;
@@ -8088,6 +8271,131 @@
     window.acceptQuest = acceptQuest;
     window.closeTownUI = closeTownUI;
 
+    // ========== UBER PORTAL UI ==========
+    function openUberPortalUI(npc) {
+        G.townUIMode = 'uber';
+        const panel = document.getElementById('uberPanel');
+        if (!panel) return;
+        panel.style.display = 'block';
+        renderUberPortalUI();
+    }
+    function renderUberPortalUI() {
+        const panel = document.getElementById('uberPanel');
+        if (!panel) return;
+        // Count keys in inventory + stash
+        const keyCount = {};
+        for (const keyId of Object.keys(UBER_KEY_DEFS)) keyCount[keyId] = 0;
+        const allItems = [...player.inventory, ...G.stash];
+        for (const item of allItems) {
+            if (item.uberKeyId && keyCount[item.uberKeyId] !== undefined) keyCount[item.uberKeyId]++;
+        }
+        const hasAllKeys = Object.values(keyCount).every(c => c >= 1);
+        let html = `<div class="panel-header">🌀 パンデモニウムの門</div>`;
+        html += `<div style="color:#aaa;font-size:11px;margin:6px 0">3つの鍵を集めて門を開け。その先にはパンデモニウムのウーバーボスが待ち受ける。</div>`;
+        html += '<div style="display:flex;flex-direction:column;gap:4px;margin:8px 0">';
+        for (const [keyId, keyDef] of Object.entries(UBER_KEY_DEFS)) {
+            const count = keyCount[keyId];
+            const found = count > 0;
+            html += `<div style="padding:4px 8px;background:${found ? '#1a2a1a' : '#1a1a1a'};border:1px solid ${found ? keyDef.color : '#333'};border-radius:4px">
+                <span style="font-size:14px">${keyDef.icon}</span>
+                <span style="color:${found ? keyDef.color : '#555'}">${keyDef.name}</span>
+                <span style="float:right;color:${found ? '#88ff88' : '#555'}">${found ? '✓ 所持' : '✗ 未入手'}</span>
+            </div>`;
+        }
+        html += '</div>';
+        if (hasAllKeys) {
+            html += `<button class="town-btn" onclick="enterUberTristram()" style="background:#442200;border-color:#ff6600;color:#ff8844;margin-top:8px">🌀 パンデモニウムへ突入</button>`;
+        } else {
+            html += `<div style="color:#666;font-size:10px;margin-top:8px">ACTボスをナイトメア/ヘル難易度で倒すと鍵をドロップする</div>`;
+        }
+        html += `<button class="town-btn" onclick="closeTownUI()" style="margin-top:4px">閉じる</button>`;
+        panel.innerHTML = html;
+    }
+
+    function enterUberTristram() {
+        // Consume one of each key from inventory/stash
+        for (const keyId of Object.keys(UBER_KEY_DEFS)) {
+            let consumed = false;
+            for (let i = 0; i < player.inventory.length && !consumed; i++) {
+                if (player.inventory[i].uberKeyId === keyId) {
+                    player.inventory.splice(i, 1);
+                    consumed = true;
+                }
+            }
+            if (!consumed) {
+                for (let i = 0; i < G.stash.length && !consumed; i++) {
+                    if (G.stash[i].uberKeyId === keyId) {
+                        G.stash.splice(i, 1);
+                        consumed = true;
+                    }
+                }
+            }
+            if (!consumed) { addLog('鍵が足りない！', '#ff4444'); return; }
+        }
+        closeTownUI();
+        // Reset uber boss tracking
+        G.uberBossesDefeated = {};
+        G.inUber = true;
+        // Generate uber floor using ACT4 theme (hell/pandemonium)
+        G.floor = 99;
+        G.inTown = false;
+        const actDef = ACT_DEFS[4];
+        generateTileTextures(actDef.tileTheme); tileTexturesReady = true;
+        G.dungeonSeed = (Math.random() * 0x7FFFFFFF) | 0;
+        seedRng(G.dungeonSeed);
+        dungeon = new Dungeon(99);
+        // Clear arrays
+        projectiles.length = 0; enemyProjectiles.length = 0;
+        particles.length = 0; bloodPools.length = 0; ambientParticles.length = 0;
+        monsters.length = 0; groundItems.length = 0;
+        G.traps = []; G.consecrations = []; G.minions = []; G.spawnTimer = 0;
+        // Place player at start
+        const startRoom = dungeon.rooms[0];
+        player.x = startRoom.cx * TILE + TILE/2;
+        player.y = startRoom.cy * TILE + TILE/2;
+        player.targetX = player.x; player.targetY = player.y;
+        player.moving = false; player.attacking = false;
+        // Spawn 3 uber bosses in different rooms
+        const uberKeys = Object.keys(UBER_BOSS_DEFS);
+        for (let i = 0; i < uberKeys.length; i++) {
+            const uKey = uberKeys[i];
+            const uDef = UBER_BOSS_DEFS[uKey];
+            // Use rooms 2, 4, 6 (or last available) for spacing
+            const roomIdx = Math.min(2 + i * 2, dungeon.rooms.length - 1);
+            const room = dungeon.rooms[roomIdx];
+            const bm = new Monster(room.cx * TILE + TILE/2, room.cy * TILE + TILE/2, 'demon', 99, uKey);
+            // Override with uber stats
+            bm.maxHP = Math.round(uDef.hp * getCycleMult());
+            bm.hp = bm.maxHP;
+            bm.dmg = Math.round(uDef.dmg * getCycleMult());
+            bm.spd = uDef.spd;
+            bm.r = uDef.r;
+            bm.defense = Math.round(uDef.defense * getCycleMult());
+            bm.def = { name: uDef.name, icon: uDef.icon, xp: uDef.xp, loot: 1.0, color: uDef.color };
+            bm.bossPhase = 0; bm.bossCD = {}; bm.bossState = 'idle'; bm.bossBurrowT = 0;
+            bm.drawScale = 2.5; bm.aggroRange = 500;
+            bm.isUber = true;
+            bm.immunities = uDef.immunities || {};
+            monsters.push(bm);
+        }
+        // Also spawn elite demon guards
+        for (let i = 0; i < 15; i++) {
+            const room = dungeon.rooms[rand(1, dungeon.rooms.length - 1)];
+            const m = new Monster(
+                room.cx * TILE + TILE/2 + randf(-60, 60),
+                room.cy * TILE + TILE/2 + randf(-60, 60),
+                'demon', 99
+            );
+            m.makeChampion();
+            monsters.push(m);
+        }
+        unseedRng();
+        showActTransition('パンデモニウム', 'Pandemonium Tristram');
+        addLog('⚠ パンデモニウムに突入した！ウーバーボスが3体待ち受ける！', '#ff0000');
+        if (audioCtx && SETTINGS.sound) startBGM(4);
+    }
+    window.enterUberTristram = enterUberTristram;
+
     // ========== LEVEL UP NOTICE ==========
     let levelUpTimer = 0;
     function showLevelUp() {
@@ -8166,7 +8474,7 @@
             <hr style="border-color:#333;margin:6px 0">
             <div style="color:#ccc;font-size:11px;margin-bottom:4px">🗺 探索情報</div>
             <div class="stat-row"><span class="stat-label">難易度</span><span class="stat-value" style="color:${DIFFICULTY_DEFS[G.difficulty||'normal'].color}">${DIFFICULTY_DEFS[G.difficulty||'normal'].name}</span></div>
-            <div class="stat-row"><span class="stat-label">現在地</span><span class="stat-value" style="color:#aa88ff">ACT${G.act} ${G.inTown ? '町' : '第' + G.actFloor + '層'}${G.cycle > 0 ? ' (' + (G.cycle+1) + '周目)' : ''}</span></div>
+            <div class="stat-row"><span class="stat-label">現在地</span><span class="stat-value" style="color:${G.inUber ? '#ff4400' : '#aa88ff'}">${G.inUber ? 'パンデモニウム' : 'ACT' + G.act + ' ' + (G.inTown ? '町' : '第' + G.actFloor + '層')}${G.cycle > 0 ? ' (' + (G.cycle+1) + '周目)' : ''}</span></div>
             <div class="stat-row"><span class="stat-label">ゴールド</span><span class="stat-value" style="color:#ffd700">${G.gold}G</span></div>
             <div class="stat-row"><span class="stat-label">残り敵数</span><span class="stat-value" style="color:#ff6666">${monsters.filter(m=>m.alive).length}</span></div>
             <div class="stat-row"><span class="stat-label">所持アイテム</span><span class="stat-value">${player.inventory.length}/${player.maxInv}</span></div>
@@ -8642,6 +8950,15 @@
                 }
             }
             html += `<div style="color:#888;font-size:10px;margin-top:4px">鍛冶屋でソケット装備に装着 | 右クリックで捨てる</div>`;
+            return html;
+        }
+        // Uber key tooltip
+        if (item.uberKeyId) {
+            const kd = UBER_KEY_DEFS[item.uberKeyId];
+            let html = `<div class="tt-name" style="color:${kd ? kd.color : '#ffd700'}">${kd ? kd.icon : '🗝'} ${item.name}</div>`;
+            html += `<div class="tt-type" style="color:#daa520">クエストアイテム</div>`;
+            html += `<div style="color:#aaa;margin:4px 0;font-size:11px">${item.desc || ''}</div>`;
+            html += `<div style="color:#888;font-size:10px;margin-top:4px">ACT5の闇商人に持っていけ</div>`;
             return html;
         }
         if (isPotion(item)) {
@@ -10994,7 +11311,8 @@
                 socketedRunes: Array.isArray(item.socketedRunes) ? [...item.socketedRunes] : (item.sockets > 0 ? [] : null),
                 runeword: item.runeword || null,
                 runewordJP: item.runewordJP || null,
-                runeId: item.runeId != null ? item.runeId : null
+                runeId: item.runeId != null ? item.runeId : null,
+                uberKeyId: item.uberKeyId || null
             });
             const saveData = {
                 version: 6,
@@ -11174,6 +11492,7 @@
             DOM.deathScreen.style.display = 'none';
 
             // Generate dungeon or town with saved seed
+            G.inUber = false; // Uber state is transient, always reset on load
             if (G.inTown) {
                 enterTown(G.act);
             } else {
@@ -11281,6 +11600,15 @@
             G.actFloor = 1;
             G.inTown = false;
             initFloor();
+            return true;
+        }
+
+        // Uber floor: stairs return to town
+        if (G.inUber) {
+            sfxStairs();
+            G.inUber = false;
+            enterTown(5);
+            addLog('パンデモニウムから帰還した', '#88ff88');
             return true;
         }
 
@@ -11397,9 +11725,9 @@
                     }
                 }
 
-                // 敵の継続的な出現（ワラワラ感）- 階段付近では出現しない
+                // 敵の継続的な出現（ワラワラ感）- 階段付近では出現しない、ウーバーフロアでは無効
                 G.spawnTimer += dt;
-                if (G.spawnTimer >= G.spawnInterval) {
+                if (G.spawnTimer >= G.spawnInterval && !G.inUber) {
                     G.spawnTimer = 0;
                     const aliveCount = aliveMonsterCount;
                     const maxMonsters = 30 + G.actFloor * 5;
@@ -11462,7 +11790,9 @@
                 if (m.alive && dist(p.x, p.y, m.x, m.y) < p.r + m.r) {
                     const isCrit = Math.random() * 100 < player.getCritChance();
                     const d = isCrit ? p.dmg * player.getCritDamage() / 100 : p.dmg;
-                    monsterTakeDmg(m, d, isCrit);
+                    // Map projectile attribute to immunity element
+                    const projElem = p.attribute === 'ice' ? 'cold' : (p.attribute === 'arcane' ? null : p.attribute || null);
+                    monsterTakeDmg(m, d, isCrit, projElem);
                     emitParticles(p.x, p.y, '#ffaa00', 10, 80, 0.4, 3, 0);
                     projectiles[i] = projectiles[projectiles.length - 1]; projectiles.pop();
                     break;
@@ -11480,7 +11810,7 @@
                     for (const m of monsters) {
                         if (m.alive && dist(tr.x, tr.y, m.x, m.y) < tr.r) {
                             tr.triggered = true;
-                            monsterTakeDmg(m, tr.dmg, false);
+                            monsterTakeDmg(m, tr.dmg, false, 'fire');
                             emitParticles(tr.x, tr.y, '#ff6600', 20, 100, 0.5, 4, 50);
                             playNoise(0.15, 0.1, 2000);
                             G.shakeT = 0.15; G.shakeAmt = 6; // Diablo風：2倍
