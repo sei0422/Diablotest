@@ -1542,7 +1542,7 @@
             if (cls === 'rogue') return 'shoot';
             return 'swing';
         }
-        if (player.moving) return 'run';
+        if (player.moving || player._kbMoving) return 'run';
         return 'stance';
     }
 
@@ -6657,12 +6657,12 @@
                 }
             }
 
-            // Arrow key movement with inertia
+            // Arrow key / WASD movement with inertia
             let kbMoveX = 0, kbMoveY = 0;
-            if (keysDown['arrowup']) kbMoveY = -1;
-            if (keysDown['arrowdown']) kbMoveY = 1;
-            if (keysDown['arrowleft']) kbMoveX = -1;
-            if (keysDown['arrowright']) kbMoveX = 1;
+            if (keysDown['arrowup'] || keysDown['w']) kbMoveY = -1;
+            if (keysDown['arrowdown'] || keysDown['s']) kbMoveY = 1;
+            if (keysDown['arrowleft'] || keysDown['a']) kbMoveX = -1;
+            if (keysDown['arrowright'] || keysDown['d']) kbMoveX = 1;
 
             // 目標速度を計算
             let targetVx = 0, targetVy = 0;
@@ -6719,7 +6719,10 @@
                 }
                 this.moving = false; // Cancel click-move
                 this.attacking = false;
+                this._kbMoving = true; // Flag for sprite animation
                 sfxFootstep();
+            } else {
+                this._kbMoving = false;
             }
 
             // Movement with proper circle collision
@@ -6864,7 +6867,7 @@
 
             // Minimal procedural transforms (real animation is in sprite frames now)
             let bounce = 0, tilt = 0, scaleX = 1, scaleY = 1;
-            if (!this.moving && !this.attacking) {
+            if (!this.moving && !this._kbMoving && !this.attacking) {
                 // Subtle idle breathing
                 bounce = Math.sin(G.time * 2) * 1.5;
                 scaleY = 1 + Math.sin(G.time * 2) * 0.01;
@@ -6895,17 +6898,23 @@
             if (hiresSpritesLoaded) {
                 const classKey = getHiResClassKey(this);
                 const animName = getHiResAnimState(this);
-                const mdx = this.targetX - this.x;
-                const mdy = this.targetY - this.y;
-                const md = Math.hypot(mdx, mdy);
-                // Only update direction when distance is significant (avoids jitter near target)
+                // Direction: prefer velocity vector (keyboard), then target delta (click-move)
                 let dirIdx = this._lastDirIdx || 0;
-                if ((this.moving || this.attacking) && md > 8) {
-                    dirIdx = getFacingDir8(mdx, mdy);
+                if (this._kbMoving && Math.hypot(this.vx, this.vy) > 5) {
+                    dirIdx = getFacingDir8(this.vx, this.vy);
                     this._lastDirIdx = dirIdx;
+                } else if (this.moving || this.attacking) {
+                    const mdx = this.targetX - this.x;
+                    const mdy = this.targetY - this.y;
+                    if (Math.hypot(mdx, mdy) > 8) {
+                        dirIdx = getFacingDir8(mdx, mdy);
+                        this._lastDirIdx = dirIdx;
+                    }
                 }
                 const hiDrawSize = drawSize * 2.0;
-                if (!drawHiResSpr(classKey, animName, dirIdx, G.time, -hiDrawSize/2, -hiDrawSize + TILE/2, hiDrawSize, hiDrawSize)) {
+                // FLARE sprites: feet at 75% of cell height. Align feet with shadow (at TILE/2)
+                const hiDy = TILE/2 - hiDrawSize * 0.75;
+                if (!drawHiResSpr(classKey, animName, dirIdx, G.time, -hiDrawSize/2, hiDy, hiDrawSize, hiDrawSize)) {
                     // Fallback: pixel art sprite
                     if (!drawSpr(spriteKey, -drawSize/2, -drawSize + TILE/2, drawSize, drawSize, flipX)) {
                         ctx.fillStyle = '#888'; ctx.fillRect(-drawSize/4, -drawSize/4, drawSize/2, drawSize/2);
@@ -7692,8 +7701,9 @@
                 const _drawSize = TILE * mScale * 3.0;
                 const _prevAlpha = ctx.globalAlpha;
                 ctx.globalAlpha *= alphaFlash;
-                // Pass G.time for walk animation; anchor bottom-center at monster feet
-                _drewOGA = drawOGACreature(this.type, _dirIdx, G.time, sx - _drawSize/2, sy - _drawSize * 0.9, _drawSize, _drawSize);
+                // FLARE sprites: feet at ~75% of cell. Align with shadow position
+                const _mFeetY = this.r * mScale * 0.5 + 3;
+                _drewOGA = drawOGACreature(this.type, _dirIdx, G.time, sx - _drawSize/2, sy + _mFeetY - _drawSize * 0.78, _drawSize, _drawSize);
                 ctx.globalAlpha = _prevAlpha;
             }
             if (!_drewOGA) {
