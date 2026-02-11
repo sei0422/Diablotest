@@ -3219,6 +3219,84 @@
             }
         }
 
+        // --- Override with Kenney Isometric Dungeon tiles if loaded ---
+        if (ogaLoaded) {
+            const kenneyTheme = KENNEY_THEME_MAP[theme];
+            if (kenneyTheme) {
+                // Extract center of isometric diamond as top-down floor texture
+                const kenneyFloorToTile = (kImg, tintRGB) => {
+                    const c = document.createElement('canvas');
+                    c.width = TILE; c.height = TILE;
+                    const tc = c.getContext('2d');
+                    // Base fill covers transparent diamond corners
+                    tc.fillStyle = 'rgb(160,145,120)';
+                    tc.fillRect(0, 0, TILE, TILE);
+                    // Scale full isometric image; diamond center at (w/2, h*0.6)
+                    const scale = TILE / kImg.width;
+                    const offY = TILE / 2 - kImg.height * 0.6 * scale;
+                    tc.drawImage(kImg, 0, 0, kImg.width, kImg.height, 0, offY, TILE, kImg.height * scale);
+                    if (tintRGB) {
+                        tc.globalCompositeOperation = 'multiply';
+                        tc.fillStyle = `rgb(${tintRGB[0]},${tintRGB[1]},${tintRGB[2]})`;
+                        tc.fillRect(0, 0, TILE, TILE);
+                        tc.globalCompositeOperation = 'source-over';
+                    }
+                    return c;
+                };
+                // Floor variants (9 variants cycling through available tile types)
+                for (let v = 0; v < 9; v++) {
+                    const floorKey = kenneyTheme.floors[v % kenneyTheme.floors.length];
+                    const kImg = OGA[floorKey];
+                    if (!kImg) continue;
+                    TILE_TEXTURES['floor_' + v] = kenneyFloorToTile(kImg, kenneyTheme.tint);
+                }
+                // Wall textures (extract brick face from isometric wall)
+                const wImg = OGA[kenneyTheme.wall];
+                if (wImg) {
+                    const wallSrcX = wImg.width * 0.22;
+                    const wallSrcY = wImg.height * 0.28;
+                    const wallSrcW = wImg.width * 0.56;
+                    const wallSrcH = wImg.height * 0.42;
+                    for (const wallKey of ['wall', 'wall2']) {
+                        const wc = document.createElement('canvas');
+                        wc.width = TILE; wc.height = TILE;
+                        const wtc = wc.getContext('2d');
+                        const xOff = wallKey === 'wall2' ? wImg.width * 0.04 : 0;
+                        wtc.drawImage(wImg, wallSrcX + xOff, wallSrcY, wallSrcW, wallSrcH, 0, 0, TILE, TILE);
+                        if (kenneyTheme.tint) {
+                            wtc.globalCompositeOperation = 'multiply';
+                            wtc.fillStyle = `rgb(${kenneyTheme.tint[0]},${kenneyTheme.tint[1]},${kenneyTheme.tint[2]})`;
+                            wtc.fillRect(0, 0, TILE, TILE);
+                            wtc.globalCompositeOperation = 'source-over';
+                        }
+                        TILE_TEXTURES[wallKey] = wc;
+                    }
+                    // Wall face strip (3D bottom edge)
+                    const faceC = document.createElement('canvas');
+                    faceC.width = TILE; faceC.height = 14;
+                    const fctx = faceC.getContext('2d');
+                    fctx.drawImage(wImg, wallSrcX, wImg.height * 0.62, wallSrcW, wImg.height * 0.12, 0, 0, TILE, 14);
+                    fctx.fillStyle = 'rgba(0,0,0,0.3)';
+                    fctx.fillRect(0, 0, TILE, 14);
+                    if (kenneyTheme.tint) {
+                        fctx.globalCompositeOperation = 'multiply';
+                        fctx.fillStyle = `rgb(${kenneyTheme.tint[0]},${kenneyTheme.tint[1]},${kenneyTheme.tint[2]})`;
+                        fctx.fillRect(0, 0, TILE, 14);
+                        fctx.globalCompositeOperation = 'source-over';
+                    }
+                    TILE_TEXTURES['wall_face'] = faceC;
+                    // Deep wall (heavily darkened wall)
+                    const deepC = document.createElement('canvas');
+                    deepC.width = TILE; deepC.height = TILE;
+                    const dctx = deepC.getContext('2d');
+                    dctx.drawImage(TILE_TEXTURES['wall'], 0, 0);
+                    dctx.fillStyle = 'rgba(0,0,0,0.6)';
+                    dctx.fillRect(0, 0, TILE, TILE);
+                    TILE_TEXTURES['deep_wall'] = deepC;
+                }
+            }
+        }
+
         // --- GLOBAL DARKENING PASS (multiply composite) ---
         const darkenKeys = ['floor_0','floor_1','floor_2','floor_3','floor_4','floor_5','floor_6','floor_7','floor_8','wall','wall2'];
         for (const key of darkenKeys) {
