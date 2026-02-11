@@ -1228,47 +1228,47 @@
         npcWarClericM:['rogues',96,64],    // male war cleric
     };
 
-    // --- Hi-Res Isometric Sprite System (8-directional Blender renders) ---
+    // --- Hi-Res Animated Sprite System (FLARE-based 8-dir multi-frame) ---
     const HIRES_SPRITES = {};
     let hiresSpritesLoaded = false;
-    const HIRES_SP = 128; // pixel size per direction frame
+    const HIRES_SP = 128; // pixel size per cell
     const HIRES_DIR_ORDER = ['S','SW','W','NW','N','NE','E','SE'];
-    // Map equipment to hi-res sprite sheet name
-    const HIRES_WEAPON_MAP = {
-        sword: { base: 'shortsword', elite: 'greatsword' },
-        axe: { base: 'greatsword', elite: 'greatsword' },
-        staff: { base: 'staff', elite: 'greatstaff' },
+    // Class → sprite sheet prefix mapping
+    const HIRES_CLASS_MAP = {
+        warrior: 'warrior', paladin: 'warrior', berserker: 'warrior',
+        rogue: 'rogue', assassin: 'rogue', ranger: 'rogue',
+        sorcerer: 'mage', pyromancer: 'mage', cryomancer: 'mage',
     };
-    const HIRES_ARMOR_MAP = {
-        common: 'clothes', magic: 'clothes', rare: 'leather_armor',
-        legendary: 'steel_armor', unique: 'steel_armor'
+    // Animation configs: frames per animation, fps
+    const HIRES_ANIM_CONFIG = {
+        run:    { frames: 8, fps: 15 },
+        stance: { frames: 4, fps: 5  },
+        swing:  { frames: 4, fps: 10 },
+        cast:   { frames: 4, fps: 10 },
+        shoot:  { frames: 4, fps: 10 },
     };
-    const HIRES_SHIELD_MAP = { base: 'buckler', elite: 'shield' };
 
     function loadHiResSprites() {
-        const prefix = 'hero'; // TODO: gender selection
-        const variants = [
-            'clothes','leather_armor','steel_armor',
-            'buckler','shield',
-            'shortsword','greatsword',
-            'greatbow','longbow','slingshot',
-            'staff','greatstaff','rod','wand',
-            'male_head1','male_head2','male_head3'
-        ];
+        const classes = ['warrior', 'mage', 'rogue', 'base'];
+        const anims = ['run', 'stance', 'swing', 'cast', 'shoot'];
+        const toLoad = [];
+        for (const cls of classes) {
+            for (const anim of anims) {
+                toLoad.push(`hero_${cls}_${anim}`);
+            }
+        }
         let loaded = 0;
-        const total = variants.length;
-        for (const v of variants) {
-            const key = `${prefix}_${v}`;
+        const total = toLoad.length;
+        for (const key of toLoad) {
             const img = new Image();
             img.onload = () => {
                 HIRES_SPRITES[key] = img;
                 if (++loaded === total) {
                     hiresSpritesLoaded = true;
-                    console.log('Hi-res sprites loaded:', Object.keys(HIRES_SPRITES).join(', '));
+                    console.log('Hi-res animated sprites loaded:', Object.keys(HIRES_SPRITES).length);
                 }
             };
             img.onerror = () => {
-                console.warn('Hi-res sprite FAIL:', key);
                 if (++loaded === total) { hiresSpritesLoaded = true; }
             };
             img.src = `asset/sprite_sheets/${key}.png?v=${Date.now()}`;
@@ -1368,6 +1368,23 @@
             spell_fireball: 'asset/opengameart/spell_anims/fireball.png',
             spell_flash_freeze: 'asset/opengameart/spell_anims/flash_freeze.png',
             spell_flash_heal: 'asset/opengameart/spell_anims/flash_heal.png',
+            // Kenney Isometric Dungeon tiles (256x512, S-direction)
+            kenney_stone: 'asset/opengameart/kenney_dungeon/Isometric/stone_S.png',
+            kenney_stoneTile: 'asset/opengameart/kenney_dungeon/Isometric/stoneTile_S.png',
+            kenney_stoneUneven: 'asset/opengameart/kenney_dungeon/Isometric/stoneUneven_S.png',
+            kenney_stoneMissing: 'asset/opengameart/kenney_dungeon/Isometric/stoneMissingTiles_S.png',
+            kenney_dirt: 'asset/opengameart/kenney_dungeon/Isometric/dirt_S.png',
+            kenney_dirtTiles: 'asset/opengameart/kenney_dungeon/Isometric/dirtTiles_S.png',
+            kenney_planks: 'asset/opengameart/kenney_dungeon/Isometric/planks_S.png',
+            kenney_planksBroken: 'asset/opengameart/kenney_dungeon/Isometric/planksBroken_S.png',
+            kenney_planksHole: 'asset/opengameart/kenney_dungeon/Isometric/planksHole_S.png',
+            kenney_stoneWall: 'asset/opengameart/kenney_dungeon/Isometric/stoneWall_S.png',
+            kenney_stoneWallAged: 'asset/opengameart/kenney_dungeon/Isometric/stoneWallAged_S.png',
+            kenney_stoneWallBroken: 'asset/opengameart/kenney_dungeon/Isometric/stoneWallBroken_S.png',
+            kenney_stoneColumn: 'asset/opengameart/kenney_dungeon/Isometric/stoneColumn_S.png',
+            kenney_barrel: 'asset/opengameart/kenney_dungeon/Isometric/barrel_S.png',
+            kenney_chestClosed: 'asset/opengameart/kenney_dungeon/Isometric/chestClosed_S.png',
+            kenney_stairs: 'asset/opengameart/kenney_dungeon/Isometric/stairs_S.png',
         };
         let loaded = 0;
         const total = Object.keys(assets).length;
@@ -1396,6 +1413,15 @@
     // Projectile sheets use different direction order: W,SW,S,SE,E,NE,N,NW
     // Game dir: S(0),SW(1),W(2),NW(3),N(4),NE(5),E(6),SE(7)
     const OGA_PROJ_DIR_REMAP = [2, 1, 0, 7, 6, 5, 4, 3];
+
+    // Kenney Isometric Dungeon tile theme mapping per ACT
+    const KENNEY_THEME_MAP = {
+        cathedral: { floors: ['kenney_stone', 'kenney_stoneTile', 'kenney_stoneUneven'], wall: 'kenney_stoneWall', tint: null },
+        desert: { floors: ['kenney_dirt', 'kenney_dirtTiles', 'kenney_stoneMissing'], wall: 'kenney_stoneWallAged', tint: [240, 210, 160] },
+        jungle: { floors: ['kenney_planks', 'kenney_planksBroken', 'kenney_planksHole'], wall: 'kenney_stoneWallBroken', tint: [180, 220, 160] },
+        hell: { floors: ['kenney_stoneUneven', 'kenney_stoneMissing', 'kenney_stone'], wall: 'kenney_stoneWallBroken', tint: [255, 140, 120] },
+        ice: { floors: ['kenney_stone', 'kenney_stoneTile', 'kenney_stoneUneven'], wall: 'kenney_stoneWall', tint: [160, 190, 240] },
+    };
 
     // Draw OGA creature sprite (8-dir, animated walk cycle)
     function drawOGACreature(monsterType, dirIdx, time, dx, dy, dw, dh) {
@@ -1502,38 +1528,45 @@
         return bestIdx;
     }
 
-    // Resolve which hi-res sprite key to use based on player equipment
-    function getHiResSpriteKey(player) {
-        const prefix = 'hero'; // TODO: gender
-        const weapon = player.equipment ? player.equipment.weapon : null;
-        const armor = player.equipment ? player.equipment.body : null;
-        // Prioritize weapon visual
-        if (weapon && weapon.typeKey) {
-            const wMap = HIRES_WEAPON_MAP[weapon.typeKey];
-            if (wMap) {
-                const isElite = weapon.rarityKey === 'legendary' || weapon.rarityKey === 'unique';
-                const variant = isElite ? wMap.elite : wMap.base;
-                const key = `${prefix}_${variant}`;
-                if (HIRES_SPRITES[key]) return key;
-            }
-        }
-        // Fall back to armor visual
-        if (armor && armor.rarityKey) {
-            const variant = HIRES_ARMOR_MAP[armor.rarityKey] || 'clothes';
-            const key = `${prefix}_${variant}`;
-            if (HIRES_SPRITES[key]) return key;
-        }
-        // Default: clothes
-        const defKey = `${prefix}_clothes`;
-        return HIRES_SPRITES[defKey] ? defKey : null;
+    // Resolve which hi-res sprite class prefix to use
+    function getHiResClassKey(player) {
+        const cls = player.classKey || 'warrior';
+        return HIRES_CLASS_MAP[cls] || 'warrior';
     }
 
-    // Draw hi-res sprite with direction
-    function drawHiResSpr(spriteKey, dirIdx, dx, dy, dw, dh) {
-        const img = HIRES_SPRITES[spriteKey];
-        if (!img) return false;
-        const sx = dirIdx * HIRES_SP;
-        ctx.drawImage(img, sx, 0, HIRES_SP, HIRES_SP, dx, dy, dw, dh);
+    // Determine current animation state
+    function getHiResAnimState(player) {
+        if (player.attacking) {
+            const cls = HIRES_CLASS_MAP[player.classKey] || 'warrior';
+            if (cls === 'mage') return 'cast';
+            if (cls === 'rogue') return 'shoot';
+            return 'swing';
+        }
+        if (player.moving) return 'run';
+        return 'stance';
+    }
+
+    // Draw hi-res animated sprite (grid format: rows=directions, cols=frames)
+    function drawHiResSpr(classKey, animName, dirIdx, time, dx, dy, dw, dh) {
+        const sheetKey = `hero_${classKey}_${animName}`;
+        const img = HIRES_SPRITES[sheetKey];
+        if (!img) {
+            // Fallback to base class
+            const fallbackKey = `hero_base_${animName}`;
+            const fallbackImg = HIRES_SPRITES[fallbackKey];
+            if (!fallbackImg) return false;
+            const cfg = HIRES_ANIM_CONFIG[animName] || { frames: 4, fps: 8 };
+            const frameIdx = Math.floor((time * cfg.fps) % cfg.frames);
+            const sx = frameIdx * HIRES_SP;
+            const sy = dirIdx * HIRES_SP;
+            ctx.drawImage(fallbackImg, sx, sy, HIRES_SP, HIRES_SP, dx, dy, dw, dh);
+            return true;
+        }
+        const cfg = HIRES_ANIM_CONFIG[animName] || { frames: 4, fps: 8 };
+        const frameIdx = Math.floor((time * cfg.fps) % cfg.frames);
+        const sx = frameIdx * HIRES_SP;
+        const sy = dirIdx * HIRES_SP;
+        ctx.drawImage(img, sx, sy, HIRES_SP, HIRES_SP, dx, dy, dw, dh);
         return true;
     }
 
@@ -6686,16 +6719,7 @@
                 ctx.restore();
             }
 
-            // Shadow (scaled radial gradient)
-            const pShadowRx = TILE * PLAYER_DRAW_SCALE * 0.25;
-            const pShadowG = ctx.createRadialGradient(sx, sy + 16, 0, sx, sy + 16, pShadowRx);
-            pShadowG.addColorStop(0, 'rgba(0,0,0,0.5)');
-            pShadowG.addColorStop(0.6, 'rgba(0,0,0,0.2)');
-            pShadowG.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = pShadowG;
-            ctx.beginPath();
-            ctx.ellipse(sx, sy + 16, pShadowRx, 6, 0, 0, Math.PI * 2);
-            ctx.fill();
+            // Shadow is drawn inside _drawGenericSprite (with walk sway)
 
             // Walking animation phase
             const walkPhase = this.moving ? Math.sin(G.time * 10) * 2 : 0;
@@ -6760,31 +6784,24 @@
             const drawSize = TILE * S;
             const flipX = this.targetX < this.x - 2;
 
-            // --- Procedural animation transforms ---
+            // Minimal procedural transforms (real animation is in sprite frames now)
             let bounce = 0, tilt = 0, scaleX = 1, scaleY = 1;
-            if (this.moving) {
-                const walkT = G.time * 8;
-                bounce = Math.abs(Math.sin(walkT)) * 5;
-                tilt = Math.sin(walkT) * 0.06;
-                const landPhase = Math.abs(Math.sin(walkT));
-                scaleX = 1 + (1 - landPhase) * 0.03;
-                scaleY = 1 - (1 - landPhase) * 0.03;
-            } else if (!this.attacking) {
+            if (!this.moving && !this.attacking) {
+                // Subtle idle breathing
                 bounce = Math.sin(G.time * 2) * 1.5;
-                scaleY = 1 + Math.sin(G.time * 2) * 0.015;
-                scaleX = 1 - Math.sin(G.time * 2) * 0.01;
+                scaleY = 1 + Math.sin(G.time * 2) * 0.01;
             }
             if (this.attacking) {
-                const atkP = this.attackTimer * Math.PI * 6;
-                tilt = Math.sin(atkP) * 0.25;
-                bounce = Math.sin(atkP * 0.5) * -3;
+                const atkP = this.attackTimer * Math.PI * 4;
+                tilt = Math.sin(atkP) * 0.15;
+                bounce = Math.sin(atkP * 0.5) * -2;
             }
 
-            // Drop shadow (radial gradient)
-            const shadowRx = drawSize * 0.28 * scaleX, shadowRy = 5;
+            // Drop shadow
+            const shadowRx = drawSize * 0.28, shadowRy = 5;
             const shG = ctx.createRadialGradient(sx, sy + TILE/2, 0, sx, sy + TILE/2, shadowRx);
-            shG.addColorStop(0, 'rgba(0,0,0,0.45)');
-            shG.addColorStop(0.6, 'rgba(0,0,0,0.2)');
+            shG.addColorStop(0, 'rgba(0,0,0,0.4)');
+            shG.addColorStop(0.6, 'rgba(0,0,0,0.15)');
             shG.addColorStop(1, 'rgba(0,0,0,0)');
             ctx.fillStyle = shG;
             ctx.beginPath();
@@ -6796,15 +6813,17 @@
             if (tilt) ctx.rotate(tilt);
             ctx.scale(scaleX, scaleY);
 
-            // Try hi-res 8-directional sprite first
-            const hiresKey = hiresSpritesLoaded ? getHiResSpriteKey(this) : null;
-            if (hiresKey) {
+            // Try hi-res animated sprite first
+            if (hiresSpritesLoaded) {
+                const classKey = getHiResClassKey(this);
+                const animName = getHiResAnimState(this);
                 const mdx = this.targetX - this.x;
                 const mdy = this.targetY - this.y;
                 const dirIdx = (this.moving || this.attacking) ? getFacingDir8(mdx, mdy) : (this._lastDirIdx || 0);
                 if (this.moving || this.attacking) this._lastDirIdx = dirIdx;
                 const hiDrawSize = drawSize * 1.1;
-                if (!drawHiResSpr(hiresKey, dirIdx, -hiDrawSize/2, -hiDrawSize + TILE/2, hiDrawSize, hiDrawSize)) {
+                if (!drawHiResSpr(classKey, animName, dirIdx, G.time, -hiDrawSize/2, -hiDrawSize + TILE/2, hiDrawSize, hiDrawSize)) {
+                    // Fallback: pixel art sprite
                     if (!drawSpr(spriteKey, -drawSize/2, -drawSize + TILE/2, drawSize, drawSize, flipX)) {
                         ctx.fillStyle = '#888'; ctx.fillRect(-drawSize/4, -drawSize/4, drawSize/2, drawSize/2);
                     }
@@ -14239,7 +14258,14 @@
                 if (npc.sprite && ATLAS[npc.sprite]) {
                     // Idle bob animation
                     const bob = Math.sin(G.time * 1.5 + npc.x * 0.1) * 1.5;
-                    drawSpr(npc.sprite, nx - npcSprSize/2, ny - npcSprSize + 4 + bob, npcSprSize, npcSprSize, false, true);
+                    if (!drawSpr(npc.sprite, nx - npcSprSize/2, ny - npcSprSize + 4 + bob, npcSprSize, npcSprSize, false, true)) {
+                        // Sprite image not loaded — draw fallback diamond
+                        ctx.fillStyle = '#aaaaaa';
+                        ctx.beginPath();
+                        ctx.moveTo(nx, ny - 20); ctx.lineTo(nx + 10, ny - 8);
+                        ctx.lineTo(nx, ny + 4); ctx.lineTo(nx - 10, ny - 8);
+                        ctx.closePath(); ctx.fill();
+                    }
                 } else if (npc.type === 'waypoint') {
                     // Waypoint: Canvas-drawn portal icon
                     _drawWaypointIcon(ctx, nx, ny - 8, 28);
