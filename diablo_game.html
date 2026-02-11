@@ -12466,161 +12466,127 @@
     function drawLighting() {
         if (typeof dungeon.reveal === 'function') dungeon.reveal(player.x, player.y, 300);
         const px = player.x - G.camX, py = player.y - G.camY;
-        // Dynamic torch flicker
-        const flicker = Math.sin(G.time * 4.7) * 10 + Math.sin(G.time * 7.3) * 5 + Math.sin(G.time * 13.1) * 3;
+        // Dynamic torch flicker (D2-style subtle wobble)
+        const flicker = Math.sin(G.time * 4.7) * 8 + Math.sin(G.time * 7.3) * 4;
 
-        // lightR at function scope so torch code below can reference it
-        const lightR = G.inTown ? 600 + flicker : 280 + flicker;
-
-        // Town: brighter lighting
+        // Town: gentle ambient darkness
         if (G.inTown) {
-            const lg = ctx.createRadialGradient(px, py, lightR * 0.3, px, py, lightR);
+            const lightR = 700 + flicker;
+            const lg = ctx.createRadialGradient(px, py, lightR * 0.4, px, py, lightR);
             lg.addColorStop(0, 'rgba(0,0,5,0)');
-            lg.addColorStop(0.5, 'rgba(0,0,5,0.05)');
-            lg.addColorStop(0.8, 'rgba(0,0,5,0.2)');
-            lg.addColorStop(1, 'rgba(0,0,5,0.4)');
+            lg.addColorStop(0.6, 'rgba(0,0,5,0.08)');
+            lg.addColorStop(1, 'rgba(0,0,5,0.25)');
             ctx.fillStyle = lg;
             ctx.fillRect(0, 0, W, H);
-        } else {
-            // Get theme-specific darkness tint (20% darker)
-            const actDef = getCurrentActDef();
-            const coldTint = actDef.lightTint.cold || 'rgba(0,0,5,';
-            const lg = ctx.createRadialGradient(px, py, lightR * 0.15, px, py, lightR);
-            lg.addColorStop(0, coldTint + '0)');
-            lg.addColorStop(0.2, coldTint + '0.15)');
-            lg.addColorStop(0.45, coldTint + '0.5)');
-            lg.addColorStop(0.65, coldTint + '0.8)');
-            lg.addColorStop(1, coldTint + '0.98)');
-            ctx.fillStyle = lg;
-            ctx.fillRect(0, 0, W, H);
+            return;
         }
 
-        if (G.inTown) return; // Town doesn't need torch lighting
+        // ============================================================
+        //  D2-STYLE DUNGEON LIGHTING
+        //  Key: near-total darkness + sharp player light circle +
+        //       warm torch pools. The darkness IS the atmosphere.
+        // ============================================================
 
-        // === MULTI-SOURCE TORCH LIGHTING ===
-        // Collect nearby torches (screen visible + player proximity)
-        const torchMaxDist = 600;
+        // Player light radius: ~9 tiles visible around player
+        const lightR = 360 + flicker;
+
+        // STEP 1: Fill screen with near-total darkness
+        ctx.fillStyle = 'rgba(0,0,2,0.96)';
+        ctx.fillRect(0, 0, W, H);
+
+        // STEP 2: Punch player light hole (destination-out)
+        // Sharp falloff: bright center → quick drop to black
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-out';
+        const plg = ctx.createRadialGradient(px, py, 0, px, py, lightR);
+        plg.addColorStop(0, 'rgba(0,0,0,1)');       // fully clear
+        plg.addColorStop(0.45, 'rgba(0,0,0,0.92)'); // still mostly clear
+        plg.addColorStop(0.7, 'rgba(0,0,0,0.5)');   // half-dark
+        plg.addColorStop(0.88, 'rgba(0,0,0,0.12)'); // almost black
+        plg.addColorStop(1, 'rgba(0,0,0,0)');        // fully dark
+        ctx.fillStyle = plg;
+        ctx.fillRect(px - lightR, py - lightR, lightR * 2, lightR * 2);
+
+        // STEP 3: Punch torch light holes
+        const torchMaxDist = 800;
         const visibleTorches = [];
         for (const t of dungeon.torchPositions) {
             const dx = t.wx - player.x, dy = t.wy - player.y;
             const d = Math.sqrt(dx*dx + dy*dy);
             if (d > torchMaxDist) continue;
             const screenX = t.wx - G.camX, screenY = t.wy - G.camY;
-            if (screenX < -120 || screenX > W + 120 || screenY < -120 || screenY > H + 120) continue;
+            if (screenX < -160 || screenX > W + 160 || screenY < -160 || screenY > H + 160) continue;
             visibleTorches.push({ sx: screenX, sy: screenY, d, seed: t.seed });
-            if (visibleTorches.length >= 20) break;
+            if (visibleTorches.length >= 24) break;
         }
 
-        // Pre-rendered torch gradient caches (created once, reused every frame)
-        if (!G._torchHoleCache) {
-            const sz = 128;
-            // Phase 1 cache: darkness hole
+        // Pre-rendered torch gradient caches (created once)
+        if (!G._torchHoleCacheV2) {
+            const sz = 128, r = sz / 2;
+            // Darkness hole: strong punch-through
             const c1 = document.createElement('canvas'); c1.width = sz; c1.height = sz;
-            const x1 = c1.getContext('2d'); const r1 = sz / 2;
-            const g1 = x1.createRadialGradient(r1, r1, 0, r1, r1, r1);
-            g1.addColorStop(0, 'rgba(0,0,0,0.55)');
-            g1.addColorStop(0.4, 'rgba(0,0,0,0.3)');
-            g1.addColorStop(0.7, 'rgba(0,0,0,0.1)');
+            const x1 = c1.getContext('2d');
+            const g1 = x1.createRadialGradient(r, r, 0, r, r, r);
+            g1.addColorStop(0, 'rgba(0,0,0,0.85)');
+            g1.addColorStop(0.3, 'rgba(0,0,0,0.6)');
+            g1.addColorStop(0.6, 'rgba(0,0,0,0.25)');
             g1.addColorStop(1, 'rgba(0,0,0,0)');
             x1.fillStyle = g1; x1.fillRect(0, 0, sz, sz);
-            G._torchHoleCache = c1;
-            // Phase 2 cache: warm color
+            G._torchHoleCacheV2 = c1;
+            // Warm glow: strong amber
             const c2 = document.createElement('canvas'); c2.width = sz; c2.height = sz;
-            const x2 = c2.getContext('2d'); const r2 = sz / 2;
-            const g2 = x2.createRadialGradient(r2, r2, 0, r2, r2, r2);
-            g2.addColorStop(0, 'rgba(255,160,64,0.12)');
-            g2.addColorStop(0.3, 'rgba(255,96,16,0.06)');
-            g2.addColorStop(0.7, 'rgba(255,80,10,0.02)');
-            g2.addColorStop(1, 'rgba(255,80,10,0)');
+            const x2 = c2.getContext('2d');
+            const g2 = x2.createRadialGradient(r, r, 0, r, r, r);
+            g2.addColorStop(0, 'rgba(255,150,50,0.20)');
+            g2.addColorStop(0.3, 'rgba(255,100,20,0.10)');
+            g2.addColorStop(0.6, 'rgba(255,80,10,0.03)');
+            g2.addColorStop(1, 'rgba(255,60,5,0)');
             x2.fillStyle = g2; x2.fillRect(0, 0, sz, sz);
-            G._torchWarmCache = c2;
+            G._torchWarmCacheV2 = c2;
         }
 
-        // Phase 1: Punch holes in darkness (destination-out) - using cached gradient
-        ctx.save();
-        ctx.globalCompositeOperation = 'destination-out';
         for (const torch of visibleTorches) {
-            const tFlicker = Math.sin(G.time * 8.3 + torch.seed) * 6 + Math.sin(G.time * 13.7 + torch.seed * 2) * 3;
-            const tRadius = 70 + tFlicker;
+            const tFlicker = Math.sin(G.time * 8.3 + torch.seed) * 8 + Math.sin(G.time * 13.7 + torch.seed * 2) * 4;
+            const tRadius = 110 + tFlicker; // larger light pools
             const fade = clamp(1 - torch.d / torchMaxDist, 0, 1);
             ctx.globalAlpha = fade;
             const drawSz = tRadius * 2;
-            ctx.drawImage(G._torchHoleCache, torch.sx - tRadius, torch.sy - tRadius, drawSz, drawSz);
+            ctx.drawImage(G._torchHoleCacheV2, torch.sx - tRadius, torch.sy - tRadius, drawSz, drawSz);
         }
         ctx.globalAlpha = 1;
         ctx.restore();
 
-        // Phase 2: Add warm torch color (lighter blend) - using cached gradient
+        // STEP 4: Warm amber player glow (D2 signature golden light)
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
-        for (const torch of visibleTorches) {
-            const tFlicker = Math.sin(G.time * 6.1 + torch.seed * 1.3) * 4 + Math.sin(G.time * 11.2 + torch.seed) * 2;
-            const tRadius = 65 + tFlicker;
-            const fade = clamp(1 - torch.d / torchMaxDist, 0, 1);
-            ctx.globalAlpha = fade;
-            const drawSz = tRadius * 2;
-            ctx.drawImage(G._torchWarmCache, torch.sx - tRadius, torch.sy - tRadius, drawSz, drawSz);
-        }
-        ctx.globalAlpha = 1;
-        ctx.restore();
-
-        // Player warm torch tint - amber/orange Diablo glow
-        const warmG = ctx.createRadialGradient(px, py, 0, px, py, lightR * 0.55);
-        warmG.addColorStop(0, 'rgba(255,160,60,0.18)');
-        warmG.addColorStop(0.3, 'rgba(255,130,40,0.10)');
-        warmG.addColorStop(0.7, 'rgba(255,100,20,0.04)');
+        const warmR = lightR * 0.55;
+        const warmG = ctx.createRadialGradient(px, py, 0, px, py, warmR);
+        warmG.addColorStop(0, 'rgba(255,170,70,0.22)');
+        warmG.addColorStop(0.25, 'rgba(255,140,40,0.12)');
+        warmG.addColorStop(0.6, 'rgba(255,100,20,0.04)');
         warmG.addColorStop(1, 'rgba(255,80,10,0)');
         ctx.fillStyle = warmG;
-        ctx.beginPath();
-        ctx.arc(px, py, lightR * 0.55, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillRect(px - warmR, py - warmR, warmR * 2, warmR * 2);
 
-        // Torch warm color bleeding (multiply compositing on nearby walls/floor) - cached gradient
-        if (!G._torchMultCache) {
-            const sz = 128, r = sz / 2;
-            const c3 = document.createElement('canvas'); c3.width = sz; c3.height = sz;
-            const x3 = c3.getContext('2d');
-            const g3 = x3.createRadialGradient(r, r, 0, r, r, r);
-            g3.addColorStop(0, 'rgba(255,200,140,0.85)');
-            g3.addColorStop(0.5, 'rgba(255,180,120,0.92)');
-            g3.addColorStop(1, 'rgba(255,255,255,1)');
-            x3.fillStyle = g3; x3.fillRect(0, 0, sz, sz);
-            G._torchMultCache = c3;
-        }
-        ctx.save();
-        ctx.globalCompositeOperation = 'multiply';
+        // STEP 5: Warm torch glow color
         for (const torch of visibleTorches) {
+            const tFlicker = Math.sin(G.time * 6.1 + torch.seed * 1.3) * 5;
+            const tRadius = 100 + tFlicker;
             const fade = clamp(1 - torch.d / torchMaxDist, 0, 1);
-            const tFlicker = Math.sin(G.time * 5.5 + torch.seed) * 4;
-            const tRadius = 80 + tFlicker;
             ctx.globalAlpha = fade;
             const drawSz = tRadius * 2;
-            ctx.drawImage(G._torchMultCache, torch.sx - tRadius, torch.sy - tRadius, drawSz, drawSz);
+            ctx.drawImage(G._torchWarmCacheV2, torch.sx - tRadius, torch.sy - tRadius, drawSz, drawSz);
         }
         ctx.globalAlpha = 1;
         ctx.restore();
 
-        // Color grading - warm amber tint (Diablo signature look) - stronger
-        ctx.globalAlpha = 0.12;
-        ctx.fillStyle = '#442200';
-        ctx.fillRect(0, 0, W, H);
-        ctx.globalAlpha = 1;
-
-        // Cold blue shadow tint (D2 characteristic) - stronger
+        // STEP 6: Subtle warm color grade (D2 amber tone — no cold blue)
         ctx.globalAlpha = 0.06;
-        ctx.fillStyle = '#0a0020';
+        ctx.fillStyle = '#331800';
         ctx.fillRect(0, 0, W, H);
         ctx.globalAlpha = 1;
 
-        // Screen vignette - darker, tighter cinematic
-        const vigSize = Math.max(W, H) * 0.6;
-        const vig = ctx.createRadialGradient(W / 2, H / 2, vigSize * 0.2, W / 2, H / 2, vigSize);
-        vig.addColorStop(0, 'rgba(0,0,0,0)');
-        vig.addColorStop(0.4, 'rgba(0,0,0,0.3)');
-        vig.addColorStop(0.7, 'rgba(0,0,0,0.6)');
-        vig.addColorStop(1, 'rgba(0,0,0,0.85)');
-        ctx.fillStyle = vig;
-        ctx.fillRect(0, 0, W, H);
+        // NO aggressive vignette — the darkness system IS the atmosphere
 
         // Damage flash - stronger red vignette + white flash peak when hit
         if (G.dmgFlashT > 0) {
