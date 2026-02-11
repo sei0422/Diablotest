@@ -3028,6 +3028,79 @@
             tc.fillRect(2, TILE - 3, TILE - 4, 1);
             tc.fillRect(TILE - 3, 2, 1, TILE - 4);
 
+            // ACT-specific surface treatment (before noise)
+            if (theme === 'cathedral') {
+                // Stone joint cross-pattern: subtle grid lines
+                tc.strokeStyle = 'rgba(0,0,0,0.15)';
+                tc.lineWidth = 0.5;
+                if (v % 3 === 0) { tc.beginPath(); tc.moveTo(TILE/2, 2); tc.lineTo(TILE/2, TILE-2); tc.stroke(); }
+                if (v % 3 === 1) { tc.beginPath(); tc.moveTo(2, TILE/2); tc.lineTo(TILE-2, TILE/2); tc.stroke(); }
+                // Occasional worn cross etching
+                if (v === 4 || v === 7) {
+                    tc.strokeStyle = 'rgba(180,160,120,0.04)';
+                    tc.lineWidth = 1;
+                    tc.beginPath(); tc.moveTo(TILE/2, 8); tc.lineTo(TILE/2, TILE-8); tc.moveTo(12, TILE*0.38); tc.lineTo(TILE-12, TILE*0.38); tc.stroke();
+                }
+            } else if (theme === 'desert') {
+                // Wind-worn grooves: horizontal scratchy lines
+                tc.strokeStyle = 'rgba(80,60,30,0.12)';
+                tc.lineWidth = 0.3;
+                for (let i = 0; i < 3; i++) {
+                    const ly = 6 + i * 12 + (v * 3 + i * 5) % 7;
+                    tc.beginPath(); tc.moveTo(2, ly); tc.quadraticCurveTo(TILE/2, ly + (i%2?2:-2), TILE-2, ly + 1); tc.stroke();
+                }
+                // Sandy accretion patches
+                tc.fillStyle = `rgba(${50+v*2},${42+v*2},${28+v},0.1)`;
+                tc.beginPath(); tc.ellipse(10+(v*7)%20, 10+(v*11)%20, 6, 4, v*0.5, 0, Math.PI*2); tc.fill();
+            } else if (theme === 'jungle') {
+                // Moss patches
+                tc.fillStyle = `rgba(30,${60+v*5},20,0.08)`;
+                if (v < 4) { tc.beginPath(); tc.ellipse(8+v*7, 12+v*5, 5+v, 3+v, v*0.4, 0, Math.PI*2); tc.fill(); }
+                // Organic stain: irregular dark spots
+                tc.fillStyle = 'rgba(10,20,8,0.06)';
+                for (let i = 0; i < 2; i++) {
+                    tc.beginPath(); tc.arc(8+(v*11+i*17)%28, 8+(v*7+i*13)%28, 2+i, 0, Math.PI*2); tc.fill();
+                }
+                // Thin root lines
+                if (v >= 5) {
+                    tc.strokeStyle = 'rgba(40,30,15,0.12)'; tc.lineWidth = 0.5;
+                    tc.beginPath(); tc.moveTo(0, 10+v*3); tc.quadraticCurveTo(20, 20+v*2, TILE, 15+v*4); tc.stroke();
+                }
+            } else if (theme === 'hell') {
+                // Lava hairline cracks with warm glow
+                if (v % 2 === 0) {
+                    tc.strokeStyle = `rgba(255,${60+v*10},0,0.08)`;
+                    tc.lineWidth = 0.8;
+                    tc.beginPath(); tc.moveTo(5+v*3, 2); tc.lineTo(15+v*2, TILE/2); tc.lineTo(8+v*4, TILE-3); tc.stroke();
+                    // Glow around crack
+                    tc.strokeStyle = `rgba(200,${40+v*8},0,0.04)`;
+                    tc.lineWidth = 3;
+                    tc.beginPath(); tc.moveTo(5+v*3, 2); tc.lineTo(15+v*2, TILE/2); tc.lineTo(8+v*4, TILE-3); tc.stroke();
+                }
+                // Charred texture: darker random spots
+                tc.fillStyle = 'rgba(0,0,0,0.08)';
+                for (let i = 0; i < 3; i++) {
+                    tc.beginPath(); tc.arc((v*13+i*11)%36+2, (v*7+i*17)%36+2, 1.5, 0, Math.PI*2); tc.fill();
+                }
+            } else if (theme === 'ice') {
+                // Frost crystal veins
+                tc.strokeStyle = `rgba(150,180,220,0.06)`;
+                tc.lineWidth = 0.5;
+                const cx = TILE/2 + (v*7-15)%10, cy = TILE/2 + (v*3-10)%10;
+                for (let i = 0; i < 3; i++) {
+                    const a = (v * 1.2 + i * 2.1);
+                    tc.beginPath(); tc.moveTo(cx, cy); tc.lineTo(cx + Math.cos(a)*16, cy + Math.sin(a)*16); tc.stroke();
+                }
+                // Bluish sheen patch
+                tc.fillStyle = `rgba(120,160,200,0.04)`;
+                tc.beginPath(); tc.ellipse(TILE/2, TILE/2, 12, 8, v*0.3, 0, Math.PI*2); tc.fill();
+                // Frost specks
+                tc.fillStyle = 'rgba(200,220,255,0.06)';
+                for (let i = 0; i < 2; i++) {
+                    tc.beginPath(); tc.arc((v*11+i*19)%34+3, (v*13+i*7)%34+3, 1, 0, Math.PI*2); tc.fill();
+                }
+            }
+
             // Add stone grain noise (stronger)
             addNoise(tc, TILE, TILE, 18, 1, 0.85, 0.7);
 
@@ -3146,6 +3219,25 @@
         wc.fillStyle = 'rgba(255,240,200,0.03)';
         wc.fillRect(0, 2, TILE, 1);
 
+        // ACT-specific wall accents
+        if (theme === 'jungle') {
+            // Moss creep on bottom
+            wc.fillStyle = 'rgba(30,60,20,0.12)';
+            wc.fillRect(0, TILE - 6, TILE, 6);
+        } else if (theme === 'hell') {
+            // Warm glow seam at mortar lines
+            wc.fillStyle = 'rgba(200,60,0,0.06)';
+            wc.fillRect(0, thirdH - 1, TILE, 3);
+            wc.fillRect(0, thirdH * 2 - 1, TILE, 3);
+        } else if (theme === 'ice') {
+            // Frost rime on top edge
+            wc.fillStyle = 'rgba(180,210,240,0.08)';
+            wc.fillRect(0, 0, TILE, 4);
+        } else if (theme === 'desert') {
+            // Sand dust accumulation at bottom
+            wc.fillStyle = 'rgba(80,65,40,0.1)';
+            wc.fillRect(0, TILE - 4, TILE, 4);
+        }
         // Stone grain
         addNoise(wc, TILE, TILE, 12, 1, 0.85, 0.65);
 
@@ -3628,7 +3720,7 @@
                         }
 
                         // Bone fragment
-                        if ((x * 23 + y * 11) % 67 < 2) {
+                        if ((x * 23 + y * 11) % 67 < 4) {
                             ctx.fillStyle = 'rgba(160,150,120,0.12)';
                             ctx.save();
                             ctx.translate(sx + 18, sy + 24);
@@ -3639,7 +3731,7 @@
                         }
 
                         // Pebble
-                        if ((x * 19 + y * 29) % 41 < 3) {
+                        if ((x * 19 + y * 29) % 41 < 5) {
                             ctx.fillStyle = 'rgba(50,45,38,0.5)';
                             ctx.beginPath();
                             ctx.arc(sx + ((x * 7) % 30) + 5, sy + ((y * 11) % 30) + 5, 1.5, 0, Math.PI * 2);
@@ -3661,7 +3753,7 @@
                         }
 
                         // Floor crack
-                        if ((x * 41 + y * 23) % 73 === 0) {
+                        if ((x * 41 + y * 23) % 73 < 3) {
                             ctx.strokeStyle = 'rgba(0,0,0,0.2)';
                             ctx.lineWidth = 0.5;
                             ctx.beginPath();
@@ -3672,7 +3764,7 @@
                         }
 
                         // Scorch mark
-                        if ((x * 47 + y * 31) % 97 === 0) {
+                        if ((x * 47 + y * 31) % 97 < 3) {
                             ctx.fillStyle = 'rgba(10,8,5,0.12)';
                             ctx.beginPath();
                             ctx.ellipse(sx + TILE/2, sy + TILE/2, 8, 6, (x * 2 + y) * 0.5, 0, Math.PI * 2);
@@ -3680,7 +3772,7 @@
                         }
 
                         // Dust pile
-                        if ((x * 29 + y * 43) % 83 === 0) {
+                        if ((x * 29 + y * 43) % 83 < 3) {
                             ctx.fillStyle = 'rgba(40,35,28,0.15)';
                             ctx.beginPath();
                             ctx.ellipse(sx + 12 + (x % 10), sy + 25 + (y % 8), 5, 2.5, 0, 0, Math.PI * 2);
@@ -3688,7 +3780,7 @@
                         }
 
                         // Skull
-                        if ((x * 53 + y * 37) % 127 === 0) {
+                        if ((x * 53 + y * 37) % 127 < 3) {
                             ctx.fillStyle = 'rgba(140,130,110,0.1)';
                             ctx.beginPath();
                             ctx.arc(sx + 20, sy + 22, 3.5, 0, Math.PI * 2);
@@ -3697,8 +3789,199 @@
                             ctx.fillRect(sx + 18, sy + 25, 4, 3);
                         }
 
+                        // === ACT-SPECIFIC DECORATIONS ===
+                        const actTheme = getCurrentActDef().tileTheme;
+                        if (actTheme === 'cathedral') {
+                            // Candle wax drip marks
+                            if ((x * 61 + y * 47) % 43 === 0) {
+                                ctx.fillStyle = 'rgba(180,160,100,0.08)';
+                                ctx.beginPath();
+                                ctx.ellipse(sx + 15 + (x*3)%12, sy + 10 + (y*5)%18, 3, 5, 0, 0, Math.PI * 2);
+                                ctx.fill();
+                                ctx.fillStyle = 'rgba(200,180,120,0.12)';
+                                ctx.beginPath();
+                                ctx.arc(sx + 15 + (x*3)%12, sy + 8 + (y*5)%18, 1.5, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                            // Broken stone fragment
+                            if ((x * 31 + y * 59) % 61 < 2) {
+                                ctx.fillStyle = 'rgba(40,35,28,0.18)';
+                                ctx.save();
+                                ctx.translate(sx + 25 + (x%8), sy + 20 + (y%10));
+                                ctx.rotate((x*5+y*3)*0.4);
+                                ctx.fillRect(-4, -2, 8, 4);
+                                ctx.fillRect(-2, -4, 5, 3);
+                                ctx.restore();
+                            }
+                            // Ritual circle fragment
+                            if ((x * 43 + y * 67) % 157 === 0) {
+                                ctx.strokeStyle = 'rgba(100,80,50,0.07)';
+                                ctx.lineWidth = 0.5;
+                                ctx.beginPath();
+                                ctx.arc(sx + TILE/2, sy + TILE/2, 14, 0.3, Math.PI * 1.7);
+                                ctx.stroke();
+                            }
+                        } else if (actTheme === 'desert') {
+                            // Sand drift patches (higher density)
+                            if ((x * 43 + y * 31) % 29 < 3) {
+                                const sdx = sx + (x*7)%28 + 4, sdy = sy + (y*11)%24 + 8;
+                                ctx.fillStyle = 'rgba(70,58,38,0.12)';
+                                ctx.beginPath();
+                                ctx.ellipse(sdx, sdy, 7, 3, (x+y)*0.3, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                            // Cracked earth lines
+                            if ((x * 67 + y * 41) % 47 === 0) {
+                                ctx.strokeStyle = 'rgba(30,22,12,0.2)';
+                                ctx.lineWidth = 0.5;
+                                ctx.beginPath();
+                                ctx.moveTo(sx + 5, sy + 12);
+                                ctx.lineTo(sx + 18, sy + 16);
+                                ctx.lineTo(sx + 15, sy + 28);
+                                ctx.moveTo(sx + 18, sy + 16);
+                                ctx.lineTo(sx + 32, sy + 20);
+                                ctx.stroke();
+                            }
+                            // Pottery shard
+                            if ((x * 37 + y * 53) % 83 === 0) {
+                                ctx.fillStyle = 'rgba(120,80,40,0.15)';
+                                ctx.save();
+                                ctx.translate(sx + 28, sy + 30);
+                                ctx.rotate((x*3+y)*0.6);
+                                ctx.beginPath();
+                                ctx.moveTo(0,-3); ctx.lineTo(4,0); ctx.lineTo(2,4); ctx.lineTo(-3,2); ctx.closePath();
+                                ctx.fill();
+                                ctx.restore();
+                            }
+                        } else if (actTheme === 'jungle') {
+                            // Vine tendrils from walls
+                            if ((x * 47 + y * 29) % 31 < 2 && this.get(x, y-1) === 0) {
+                                ctx.strokeStyle = 'rgba(40,80,25,0.18)';
+                                ctx.lineWidth = 1;
+                                ctx.beginPath();
+                                ctx.moveTo(sx + 10 + (x*7)%20, sy);
+                                ctx.quadraticCurveTo(sx + 15 + (x*3)%10, sy + 12, sx + 8 + (x*11)%22, sy + 22);
+                                ctx.stroke();
+                                // Leaf at tip
+                                ctx.fillStyle = 'rgba(50,90,30,0.15)';
+                                ctx.beginPath();
+                                ctx.ellipse(sx + 8 + (x*11)%22, sy + 22, 3, 1.5, (x+y)*0.5, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                            // Glowing mushroom
+                            if ((x * 59 + y * 43) % 67 === 0) {
+                                const mx = sx + 10 + (x*9)%20, my = sy + 20 + (y*7)%14;
+                                // Glow
+                                ctx.fillStyle = 'rgba(80,200,60,0.06)';
+                                ctx.beginPath(); ctx.arc(mx, my, 6, 0, Math.PI * 2); ctx.fill();
+                                // Mushroom cap
+                                ctx.fillStyle = 'rgba(60,140,40,0.2)';
+                                ctx.beginPath(); ctx.ellipse(mx, my - 1, 3, 2, 0, 0, Math.PI * 2); ctx.fill();
+                                // Stem
+                                ctx.fillStyle = 'rgba(80,100,60,0.15)';
+                                ctx.fillRect(mx - 0.5, my, 1, 3);
+                            }
+                            // Water puddle
+                            if ((x * 71 + y * 37) % 97 === 0) {
+                                ctx.fillStyle = 'rgba(30,60,50,0.1)';
+                                ctx.beginPath();
+                                ctx.ellipse(sx + TILE/2, sy + TILE/2 + 5, 9, 5, 0.2, 0, Math.PI * 2);
+                                ctx.fill();
+                                // Reflection sheen
+                                ctx.fillStyle = 'rgba(100,160,140,0.04)';
+                                ctx.beginPath();
+                                ctx.ellipse(sx + TILE/2 - 2, sy + TILE/2 + 3, 5, 2.5, 0.2, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                        } else if (actTheme === 'hell') {
+                            // Lava crack (glowing orange line)
+                            if ((x * 43 + y * 59) % 37 < 2) {
+                                // Outer glow
+                                ctx.strokeStyle = 'rgba(255,80,0,0.06)';
+                                ctx.lineWidth = 4;
+                                ctx.beginPath();
+                                ctx.moveTo(sx + (x*7)%15 + 5, sy + 2);
+                                ctx.lineTo(sx + 20 + (x*3)%10, sy + TILE/2);
+                                ctx.lineTo(sx + (y*11)%20 + 8, sy + TILE - 3);
+                                ctx.stroke();
+                                // Core line
+                                ctx.strokeStyle = 'rgba(255,140,20,0.15)';
+                                ctx.lineWidth = 1;
+                                ctx.beginPath();
+                                ctx.moveTo(sx + (x*7)%15 + 5, sy + 2);
+                                ctx.lineTo(sx + 20 + (x*3)%10, sy + TILE/2);
+                                ctx.lineTo(sx + (y*11)%20 + 8, sy + TILE - 3);
+                                ctx.stroke();
+                            }
+                            // Ember glow spots
+                            if ((x * 31 + y * 67) % 23 < 2) {
+                                const ex = sx + (x*13)%30 + 5, ey = sy + (y*17)%30 + 5;
+                                ctx.fillStyle = 'rgba(255,100,20,0.08)';
+                                ctx.beginPath(); ctx.arc(ex, ey, 4, 0, Math.PI * 2); ctx.fill();
+                                ctx.fillStyle = 'rgba(255,180,60,0.12)';
+                                ctx.beginPath(); ctx.arc(ex, ey, 1.5, 0, Math.PI * 2); ctx.fill();
+                            }
+                            // Demonic rune
+                            if ((x * 53 + y * 41) % 113 === 0) {
+                                ctx.strokeStyle = 'rgba(200,40,20,0.07)';
+                                ctx.lineWidth = 0.8;
+                                ctx.beginPath();
+                                const rcx = sx + TILE/2, rcy = sy + TILE/2;
+                                ctx.arc(rcx, rcy, 8, 0, Math.PI * 2); ctx.stroke();
+                                ctx.beginPath();
+                                for (let i = 0; i < 5; i++) {
+                                    const a = i * Math.PI * 2 / 5 - Math.PI/2;
+                                    const a2 = ((i+2)%5) * Math.PI * 2 / 5 - Math.PI/2;
+                                    ctx.moveTo(rcx + Math.cos(a)*8, rcy + Math.sin(a)*8);
+                                    ctx.lineTo(rcx + Math.cos(a2)*8, rcy + Math.sin(a2)*8);
+                                }
+                                ctx.stroke();
+                            }
+                        } else if (actTheme === 'ice') {
+                            // Frost formation
+                            if ((x * 61 + y * 37) % 41 < 2) {
+                                ctx.strokeStyle = 'rgba(160,200,240,0.08)';
+                                ctx.lineWidth = 0.5;
+                                const fcx = sx + 12 + (x*7)%18, fcy = sy + 12 + (y*11)%18;
+                                for (let i = 0; i < 4; i++) {
+                                    const a = i * Math.PI / 2 + (x+y) * 0.3;
+                                    ctx.beginPath();
+                                    ctx.moveTo(fcx, fcy);
+                                    ctx.lineTo(fcx + Math.cos(a)*10, fcy + Math.sin(a)*10);
+                                    // Side branches
+                                    const mx = fcx + Math.cos(a)*6, my = fcy + Math.sin(a)*6;
+                                    ctx.moveTo(mx, my);
+                                    ctx.lineTo(mx + Math.cos(a+0.8)*4, my + Math.sin(a+0.8)*4);
+                                    ctx.moveTo(mx, my);
+                                    ctx.lineTo(mx + Math.cos(a-0.8)*4, my + Math.sin(a-0.8)*4);
+                                    ctx.stroke();
+                                }
+                            }
+                            // Frozen puddle
+                            if ((x * 47 + y * 53) % 73 === 0) {
+                                ctx.fillStyle = 'rgba(100,140,180,0.07)';
+                                ctx.beginPath();
+                                ctx.ellipse(sx + TILE/2, sy + TILE/2, 10, 6, (x*3+y)*0.2, 0, Math.PI * 2);
+                                ctx.fill();
+                                // Ice sheen highlight
+                                ctx.fillStyle = 'rgba(180,210,240,0.05)';
+                                ctx.beginPath();
+                                ctx.ellipse(sx + TILE/2 - 3, sy + TILE/2 - 2, 5, 2.5, 0.3, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                            // Ice crystal speck
+                            if ((x * 37 + y * 29) % 31 < 2) {
+                                ctx.fillStyle = 'rgba(200,225,255,0.1)';
+                                ctx.beginPath();
+                                const icx = sx + (x*11)%32 + 4, icy = sy + (y*7)%32 + 4;
+                                // Diamond shape
+                                ctx.moveTo(icx, icy-2); ctx.lineTo(icx+1.5, icy); ctx.lineTo(icx, icy+2); ctx.lineTo(icx-1.5, icy);
+                                ctx.closePath(); ctx.fill();
+                            }
+                        }
+
                         // OGA Props decoration (256px cells, rows 0-6 valid)
-                        if (ogaLoaded && OGA.props_1x1 && (x * 59 + y * 41) % 151 === 0) {
+                        if (ogaLoaded && OGA.props_1x1 && (x * 59 + y * 41) % 151 < 4) {
                             const propCol = (x * 13 + y * 7) % 8;
                             const propRow = (x * 3 + y * 11) % 7; // rows 0-6 all valid
                             const propCellSz = (OGA.props_1x1.width / 8) | 0; // 256
@@ -14421,6 +14704,15 @@
                 const bob = Math.sin(G.time * 1.5 + npc.x * 0.1) * 1.5;
                 // 1) Hi-res FLARE sprite (same system as player)
                 if (npc.hiresClass && hiresSpritesLoaded) {
+                    // Deterministic direction from NPC id (variety instead of all facing south)
+                    const dirHash = npc.id.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
+                    const npcDir = dirHash % 8;
+                    // Animation per role: blacksmith hammers, quest/uber channels, others idle
+                    let npcAnim = 'stance';
+                    let npcTimeScale = 1.0;
+                    if (npc.type === 'blacksmith') { npcAnim = 'swing'; npcTimeScale = 0.35; }
+                    else if (npc.type === 'mercenary') { npcAnim = 'swing'; npcTimeScale = 0.25; }
+                    else if (npc.type === 'quest' || npc.type === 'uber_portal') { npcAnim = 'cast'; npcTimeScale = 0.3; }
                     // Drop shadow
                     const shadowRx = TILE * PLAYER_DRAW_SCALE * 0.28;
                     const shG = ctx.createRadialGradient(nx, ny + TILE/2, 0, nx, ny + TILE/2, shadowRx);
@@ -14431,9 +14723,9 @@
                     ctx.beginPath();
                     ctx.ellipse(nx, ny + TILE/2, shadowRx, 5, 0, 0, Math.PI * 2);
                     ctx.fill();
-                    // Draw hi-res stance sprite facing south (dirIdx=0)
+                    // Draw hi-res animated sprite
                     const hiDy = ny + bob + TILE/2 - npcHiSize * 0.75;
-                    if (drawHiResSpr(npc.hiresClass, 'stance', 0, G.time, nx - npcHiSize/2, hiDy, npcHiSize, npcHiSize)) {
+                    if (drawHiResSpr(npc.hiresClass, npcAnim, npcDir, G.time * npcTimeScale, nx - npcHiSize/2, hiDy, npcHiSize, npcHiSize)) {
                         npcDrawn = true;
                     }
                 }
