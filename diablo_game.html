@@ -1287,15 +1287,15 @@
         zombie: 'zombie', frost_zombie: 'zombie', ghoul: 'zombie',
         imp: 'goblin', goblin: 'goblin',
         lich: 'magician', magician: 'magician',
-        minotaur: 'ogre', ogre: 'ogre', sand_golem: 'ogre',
+        minotaur: 'minotaur', ogre: 'ogre', sand_golem: 'ogre',
         slime: 'slime', poison_spider: 'slime',
         werewolf: 'werewolf', hellhound: 'werewolf',
         banshee: 'elemental', wraith: 'elemental', ice_wraith: 'elemental',
         ghost: 'elemental', elemental: 'elemental',
-        deathKnight: 'skeleton', demon: 'werewolf',
+        deathKnight: 'skeleton', demon: 'demon',
         mummy: 'zombie', scarab: 'slime',
         treeant: 'ogre', jungle_shaman: 'magician',
-        demonlord: 'ogre',
+        demonlord: 'demon',
     };
     // Map skill elements to projectile sprite + sparks row
     // Game uses 'cold' internally but assets are named 'ice' - include both
@@ -1385,6 +1385,106 @@
             kenney_barrel: 'asset/opengameart/kenney_dungeon/Isometric/barrel_S.png',
             kenney_chestClosed: 'asset/opengameart/kenney_dungeon/Isometric/chestClosed_S.png',
             kenney_stairs: 'asset/opengameart/kenney_dungeon/Isometric/stairs_S.png',
+            // --- New Creature Sprites (Phase 1) ---
+            creature_demon: 'asset/opengameart/creatures/demon.png',
+            creature_minotaur: 'asset/opengameart/creatures/minotaur.png',
+            // --- Spell VFX (Phase 2) ---
+            spell_fire_green: 'asset/opengameart/spell_anims/fire_green.png',
+            spell_fire_purple: 'asset/opengameart/spell_anims/fire_purple.png',
+            spell_fire_yellow: 'asset/opengameart/spell_anims/fire_yellow.png',
+            spell_fireball_blue: 'asset/opengameart/spell_anims/fireball_blue.png',
+            spell_sphere_blue: 'asset/opengameart/spell_anims/sphere_blue.png',
+            spell_sphere_purple: 'asset/opengameart/spell_anims/sphere_purple.png',
+            spell_sphere_yellow: 'asset/opengameart/spell_anims/sphere_yellow.png',
+            spell_skull_smoke_green: 'asset/opengameart/spell_anims/skull_smoke_green.png',
+            spell_skull_smoke_purple: 'asset/opengameart/spell_anims/skull_smoke_purple.png',
+            spell_arrows_green: 'asset/opengameart/spell_anims/arrows_green.png',
+            spell_arrows_yellow: 'asset/opengameart/spell_anims/arrows_yellow.png',
+            vfx_impact_air: 'asset/opengameart/vfx/rpg_vfx_pack/16_frames/vfx_sequence_x16_air.png',
+            vfx_impact_water: 'asset/opengameart/vfx/rpg_vfx_pack/16_frames/vfx_sequence_x16_impact_water_1.png',
+            vfx_impact_divine: 'asset/opengameart/vfx/rpg_vfx_pack/16_frames/vfx_sequence_x16_impact_divine_1.png',
+            vfx_impact_chaos: 'asset/opengameart/vfx/rpg_vfx_pack/16_frames/vfx_sequence_x16_chaos.png',
+            vfx_swing: 'asset/opengameart/vfx/rpg_vfx_pack/8_frames/vfx_sequence_x8_swing_set_1.png',
+            vfx_impact_set2: 'asset/opengameart/vfx/rpg_vfx_pack/8_frames/vfx_sequence_x8_impact_set_2.png',
+            // --- Item Icons (Phase 3) ---
+            icon_berry: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Berry_02.png',
+            icon_berry2: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Berry_03.png',
+            icon_book2: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Book_03.png',
+            icon_cloak2: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Cloak_03.png',
+            icon_crystal2: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Crystal Ball_03.png',
+            icon_flower: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Flower Bunch_03.png',
+            icon_gems2: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Gems_03.png',
+            icon_case: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Metal Case_00.png',
+            icon_case2: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Metal Case_01.png',
+            icon_necklace2: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Necklace_03.png',
+            icon_ring2: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Ornament_03.png',
+            icon_parchment: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Parchment_02.png',
+            icon_rune2: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Ruin Stone_02.png',
+            icon_shirt2: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Shirt_01.png',
+            icon_wood2: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Wood_01.png',
+            // --- Props & Tiles (Phase 4) ---
+            props_2x2: 'asset/opengameart/props/props_2x2.png',
+            props_4x4: 'asset/opengameart/props/props_4x4.png',
+            pixel_dungeon: 'asset/opengameart/pixel_dungeon_tiles.png',
+            kenney_barrels: 'asset/opengameart/kenney_dungeon/Isometric/barrels_S.png',
+            kenney_barrelsStacked: 'asset/opengameart/kenney_dungeon/Isometric/barrelsStacked_S.png',
+            kenney_chair: 'asset/opengameart/kenney_dungeon/Isometric/chair_S.png',
+            kenney_tableRound: 'asset/opengameart/kenney_dungeon/Isometric/tableRound_S.png',
+            kenney_tableShort: 'asset/opengameart/kenney_dungeon/Isometric/tableShort_S.png',
+            kenney_tableChairsBroken: 'asset/opengameart/kenney_dungeon/Isometric/tableChairsBroken_S.png',
+            kenney_chestOpen: 'asset/opengameart/kenney_dungeon/Isometric/chestOpen_S.png',
+            kenney_woodenCrate: 'asset/opengameart/kenney_dungeon/Isometric/woodenCrate_S.png',
+            kenney_woodenCrates: 'asset/opengameart/kenney_dungeon/Isometric/woodenCrates_S.png',
+            kenney_woodenPile: 'asset/opengameart/kenney_dungeon/Isometric/woodenPile_S.png',
+            kenney_bridge: 'asset/opengameart/kenney_dungeon/Isometric/bridge_S.png',
+            kenney_bridgeBroken: 'asset/opengameart/kenney_dungeon/Isometric/bridgeBroken_S.png',
+            kenney_stoneWallDoor: 'asset/opengameart/kenney_dungeon/Isometric/stoneWallDoor_S.png',
+            kenney_stoneWallGate: 'asset/opengameart/kenney_dungeon/Isometric/stoneWallGate_S.png',
+            kenney_stoneWallColumnIn: 'asset/opengameart/kenney_dungeon/Isometric/stoneWallColumnIn_S.png',
+            kenney_stoneWallArchway: 'asset/opengameart/kenney_dungeon/Isometric/stoneWallArchway_S.png',
+            kenney_stoneWallHole: 'asset/opengameart/kenney_dungeon/Isometric/stoneWallHole_S.png',
+            kenney_stoneWallWindow: 'asset/opengameart/kenney_dungeon/Isometric/stoneWallWindow_S.png',
+            kenney_woodenSupports: 'asset/opengameart/kenney_dungeon/Isometric/woodenSupports_S.png',
+            kenney_stairsSpiral: 'asset/opengameart/kenney_dungeon/Isometric/stairsSpiral_S.png',
+            dt_npc1: 'asset/opengameart/dungeon_tileset/NPC/NPC1.png',
+            dt_npc2: 'asset/opengameart/dungeon_tileset/NPC/NPC2.png',
+            dt_npc3: 'asset/opengameart/dungeon_tileset/NPC/NPC3.png',
+            dt_npc4: 'asset/opengameart/dungeon_tileset/NPC/NPC4.png',
+            dt_npc5: 'asset/opengameart/dungeon_tileset/NPC/NPC5.png',
+            dt_char1: 'asset/opengameart/dungeon_tileset/NPC/Char1.png',
+            dt_chest_closed: 'asset/opengameart/dungeon_tileset/Tiles/chest1.png',
+            dt_chest_open1: 'asset/opengameart/dungeon_tileset/Tiles/chest1-open.png',
+            dt_chest_open2: 'asset/opengameart/dungeon_tileset/Tiles/chest1-open2.png',
+            dt_chest_open3: 'asset/opengameart/dungeon_tileset/Tiles/chest1-open3.png',
+            dt_crate1: 'asset/opengameart/dungeon_tileset/Tiles/crate1.png',
+            dt_crate2: 'asset/opengameart/dungeon_tileset/Tiles/crate2.png',
+            dt_crate3: 'asset/opengameart/dungeon_tileset/Tiles/crate3.png',
+            dt_icon_potion: 'asset/opengameart/dungeon_tileset/UI/Icon-potion.png',
+            dt_icon_mana: 'asset/opengameart/dungeon_tileset/UI/Icon-potionmana.png',
+            dt_icon_coin: 'asset/opengameart/dungeon_tileset/UI/Icon-coin.png',
+            dt_icon_sword: 'asset/opengameart/dungeon_tileset/UI/Icon-sword.png',
+            dt_icon_axe: 'asset/opengameart/dungeon_tileset/UI/Icon-axe.png',
+            dt_icon_gear: 'asset/opengameart/dungeon_tileset/UI/Icon-gear.png',
+            // --- Dark Fantasy UI (Phase 5) ---
+            ui_hpbar_a1: 'asset/opengameart/dark_fantasy_ui/Dark Fantasy UI Pack (CC-BY 4.0 - Of Far Different Nature)/OFDN UI Pack - Health Bar A1.png',
+            ui_hpbar_a2: 'asset/opengameart/dark_fantasy_ui/Dark Fantasy UI Pack (CC-BY 4.0 - Of Far Different Nature)/OFDN UI PACK - Health Bar A2.png',
+            ui_hpbar_b1: 'asset/opengameart/dark_fantasy_ui/Dark Fantasy UI Pack (CC-BY 4.0 - Of Far Different Nature)/OFDN UI Pack - Health Bar B1.png',
+            ui_hpbar_b2: 'asset/opengameart/dark_fantasy_ui/Dark Fantasy UI Pack (CC-BY 4.0 - Of Far Different Nature)/OFDN UI Pack - Health Bar B2.png',
+            ui_hpbar_c1: 'asset/opengameart/dark_fantasy_ui/Dark Fantasy UI Pack (CC-BY 4.0 - Of Far Different Nature)/OFDN UI Pack - Health Bar C1.png',
+            ui_hpbar_c2: 'asset/opengameart/dark_fantasy_ui/Dark Fantasy UI Pack (CC-BY 4.0 - Of Far Different Nature)/OFDN UI Pack - Health Bar C2.png',
+            ui_inventory_a: 'asset/opengameart/dark_fantasy_ui/Dark Fantasy UI Pack (CC-BY 4.0 - Of Far Different Nature)/OFDN UI Pack - Inventory A.png',
+            ui_inventory_b1: 'asset/opengameart/dark_fantasy_ui/Dark Fantasy UI Pack (CC-BY 4.0 - Of Far Different Nature)/OFDN UI Pack - Inventory B1.png',
+            ui_inventory_b2: 'asset/opengameart/dark_fantasy_ui/Dark Fantasy UI Pack (CC-BY 4.0 - Of Far Different Nature)/OFDN UI Pack - Inventory B2.png',
+            // --- NPC Creature Sprites (Phase 6) ---
+            creature_male_heavy: 'asset/opengameart/creatures/male_heavy.png',
+            creature_male_light: 'asset/opengameart/creatures/male_light.png',
+            creature_male_longbow: 'asset/opengameart/creatures/male_longbow.png',
+            creature_male_longsword: 'asset/opengameart/creatures/male_longsword.png',
+            creature_male_shield: 'asset/opengameart/creatures/male_shield.png',
+            creature_male_staff: 'asset/opengameart/creatures/male_staff.png',
+            creature_male_unarmored: 'asset/opengameart/creatures/male_unarmored.png',
+            // --- Zombie variant (Phase 7) ---
+            zombie_variant: 'asset/opengameart/zombie_0.png',
         };
         let loaded = 0;
         const total = Object.keys(assets).length;
@@ -1417,11 +1517,21 @@
 
     // Kenney Isometric Dungeon tile theme mapping per ACT
     const KENNEY_THEME_MAP = {
-        cathedral: { floors: ['kenney_stone', 'kenney_stoneTile', 'kenney_stoneUneven'], wall: 'kenney_stoneWall', tint: null },
-        desert: { floors: ['kenney_dirt', 'kenney_dirtTiles', 'kenney_stoneMissing'], wall: 'kenney_stoneWallAged', tint: [240, 210, 160] },
-        jungle: { floors: ['kenney_planks', 'kenney_planksBroken', 'kenney_planksHole'], wall: 'kenney_stoneWallBroken', tint: [180, 220, 160] },
-        hell: { floors: ['kenney_stoneUneven', 'kenney_stoneMissing', 'kenney_stone'], wall: 'kenney_stoneWallBroken', tint: [255, 140, 120] },
-        ice: { floors: ['kenney_stone', 'kenney_stoneTile', 'kenney_stoneUneven'], wall: 'kenney_stoneWall', tint: [160, 190, 240] },
+        cathedral: { floors: ['kenney_stone', 'kenney_stoneTile', 'kenney_stoneUneven'], wall: 'kenney_stoneWall', tint: null,
+            props: ['kenney_barrel', 'kenney_stoneColumn', 'kenney_chair', 'kenney_tableRound', 'kenney_woodenCrate', 'kenney_woodenPile', 'kenney_stoneWallArchway'],
+            wallVariants: ['kenney_stoneWallWindow', 'kenney_stoneWallColumnIn', 'kenney_stoneWallArchway'] },
+        desert: { floors: ['kenney_dirt', 'kenney_dirtTiles', 'kenney_stoneMissing'], wall: 'kenney_stoneWallAged', tint: [240, 210, 160],
+            props: ['kenney_barrel', 'kenney_barrels', 'kenney_woodenCrates', 'kenney_stoneColumn', 'kenney_woodenSupports', 'kenney_bridgeBroken'],
+            wallVariants: ['kenney_stoneWallHole', 'kenney_stoneWallDoor'] },
+        jungle: { floors: ['kenney_planks', 'kenney_planksBroken', 'kenney_planksHole'], wall: 'kenney_stoneWallBroken', tint: [180, 220, 160],
+            props: ['kenney_barrel', 'kenney_woodenPile', 'kenney_woodenSupports', 'kenney_bridge', 'kenney_bridgeBroken', 'kenney_tableChairsBroken'],
+            wallVariants: ['kenney_stoneWallHole', 'kenney_stoneWallGate'] },
+        hell: { floors: ['kenney_stoneUneven', 'kenney_stoneMissing', 'kenney_stone'], wall: 'kenney_stoneWallBroken', tint: [255, 140, 120],
+            props: ['kenney_barrelsStacked', 'kenney_stoneColumn', 'kenney_woodenCrates', 'kenney_tableChairsBroken', 'kenney_woodenSupports', 'kenney_bridgeBroken'],
+            wallVariants: ['kenney_stoneWallHole', 'kenney_stoneWallDoor', 'kenney_stoneWallGate'] },
+        ice: { floors: ['kenney_stone', 'kenney_stoneTile', 'kenney_stoneUneven'], wall: 'kenney_stoneWall', tint: [160, 190, 240],
+            props: ['kenney_barrel', 'kenney_stoneColumn', 'kenney_woodenCrate', 'kenney_tableShort', 'kenney_chair', 'kenney_woodenPile'],
+            wallVariants: ['kenney_stoneWallWindow', 'kenney_stoneWallColumnIn'] },
     };
 
     // Draw OGA creature sprite (8-dir, animated walk cycle)
@@ -1473,22 +1583,34 @@
     // Map item types to OGA RPG item icon keys for ground loot rendering
     const OGA_ITEM_ICON_MAP = {
         sword: 'icon_sword', axe: 'icon_sword', dagger: 'icon_sword',
-        staff: 'icon_wood', wand: 'icon_wood',
-        bow: 'icon_wood', crossbow: 'icon_wood',
-        armor: 'icon_armor', shield: 'icon_armor',
-        helmet: 'icon_shirt', boots: 'icon_cloak',
+        staff: 'icon_wood', wand: 'icon_wood2',
+        bow: 'icon_wood2', crossbow: 'icon_wood2',
+        armor: 'icon_armor', shield: 'icon_case2',
+        helmet: 'icon_case', boots: 'icon_shirt2',
         ring: 'icon_ring', amulet: 'icon_necklace',
         hp1: 'icon_potion_red', hp2: 'icon_potion_red', hp3: 'icon_potion_red',
         hp4: 'icon_potion_red', hp5: 'icon_potion_red',
         mp1: 'icon_potion_blue', mp2: 'icon_potion_blue', mp3: 'icon_potion_blue',
         manaPotion: 'icon_potion_blue', potion: 'icon_potion_red',
-        rejuv: 'icon_essence', fullrejuv: 'icon_essence',
+        rejuv: 'icon_flower', fullrejuv: 'icon_flower',
         rune: 'icon_rune',
-        smallCharm: 'icon_gems', mediumCharm: 'icon_gems', grandCharm: 'icon_crystal',
+        smallCharm: 'icon_gems', mediumCharm: 'icon_gems2', grandCharm: 'icon_crystal2',
+        scroll: 'icon_parchment', tome: 'icon_book2',
+        berry: 'icon_berry', berry2: 'icon_berry2',
+        cloak: 'icon_cloak2',
     };
+    // Rarity-based icon overrides (rare+ items get alternate icon variants)
+    function getItemIconKey(typeKey, rarity) {
+        if (rarity >= 3) { // rare or better
+            const rareOverrides = { ring: 'icon_ring2', amulet: 'icon_necklace2', rune: 'icon_rune2',
+                shield: 'icon_case', helmet: 'icon_case2', grandCharm: 'icon_crystal' };
+            if (rareOverrides[typeKey]) return rareOverrides[typeKey];
+        }
+        return OGA_ITEM_ICON_MAP[typeKey] || null;
+    }
     // Draw an OGA RPG item icon for ground loot
-    function drawOGAItemIcon(typeKey, dx, dy, dw, dh) {
-        const iconKey = OGA_ITEM_ICON_MAP[typeKey];
+    function drawOGAItemIcon(typeKey, dx, dy, dw, dh, rarity) {
+        const iconKey = (rarity != null) ? getItemIconKey(typeKey, rarity) : OGA_ITEM_ICON_MAP[typeKey];
         if (!iconKey) return false;
         const img = OGA[iconKey];
         if (!img) return false;
@@ -2357,50 +2479,50 @@
     // ========== TOWN NPC DEFINITIONS ==========
     const TOWN_NPC_DEFS = {
         1: [
-            { id:'merchant_1', name:'商人マーロ', icon:'🧑‍💼', sprite:'npcShopkeep', type:'shop', dialog:['品物を見ていくかい？何でも揃ってるよ。','良い防具があれば命を救うぞ。'] },
-            { id:'smith_1', name:'鍛冶屋グリスウォルド', icon:'⚒', sprite:'npcBlacksmith', type:'blacksmith', dialog:['武器を鍛えてやろう。','良い鉄を使えば、切れ味が違う。'] },
-            { id:'stash_1', name:'倉庫番カイン', icon:'📦', sprite:'npcScholar', type:'stash', dialog:['預かり物はここに置いていけ。','倉庫はいつでも使えるぞ。'] },
-            { id:'quest_1', name:'長老アカラ', icon:'👵', sprite:'npcElderlyW', type:'quest', dialog:['勇者よ、地下聖堂の魔物を退治してくれ。','骸骨王が復活したのだ...'] },
+            { id:'merchant_1', name:'商人マーロ', icon:'🧑‍💼', sprite:'npcShopkeep', ogaSprite:'dt_npc1', type:'shop', dialog:['品物を見ていくかい？何でも揃ってるよ。','良い防具があれば命を救うぞ。'] },
+            { id:'smith_1', name:'鍛冶屋グリスウォルド', icon:'⚒', sprite:'npcBlacksmith', ogaCreature:'male_heavy', type:'blacksmith', dialog:['武器を鍛えてやろう。','良い鉄を使えば、切れ味が違う。'] },
+            { id:'stash_1', name:'倉庫番カイン', icon:'📦', sprite:'npcScholar', ogaSprite:'dt_npc2', type:'stash', dialog:['預かり物はここに置いていけ。','倉庫はいつでも使えるぞ。'] },
+            { id:'quest_1', name:'長老アカラ', icon:'👵', sprite:'npcElderlyW', ogaSprite:'dt_char1', type:'quest', dialog:['勇者よ、地下聖堂の魔物を退治してくれ。','骸骨王が復活したのだ...'] },
             { id:'wp_1', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] },
-            { id:'merc_1', name:'傭兵ギルド長カシア', icon:'⚔', sprite:'npcWarClericF', type:'mercenary', dialog:['傭兵を雇いたいか？腕利きが揃ってるよ。'] },
-            { id:'gamble_1', name:'賭博師ガイード', icon:'🎰', sprite:'npcPeasant1', type:'gamble', dialog:['運試しはどうだい？何が出るかは開けてのお楽しみさ。'] }
+            { id:'merc_1', name:'傭兵ギルド長カシア', icon:'⚔', sprite:'npcWarClericF', ogaCreature:'male_longsword', type:'mercenary', dialog:['傭兵を雇いたいか？腕利きが揃ってるよ。'] },
+            { id:'gamble_1', name:'賭博師ガイード', icon:'🎰', sprite:'npcPeasant1', ogaSprite:'dt_npc3', type:'gamble', dialog:['運試しはどうだい？何が出るかは開けてのお楽しみさ。'] }
         ],
         2: [
-            { id:'merchant_2', name:'商人エルジクス', icon:'🧑‍💼', sprite:'npcShopkeep', type:'shop', dialog:['砂漠の品は珍しいぞ。','水よりも価値のある物がある。'] },
-            { id:'smith_2', name:'鍛冶屋ファーラ', icon:'⚒', sprite:'npcBlacksmith', type:'blacksmith', dialog:['砂漠の鉄は硬いが...鍛えがいがある。'] },
-            { id:'stash_2', name:'倉庫番メシフ', icon:'📦', sprite:'npcPeasant1', type:'stash', dialog:['荷物はここに預けろ。'] },
-            { id:'quest_2', name:'賢者ドロガン', icon:'🧔', sprite:'npcDesertSage', type:'quest', dialog:['砂漠の地下に巨大な蟲がいる...退治してくれ。'] },
+            { id:'merchant_2', name:'商人エルジクス', icon:'🧑‍💼', sprite:'npcShopkeep', ogaSprite:'dt_npc4', type:'shop', dialog:['砂漠の品は珍しいぞ。','水よりも価値のある物がある。'] },
+            { id:'smith_2', name:'鍛冶屋ファーラ', icon:'⚒', sprite:'npcBlacksmith', ogaCreature:'male_shield', type:'blacksmith', dialog:['砂漠の鉄は硬いが...鍛えがいがある。'] },
+            { id:'stash_2', name:'倉庫番メシフ', icon:'📦', sprite:'npcPeasant1', ogaSprite:'dt_npc5', type:'stash', dialog:['荷物はここに預けろ。'] },
+            { id:'quest_2', name:'賢者ドロガン', icon:'🧔', sprite:'npcDesertSage', ogaCreature:'male_staff', type:'quest', dialog:['砂漠の地下に巨大な蟲がいる...退治してくれ。'] },
             { id:'wp_2', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] },
-            { id:'merc_2', name:'傭兵隊長グレイズ', icon:'⚔', sprite:'npcWarClericM', type:'mercenary', dialog:['砂漠で鍛えた兵がいる。雇うか？'] },
-            { id:'gamble_2', name:'賭博師アルール', icon:'🎰', sprite:'npcPeasant1', type:'gamble', dialog:['砂漠の宝石が入ってるかもよ？'] }
+            { id:'merc_2', name:'傭兵隊長グレイズ', icon:'⚔', sprite:'npcWarClericM', ogaCreature:'male_longbow', type:'mercenary', dialog:['砂漠で鍛えた兵がいる。雇うか？'] },
+            { id:'gamble_2', name:'賭博師アルール', icon:'🎰', sprite:'npcPeasant1', ogaSprite:'dt_npc1', type:'gamble', dialog:['砂漠の宝石が入ってるかもよ？'] }
         ],
         3: [
-            { id:'merchant_3', name:'商人アシェラ', icon:'🧑‍💼', sprite:'npcShopkeep', type:'shop', dialog:['密林の収穫品だ、見てくれ。'] },
-            { id:'smith_3', name:'鍛冶屋ヘファスト', icon:'⚒', sprite:'npcBlacksmith', type:'blacksmith', dialog:['神殿の金属は特殊だ...鍛え直してやろう。'] },
-            { id:'stash_3', name:'倉庫番ナタリヤ', icon:'📦', sprite:'npcWarClericF', type:'stash', dialog:['安全に保管してあるわ。'] },
-            { id:'quest_3', name:'巫女オーマス', icon:'🧙‍♀', sprite:'npcWarClericM', type:'quest', dialog:['大魔導師が神殿を支配している...倒してくれ。'] },
+            { id:'merchant_3', name:'商人アシェラ', icon:'🧑‍💼', sprite:'npcShopkeep', ogaSprite:'dt_npc3', type:'shop', dialog:['密林の収穫品だ、見てくれ。'] },
+            { id:'smith_3', name:'鍛冶屋ヘファスト', icon:'⚒', sprite:'npcBlacksmith', ogaCreature:'male_heavy', type:'blacksmith', dialog:['神殿の金属は特殊だ...鍛え直してやろう。'] },
+            { id:'stash_3', name:'倉庫番ナタリヤ', icon:'📦', sprite:'npcWarClericF', ogaSprite:'dt_npc5', type:'stash', dialog:['安全に保管してあるわ。'] },
+            { id:'quest_3', name:'巫女オーマス', icon:'🧙‍♀', sprite:'npcWarClericM', ogaCreature:'male_light', type:'quest', dialog:['大魔導師が神殿を支配している...倒してくれ。'] },
             { id:'wp_3', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] },
-            { id:'merc_3', name:'傭兵長アシェラ', icon:'⚔', sprite:'npcWarClericF', type:'mercenary', dialog:['密林の戦士を紹介しよう。'] },
-            { id:'gamble_3', name:'賭博師リア', icon:'🎰', sprite:'npcElderlyW', type:'gamble', dialog:['密林には隠された宝がある...賭けてみるかい？'] }
+            { id:'merc_3', name:'傭兵長アシェラ', icon:'⚔', sprite:'npcWarClericF', ogaCreature:'male_longsword', type:'mercenary', dialog:['密林の戦士を紹介しよう。'] },
+            { id:'gamble_3', name:'賭博師リア', icon:'🎰', sprite:'npcElderlyW', ogaSprite:'dt_npc2', type:'gamble', dialog:['密林には隠された宝がある...賭けてみるかい？'] }
         ],
         4: [
-            { id:'merchant_4', name:'商人ジャメラ', icon:'🧑‍💼', sprite:'npcShopkeep', type:'shop', dialog:['地獄でも商売は続く...'] },
-            { id:'smith_4', name:'鍛冶屋ハルバ', icon:'⚒', sprite:'npcBlacksmith', type:'blacksmith', dialog:['地獄の炎で鍛えた武器は一味違う。'] },
-            { id:'stash_4', name:'倉庫番ティラエル', icon:'📦', sprite:'templar', type:'stash', dialog:['ここなら安全だ。'] },
-            { id:'quest_4', name:'天使ハラティ', icon:'👼', sprite:'priest', type:'quest', dialog:['魔王を倒さねば世界が滅ぶ...頼む。'] },
+            { id:'merchant_4', name:'商人ジャメラ', icon:'🧑‍💼', sprite:'npcShopkeep', ogaSprite:'dt_npc4', type:'shop', dialog:['地獄でも商売は続く...'] },
+            { id:'smith_4', name:'鍛冶屋ハルバ', icon:'⚒', sprite:'npcBlacksmith', ogaCreature:'male_shield', type:'blacksmith', dialog:['地獄の炎で鍛えた武器は一味違う。'] },
+            { id:'stash_4', name:'倉庫番ティラエル', icon:'📦', sprite:'templar', ogaSprite:'dt_char1', type:'stash', dialog:['ここなら安全だ。'] },
+            { id:'quest_4', name:'天使ハラティ', icon:'👼', sprite:'priest', ogaCreature:'male_unarmored', type:'quest', dialog:['魔王を倒さねば世界が滅ぶ...頼む。'] },
             { id:'wp_4', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] },
-            { id:'merc_4', name:'傭兵ギルド長ティリエル', icon:'⚔', sprite:'templar', type:'mercenary', dialog:['地獄でも戦える兵士がいる。'] },
-            { id:'gamble_4', name:'賭博師ジャム', icon:'🎰', sprite:'npcDesertSage', type:'gamble', dialog:['地獄の品を賭けてみるか？命を賭ける価値はあるぞ。'] }
+            { id:'merc_4', name:'傭兵ギルド長ティリエル', icon:'⚔', sprite:'templar', ogaCreature:'male_longsword', type:'mercenary', dialog:['地獄でも戦える兵士がいる。'] },
+            { id:'gamble_4', name:'賭博師ジャム', icon:'🎰', sprite:'npcDesertSage', ogaSprite:'dt_npc2', type:'gamble', dialog:['地獄の品を賭けてみるか？命を賭ける価値はあるぞ。'] }
         ],
         5: [
-            { id:'merchant_5', name:'商人アーニャ', icon:'🧑‍💼', sprite:'npcShopkeep', type:'shop', dialog:['氷の品は貴重よ。'] },
-            { id:'smith_5', name:'鍛冶屋ラーズク', icon:'⚒', sprite:'npcBlacksmith', type:'blacksmith', dialog:['凍てつく金属...だが鍛えられる。'] },
-            { id:'stash_5', name:'倉庫番ニーラサック', icon:'📦', sprite:'npcElderlyM', type:'stash', dialog:['預かるぞ。'] },
-            { id:'quest_5', name:'賢者マラス', icon:'🧓', sprite:'npcElderlyM', type:'quest', dialog:['氷の女王が山を支配している...最後の戦いだ。'] },
+            { id:'merchant_5', name:'商人アーニャ', icon:'🧑‍💼', sprite:'npcShopkeep', ogaSprite:'dt_npc5', type:'shop', dialog:['氷の品は貴重よ。'] },
+            { id:'smith_5', name:'鍛冶屋ラーズク', icon:'⚒', sprite:'npcBlacksmith', ogaCreature:'male_heavy', type:'blacksmith', dialog:['凍てつく金属...だが鍛えられる。'] },
+            { id:'stash_5', name:'倉庫番ニーラサック', icon:'📦', sprite:'npcElderlyM', ogaSprite:'dt_npc3', type:'stash', dialog:['預かるぞ。'] },
+            { id:'quest_5', name:'賢者マラス', icon:'🧓', sprite:'npcElderlyM', ogaCreature:'male_staff', type:'quest', dialog:['氷の女王が山を支配している...最後の戦いだ。'] },
             { id:'wp_5', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] },
-            { id:'uber_5', name:'闘技場の門番', icon:'🌀', sprite:'npcScholar', type:'uber_portal', dialog:['3つの鍵を集めたか？パンデモニウムへの門を開こう...'], requireDifficulty: true },
-            { id:'merc_5', name:'傭兵長ラーズク', icon:'⚔', sprite:'npcWarClericM', type:'mercenary', dialog:['氷の戦士を紹介しよう。'] },
-            { id:'gamble_5', name:'賭博師ニーラ', icon:'🎰', sprite:'npcElderlyW', type:'gamble', dialog:['氷の中に眠る宝...引き当てられるかしら？'] }
+            { id:'uber_5', name:'闘技場の門番', icon:'🌀', sprite:'npcScholar', ogaSprite:'dt_char1', type:'uber_portal', dialog:['3つの鍵を集めたか？パンデモニウムへの門を開こう...'], requireDifficulty: true },
+            { id:'merc_5', name:'傭兵長ラーズク', icon:'⚔', sprite:'npcWarClericM', ogaCreature:'male_longbow', type:'mercenary', dialog:['氷の戦士を紹介しよう。'] },
+            { id:'gamble_5', name:'賭博師ニーラ', icon:'🎰', sprite:'npcElderlyW', ogaSprite:'dt_npc1', type:'gamble', dialog:['氷の中に眠る宝...引き当てられるかしら？'] }
         ]
     };
 
@@ -2903,6 +3025,17 @@
         fire: { key: 'spell_fireball', cols: 4, cellW: 512, cellH: 384, frames: 40, duration: 0.5 },
         ice: { key: 'spell_flash_freeze', cols: 8, cellW: 512, cellH: 512, frames: 96, duration: 0.6 },
         heal: { key: 'spell_flash_heal', cols: 5, cellW: 288, cellH: 320, frames: 60, duration: 0.8 },
+        lightning: { key: 'spell_fire_yellow', cols: 7, cellW: 96, cellH: 96, frames: 70, duration: 0.5 },
+        poison: { key: 'spell_fire_green', cols: 7, cellW: 96, cellH: 96, frames: 70, duration: 0.5 },
+        dark: { key: 'spell_fire_purple', cols: 7, cellW: 96, cellH: 96, frames: 70, duration: 0.5 },
+        cold: { key: 'spell_fireball_blue', cols: 4, cellW: 512, cellH: 384, frames: 40, duration: 0.5 },
+        buff_ice: { key: 'spell_sphere_blue', cols: 6, cellW: 128, cellH: 128, frames: 30, duration: 0.8 },
+        buff_dark: { key: 'spell_sphere_purple', cols: 6, cellW: 128, cellH: 128, frames: 30, duration: 0.8 },
+        buff_lightning: { key: 'spell_sphere_yellow', cols: 6, cellW: 128, cellH: 128, frames: 30, duration: 0.8 },
+        skull_poison: { key: 'spell_skull_smoke_green', cols: 19, cellW: 192, cellH: 512, frames: 19, duration: 0.6 },
+        skull_dark: { key: 'spell_skull_smoke_purple', cols: 19, cellW: 192, cellH: 512, frames: 19, duration: 0.6 },
+        arrows_poison: { key: 'spell_arrows_green', cols: 4, cellW: 256, cellH: 256, frames: 24, duration: 0.5 },
+        arrows_lightning: { key: 'spell_arrows_yellow', cols: 4, cellW: 256, cellH: 256, frames: 24, duration: 0.5 },
     };
     function spawnWorldEffect(wx, wy, type, scale) {
         if (!type || !SPELL_ANIM_MAP[type]) return;
@@ -3741,9 +3874,11 @@
                             ctx.globalAlpha = prevAlpha;
                         }
 
-                        // Kenney Isometric props (barrel, column)
+                        // Kenney Isometric props (theme-specific furniture & decoration)
                         if (ogaLoaded && (x * 43 + y * 29) % 127 === 0) {
-                            const kenneyPropKeys = ['kenney_barrel', 'kenney_stoneColumn'];
+                            const themeKey = this._tileTheme || 'cathedral';
+                            const themeInfo = KENNEY_THEME_MAP[themeKey];
+                            const kenneyPropKeys = (themeInfo && themeInfo.props) || ['kenney_barrel', 'kenney_stoneColumn'];
                             const kpKey = kenneyPropKeys[(x * 7 + y * 3) % kenneyPropKeys.length];
                             const kpImg = OGA[kpKey];
                             if (kpImg) {
@@ -3754,6 +3889,34 @@
                                 const prevAlpha = ctx.globalAlpha;
                                 ctx.globalAlpha *= 0.85;
                                 ctx.drawImage(kpImg, kpX, kpY, kpW, kpH);
+                                ctx.globalAlpha = prevAlpha;
+                            }
+                        }
+
+                        // Props 2x2 decoration (less frequent, larger props)
+                        if (ogaLoaded && OGA.props_2x2 && (x * 67 + y * 53) % 211 === 0 &&
+                            this.get(x + 1, y) === 1 && this.get(x, y + 1) === 1) {
+                            const p2CellSz = (OGA.props_2x2.width / 4) | 0; // 512px cells
+                            const p2Col = (x * 11 + y * 5) % 4;
+                            const p2Row = (x * 3 + y * 7) % ((OGA.props_2x2.height / p2CellSz) | 0);
+                            const p2Sz = Math.round(TILE * 2);
+                            const prevAlpha = ctx.globalAlpha;
+                            ctx.globalAlpha *= 0.5;
+                            ctx.drawImage(OGA.props_2x2, p2Col * p2CellSz, p2Row * p2CellSz, p2CellSz, p2CellSz,
+                                sx, sy - TILE * 0.3, p2Sz, p2Sz);
+                            ctx.globalAlpha = prevAlpha;
+                        }
+
+                        // Dungeon tileset crates (random decoration)
+                        if (ogaLoaded && (x * 37 + y * 61) % 181 === 0) {
+                            const crateKeys = ['dt_crate1', 'dt_crate2', 'dt_crate3'];
+                            const crKey = crateKeys[(x * 5 + y * 9) % crateKeys.length];
+                            const crImg = OGA[crKey];
+                            if (crImg) {
+                                const crSz = Math.round(TILE * 0.7);
+                                const prevAlpha = ctx.globalAlpha;
+                                ctx.globalAlpha *= 0.8;
+                                ctx.drawImage(crImg, sx + (TILE - crSz) / 2, sy + (TILE - crSz) / 2, crSz, crSz);
                                 ctx.globalAlpha = prevAlpha;
                             }
                         }
@@ -3800,10 +3963,14 @@
                         }
 
                     } else if (t === 3) {
-                        // === CHEST (Sprite) ===
+                        // === CHEST (Sprite - with dt_chest variant) ===
                         const variant = ((x * 7 + y * 13) % 9);
                         ctx.drawImage(TILE_TEXTURES['floor_' + variant], sx, sy);
-                        if (ogaLoaded && OGA.kenney_chestClosed) {
+                        const useDtChest = ogaLoaded && OGA.dt_chest_closed && ((x + y) % 3 === 0);
+                        if (useDtChest) {
+                            const dtcSz = Math.round(TILE * 1.1);
+                            ctx.drawImage(OGA.dt_chest_closed, sx + (TILE - dtcSz) / 2, sy + (TILE - dtcSz) / 2, dtcSz, dtcSz);
+                        } else if (ogaLoaded && OGA.kenney_chestClosed) {
                             const kcW = Math.round(TILE * 1.3);
                             const kcH = Math.round(kcW * (OGA.kenney_chestClosed.height / OGA.kenney_chestClosed.width));
                             ctx.drawImage(OGA.kenney_chestClosed, sx + (TILE - kcW) / 2, sy + TILE - kcH, kcW, kcH);
@@ -7852,21 +8019,26 @@
                 ctx.globalAlpha = 1;
             }
 
-            // HP bar (scaled position) - OGA Dark Fantasy HP bar
+            // HP bar (scaled position) - OGA Dark Fantasy HP bar (rank-differentiated)
             if (this.alive && this.hp < this.maxHP) {
                 const bw = mScaledR * 2.2;
                 const mHpRatio = this.hp / this.maxHP;
-                if (ogaLoaded && OGA.ui_hpbar_empty && OGA.ui_hpbar) {
+                // Select HP bar style: B-series for elites/uniques, D-series for normal
+                const hpFilled = (this.isUnique || this.isChampion)
+                    ? (OGA.ui_hpbar_b1 || OGA.ui_hpbar) : OGA.ui_hpbar;
+                const hpEmpty = (this.isUnique || this.isChampion)
+                    ? (OGA.ui_hpbar_b2 || OGA.ui_hpbar_empty) : OGA.ui_hpbar_empty;
+                if (ogaLoaded && hpEmpty && hpFilled) {
                     // Maintain source aspect ratio (1137:356 ≈ 3.19:1)
                     const barH = Math.max(6, Math.round(bw / 3.19));
                     const hpY = sy - mScaledR - barH - 4;
-                    ctx.drawImage(OGA.ui_hpbar_empty, sx - bw/2, hpY, bw, barH);
+                    ctx.drawImage(hpEmpty, sx - bw/2, hpY, bw, barH);
                     if (mHpRatio > 0) {
                         ctx.save();
                         ctx.beginPath();
                         ctx.rect(sx - bw/2, hpY, bw * mHpRatio, barH);
                         ctx.clip();
-                        ctx.drawImage(OGA.ui_hpbar, sx - bw/2, hpY, bw, barH);
+                        ctx.drawImage(hpFilled, sx - bw/2, hpY, bw, barH);
                         ctx.restore();
                     }
                 } else {
@@ -7978,13 +8150,28 @@
                 drawOGASparks(this.lastHitElement, G.time, sx - scaledR, sy - scaledR, scaledR * 2, scaledR * 2);
                 ctx.globalAlpha = 1;
             }
-            // VFX impact overlay (16-frame strip, blood for physical, earth for others)
+            // VFX impact overlay (element-specific 16-frame strips)
             if (ogaLoaded) {
-                const vfxImg = (this.lastHitElement === 'physical' || !this.lastHitElement)
-                    ? OGA.vfx_impact_blood : OGA.vfx_impact_earth;
+                let vfxImg;
+                const hitEl = this.lastHitElement;
+                if (hitEl === 'physical' || !hitEl) {
+                    // Alternate between blood and impact_set2 for physical variety
+                    vfxImg = ((this.type.charCodeAt(0) || 0) % 2 === 0)
+                        ? OGA.vfx_impact_blood : (OGA.vfx_impact_set2 || OGA.vfx_impact_blood);
+                } else if (hitEl === 'cold' || hitEl === 'ice') {
+                    vfxImg = OGA.vfx_impact_water || OGA.vfx_impact_earth;
+                } else if (hitEl === 'lightning') {
+                    vfxImg = OGA.vfx_impact_air || OGA.vfx_impact_earth;
+                } else if (hitEl === 'dark') {
+                    vfxImg = OGA.vfx_impact_chaos || OGA.vfx_impact_earth;
+                } else if (hitEl === 'heal' || hitEl === 'holy') {
+                    vfxImg = OGA.vfx_impact_divine || OGA.vfx_impact_earth;
+                } else {
+                    vfxImg = OGA.vfx_impact_earth;
+                }
                 if (vfxImg) {
                     const vfxCellSz = (vfxImg.height / 4) | 0; // 128px (4 rows of variants)
-                    const vfxFrames = (vfxImg.width / vfxCellSz) | 0; // 16
+                    const vfxFrames = (vfxImg.width / vfxCellSz) | 0; // 16 or 8
                     const vfxFrame = Math.floor((1 - flashIntensity) * vfxFrames);
                     if (vfxFrame < vfxFrames) {
                         ctx.globalAlpha = flashIntensity * 0.7;
@@ -8155,20 +8342,22 @@
         ctx.fillStyle = '#000'; ctx.fillText(bd.name || 'BOSS', sx + 1, sy - this.r - 21);
         ctx.fillStyle = color; ctx.fillText(bd.name || 'BOSS', sx, sy - this.r - 22);
 
-        // Boss HP bar (wider) - OGA Dark Fantasy HP bar
+        // Boss HP bar (wider) - OGA Dark Fantasy A-series HP bar
         const barW = 60;
         const hpPct = clamp(this.hp / this.maxHP, 0, 1);
-        if (ogaLoaded && OGA.ui_hpbar_empty && OGA.ui_hpbar) {
+        const bossHpFilled = OGA.ui_hpbar_a1 || OGA.ui_hpbar;
+        const bossHpEmpty = OGA.ui_hpbar_a2 || OGA.ui_hpbar_empty;
+        if (ogaLoaded && bossHpEmpty && bossHpFilled) {
             // Maintain source aspect ratio (1137:356 ≈ 3.19:1)
             const barH = Math.round(barW / 3.19);
             const barY = sy - this.r - barH - 6;
-            ctx.drawImage(OGA.ui_hpbar_empty, sx - barW/2, barY, barW, barH);
+            ctx.drawImage(bossHpEmpty, sx - barW/2, barY, barW, barH);
             if (hpPct > 0) {
                 ctx.save();
                 ctx.beginPath();
                 ctx.rect(sx - barW/2, barY, barW * hpPct, barH);
                 ctx.clip();
-                ctx.drawImage(OGA.ui_hpbar, sx - barW/2, barY, barW, barH);
+                ctx.drawImage(bossHpFilled, sx - barW/2, barY, barW, barH);
                 ctx.restore();
             }
         } else {
@@ -8855,6 +9044,7 @@
         }
 
         dungeon = new Dungeon(G.floor);
+        dungeon._tileTheme = actDef.tileTheme || 'cathedral';
 
         // Clear visual-only arrays always
         projectiles.length = 0;
@@ -9855,6 +10045,7 @@
         G.dungeonSeed = (Math.random() * 0x7FFFFFFF) | 0;
         seedRng(G.dungeonSeed);
         dungeon = new Dungeon(99);
+        dungeon._tileTheme = actDef.tileTheme || 'hell';
         // Clear arrays
         projectiles.length = 0; enemyProjectiles.length = 0;
         particles.length = 0; bloodPools.length = 0; ambientParticles.length = 0;
@@ -10315,6 +10506,14 @@
     function updateInventoryPanel() {
         const el = DOM.inventoryContent;
         if (!isPanelVisible(DOM.inventoryPanel)) return;
+        // Apply Dark Fantasy UI inventory background
+        if (ogaLoaded && OGA.ui_inventory_a && !DOM.inventoryPanel._bgApplied) {
+            DOM.inventoryPanel.style.backgroundImage = `url(${OGA.ui_inventory_a.src})`;
+            DOM.inventoryPanel.style.backgroundSize = 'cover';
+            DOM.inventoryPanel.style.backgroundPosition = 'center';
+            DOM.inventoryPanel.style.backgroundBlendMode = 'overlay';
+            DOM.inventoryPanel._bgApplied = true;
+        }
         const tab = player.invTab || 0;
 
         let html = '<div style="color:#aaa;font-size:11px;margin-bottom:6px">装備スロット (クリックで外す)</div>';
@@ -12340,7 +12539,7 @@
                 }
                 drawn = sprKey && drawSpr(sprKey, sx - 14, sy - 14, 28, 28);
                 if (!drawn && ogaLoaded && typeKey) {
-                    drawn = drawOGAItemIcon(typeKey, sx - 14, sy - 14, 28, 28);
+                    drawn = drawOGAItemIcon(typeKey, sx - 14, sy - 14, 28, 28, gi.item.rarity || 0);
                 }
             }
             if (!drawn) {
@@ -13254,11 +13453,13 @@
             ctx.lineWidth = 1;
             ctx.strokeRect(bx, beltY, beltSlotW, beltSlotH);
             if (hpPotCount > i) {
-                ctx.font = '16px serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillStyle = '#fff';
-                ctx.fillText('🧪', bx + beltSlotW / 2, beltY + beltSlotH / 2);
+                if (ogaLoaded && OGA.dt_icon_potion) {
+                    const potIconSz = beltSlotW - 4;
+                    ctx.drawImage(OGA.dt_icon_potion, bx + 2, beltY + (beltSlotH - potIconSz) / 2, potIconSz, potIconSz * (OGA.dt_icon_potion.height / OGA.dt_icon_potion.width));
+                } else {
+                    ctx.font = '16px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#fff'; ctx.fillText('🧪', bx + beltSlotW / 2, beltY + beltSlotH / 2);
+                }
             }
         }
         ctx.textAlign = 'center';
@@ -13279,11 +13480,13 @@
             ctx.lineWidth = 1;
             ctx.strokeRect(bx, beltY, beltSlotW, beltSlotH);
             if (mpPotCount > i) {
-                ctx.font = '16px serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillStyle = '#fff';
-                ctx.fillText('💧', bx + beltSlotW / 2, beltY + beltSlotH / 2);
+                if (ogaLoaded && OGA.dt_icon_mana) {
+                    const manaIconSz = beltSlotW - 4;
+                    ctx.drawImage(OGA.dt_icon_mana, bx + 2, beltY + (beltSlotH - manaIconSz) / 2, manaIconSz, manaIconSz * (OGA.dt_icon_mana.height / OGA.dt_icon_mana.width));
+                } else {
+                    ctx.font = '16px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#fff'; ctx.fillText('💧', bx + beltSlotW / 2, beltY + beltSlotH / 2);
+                }
             }
         }
         ctx.textAlign = 'center';
@@ -13556,10 +13759,13 @@
             ctx.textAlign = 'left';
         }
 
-        // Persistent shortcut display (top-left)
+    }
+
+    function drawShortcutHints() {
         ctx.globalAlpha = 0.6;
         ctx.font = `10px ${FONT_UI}`;
         ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
         const shortcuts = G.inTown ? [
             ['矢印', '移動'], ['E', 'NPC/階段'], ['Q', 'HP薬'], ['W', 'MP薬'],
             ['I', '装備'], ['C', 'キャラ'], ['T', 'ツリー'], ['H', '手引書'],
@@ -13572,7 +13778,7 @@
         ];
         let scX = 8;
         let scY = 14;
-        const maxW = canvas.width - 16;
+        const maxW = W - 16;
         for (const [key, desc] of shortcuts) {
             const kw = ctx.measureText(key).width;
             const dw = ctx.measureText(desc).width;
@@ -14211,9 +14417,12 @@
                     const projElem = p.attribute === 'ice' ? 'cold' : (p.attribute === 'arcane' ? null : p.attribute || null);
                     monsterTakeDmg(m, d, isCrit, projElem);
                     emitParticles(p.x, p.y, '#ffaa00', 10, 80, 0.4, 3, 0);
-                    // Spell impact VFX
+                    // Spell impact VFX (element-specific animations)
                     if (p.attribute === 'fire') spawnWorldEffect(p.x, p.y, 'fire', 0.8);
-                    else if (p.attribute === 'ice' || p.attribute === 'cold') spawnWorldEffect(p.x, p.y, 'ice', 0.7);
+                    else if (p.attribute === 'ice' || p.attribute === 'cold') spawnWorldEffect(p.x, p.y, 'cold', 0.7);
+                    else if (p.attribute === 'lightning') spawnWorldEffect(p.x, p.y, 'lightning', 0.8);
+                    else if (p.attribute === 'poison') spawnWorldEffect(p.x, p.y, 'poison', 0.7);
+                    else if (p.attribute === 'dark' || p.attribute === 'arcane') spawnWorldEffect(p.x, p.y, 'dark', 0.8);
                     projectiles[i] = projectiles[projectiles.length - 1]; projectiles.pop();
                     break;
                 }
@@ -14424,10 +14633,33 @@
             for (const npc of townNPCs) {
                 const nx = npc.x - G.camX, ny = npc.y - G.camY;
                 if (nx < -60 || nx > W + 60 || ny < -60 || ny > H + 60) continue;
-                // NPC sprite or emoji fallback
-                if (npc.sprite && ATLAS[npc.sprite]) {
-                    // Idle bob animation
-                    const bob = Math.sin(G.time * 1.5 + npc.x * 0.1) * 1.5;
+                // NPC sprite: OGA creature sheet > OGA tileset sprite > ATLAS sprite > fallback
+                let npcDrawn = false;
+                const bob = Math.sin(G.time * 1.5 + npc.x * 0.1) * 1.5;
+                // Try OGA creature sheet (8-dir animated NPC)
+                if (!npcDrawn && ogaLoaded && npc.ogaCreature) {
+                    const ogaKey = 'creature_' + npc.ogaCreature;
+                    const ogaImg = OGA[ogaKey];
+                    if (ogaImg) {
+                        const cellSz = (ogaImg.width / 8) | 0;
+                        const row = 6; // S-facing (row6 = South in FLARE layout)
+                        const frameIdx = Math.floor((G.time * 3) % 4); // slow idle cycle
+                        ctx.drawImage(ogaImg, frameIdx * cellSz, row * cellSz, cellSz, cellSz,
+                            nx - npcSprSize/2, ny - npcSprSize + 4 + bob, npcSprSize, npcSprSize);
+                        npcDrawn = true;
+                    }
+                }
+                // Try OGA dungeon tileset sprite (small individual PNG)
+                if (!npcDrawn && ogaLoaded && npc.ogaSprite) {
+                    const dtImg = OGA[npc.ogaSprite];
+                    if (dtImg) {
+                        const dtH = Math.round(npcSprSize * (dtImg.height / dtImg.width));
+                        ctx.drawImage(dtImg, nx - npcSprSize/2, ny - dtH + 4 + bob, npcSprSize, dtH);
+                        npcDrawn = true;
+                    }
+                }
+                // Fall back to ATLAS hi-res sprite
+                if (!npcDrawn && npc.sprite && ATLAS[npc.sprite]) {
                     if (!drawSpr(npc.sprite, nx - npcSprSize/2, ny - npcSprSize + 4 + bob, npcSprSize, npcSprSize, false, true)) {
                         // Sprite image not loaded — draw fallback diamond
                         ctx.fillStyle = '#aaaaaa';
@@ -14436,10 +14668,10 @@
                         ctx.lineTo(nx, ny + 4); ctx.lineTo(nx - 10, ny - 8);
                         ctx.closePath(); ctx.fill();
                     }
-                } else if (npc.type === 'waypoint') {
+                } else if (!npcDrawn && npc.type === 'waypoint') {
                     // Waypoint: Canvas-drawn portal icon
                     _drawWaypointIcon(ctx, nx, ny - 8, 28);
-                } else {
+                } else if (!npcDrawn) {
                     // Other missing sprite: diamond fallback
                     ctx.fillStyle = '#aaaaaa';
                     ctx.beginPath();
@@ -14581,6 +14813,7 @@
         }
 
         drawHUD();
+        drawShortcutHints();
         drawOverlayMap();
         drawLog();
 
