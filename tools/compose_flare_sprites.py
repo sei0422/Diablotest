@@ -25,10 +25,9 @@ RENDER_OFFSET_X = 64
 RENDER_OFFSET_Y = 96
 
 # FLARE directions: 0=E, 1=SE, 2=S, 3=SW, 4=W, 5=NW, 6=N, 7=NE
-# Game directions (from player facing):
-#   0=S, 1=SW, 2=W, 3=NW, 4=N, 5=NE, 6=E, 7=SE
-# Map: game_dir -> flare_dir
-GAME_TO_FLARE_DIR = [2, 3, 4, 5, 6, 7, 0, 1]
+# OGA creature sheets use FLARE order directly (OGA_DIR_REMAP = identity)
+# So player sprites must also use FLARE order to match
+GAME_TO_FLARE_DIR = [0, 1, 2, 3, 4, 5, 6, 7]  # identity = FLARE order
 
 
 def parse_animation_file(txt_path, gender="male"):
