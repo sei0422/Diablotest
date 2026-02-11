@@ -1406,10 +1406,10 @@
     }
     loadOGASprites();
 
-    // FLARE 8-dir sprite row order: S(0) SW(1) W(2) NW(3) N(4) NE(5) E(6) SE(7)
-    // Our getFacingDir8 returns same order, so no remap needed for standard FLARE sheets.
-    // If sheets use different order, adjust this table:
-    const OGA_DIR_REMAP = [0, 1, 2, 3, 4, 5, 6, 7]; // identity (standard FLARE)
+    // FLARE sprite row order: row0=E, row1=SE, row2=S, row3=SW, row4=W, row5=NW, row6=N, row7=NE
+    // getFacingDir8 returns: 0=S, 1=SW, 2=W, 3=NW, 4=N, 5=NE, 6=E, 7=SE
+    // Remap: game dir index → sprite sheet row
+    const OGA_DIR_REMAP = [2, 3, 4, 5, 6, 7, 0, 1];
     // Projectile sheets use different direction order: W,SW,S,SE,E,NE,N,NW
     // Game dir: S(0),SW(1),W(2),NW(3),N(4),NE(5),E(6),SE(7)
     const OGA_PROJ_DIR_REMAP = [2, 1, 0, 7, 6, 5, 4, 3];
@@ -1547,7 +1547,9 @@
     }
 
     // Draw hi-res animated sprite (grid format: rows=directions, cols=frames)
+    // Uses OGA_DIR_REMAP to convert game direction to sprite sheet row (same as monsters)
     function drawHiResSpr(classKey, animName, dirIdx, time, dx, dy, dw, dh) {
+        const row = OGA_DIR_REMAP[dirIdx] ?? 0;
         const sheetKey = `hero_${classKey}_${animName}`;
         const img = HIRES_SPRITES[sheetKey];
         if (!img) {
@@ -1558,14 +1560,14 @@
             const cfg = HIRES_ANIM_CONFIG[animName] || { frames: 4, fps: 8 };
             const frameIdx = Math.floor((time * cfg.fps) % cfg.frames);
             const sx = frameIdx * HIRES_SP;
-            const sy = dirIdx * HIRES_SP;
+            const sy = row * HIRES_SP;
             ctx.drawImage(fallbackImg, sx, sy, HIRES_SP, HIRES_SP, dx, dy, dw, dh);
             return true;
         }
         const cfg = HIRES_ANIM_CONFIG[animName] || { frames: 4, fps: 8 };
         const frameIdx = Math.floor((time * cfg.fps) % cfg.frames);
         const sx = frameIdx * HIRES_SP;
-        const sy = dirIdx * HIRES_SP;
+        const sy = row * HIRES_SP;
         ctx.drawImage(img, sx, sy, HIRES_SP, HIRES_SP, dx, dy, dw, dh);
         return true;
     }
