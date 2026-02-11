@@ -8727,6 +8727,19 @@
                     _grd.addColorStop(1, this.color + '00');
                     ctx.fillStyle = _grd;
                     ctx.beginPath(); ctx.arc(px, py, _glowR, 0, Math.PI * 2); ctx.fill();
+                    // VFX ball overlay (fire/lightning/arcane)
+                    if (OGA.vfx_ball_set) {
+                        const _ballRows = { fire: 0, lightning: 1, arcane: 2, poison: 2 };
+                        const _ballRow = _ballRows[this.attribute];
+                        if (_ballRow !== undefined) {
+                            const _bCsz = 128;
+                            const _bFrame = Math.floor((G.time * 8 + this.life * 5) % 8);
+                            const _bSz = this.r * 5;
+                            ctx.globalAlpha = 0.5;
+                            ctx.drawImage(OGA.vfx_ball_set, _bFrame * _bCsz, _ballRow * _bCsz, _bCsz, _bCsz,
+                                px - _bSz/2, py - _bSz/2, _bSz, _bSz);
+                        }
+                    }
                     ctx.restore();
                     // Trail
                     if (this.trail.length > 1) {
