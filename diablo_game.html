@@ -1070,7 +1070,7 @@
         <p>Enter / クリックで復活...</p>
     </div>
     <div id="controls-help">
-        左クリック:移動/攻撃 | 右クリック:スキル | 1~6:スキル選択 | R:スキル編集 | Space:拾う/階段 | I:インベントリ | C:ステータス | TAB:マップ | H:ヘルプ
+        矢印:移動 | 左クリック:攻撃 | 右クリック:スキル | A:攻撃 | S:スキル | Q:HP薬 | W:MP薬 | 1~6:スキル選択 | Space:拾う | I:装備 | C:キャラ | T:ツリー | R:S編集 | H:手引書
     </div>
     <button id="skillEditBtn" class="toggle-btn" tabindex="-1" style="position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:300;opacity:0.9">
         スキル編集 (R)
@@ -6724,12 +6724,12 @@
                 }
             }
 
-            // Arrow key / WASD movement with inertia
+            // Arrow key movement with inertia (WASD reserved for combat actions)
             let kbMoveX = 0, kbMoveY = 0;
-            if (keysDown['arrowup'] || keysDown['w']) kbMoveY = -1;
-            if (keysDown['arrowdown'] || keysDown['s']) kbMoveY = 1;
-            if (keysDown['arrowleft'] || keysDown['a']) kbMoveX = -1;
-            if (keysDown['arrowright'] || keysDown['d']) kbMoveX = 1;
+            if (keysDown['arrowup']) kbMoveY = -1;
+            if (keysDown['arrowdown']) kbMoveY = 1;
+            if (keysDown['arrowleft']) kbMoveX = -1;
+            if (keysDown['arrowright']) kbMoveX = 1;
 
             // 目標速度を計算
             let targetVx = 0, targetVy = 0;
@@ -10269,6 +10269,7 @@
                 ['ダンジョン', [
                     ['Space', 'アイテム拾い ＆ 階段を降りる'],
                     ['E', '階段を降りる（専用キー）'],
+                    ['V', 'タウンポータル（帰還）'],
                     ['TAB', 'オーバーレイマップ表示/非表示'],
                 ]],
                 ['アイテム', [
@@ -13560,34 +13561,23 @@
         ctx.font = `10px ${FONT_UI}`;
         ctx.textAlign = 'left';
         const shortcuts = G.inTown ? [
-            ['矢印', '移動'],
-            ['E', 'NPC会話/階段'],
-            ['I', '装備'],
-            ['C', 'ステータス'],
-            ['TAB', 'マップ'],
-            ['Esc', '閉じる'],
-            ['F5', `セーブ(S${G.saveSlot})`],
-            ['F8', `ロード(S${G.saveSlot})`]
+            ['矢印', '移動'], ['E', 'NPC/階段'], ['Q', 'HP薬'], ['W', 'MP薬'],
+            ['I', '装備'], ['C', 'キャラ'], ['T', 'ツリー'], ['H', '手引書'],
+            ['TAB', 'マップ'], ['F5', 'セーブ'], ['F8', 'ロード']
         ] : [
-            ['A/Click', '攻撃'],
-            ['S/RClick', 'スキル'],
-            ['1-6', 'スキル選択'],
-            ['Space', '拾う'],
-            ['E', '階段'],
-            ['V', '帰還'],
-            ['TAB', 'マップ'],
-            ['I', '装備'],
-            ['C', 'ステータス'],
-            ['T', 'スキルツリー'],
-            ['Esc', '一時停止']
+            ['矢印', '移動'], ['A/Click', '攻撃'], ['S/RClick', 'スキル'],
+            ['Q', 'HP薬'], ['W', 'MP薬'], ['1-6', 'スキル選択'], ['Space', '拾う'],
+            ['E', '階段'], ['V', '帰還'], ['R', 'S編集'], ['TAB', 'マップ'],
+            ['I', '装備'], ['C', 'キャラ'], ['T', 'ツリー'], ['H', '手引書'], ['Esc', '一時停止']
         ];
         let scX = 8;
-        const scY = 14;
+        let scY = 14;
+        const maxW = canvas.width - 16;
         for (const [key, desc] of shortcuts) {
-            ctx.fillStyle = '#000';
             const kw = ctx.measureText(key).width;
             const dw = ctx.measureText(desc).width;
             const totalW = kw + dw + 8;
+            if (scX + totalW > maxW) { scX = 8; scY += 16; }
             ctx.fillStyle = 'rgba(0,0,0,0.45)';
             ctx.fillRect(scX - 2, scY - 10, totalW + 4, 14);
             ctx.fillStyle = '#c8a84e';
