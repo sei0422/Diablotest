@@ -1411,6 +1411,28 @@
             rogues_tiles: 'asset/32rogues/tiles.png',
             rogues_animated: 'asset/32rogues/animated-tiles.png',
             rogues_items: 'asset/32rogues/items.png',
+            // Dungeon Tileset (pre-rendered 3D stone tiles, 450x392px)
+            dt_tile1: 'asset/opengameart/dungeon_tileset/Tiles/tile1.png',
+            dt_tile2: 'asset/opengameart/dungeon_tileset/Tiles/tile2.png',
+            dt_tile3: 'asset/opengameart/dungeon_tileset/Tiles/tile3.png',
+            dt_tile4: 'asset/opengameart/dungeon_tileset/Tiles/tile4.png',
+            dt_tile5: 'asset/opengameart/dungeon_tileset/Tiles/tile5.png',
+            dt_tile6: 'asset/opengameart/dungeon_tileset/Tiles/tile6.png',
+            dt_tile7: 'asset/opengameart/dungeon_tileset/Tiles/tile7.png',
+            dt_chest_closed: 'asset/opengameart/dungeon_tileset/Tiles/chest1.png',
+            dt_chest_open: 'asset/opengameart/dungeon_tileset/Tiles/chest1-open.png',
+            dt_crate1: 'asset/opengameart/dungeon_tileset/Tiles/crate1.png',
+            dt_crate2: 'asset/opengameart/dungeon_tileset/Tiles/crate2.png',
+            dt_door_closed: 'asset/opengameart/dungeon_tileset/Tiles/tiledoor.png',
+            dt_door_open: 'asset/opengameart/dungeon_tileset/Tiles/tiledoor-open.png',
+            // Kenney Isometric props (256x512px, _S = south view)
+            kenney_barrel: 'asset/opengameart/kenney_dungeon/Isometric/barrel_S.png',
+            kenney_barrels: 'asset/opengameart/kenney_dungeon/Isometric/barrels_S.png',
+            kenney_chest_closed: 'asset/opengameart/kenney_dungeon/Isometric/chestClosed_S.png',
+            kenney_stone_floor: 'asset/opengameart/kenney_dungeon/Isometric/stone_S.png',
+            kenney_wall: 'asset/opengameart/kenney_dungeon/Isometric/stoneWall_S.png',
+            kenney_wall_aged: 'asset/opengameart/kenney_dungeon/Isometric/stoneWallAged_S.png',
+            kenney_column: 'asset/opengameart/kenney_dungeon/Isometric/stoneColumn_S.png',
             // --- Dark Fantasy UI (Phase 5) ---
             ui_hpbar_a1: 'asset/opengameart/dark_fantasy_ui/Dark Fantasy UI Pack (CC-BY 4.0 - Of Far Different Nature)/OFDN UI Pack - Health Bar A1.png',
             ui_hpbar_a2: 'asset/opengameart/dark_fantasy_ui/Dark Fantasy UI Pack (CC-BY 4.0 - Of Far Different Nature)/OFDN UI PACK - Health Bar A2.png',
@@ -3396,71 +3418,75 @@
             }
         }
 
-        // --- 32ROGUES TILESET OVERRIDE (top-down pixel art, 32x32 grid) ---
-        // Replaces procedural floor tiles with hand-drawn pixel art tiles
-        // tiles.png layout: Row 0=grey stone, Row 1=blue/ice, Row 2=red/brick, Row 3=beige/cobble
-        const ROGUES_FLOOR_ROW = {
-            cathedral: 0, desert: 3, jungle: 0, hell: 2, ice: 1
+        // --- DUNGEON TILESET OVERRIDE (pre-rendered 3D stone tiles) ---
+        // Replaces procedural floor tiles with dungeon_tileset isometric tiles
+        // Crop strategy: top face of isometric block (sx=25, sy=0, sw=400, sh=215)
+        const DT_TILES = ['dt_tile1','dt_tile2','dt_tile3','dt_tile4','dt_tile5','dt_tile6','dt_tile7'];
+        const DT_ACT_TINT = {
+            cathedral: null,                    // gray stone as-is
+            desert: 'rgb(240,220,180)',         // warm sandstone
+            jungle: 'rgb(190,225,185)',         // green moss
+            hell: 'rgb(230,180,170)',           // red/dark
+            ice: 'rgb(190,210,240)',            // blue/frost
         };
-        // Dark section wall tiles (rows 8+ in tiles.png, 128px wide dark environment)
-        const ROGUES_WALL_ROW = {
-            cathedral: 8, desert: 8, jungle: 14, hell: 10, ice: 12
-        };
-        if (ogaLoaded && OGA.rogues_tiles) {
-            const floorRow = ROGUES_FLOOR_ROW[theme];
-            if (floorRow !== undefined) {
-                const fsy = floorRow * 32;
-                for (let v = 0; v < 9; v++) {
-                    const col = v % 4;
-                    const c = TILE_TEXTURES['floor_' + v];
-                    const tc = c.getContext('2d');
-                    tc.imageSmoothingEnabled = false;
-                    tc.clearRect(0, 0, TILE, TILE);
-                    // Draw base tile (scaled 32x32 → TILE x TILE)
-                    tc.drawImage(OGA.rogues_tiles, col * 32, fsy, 32, 32, 0, 0, TILE, TILE);
-                    // Variants 4-8: darken progressively for visual variety
-                    if (v >= 4) {
-                        tc.globalCompositeOperation = 'multiply';
-                        const dim = 235 - (v - 4) * 10;
-                        tc.fillStyle = `rgb(${dim},${dim},${dim})`;
-                        tc.fillRect(0, 0, TILE, TILE);
-                        tc.globalCompositeOperation = 'source-over';
-                    }
-                    // Jungle: add green tint over grey stone base
-                    if (theme === 'jungle') {
-                        tc.globalCompositeOperation = 'multiply';
-                        tc.fillStyle = 'rgb(190,225,185)';
-                        tc.fillRect(0, 0, TILE, TILE);
-                        tc.globalCompositeOperation = 'source-over';
-                    }
+        if (ogaLoaded && OGA.dt_tile1) {
+            // Floor tiles (floor_0 through floor_8)
+            for (let v = 0; v < 9; v++) {
+                const tileKey = DT_TILES[v % DT_TILES.length];
+                const src = OGA[tileKey];
+                if (!src) continue;
+                const c = TILE_TEXTURES['floor_' + v];
+                const tc = c.getContext('2d');
+                tc.imageSmoothingEnabled = true;
+                tc.clearRect(0, 0, TILE, TILE);
+                // Crop top face of isometric block, scale to TILE×TILE
+                tc.drawImage(src, 25, 0, 400, 215, 0, 0, TILE, TILE);
+                // Variants 4-8: darken progressively for visual variety
+                if (v >= 4) {
+                    tc.globalCompositeOperation = 'multiply';
+                    const dim = 235 - (v - 4) * 10;
+                    tc.fillStyle = `rgb(${dim},${dim},${dim})`;
+                    tc.fillRect(0, 0, TILE, TILE);
+                    tc.globalCompositeOperation = 'source-over';
+                }
+                // ACT-specific color tinting
+                const tint = DT_ACT_TINT[theme];
+                if (tint) {
+                    tc.globalCompositeOperation = 'multiply';
+                    tc.fillStyle = tint;
+                    tc.fillRect(0, 0, TILE, TILE);
+                    tc.globalCompositeOperation = 'source-over';
                 }
             }
-            // Override wall tiles with dark section tiles (row 0, col 0-1 of dark area)
-            const wallRow = ROGUES_WALL_ROW[theme];
-            if (wallRow !== undefined) {
-                const wsy = wallRow * 32;
-                // Wall 1
-                const w1 = TILE_TEXTURES['wall'];
-                const w1c = w1.getContext('2d');
-                w1c.imageSmoothingEnabled = false;
-                w1c.clearRect(0, 0, TILE, TILE);
-                w1c.drawImage(OGA.rogues_tiles, 0, wsy, 32, 32, 0, 0, TILE, TILE);
-                // Wall 2 (use adjacent tile for variety)
-                const w2 = TILE_TEXTURES['wall2'];
-                const w2c = w2.getContext('2d');
-                w2c.imageSmoothingEnabled = false;
-                w2c.clearRect(0, 0, TILE, TILE);
-                w2c.drawImage(OGA.rogues_tiles, 32, wsy, 32, 32, 0, 0, TILE, TILE);
-                // Deep wall (darkened version)
-                const dw = TILE_TEXTURES['deep_wall'];
-                const dwc = dw.getContext('2d');
-                dwc.imageSmoothingEnabled = false;
-                dwc.clearRect(0, 0, TILE, TILE);
-                dwc.drawImage(OGA.rogues_tiles, 0, wsy, 32, 32, 0, 0, TILE, TILE);
-                dwc.globalCompositeOperation = 'multiply';
-                dwc.fillStyle = 'rgb(80,80,80)';
-                dwc.fillRect(0, 0, TILE, TILE);
-                dwc.globalCompositeOperation = 'source-over';
+            // Wall tiles
+            const w1 = TILE_TEXTURES['wall'];
+            const w1c = w1.getContext('2d');
+            w1c.imageSmoothingEnabled = true;
+            w1c.clearRect(0, 0, TILE, TILE);
+            w1c.drawImage(OGA.dt_tile1, 0, 0, 450, 392, 0, 0, TILE, TILE);
+            // Wall 2 (different tile for variety)
+            const w2 = TILE_TEXTURES['wall2'];
+            const w2c = w2.getContext('2d');
+            w2c.imageSmoothingEnabled = true;
+            w2c.clearRect(0, 0, TILE, TILE);
+            w2c.drawImage(OGA.dt_tile4, 0, 0, 450, 392, 0, 0, TILE, TILE);
+            // Deep wall (heavily darkened)
+            const dw = TILE_TEXTURES['deep_wall'];
+            const dwc = dw.getContext('2d');
+            dwc.imageSmoothingEnabled = true;
+            dwc.clearRect(0, 0, TILE, TILE);
+            dwc.drawImage(OGA.dt_tile1, 0, 0, 450, 392, 0, 0, TILE, TILE);
+            dwc.globalCompositeOperation = 'multiply';
+            dwc.fillStyle = 'rgb(80,80,80)';
+            dwc.fillRect(0, 0, TILE, TILE);
+            dwc.globalCompositeOperation = 'source-over';
+            // Wall face: crop bottom/front face of isometric block
+            const wf = TILE_TEXTURES['wall_face'];
+            if (wf) {
+                const wfc = wf.getContext('2d');
+                wfc.imageSmoothingEnabled = true;
+                wfc.clearRect(0, 0, wf.width, wf.height);
+                wfc.drawImage(OGA.dt_tile1, 25, 250, 400, 142, 0, 0, wf.width, wf.height);
             }
         }
 
@@ -3471,8 +3497,8 @@
             if (!tex) continue;
             const tc = tex.getContext('2d');
             tc.globalCompositeOperation = 'multiply';
-            // Lighter darkening when using tile art (preserve pixel art detail)
-            tc.fillStyle = ogaLoaded && OGA.rogues_tiles ? 'rgb(240,235,230)' : 'rgb(220,215,210)';
+            // Lighter darkening when using dungeon tileset (preserve 3D detail)
+            tc.fillStyle = ogaLoaded && OGA.dt_tile1 ? 'rgb(240,235,230)' : 'rgb(220,215,210)';
             tc.fillRect(0, 0, tex.width, tex.height);
             tc.globalCompositeOperation = 'source-over';
         }
@@ -4062,39 +4088,42 @@
                             ctx.globalAlpha = prevAlpha;
                         }
 
-                        // 32rogues tileset props (barrels, crates, pots, plants, gravestones)
-                        // Props row in tiles.png: y=544+ (32px grid), various useful decoration sprites
-                        if (ogaLoaded && OGA.rogues_tiles) {
+                        // Dungeon tileset / Kenney props (barrels, crates near walls)
+                        if (ogaLoaded && OGA.dt_crate1) {
                             // Barrel/crate near walls (room edges)
                             const nearWallX = this.get(x-1,y) === 0 || this.get(x+1,y) === 0;
                             const nearWallY = this.get(x,y-1) === 0 || this.get(x,y+1) === 0;
                             if ((nearWallX || nearWallY) && (x * 67 + y * 43) % 71 < 3) {
-                                // Pick a prop: barrels, pots, crates from the props rows
-                                // Props are at approximately: barrels(160,544), pot(128,576), crate(256,576)
-                                const propSet = [
-                                    [160, 544], // barrel
-                                    [192, 544], // barrel variant
-                                    [128, 576], // pot/bag
-                                    [160, 576], // rock
-                                ];
-                                const pi = (x * 11 + y * 23) % propSet.length;
-                                const [ppx, ppy] = propSet[pi];
-                                const pSz = Math.round(TILE * 1.0);
-                                ctx.drawImage(OGA.rogues_tiles, ppx, ppy, 32, 32, sx + (TILE-pSz)/2, sy + (TILE-pSz)/2, pSz, pSz);
+                                const propImages = [OGA.dt_crate1, OGA.dt_crate2, OGA.kenney_barrel, OGA.kenney_barrels];
+                                const pi = (x * 11 + y * 23) % propImages.length;
+                                const propImg = propImages[pi];
+                                if (propImg) {
+                                    const pSz = Math.round(TILE * 1.0);
+                                    if (pi < 2) {
+                                        // Dungeon tileset crates: crop center square portion
+                                        const cSz = Math.min(propImg.width, propImg.height);
+                                        const cx = (propImg.width - cSz) / 2;
+                                        const cy = (propImg.height - cSz) / 2;
+                                        ctx.drawImage(propImg, cx, cy, cSz, cSz, sx + (TILE-pSz)/2, sy + (TILE-pSz)/2, pSz, pSz);
+                                    } else {
+                                        // Kenney iso props (256x512): crop lower 60% (object portion)
+                                        const ksy = Math.round(propImg.height * 0.4);
+                                        const ksh = propImg.height - ksy;
+                                        ctx.drawImage(propImg, 0, ksy, propImg.width, ksh, sx + (TILE-pSz)/2, sy + (TILE-pSz)/2, pSz, pSz);
+                                    }
+                                }
                             }
-                            // Scattered small objects on open floor
-                            if (!nearWallX && !nearWallY && (x * 73 + y * 59) % 97 < 2) {
-                                // Small bones, rocks, debris from tiles.png
-                                const smallProps = [
-                                    [192, 576], // small rock
-                                    [224, 576], // gem/small object
-                                ];
-                                const si = (x * 7 + y * 13) % smallProps.length;
-                                const [spx, spy] = smallProps[si];
+                            // Scattered small objects on open floor (using props_1x1)
+                            if (OGA.props_1x1 && !nearWallX && !nearWallY && (x * 73 + y * 59) % 97 < 2) {
+                                const propCellSz = 32;
+                                const cols = Math.floor(OGA.props_1x1.width / propCellSz);
+                                const si = (x * 7 + y * 13) % Math.max(1, cols * 2);
+                                const pcol = si % cols;
+                                const prow = Math.floor(si / cols);
                                 const sSz = Math.round(TILE * 0.7);
                                 const prevA = ctx.globalAlpha;
-                                ctx.globalAlpha *= 0.8;
-                                ctx.drawImage(OGA.rogues_tiles, spx, spy, 32, 32, sx + (TILE-sSz)/2, sy + (TILE-sSz)/2, sSz, sSz);
+                                ctx.globalAlpha *= 0.6;
+                                ctx.drawImage(OGA.props_1x1, pcol * propCellSz, prow * propCellSz, propCellSz, propCellSz, sx + (TILE-sSz)/2, sy + (TILE-sSz)/2, sSz, sSz);
                                 ctx.globalAlpha = prevA;
                             }
                         }
@@ -4144,7 +4173,16 @@
                         // === CHEST (Sprite) ===
                         const variant = ((x * 7 + y * 13) % 9);
                         ctx.drawImage(TILE_TEXTURES['floor_' + variant], sx, sy);
-                        drawSpr('chestClosed', sx, sy, TILE, TILE);
+                        // Use dungeon_tileset chest if available, fallback to sprite
+                        if (ogaLoaded && OGA.dt_chest_closed) {
+                            const chImg = OGA.dt_chest_closed;
+                            const cSz = Math.min(chImg.width, chImg.height);
+                            const cx = (chImg.width - cSz) / 2;
+                            const cy = (chImg.height - cSz) / 2;
+                            ctx.drawImage(chImg, cx, cy, cSz, cSz, sx, sy, TILE, TILE);
+                        } else {
+                            drawSpr('chestClosed', sx, sy, TILE, TILE);
+                        }
                         // Gold glow
                         ctx.globalAlpha = 0.12;
                         ctx.fillStyle = '#c8a030';
