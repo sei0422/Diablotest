@@ -1406,10 +1406,13 @@
     }
     loadOGASprites();
 
-    // FLARE sprite row order: row0=E, row1=SE, row2=S, row3=SW, row4=W, row5=NW, row6=N, row7=NE
+    // Creature sprite row order: row0=E, row1=SE, row2=S, row3=SW, row4=W, row5=NW, row6=N, row7=NE
+    // Hero sprite row order (mirrored): row0=W, row1=SW, row2=S, row3=SE, row4=E, row5=NE, row6=N, row7=NW
     // getFacingDir8 returns: 0=S, 1=SW, 2=W, 3=NW, 4=N, 5=NE, 6=E, 7=SE
-    // Remap: game dir index → sprite sheet row
+    // Creature remap: game dir → creature sprite row
     const OGA_DIR_REMAP = [2, 3, 4, 5, 6, 7, 0, 1];
+    // Hero remap: game dir → hero sprite row (E/W swapped)
+    const HERO_DIR_REMAP = [2, 1, 0, 7, 6, 5, 4, 3];
     // Projectile sheets use different direction order: W,SW,S,SE,E,NE,N,NW
     // Game dir: S(0),SW(1),W(2),NW(3),N(4),NE(5),E(6),SE(7)
     const OGA_PROJ_DIR_REMAP = [2, 1, 0, 7, 6, 5, 4, 3];
@@ -1547,9 +1550,9 @@
     }
 
     // Draw hi-res animated sprite (grid format: rows=directions, cols=frames)
-    // Uses OGA_DIR_REMAP to convert game direction to sprite sheet row (same as monsters)
+    // Uses HERO_DIR_REMAP (hero sprites have E/W mirrored vs creature sprites)
     function drawHiResSpr(classKey, animName, dirIdx, time, dx, dy, dw, dh) {
-        const row = OGA_DIR_REMAP[dirIdx] ?? 0;
+        const row = HERO_DIR_REMAP[dirIdx] ?? 0;
         const sheetKey = `hero_${classKey}_${animName}`;
         const img = HIRES_SPRITES[sheetKey];
         if (!img) {
