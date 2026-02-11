@@ -2896,6 +2896,41 @@
         floatingTexts.push({ x, y, text: String(text), color, life: 1.2, maxLife: 1.2, big, vy: -60 });
     }
 
+    // ========== SPELL IMPACT EFFECT SYSTEM ==========
+    const worldEffects = [];
+    const SPELL_ANIM_MAP = {
+        fire: { key: 'spell_fireball', cols: 4, cellW: 512, cellH: 384, frames: 40, duration: 0.5 },
+        ice: { key: 'spell_flash_freeze', cols: 8, cellW: 512, cellH: 512, frames: 96, duration: 0.6 },
+        heal: { key: 'spell_flash_heal', cols: 5, cellW: 288, cellH: 320, frames: 60, duration: 0.8 },
+    };
+    function spawnWorldEffect(wx, wy, type, scale) {
+        if (!type || !SPELL_ANIM_MAP[type]) return;
+        worldEffects.push({ x: wx, y: wy, type, scale: scale || 1, start: G.time });
+    }
+    function drawWorldEffects(camX, camY) {
+        for (let i = worldEffects.length - 1; i >= 0; i--) {
+            const eff = worldEffects[i];
+            const anim = SPELL_ANIM_MAP[eff.type];
+            if (!anim) { worldEffects.splice(i, 1); continue; }
+            const img = OGA[anim.key];
+            if (!img) { worldEffects.splice(i, 1); continue; }
+            const elapsed = G.time - eff.start;
+            if (elapsed >= anim.duration) { worldEffects.splice(i, 1); continue; }
+            const progress = elapsed / anim.duration;
+            const frame = Math.min(Math.floor(progress * anim.frames), anim.frames - 1);
+            const col = frame % anim.cols;
+            const row = Math.floor(frame / anim.cols);
+            const sx = col * anim.cellW, sy = row * anim.cellH;
+            const drawSz = TILE * 2.5 * eff.scale;
+            const dx = eff.x - camX - drawSz / 2;
+            const dy = eff.y - camY - drawSz / 2;
+            const prevAlpha = ctx.globalAlpha;
+            ctx.globalAlpha = (1 - progress * 0.7) * 0.8;
+            ctx.drawImage(img, sx, sy, anim.cellW, anim.cellH, dx, dy, drawSz, drawSz);
+            ctx.globalAlpha = prevAlpha;
+        }
+    }
+
     // ========== TILE TEXTURE SYSTEM (Offscreen Canvas) ==========
     // Pre-render tile textures for much better visual quality
     const TILE_TEXTURES = {};
@@ -3705,6 +3740,23 @@
                             ctx.globalAlpha = prevAlpha;
                         }
 
+                        // Kenney Isometric props (barrel, column)
+                        if (ogaLoaded && (x * 43 + y * 29) % 127 === 0) {
+                            const kenneyPropKeys = ['kenney_barrel', 'kenney_stoneColumn'];
+                            const kpKey = kenneyPropKeys[(x * 7 + y * 3) % kenneyPropKeys.length];
+                            const kpImg = OGA[kpKey];
+                            if (kpImg) {
+                                const kpW = Math.round(TILE * 1.3);
+                                const kpH = Math.round(kpW * (kpImg.height / kpImg.width));
+                                const kpX = sx + (TILE - kpW) / 2;
+                                const kpY = sy + TILE - kpH;
+                                const prevAlpha = ctx.globalAlpha;
+                                ctx.globalAlpha *= 0.85;
+                                ctx.drawImage(kpImg, kpX, kpY, kpW, kpH);
+                                ctx.globalAlpha = prevAlpha;
+                            }
+                        }
+
                         // Wall shadows
                         if (this.get(x, y - 1) === 0) {
                             ctx.drawImage(TILE_TEXTURES['shadow_top'], sx, sy);
@@ -3717,7 +3769,13 @@
                         // === STAIRS (Sprite) ===
                         const variant = ((x * 7 + y * 13) % 9);
                         ctx.drawImage(TILE_TEXTURES['floor_' + variant], sx, sy);
-                        drawSpr('stairsDown', sx, sy, TILE, TILE);
+                        if (ogaLoaded && OGA.kenney_stairs) {
+                            const ksW = Math.round(TILE * 1.4);
+                            const ksH = Math.round(ksW * (OGA.kenney_stairs.height / OGA.kenney_stairs.width));
+                            ctx.drawImage(OGA.kenney_stairs, sx + (TILE - ksW) / 2, sy + TILE - ksH, ksW, ksH);
+                        } else {
+                            drawSpr('stairsDown', sx, sy, TILE, TILE);
+                        }
 
                         // D2-style gold ethereal glow
                         const glowPulse = Math.sin(G.time * 2.5) * 0.05;
@@ -3744,7 +3802,13 @@
                         // === CHEST (Sprite) ===
                         const variant = ((x * 7 + y * 13) % 9);
                         ctx.drawImage(TILE_TEXTURES['floor_' + variant], sx, sy);
-                        drawSpr('chestClosed', sx, sy, TILE, TILE);
+                        if (ogaLoaded && OGA.kenney_chestClosed) {
+                            const kcW = Math.round(TILE * 1.3);
+                            const kcH = Math.round(kcW * (OGA.kenney_chestClosed.height / OGA.kenney_chestClosed.width));
+                            ctx.drawImage(OGA.kenney_chestClosed, sx + (TILE - kcW) / 2, sy + TILE - kcH, kcW, kcH);
+                        } else {
+                            drawSpr('chestClosed', sx, sy, TILE, TILE);
+                        }
                         // Gold glow
                         ctx.globalAlpha = 0.12;
                         ctx.fillStyle = '#c8a030';
@@ -14140,6 +14204,9 @@
                     const projElem = p.attribute === 'ice' ? 'cold' : (p.attribute === 'arcane' ? null : p.attribute || null);
                     monsterTakeDmg(m, d, isCrit, projElem);
                     emitParticles(p.x, p.y, '#ffaa00', 10, 80, 0.4, 3, 0);
+                    // Spell impact VFX
+                    if (p.attribute === 'fire') spawnWorldEffect(p.x, p.y, 'fire', 0.8);
+                    else if (p.attribute === 'ice' || p.attribute === 'cold') spawnWorldEffect(p.x, p.y, 'ice', 0.7);
                     projectiles[i] = projectiles[projectiles.length - 1]; projectiles.pop();
                     break;
                 }
@@ -14340,6 +14407,7 @@
         for (const p of projectiles) p.draw(G.camX, G.camY);
         for (const ep of enemyProjectiles) ep.draw(G.camX, G.camY);
         for (const m of monsters) m.draw(G.camX, G.camY);
+        drawWorldEffects(G.camX, G.camY);
         // Draw mercenary
         if (mercenary && mercenary.alive) mercenary.draw(G.camX, G.camY);
         for (const mp of mercProjectiles) mp.draw(G.camX, G.camY);
