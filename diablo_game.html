@@ -6939,7 +6939,8 @@
                 bounce = Math.sin(G.time * 2) * 1.5;
                 scaleY = 1 + Math.sin(G.time * 2) * 0.01;
             }
-            if (this.attacking) {
+            if (this.attacking && !hiresSpritesLoaded) {
+                // Tilt only for fallback pixel art (hi-res has its own attack anim)
                 const atkP = this.attackTimer * Math.PI * 4;
                 tilt = Math.sin(atkP) * 0.15;
                 bounce = Math.sin(atkP * 0.5) * -2;
@@ -6995,19 +6996,21 @@
             }
             ctx.restore();
 
-            // Attack slash arc effect
+            // Attack slash arc effect (8-dir aware when using hi-res sprites)
             if (this.attacking) {
                 const atkPhase = clamp(this.attackTimer * 4, 0, 1);
-                const slashDir = flipX ? -1 : 1;
-                const arcStart = -Math.PI * 0.6 * slashDir;
-                const arcEnd = Math.PI * 0.4 * slashDir;
+                // dirAngles: S=π/2, SW=3π/4, W=π, NW=-3π/4, N=-π/2, NE=-π/4, E=0, SE=π/4
+                const dirAngles8 = [Math.PI/2, Math.PI*3/4, Math.PI, -Math.PI*3/4, -Math.PI/2, -Math.PI/4, 0, Math.PI/4];
+                const curDir = this._lastDirIdx || 0;
+                const baseAngle = hiresSpritesLoaded ? dirAngles8[curDir] : (flipX ? Math.PI : 0);
                 const arcR = drawSize * 0.55;
                 ctx.save();
                 ctx.translate(sx, sy - drawSize * 0.2);
                 for (let t = 0; t < 5; t++) {
                     const trailP = clamp(atkPhase - t * 0.06, 0, 1);
-                    const segStart = arcStart + (arcEnd - arcStart) * (trailP - 0.15);
-                    const segEnd = arcStart + (arcEnd - arcStart) * trailP;
+                    const sweep = Math.PI * 0.5;
+                    const segStart = baseAngle - sweep * (trailP - 0.15);
+                    const segEnd = baseAngle - sweep * trailP;
                     ctx.globalAlpha = (1 - t * 0.18) * 0.6 * (1 - atkPhase * 0.5);
                     ctx.strokeStyle = t === 0 ? '#ffffff' : `rgba(255,${180 - t * 30},${80 - t * 15},1)`;
                     ctx.lineWidth = 3 - t * 0.5;
