@@ -1406,11 +1406,11 @@
     }
     loadOGASprites();
 
-    // FLARE sprites are isometric: map dirs rotated 45° CW on screen
-    // Sprite row SCREEN dirs: row0=SE, row1=S, row2=SW, row3=W, row4=NW, row5=N, row6=NE, row7=E
-    // getFacingDir8 returns screen dirs: 0=S, 1=SW, 2=W, 3=NW, 4=N, 5=NE, 6=E, 7=SE
-    // Remap: game screen dir → sprite row showing that screen dir
-    const OGA_DIR_REMAP = [1, 2, 3, 4, 5, 6, 7, 0];
+    // FLARE engine source (Avatar.cpp + StatBlock.cpp) defines sprite row screen dirs:
+    // row0=W, row1=NW, row2=N, row3=NE, row4=E, row5=SE, row6=S, row7=SW
+    // getFacingDir8 returns: 0=S, 1=SW, 2=W, 3=NW, 4=N, 5=NE, 6=E, 7=SE
+    // Remap: game dir → sprite row for that screen direction
+    const OGA_DIR_REMAP = [6, 7, 0, 1, 2, 3, 4, 5];
     // Projectile sheets use different direction order: W,SW,S,SE,E,NE,N,NW
     // Game dir: S(0),SW(1),W(2),NW(3),N(4),NE(5),E(6),SE(7)
     const OGA_PROJ_DIR_REMAP = [2, 1, 0, 7, 6, 5, 4, 3];
