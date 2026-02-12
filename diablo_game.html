@@ -3024,178 +3024,24 @@
             tctx.putImageData(id, 0, 0);
         }
 
-        // --- FLOOR TILES (9 variants - 20% darker, theme-based colors) ---
+        // --- FLOOR TILES (9 variants — seamless, no borders) ---
+        // Codex advice: no strokeRect borders, no bevels, low noise,
+        // no per-variant identity marks. Differences = subtle color only.
         for (let v = 0; v < 9; v++) {
             const c = document.createElement('canvas');
             c.width = TILE; c.height = TILE;
             const tc = c.getContext('2d');
 
-            // Base color from theme (20% darker)
+            // Base color from theme (subtle variation per variant)
             const darkF = 0.8;
-            const baseR = Math.round((themeColors.base[0] + v * 2) * darkF);
+            const baseR = Math.round((themeColors.base[0] + v * 1) * darkF);
             const baseG = Math.round((themeColors.base[1] + v * 1) * darkF);
-            const baseB = Math.round((themeColors.base[2] + v * 1) * darkF);
+            const baseB = Math.round((themeColors.base[2] + v * 0.5) * darkF);
             tc.fillStyle = `rgb(${baseR},${baseG},${baseB})`;
             tc.fillRect(0, 0, TILE, TILE);
 
-            // Large stone slab pattern (Diablo cathedral feel)
-            tc.strokeStyle = `rgba(10,8,6,0.8)`;
-            tc.lineWidth = 1;
-            tc.strokeRect(1, 1, TILE - 2, TILE - 2);
-
-            // Inner bevel highlight (top-left edges brighter)
-            tc.fillStyle = `rgba(255,240,220,0.03)`;
-            tc.fillRect(2, 2, TILE - 4, 1);
-            tc.fillRect(2, 2, 1, TILE - 4);
-            // Inner bevel shadow (bottom-right edges darker)
-            tc.fillStyle = `rgba(0,0,0,0.12)`;
-            tc.fillRect(2, TILE - 3, TILE - 4, 1);
-            tc.fillRect(TILE - 3, 2, 1, TILE - 4);
-
-            // ACT-specific surface treatment (before noise)
-            if (theme === 'cathedral') {
-                // Stone joint cross-pattern: subtle grid lines
-                tc.strokeStyle = 'rgba(0,0,0,0.15)';
-                tc.lineWidth = 0.5;
-                if (v % 3 === 0) { tc.beginPath(); tc.moveTo(TILE/2, 2); tc.lineTo(TILE/2, TILE-2); tc.stroke(); }
-                if (v % 3 === 1) { tc.beginPath(); tc.moveTo(2, TILE/2); tc.lineTo(TILE-2, TILE/2); tc.stroke(); }
-                // Occasional worn cross etching
-                if (v === 4 || v === 7) {
-                    tc.strokeStyle = 'rgba(180,160,120,0.04)';
-                    tc.lineWidth = 1;
-                    tc.beginPath(); tc.moveTo(TILE/2, 8); tc.lineTo(TILE/2, TILE-8); tc.moveTo(12, TILE*0.38); tc.lineTo(TILE-12, TILE*0.38); tc.stroke();
-                }
-            } else if (theme === 'desert') {
-                // Wind-worn grooves: horizontal scratchy lines
-                tc.strokeStyle = 'rgba(80,60,30,0.12)';
-                tc.lineWidth = 0.3;
-                for (let i = 0; i < 3; i++) {
-                    const ly = 6 + i * 12 + (v * 3 + i * 5) % 7;
-                    tc.beginPath(); tc.moveTo(2, ly); tc.quadraticCurveTo(TILE/2, ly + (i%2?2:-2), TILE-2, ly + 1); tc.stroke();
-                }
-                // Sandy accretion patches
-                tc.fillStyle = `rgba(${50+v*2},${42+v*2},${28+v},0.1)`;
-                tc.beginPath(); tc.ellipse(10+(v*7)%20, 10+(v*11)%20, 6, 4, v*0.5, 0, Math.PI*2); tc.fill();
-            } else if (theme === 'jungle') {
-                // Moss patches
-                tc.fillStyle = `rgba(30,${60+v*5},20,0.08)`;
-                if (v < 4) { tc.beginPath(); tc.ellipse(8+v*7, 12+v*5, 5+v, 3+v, v*0.4, 0, Math.PI*2); tc.fill(); }
-                // Organic stain: irregular dark spots
-                tc.fillStyle = 'rgba(10,20,8,0.06)';
-                for (let i = 0; i < 2; i++) {
-                    tc.beginPath(); tc.arc(8+(v*11+i*17)%28, 8+(v*7+i*13)%28, 2+i, 0, Math.PI*2); tc.fill();
-                }
-                // Thin root lines
-                if (v >= 5) {
-                    tc.strokeStyle = 'rgba(40,30,15,0.12)'; tc.lineWidth = 0.5;
-                    tc.beginPath(); tc.moveTo(0, 10+v*3); tc.quadraticCurveTo(20, 20+v*2, TILE, 15+v*4); tc.stroke();
-                }
-            } else if (theme === 'hell') {
-                // Lava hairline cracks with warm glow
-                if (v % 2 === 0) {
-                    tc.strokeStyle = `rgba(255,${60+v*10},0,0.08)`;
-                    tc.lineWidth = 0.8;
-                    tc.beginPath(); tc.moveTo(5+v*3, 2); tc.lineTo(15+v*2, TILE/2); tc.lineTo(8+v*4, TILE-3); tc.stroke();
-                    // Glow around crack
-                    tc.strokeStyle = `rgba(200,${40+v*8},0,0.04)`;
-                    tc.lineWidth = 3;
-                    tc.beginPath(); tc.moveTo(5+v*3, 2); tc.lineTo(15+v*2, TILE/2); tc.lineTo(8+v*4, TILE-3); tc.stroke();
-                }
-                // Charred texture: darker random spots
-                tc.fillStyle = 'rgba(0,0,0,0.08)';
-                for (let i = 0; i < 3; i++) {
-                    tc.beginPath(); tc.arc((v*13+i*11)%36+2, (v*7+i*17)%36+2, 1.5, 0, Math.PI*2); tc.fill();
-                }
-            } else if (theme === 'ice') {
-                // Frost crystal veins
-                tc.strokeStyle = `rgba(150,180,220,0.06)`;
-                tc.lineWidth = 0.5;
-                const cx = TILE/2 + (v*7-15)%10, cy = TILE/2 + (v*3-10)%10;
-                for (let i = 0; i < 3; i++) {
-                    const a = (v * 1.2 + i * 2.1);
-                    tc.beginPath(); tc.moveTo(cx, cy); tc.lineTo(cx + Math.cos(a)*16, cy + Math.sin(a)*16); tc.stroke();
-                }
-                // Bluish sheen patch
-                tc.fillStyle = `rgba(120,160,200,0.04)`;
-                tc.beginPath(); tc.ellipse(TILE/2, TILE/2, 12, 8, v*0.3, 0, Math.PI*2); tc.fill();
-                // Frost specks
-                tc.fillStyle = 'rgba(200,220,255,0.06)';
-                for (let i = 0; i < 2; i++) {
-                    tc.beginPath(); tc.arc((v*11+i*19)%34+3, (v*13+i*7)%34+3, 1, 0, Math.PI*2); tc.fill();
-                }
-            }
-
-            // Add stone grain noise (stronger)
-            addNoise(tc, TILE, TILE, 18, 1, 0.85, 0.7);
-
-            // Random surface details per variant
-            if (v === 0) {
-                tc.strokeStyle = 'rgba(10,8,6,0.3)';
-                tc.lineWidth = 0.5;
-                tc.beginPath();
-                tc.moveTo(8, 5); tc.lineTo(28, 18); tc.stroke();
-            } else if (v === 1) {
-                tc.strokeStyle = 'rgba(8,5,3,0.4)';
-                tc.lineWidth = 0.5;
-                tc.beginPath();
-                tc.moveTo(15, 2); tc.lineTo(18, 15); tc.lineTo(14, 30); tc.lineTo(17, 38); tc.stroke();
-            } else if (v === 2) {
-                tc.fillStyle = 'rgba(0,0,0,0.06)';
-                tc.beginPath();
-                tc.ellipse(TILE/2, TILE/2, 12, 10, 0.3, 0, Math.PI * 2);
-                tc.fill();
-            } else if (v === 3) {
-                tc.strokeStyle = 'rgba(8,6,4,0.25)';
-                tc.lineWidth = 0.5;
-                tc.beginPath();
-                tc.moveTo(5, 10); tc.lineTo(30, 28); tc.stroke();
-                tc.beginPath();
-                tc.moveTo(25, 5); tc.lineTo(10, 32); tc.stroke();
-            } else if (v === 4) {
-                tc.fillStyle = 'rgba(15,12,8,0.12)';
-                tc.beginPath();
-                tc.ellipse(TILE * 0.35, TILE * 0.6, 8, 6, 0.5, 0, Math.PI * 2);
-                tc.fill();
-                tc.fillStyle = 'rgba(10,8,5,0.08)';
-                tc.beginPath();
-                tc.ellipse(TILE * 0.6, TILE * 0.35, 6, 4, -0.3, 0, Math.PI * 2);
-                tc.fill();
-            } else if (v === 5) {
-                tc.fillStyle = 'rgba(0,0,0,0.06)';
-                tc.fillRect(0, 0, 6, 6);
-                tc.fillStyle = 'rgba(255,240,220,0.02)';
-                tc.fillRect(1, 1, 4, 4);
-            } else if (v === 6) {
-                // Pillar base mark
-                tc.fillStyle = 'rgba(0,0,0,0.08)';
-                tc.beginPath();
-                tc.arc(TILE/2, TILE/2, 10, 0, Math.PI * 2);
-                tc.fill();
-                tc.strokeStyle = 'rgba(20,15,10,0.3)';
-                tc.lineWidth = 0.5;
-                tc.beginPath();
-                tc.arc(TILE/2, TILE/2, 10, 0, Math.PI * 2);
-                tc.stroke();
-            } else if (v === 7) {
-                // Bone scatter
-                tc.strokeStyle = 'rgba(180,170,150,0.1)';
-                tc.lineWidth = 1.5;
-                tc.beginPath(); tc.moveTo(10, 20); tc.lineTo(22, 18); tc.stroke();
-                tc.beginPath(); tc.moveTo(25, 28); tc.lineTo(32, 22); tc.stroke();
-                tc.fillStyle = 'rgba(160,150,130,0.08)';
-                tc.beginPath(); tc.arc(18, 30, 2, 0, Math.PI * 2); tc.fill();
-            } else if (v === 8) {
-                // Cracked pottery
-                tc.strokeStyle = 'rgba(80,60,40,0.2)';
-                tc.lineWidth = 0.5;
-                tc.beginPath();
-                tc.arc(TILE * 0.3, TILE * 0.7, 5, 0, Math.PI * 1.4);
-                tc.stroke();
-                tc.fillStyle = 'rgba(60,45,30,0.1)';
-                tc.beginPath();
-                tc.ellipse(TILE * 0.3, TILE * 0.7, 4, 3, 0.2, 0, Math.PI * 2);
-                tc.fill();
-            }
+            // Very light stone grain noise (low intensity = less visible seams)
+            addNoise(tc, TILE, TILE, 5, 1, 0.85, 0.7);
 
             TILE_TEXTURES['floor_' + v] = c;
         }
@@ -3804,78 +3650,28 @@
 
                     } else if (t === 1) {
                         // === FLOOR ===
-                        const variant = ((x * 7 + y * 13) % 9);
+                        // Better hash to avoid directional striping (Codex advice)
+                        const variant = ((x * 2654435761 + y * 2246822519) >>> 0) % 9;
                         ctx.drawImage(TILE_TEXTURES['floor_' + variant], sx, sy);
+
+                        // Large-scale tint overlay: subtle color zones spanning ~4 tiles
+                        // Breaks the 40px repetition cadence without adding per-tile detail
+                        const zoneX = Math.floor(x / 4), zoneY = Math.floor(y / 4);
+                        const zoneHash = ((zoneX * 1597334677 + zoneY * 3812015801) >>> 0) % 100;
+                        if (zoneHash < 30) {
+                            // Darker patch (worn stone / dampness)
+                            ctx.fillStyle = 'rgba(0,0,0,0.04)';
+                            ctx.fillRect(sx, sy, TILE, TILE);
+                        } else if (zoneHash < 50) {
+                            // Warmer patch (torch-lit area)
+                            ctx.fillStyle = 'rgba(40,25,10,0.03)';
+                            ctx.fillRect(sx, sy, TILE, TILE);
+                        }
 
                         // Blood splatters (rare, pre-rendered texture)
                         const bloodHash = (x * 17 + y * 31) % 53;
                         if (bloodHash < 2) {
                             ctx.drawImage(TILE_TEXTURES['blood_' + (bloodHash % 3)], sx, sy);
-                        }
-
-                        // Spider web (corners where two walls meet — contextual)
-                        if ((x * 37 + y * 19) % 89 === 0 && this.get(x-1,y) === 0 && this.get(x,y-1) === 0) {
-                            ctx.strokeStyle = 'rgba(180,170,160,0.08)';
-                            ctx.lineWidth = 0.5;
-                            ctx.beginPath();
-                            ctx.moveTo(sx, sy); ctx.lineTo(sx + 14, sy + 3);
-                            ctx.moveTo(sx, sy); ctx.lineTo(sx + 3, sy + 14);
-                            ctx.moveTo(sx, sy); ctx.lineTo(sx + 10, sy + 10);
-                            ctx.moveTo(sx + 4, sy + 2); ctx.lineTo(sx + 2, sy + 4);
-                            ctx.moveTo(sx + 8, sy + 3); ctx.lineTo(sx + 3, sy + 8);
-                            ctx.stroke();
-                        }
-
-                        // ACT-specific accent (1 type per ACT, wall-adjacent only, low density)
-                        const actTheme = getCurrentActDef().tileTheme;
-                        const nearWall = this.get(x,y-1) === 0 || this.get(x,y+1) === 0 || this.get(x-1,y) === 0 || this.get(x+1,y) === 0;
-                        if (actTheme === 'cathedral' && nearWall && (x * 43 + y * 67) % 157 === 0) {
-                            // Ritual circle arc — rare, near walls
-                            ctx.strokeStyle = 'rgba(100,80,50,0.07)';
-                            ctx.lineWidth = 0.5;
-                            ctx.beginPath();
-                            ctx.arc(sx + TILE/2, sy + TILE/2, 14, 0.3, Math.PI * 1.7);
-                            ctx.stroke();
-                        } else if (actTheme === 'desert' && (x * 67 + y * 41) % 97 === 0) {
-                            // Cracked earth lines
-                            ctx.strokeStyle = 'rgba(30,22,12,0.15)';
-                            ctx.lineWidth = 0.5;
-                            ctx.beginPath();
-                            ctx.moveTo(sx + 5, sy + 12); ctx.lineTo(sx + 18, sy + 16);
-                            ctx.lineTo(sx + 15, sy + 28);
-                            ctx.stroke();
-                        } else if (actTheme === 'jungle' && nearWall && this.get(x,y-1) === 0 && (x * 47 + y * 29) % 61 === 0) {
-                            // Vine tendril from north wall
-                            ctx.strokeStyle = 'rgba(40,80,25,0.18)';
-                            ctx.lineWidth = 1;
-                            ctx.beginPath();
-                            ctx.moveTo(sx + 10 + (x*7)%20, sy);
-                            ctx.quadraticCurveTo(sx + 15 + (x*3)%10, sy + 12, sx + 8 + (x*11)%22, sy + 22);
-                            ctx.stroke();
-                        } else if (actTheme === 'hell' && (x * 43 + y * 59) % 79 === 0) {
-                            // Lava crack — signature hell element
-                            ctx.strokeStyle = 'rgba(255,80,0,0.06)';
-                            ctx.lineWidth = 3;
-                            ctx.beginPath();
-                            ctx.moveTo(sx + (x*7)%15 + 5, sy + 2);
-                            ctx.lineTo(sx + 20 + (x*3)%10, sy + TILE/2);
-                            ctx.lineTo(sx + (y*11)%20 + 8, sy + TILE - 3);
-                            ctx.stroke();
-                            ctx.strokeStyle = 'rgba(255,140,20,0.12)';
-                            ctx.lineWidth = 1;
-                            ctx.stroke();
-                        } else if (actTheme === 'ice' && nearWall && (x * 61 + y * 37) % 83 === 0) {
-                            // Frost formation — near walls only
-                            ctx.strokeStyle = 'rgba(160,200,240,0.08)';
-                            ctx.lineWidth = 0.5;
-                            const fcx = sx + 12 + (x*7)%18, fcy = sy + 12 + (y*11)%18;
-                            for (let i = 0; i < 4; i++) {
-                                const a = i * Math.PI / 2 + (x+y) * 0.3;
-                                ctx.beginPath();
-                                ctx.moveTo(fcx, fcy);
-                                ctx.lineTo(fcx + Math.cos(a)*10, fcy + Math.sin(a)*10);
-                                ctx.stroke();
-                            }
                         }
 
                         // Wall shadows
@@ -3888,7 +3684,7 @@
 
                     } else if (t === 2) {
                         // === STAIRS (Sprite) ===
-                        const variant = ((x * 7 + y * 13) % 9);
+                        const variant = ((x * 2654435761 + y * 2246822519) >>> 0) % 9;
                         ctx.drawImage(TILE_TEXTURES['floor_' + variant], sx, sy);
                         if (ogaLoaded && OGA.kenney_stairs) {
                             const ksW = Math.round(TILE * 1.4);
