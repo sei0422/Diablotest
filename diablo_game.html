@@ -1370,6 +1370,8 @@
             spell_flash_heal: 'asset/opengameart/spell_anims/flash_heal.png',
             // Kenney Isometric: only stairs kept (used for stair tile rendering)
             kenney_stairs: 'asset/opengameart/kenney_dungeon/Isometric/stairs_S.png',
+            // 2D Pixel Dungeon tileset (16px grid, 10×10 cells, dark pixel art dungeon)
+            pixel_dungeon_ts: 'asset/2D Pixel Dungeon Asset Pack/character and tileset/Dungeon_Tileset.png',
             // --- New Creature Sprites (Phase 1) ---
             creature_demon: 'asset/opengameart/creatures/demon.png',
             creature_minotaur: 'asset/opengameart/creatures/minotaur.png',
@@ -3336,15 +3338,92 @@
             }
         }
 
-        // --- GLOBAL DARKENING PASS (multiply composite, lighter for tile art) ---
+        // --- 2D PIXEL DUNGEON TILESET OVERRIDE ---
+        // Real pixel art tiles with ACT-specific hue-rotate theming (Codex-validated approach)
+        // Overrides all previous tile layers (procedural, sprite, dungeon_tileset)
+        if (ogaLoaded && OGA.pixel_dungeon_ts) {
+            const pdImg = OGA.pixel_dungeon_ts;
+            const PD = 16; // 16px source tile cells in 10×10 grid (160×160)
+
+            // ACT theme CSS filters (base tileset: dark purple-brown dungeon)
+            // Codex advice: combine hue-rotate with saturate(1.1-1.4) and brightness(0.95-1.15)
+            const PD_THEME = {
+                cathedral: '',  // Original dark dungeon colors
+                desert: 'hue-rotate(30deg) saturate(1.4) brightness(1.1)',
+                jungle: 'hue-rotate(95deg) saturate(1.2)',
+                hell: 'hue-rotate(330deg) saturate(1.5) brightness(1.1)',
+                ice: 'hue-rotate(190deg) saturate(1.2) brightness(1.05)',
+            };
+            const pdF = PD_THEME[theme] || '';
+
+            // Floor tiles: 9 variants from the auto-tile interior region
+            // In the 10×10 grid, cols 1-3 rows 1-3 contain floor and transition tiles
+            const pdFloor = [
+                [1,1], [2,1], [3,1],
+                [1,2], [2,2], [3,2],
+                [1,3], [2,3], [3,3],
+            ];
+            for (let v = 0; v < 9; v++) {
+                const [col, row] = pdFloor[v];
+                const tex = TILE_TEXTURES['floor_' + v];
+                const tc = tex.getContext('2d');
+                tc.clearRect(0, 0, TILE, TILE);
+                tc.imageSmoothingEnabled = false;
+                if (pdF) tc.filter = pdF;
+                tc.drawImage(pdImg, col * PD, row * PD, PD, PD, 0, 0, TILE, TILE);
+                tc.filter = 'none';
+            }
+
+            // Wall tiles (stone block surface viewed from above)
+            for (const [key, col, row] of [['wall', 0, 0], ['wall2', 2, 0]]) {
+                const tex = TILE_TEXTURES[key];
+                const tc = tex.getContext('2d');
+                tc.clearRect(0, 0, TILE, TILE);
+                tc.imageSmoothingEnabled = false;
+                if (pdF) tc.filter = pdF;
+                tc.drawImage(pdImg, col * PD, row * PD, PD, PD, 0, 0, TILE, TILE);
+                tc.filter = 'none';
+            }
+
+            // Deep wall (unexposed walls = very dark void)
+            {
+                const dw = TILE_TEXTURES['deep_wall'];
+                const dwc = dw.getContext('2d');
+                dwc.clearRect(0, 0, TILE, TILE);
+                dwc.imageSmoothingEnabled = false;
+                dwc.filter = (pdF ? pdF + ' ' : '') + 'brightness(0.2)';
+                dwc.drawImage(pdImg, 1 * PD, 1 * PD, PD, PD, 0, 0, TILE, TILE);
+                dwc.filter = 'none';
+            }
+
+            // Wall face (vertical face below exposed walls, squished wall tile + darkened)
+            {
+                const wf = TILE_TEXTURES['wall_face'];
+                if (wf) {
+                    const wfc = wf.getContext('2d');
+                    wfc.clearRect(0, 0, wf.width, wf.height);
+                    wfc.imageSmoothingEnabled = false;
+                    wfc.filter = (pdF ? pdF + ' ' : '') + 'brightness(0.5)';
+                    wfc.drawImage(pdImg, 0, 0, PD, PD, 0, 0, wf.width, wf.height);
+                    wfc.filter = 'none';
+                    wfc.fillStyle = 'rgba(0,0,0,0.5)';
+                    wfc.fillRect(0, wf.height - 2, wf.width, 2);
+                }
+            }
+
+            console.log('2D Pixel Dungeon tiles:', theme, pdF || '(original)');
+        }
+
+        // --- GLOBAL DARKENING PASS (multiply composite) ---
         const darkenKeys = ['floor_0','floor_1','floor_2','floor_3','floor_4','floor_5','floor_6','floor_7','floor_8','wall','wall2'];
         for (const key of darkenKeys) {
             const tex = TILE_TEXTURES[key];
             if (!tex) continue;
             const tc = tex.getContext('2d');
             tc.globalCompositeOperation = 'multiply';
-            // Lighter darkening when using dungeon tileset (preserve 3D detail)
-            tc.fillStyle = ogaLoaded && OGA.dt_tile1 ? 'rgb(240,235,230)' : 'rgb(220,215,210)';
+            // Minimal darkening for pixel art tileset (preserve detail), heavier for procedural
+            tc.fillStyle = ogaLoaded && OGA.pixel_dungeon_ts ? 'rgb(252,250,248)' :
+                           (ogaLoaded && OGA.dt_tile1 ? 'rgb(240,235,230)' : 'rgb(220,215,210)');
             tc.fillRect(0, 0, tex.width, tex.height);
             tc.globalCompositeOperation = 'source-over';
         }
