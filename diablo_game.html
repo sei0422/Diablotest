@@ -3807,33 +3807,13 @@
                         const variant = ((x * 7 + y * 13) % 9);
                         ctx.drawImage(TILE_TEXTURES['floor_' + variant], sx, sy);
 
-                        // Blood splatters (deterministic)
+                        // Blood splatters (rare, pre-rendered texture)
                         const bloodHash = (x * 17 + y * 31) % 53;
-                        if (bloodHash < 3) {
+                        if (bloodHash < 2) {
                             ctx.drawImage(TILE_TEXTURES['blood_' + (bloodHash % 3)], sx, sy);
                         }
 
-                        // Bone fragment
-                        if ((x * 23 + y * 11) % 67 < 4) {
-                            ctx.fillStyle = 'rgba(160,150,120,0.12)';
-                            ctx.save();
-                            ctx.translate(sx + 18, sy + 24);
-                            ctx.rotate((x * 3 + y * 7) * 0.7);
-                            ctx.fillRect(-5, -1, 10, 2);
-                            ctx.fillRect(-2, -3, 2, 6); // cross bone
-                            ctx.restore();
-                        }
-
-                        // Pebble
-                        if ((x * 19 + y * 29) % 41 < 5) {
-                            ctx.fillStyle = 'rgba(50,45,38,0.5)';
-                            ctx.beginPath();
-                            ctx.arc(sx + ((x * 7) % 30) + 5, sy + ((y * 11) % 30) + 5, 1.5, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-
-                        // === ENVIRONMENT DETAILS ===
-                        // Spider web (in corners near walls)
+                        // Spider web (corners where two walls meet — contextual)
                         if ((x * 37 + y * 19) % 89 === 0 && this.get(x-1,y) === 0 && this.get(x,y-1) === 0) {
                             ctx.strokeStyle = 'rgba(180,170,160,0.08)';
                             ctx.lineWidth = 0.5;
@@ -3846,285 +3826,55 @@
                             ctx.stroke();
                         }
 
-                        // Floor crack
-                        if ((x * 41 + y * 23) % 73 < 3) {
-                            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                        // ACT-specific accent (1 type per ACT, wall-adjacent only, low density)
+                        const actTheme = getCurrentActDef().tileTheme;
+                        const nearWall = this.get(x,y-1) === 0 || this.get(x,y+1) === 0 || this.get(x-1,y) === 0 || this.get(x+1,y) === 0;
+                        if (actTheme === 'cathedral' && nearWall && (x * 43 + y * 67) % 157 === 0) {
+                            // Ritual circle arc — rare, near walls
+                            ctx.strokeStyle = 'rgba(100,80,50,0.07)';
                             ctx.lineWidth = 0.5;
                             ctx.beginPath();
-                            ctx.moveTo(sx + 8, sy + 12);
-                            ctx.lineTo(sx + 14, sy + 20);
-                            ctx.lineTo(sx + 11, sy + 30);
+                            ctx.arc(sx + TILE/2, sy + TILE/2, 14, 0.3, Math.PI * 1.7);
                             ctx.stroke();
-                        }
-
-                        // Scorch mark
-                        if ((x * 47 + y * 31) % 97 < 3) {
-                            ctx.fillStyle = 'rgba(10,8,5,0.12)';
-                            ctx.beginPath();
-                            ctx.ellipse(sx + TILE/2, sy + TILE/2, 8, 6, (x * 2 + y) * 0.5, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-
-                        // Dust pile
-                        if ((x * 29 + y * 43) % 83 < 3) {
-                            ctx.fillStyle = 'rgba(40,35,28,0.15)';
-                            ctx.beginPath();
-                            ctx.ellipse(sx + 12 + (x % 10), sy + 25 + (y % 8), 5, 2.5, 0, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-
-                        // Skull
-                        if ((x * 53 + y * 37) % 127 < 3) {
-                            ctx.fillStyle = 'rgba(140,130,110,0.1)';
-                            ctx.beginPath();
-                            ctx.arc(sx + 20, sy + 22, 3.5, 0, Math.PI * 2);
-                            ctx.fill();
-                            ctx.fillStyle = 'rgba(100,90,75,0.08)';
-                            ctx.fillRect(sx + 18, sy + 25, 4, 3);
-                        }
-
-                        // === ACT-SPECIFIC DECORATIONS ===
-                        const actTheme = getCurrentActDef().tileTheme;
-                        if (actTheme === 'cathedral') {
-                            // Candle wax drip marks
-                            if ((x * 61 + y * 47) % 43 === 0) {
-                                ctx.fillStyle = 'rgba(180,160,100,0.08)';
-                                ctx.beginPath();
-                                ctx.ellipse(sx + 15 + (x*3)%12, sy + 10 + (y*5)%18, 3, 5, 0, 0, Math.PI * 2);
-                                ctx.fill();
-                                ctx.fillStyle = 'rgba(200,180,120,0.12)';
-                                ctx.beginPath();
-                                ctx.arc(sx + 15 + (x*3)%12, sy + 8 + (y*5)%18, 1.5, 0, Math.PI * 2);
-                                ctx.fill();
-                            }
-                            // Broken stone fragment
-                            if ((x * 31 + y * 59) % 61 < 2) {
-                                ctx.fillStyle = 'rgba(40,35,28,0.18)';
-                                ctx.save();
-                                ctx.translate(sx + 25 + (x%8), sy + 20 + (y%10));
-                                ctx.rotate((x*5+y*3)*0.4);
-                                ctx.fillRect(-4, -2, 8, 4);
-                                ctx.fillRect(-2, -4, 5, 3);
-                                ctx.restore();
-                            }
-                            // Ritual circle fragment
-                            if ((x * 43 + y * 67) % 157 === 0) {
-                                ctx.strokeStyle = 'rgba(100,80,50,0.07)';
-                                ctx.lineWidth = 0.5;
-                                ctx.beginPath();
-                                ctx.arc(sx + TILE/2, sy + TILE/2, 14, 0.3, Math.PI * 1.7);
-                                ctx.stroke();
-                            }
-                        } else if (actTheme === 'desert') {
-                            // Sand drift patches (higher density)
-                            if ((x * 43 + y * 31) % 29 < 3) {
-                                const sdx = sx + (x*7)%28 + 4, sdy = sy + (y*11)%24 + 8;
-                                ctx.fillStyle = 'rgba(70,58,38,0.12)';
-                                ctx.beginPath();
-                                ctx.ellipse(sdx, sdy, 7, 3, (x+y)*0.3, 0, Math.PI * 2);
-                                ctx.fill();
-                            }
+                        } else if (actTheme === 'desert' && (x * 67 + y * 41) % 97 === 0) {
                             // Cracked earth lines
-                            if ((x * 67 + y * 41) % 47 === 0) {
-                                ctx.strokeStyle = 'rgba(30,22,12,0.2)';
-                                ctx.lineWidth = 0.5;
+                            ctx.strokeStyle = 'rgba(30,22,12,0.15)';
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath();
+                            ctx.moveTo(sx + 5, sy + 12); ctx.lineTo(sx + 18, sy + 16);
+                            ctx.lineTo(sx + 15, sy + 28);
+                            ctx.stroke();
+                        } else if (actTheme === 'jungle' && nearWall && this.get(x,y-1) === 0 && (x * 47 + y * 29) % 61 === 0) {
+                            // Vine tendril from north wall
+                            ctx.strokeStyle = 'rgba(40,80,25,0.18)';
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(sx + 10 + (x*7)%20, sy);
+                            ctx.quadraticCurveTo(sx + 15 + (x*3)%10, sy + 12, sx + 8 + (x*11)%22, sy + 22);
+                            ctx.stroke();
+                        } else if (actTheme === 'hell' && (x * 43 + y * 59) % 79 === 0) {
+                            // Lava crack — signature hell element
+                            ctx.strokeStyle = 'rgba(255,80,0,0.06)';
+                            ctx.lineWidth = 3;
+                            ctx.beginPath();
+                            ctx.moveTo(sx + (x*7)%15 + 5, sy + 2);
+                            ctx.lineTo(sx + 20 + (x*3)%10, sy + TILE/2);
+                            ctx.lineTo(sx + (y*11)%20 + 8, sy + TILE - 3);
+                            ctx.stroke();
+                            ctx.strokeStyle = 'rgba(255,140,20,0.12)';
+                            ctx.lineWidth = 1;
+                            ctx.stroke();
+                        } else if (actTheme === 'ice' && nearWall && (x * 61 + y * 37) % 83 === 0) {
+                            // Frost formation — near walls only
+                            ctx.strokeStyle = 'rgba(160,200,240,0.08)';
+                            ctx.lineWidth = 0.5;
+                            const fcx = sx + 12 + (x*7)%18, fcy = sy + 12 + (y*11)%18;
+                            for (let i = 0; i < 4; i++) {
+                                const a = i * Math.PI / 2 + (x+y) * 0.3;
                                 ctx.beginPath();
-                                ctx.moveTo(sx + 5, sy + 12);
-                                ctx.lineTo(sx + 18, sy + 16);
-                                ctx.lineTo(sx + 15, sy + 28);
-                                ctx.moveTo(sx + 18, sy + 16);
-                                ctx.lineTo(sx + 32, sy + 20);
+                                ctx.moveTo(fcx, fcy);
+                                ctx.lineTo(fcx + Math.cos(a)*10, fcy + Math.sin(a)*10);
                                 ctx.stroke();
-                            }
-                            // Pottery shard
-                            if ((x * 37 + y * 53) % 83 === 0) {
-                                ctx.fillStyle = 'rgba(120,80,40,0.15)';
-                                ctx.save();
-                                ctx.translate(sx + 28, sy + 30);
-                                ctx.rotate((x*3+y)*0.6);
-                                ctx.beginPath();
-                                ctx.moveTo(0,-3); ctx.lineTo(4,0); ctx.lineTo(2,4); ctx.lineTo(-3,2); ctx.closePath();
-                                ctx.fill();
-                                ctx.restore();
-                            }
-                        } else if (actTheme === 'jungle') {
-                            // Vine tendrils from walls
-                            if ((x * 47 + y * 29) % 31 < 2 && this.get(x, y-1) === 0) {
-                                ctx.strokeStyle = 'rgba(40,80,25,0.18)';
-                                ctx.lineWidth = 1;
-                                ctx.beginPath();
-                                ctx.moveTo(sx + 10 + (x*7)%20, sy);
-                                ctx.quadraticCurveTo(sx + 15 + (x*3)%10, sy + 12, sx + 8 + (x*11)%22, sy + 22);
-                                ctx.stroke();
-                                // Leaf at tip
-                                ctx.fillStyle = 'rgba(50,90,30,0.15)';
-                                ctx.beginPath();
-                                ctx.ellipse(sx + 8 + (x*11)%22, sy + 22, 3, 1.5, (x+y)*0.5, 0, Math.PI * 2);
-                                ctx.fill();
-                            }
-                            // Glowing mushroom
-                            if ((x * 59 + y * 43) % 67 === 0) {
-                                const mx = sx + 10 + (x*9)%20, my = sy + 20 + (y*7)%14;
-                                // Glow
-                                ctx.fillStyle = 'rgba(80,200,60,0.06)';
-                                ctx.beginPath(); ctx.arc(mx, my, 6, 0, Math.PI * 2); ctx.fill();
-                                // Mushroom cap
-                                ctx.fillStyle = 'rgba(60,140,40,0.2)';
-                                ctx.beginPath(); ctx.ellipse(mx, my - 1, 3, 2, 0, 0, Math.PI * 2); ctx.fill();
-                                // Stem
-                                ctx.fillStyle = 'rgba(80,100,60,0.15)';
-                                ctx.fillRect(mx - 0.5, my, 1, 3);
-                            }
-                            // Water puddle
-                            if ((x * 71 + y * 37) % 97 === 0) {
-                                ctx.fillStyle = 'rgba(30,60,50,0.1)';
-                                ctx.beginPath();
-                                ctx.ellipse(sx + TILE/2, sy + TILE/2 + 5, 9, 5, 0.2, 0, Math.PI * 2);
-                                ctx.fill();
-                                // Reflection sheen
-                                ctx.fillStyle = 'rgba(100,160,140,0.04)';
-                                ctx.beginPath();
-                                ctx.ellipse(sx + TILE/2 - 2, sy + TILE/2 + 3, 5, 2.5, 0.2, 0, Math.PI * 2);
-                                ctx.fill();
-                            }
-                        } else if (actTheme === 'hell') {
-                            // Lava crack (glowing orange line)
-                            if ((x * 43 + y * 59) % 37 < 2) {
-                                // Outer glow
-                                ctx.strokeStyle = 'rgba(255,80,0,0.06)';
-                                ctx.lineWidth = 4;
-                                ctx.beginPath();
-                                ctx.moveTo(sx + (x*7)%15 + 5, sy + 2);
-                                ctx.lineTo(sx + 20 + (x*3)%10, sy + TILE/2);
-                                ctx.lineTo(sx + (y*11)%20 + 8, sy + TILE - 3);
-                                ctx.stroke();
-                                // Core line
-                                ctx.strokeStyle = 'rgba(255,140,20,0.15)';
-                                ctx.lineWidth = 1;
-                                ctx.beginPath();
-                                ctx.moveTo(sx + (x*7)%15 + 5, sy + 2);
-                                ctx.lineTo(sx + 20 + (x*3)%10, sy + TILE/2);
-                                ctx.lineTo(sx + (y*11)%20 + 8, sy + TILE - 3);
-                                ctx.stroke();
-                            }
-                            // Ember glow spots
-                            if ((x * 31 + y * 67) % 23 < 2) {
-                                const ex = sx + (x*13)%30 + 5, ey = sy + (y*17)%30 + 5;
-                                ctx.fillStyle = 'rgba(255,100,20,0.08)';
-                                ctx.beginPath(); ctx.arc(ex, ey, 4, 0, Math.PI * 2); ctx.fill();
-                                ctx.fillStyle = 'rgba(255,180,60,0.12)';
-                                ctx.beginPath(); ctx.arc(ex, ey, 1.5, 0, Math.PI * 2); ctx.fill();
-                            }
-                            // Demonic rune
-                            if ((x * 53 + y * 41) % 113 === 0) {
-                                ctx.strokeStyle = 'rgba(200,40,20,0.07)';
-                                ctx.lineWidth = 0.8;
-                                ctx.beginPath();
-                                const rcx = sx + TILE/2, rcy = sy + TILE/2;
-                                ctx.arc(rcx, rcy, 8, 0, Math.PI * 2); ctx.stroke();
-                                ctx.beginPath();
-                                for (let i = 0; i < 5; i++) {
-                                    const a = i * Math.PI * 2 / 5 - Math.PI/2;
-                                    const a2 = ((i+2)%5) * Math.PI * 2 / 5 - Math.PI/2;
-                                    ctx.moveTo(rcx + Math.cos(a)*8, rcy + Math.sin(a)*8);
-                                    ctx.lineTo(rcx + Math.cos(a2)*8, rcy + Math.sin(a2)*8);
-                                }
-                                ctx.stroke();
-                            }
-                        } else if (actTheme === 'ice') {
-                            // Frost formation
-                            if ((x * 61 + y * 37) % 41 < 2) {
-                                ctx.strokeStyle = 'rgba(160,200,240,0.08)';
-                                ctx.lineWidth = 0.5;
-                                const fcx = sx + 12 + (x*7)%18, fcy = sy + 12 + (y*11)%18;
-                                for (let i = 0; i < 4; i++) {
-                                    const a = i * Math.PI / 2 + (x+y) * 0.3;
-                                    ctx.beginPath();
-                                    ctx.moveTo(fcx, fcy);
-                                    ctx.lineTo(fcx + Math.cos(a)*10, fcy + Math.sin(a)*10);
-                                    // Side branches
-                                    const mx = fcx + Math.cos(a)*6, my = fcy + Math.sin(a)*6;
-                                    ctx.moveTo(mx, my);
-                                    ctx.lineTo(mx + Math.cos(a+0.8)*4, my + Math.sin(a+0.8)*4);
-                                    ctx.moveTo(mx, my);
-                                    ctx.lineTo(mx + Math.cos(a-0.8)*4, my + Math.sin(a-0.8)*4);
-                                    ctx.stroke();
-                                }
-                            }
-                            // Frozen puddle
-                            if ((x * 47 + y * 53) % 73 === 0) {
-                                ctx.fillStyle = 'rgba(100,140,180,0.07)';
-                                ctx.beginPath();
-                                ctx.ellipse(sx + TILE/2, sy + TILE/2, 10, 6, (x*3+y)*0.2, 0, Math.PI * 2);
-                                ctx.fill();
-                                // Ice sheen highlight
-                                ctx.fillStyle = 'rgba(180,210,240,0.05)';
-                                ctx.beginPath();
-                                ctx.ellipse(sx + TILE/2 - 3, sy + TILE/2 - 2, 5, 2.5, 0.3, 0, Math.PI * 2);
-                                ctx.fill();
-                            }
-                            // Ice crystal speck
-                            if ((x * 37 + y * 29) % 31 < 2) {
-                                ctx.fillStyle = 'rgba(200,225,255,0.1)';
-                                ctx.beginPath();
-                                const icx = sx + (x*11)%32 + 4, icy = sy + (y*7)%32 + 4;
-                                // Diamond shape
-                                ctx.moveTo(icx, icy-2); ctx.lineTo(icx+1.5, icy); ctx.lineTo(icx, icy+2); ctx.lineTo(icx-1.5, icy);
-                                ctx.closePath(); ctx.fill();
-                            }
-                        }
-
-                        // OGA Props decoration (256px cells, rows 0-6 valid)
-                        if (ogaLoaded && OGA.props_1x1 && (x * 59 + y * 41) % 151 < 4) {
-                            const propCol = (x * 13 + y * 7) % 8;
-                            const propRow = (x * 3 + y * 11) % 7; // rows 0-6 all valid
-                            const propCellSz = (OGA.props_1x1.width / 8) | 0; // 256
-                            const psx = propCol * propCellSz, psy = propRow * propCellSz;
-                            const propSz = Math.round(TILE * 1.2);
-                            const propOff = (TILE - propSz) / 2;
-                            const prevAlpha = ctx.globalAlpha;
-                            ctx.globalAlpha *= 0.6;
-                            ctx.drawImage(OGA.props_1x1, psx, psy, propCellSz, propCellSz, sx + propOff, sy + propOff, propSz, propSz);
-                            ctx.globalAlpha = prevAlpha;
-                        }
-
-                        // Dungeon tileset / Kenney props (barrels, crates near walls)
-                        if (ogaLoaded && OGA.dt_crate1) {
-                            // Barrel/crate near walls (room edges)
-                            const nearWallX = this.get(x-1,y) === 0 || this.get(x+1,y) === 0;
-                            const nearWallY = this.get(x,y-1) === 0 || this.get(x,y+1) === 0;
-                            if ((nearWallX || nearWallY) && (x * 67 + y * 43) % 71 < 3) {
-                                const propImages = [OGA.dt_crate1, OGA.dt_crate2, OGA.kenney_barrel, OGA.kenney_barrels];
-                                const pi = (x * 11 + y * 23) % propImages.length;
-                                const propImg = propImages[pi];
-                                if (propImg) {
-                                    const pSz = Math.round(TILE * 1.0);
-                                    if (pi < 2) {
-                                        // Dungeon tileset crates: crop center square portion
-                                        const cSz = Math.min(propImg.width, propImg.height);
-                                        const cx = (propImg.width - cSz) / 2;
-                                        const cy = (propImg.height - cSz) / 2;
-                                        ctx.drawImage(propImg, cx, cy, cSz, cSz, sx + (TILE-pSz)/2, sy + (TILE-pSz)/2, pSz, pSz);
-                                    } else {
-                                        // Kenney iso props (256x512): crop lower 60% (object portion)
-                                        const ksy = Math.round(propImg.height * 0.4);
-                                        const ksh = propImg.height - ksy;
-                                        ctx.drawImage(propImg, 0, ksy, propImg.width, ksh, sx + (TILE-pSz)/2, sy + (TILE-pSz)/2, pSz, pSz);
-                                    }
-                                }
-                            }
-                            // Scattered small objects on open floor (using props_1x1)
-                            if (OGA.props_1x1 && !nearWallX && !nearWallY && (x * 73 + y * 59) % 97 < 2) {
-                                const propCellSz = 32;
-                                const cols = Math.floor(OGA.props_1x1.width / propCellSz);
-                                const si = (x * 7 + y * 13) % Math.max(1, cols * 2);
-                                const pcol = si % cols;
-                                const prow = Math.floor(si / cols);
-                                const sSz = Math.round(TILE * 0.7);
-                                const prevA = ctx.globalAlpha;
-                                ctx.globalAlpha *= 0.6;
-                                ctx.drawImage(OGA.props_1x1, pcol * propCellSz, prow * propCellSz, propCellSz, propCellSz, sx + (TILE-sSz)/2, sy + (TILE-sSz)/2, sSz, sSz);
-                                ctx.globalAlpha = prevA;
                             }
                         }
 
