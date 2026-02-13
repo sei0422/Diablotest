@@ -11757,6 +11757,16 @@
     // ========== INPUT ==========
     let mouse = { x: 0, y: 0 };
     let keysDown = {};
+    function getCanvasMousePos(e) {
+        // Use canvas-local coordinates; clientX/Y breaks aiming if canvas isn't at (0,0) or is CSS-scaled.
+        const r = canvas.getBoundingClientRect();
+        const sx = (e.clientX - r.left) * (canvas.width / r.width);
+        const sy = (e.clientY - r.top) * (canvas.height / r.height);
+        return {
+            x: Math.max(0, Math.min(W, sx)),
+            y: Math.max(0, Math.min(H, sy))
+        };
+    }
     function getSkillBarSlotAt(mx, my) {
         const skillW = 48, skillH = 48, skillGap = 5;
         const numSkills = 6;
@@ -11771,13 +11781,18 @@
         return idx >= 1 && idx <= numSkills ? idx : 0;
     }
 
-    canvas.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; }, { passive: true });
+    canvas.addEventListener('mousemove', e => {
+        const p = getCanvasMousePos(e);
+        mouse.x = p.x; mouse.y = p.y;
+    }, { passive: true });
 
     canvas.addEventListener('contextmenu', e => { e.preventDefault(); });
 
     canvas.addEventListener('mousedown', e => {
         if (G.dead || !G.started || G.paused || isPanelVisible(DOM.settingsPanel) || skillSelectOpen) return;
         e.preventDefault();
+        const p = getCanvasMousePos(e);
+        mouse.x = p.x; mouse.y = p.y;
 
         if (e.button === 2) {
             // Right click - use skill
