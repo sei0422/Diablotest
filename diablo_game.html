@@ -1806,6 +1806,25 @@
         return broken;
     }
 
+    function getClickableDungeonPropAtWorld(wx, wy, maxDist = TILE * 0.95) {
+        if (!dungeon || G.inTown) return null;
+        const tx0 = Math.floor(wx / TILE);
+        const ty0 = Math.floor(wy / TILE);
+        let best = null;
+        for (let ty = ty0 - 1; ty <= ty0 + 1; ty++) {
+            for (let tx = tx0 - 1; tx <= tx0 + 1; tx++) {
+                const prop = resolveDungeonPropAtTile(dungeon, tx, ty);
+                if (!prop || isDungeonPropBroken(dungeon, tx, ty)) continue;
+                const px = tx * TILE + TILE / 2;
+                const py = ty * TILE + TILE / 2;
+                const d = dist(wx, wy, px, py);
+                if (d > maxDist) continue;
+                if (!best || d < best.d) best = { tx, ty, prop, px, py, d };
+            }
+        }
+        return best;
+    }
+
     const ITEM_ICON_SPRITE = {
         '\u2694': 'iSword', '\ud83e\udea3': 'iAxe', '\ud83d\udd2e': 'iStaff',
         '\ud83d\udee1': 'iShield', '\u26d1': 'iHelmet', '\ud83e\uddba': 'iArmor',
@@ -5585,6 +5604,7 @@
         acceleration: 2500, // 加速度（ハクスラ用に高速）
         deceleration: 3000, // 減速度（キビキビ感）
         moving: false,
+        targetBreakProp: null, // {tx, ty}
         attacking: false,
         attackTarget: null,
         attackCooldown: 0,
@@ -6984,6 +7004,22 @@
                     // else: stuck, don't move
                 } else {
                     this.moving = false;
+                }
+            }
+
+            if (this.targetBreakProp) {
+                const tb = this.targetBreakProp;
+                const prop = resolveDungeonPropAtTile(dungeon, tb.tx, tb.ty);
+                if (!prop || isDungeonPropBroken(dungeon, tb.tx, tb.ty)) {
+                    this.targetBreakProp = null;
+                } else {
+                    const px = tb.tx * TILE + TILE / 2;
+                    const py = tb.ty * TILE + TILE / 2;
+                    if (dist(this.x, this.y, px, py) <= 56) {
+                        breakDungeonProp(tb.tx, tb.ty, prop);
+                        this.targetBreakProp = null;
+                        this.moving = false;
+                    }
                 }
             }
         },
@@ -11751,12 +11787,29 @@
             }
 
             if (clickedMonster) {
+                player.targetBreakProp = null;
                 player.attacking = true;
                 player.attackTarget = clickedMonster;
                 player.moving = true;
                 player.targetX = clickedMonster.x;
                 player.targetY = clickedMonster.y;
             } else {
+                const clickedProp = getClickableDungeonPropAtWorld(wx, wy);
+                if (clickedProp) {
+                    player.attacking = false;
+                    player.attackTarget = null;
+                    player.targetBreakProp = { tx: clickedProp.tx, ty: clickedProp.ty };
+                    if (dist(player.x, player.y, clickedProp.px, clickedProp.py) <= 56) {
+                        breakDungeonProp(clickedProp.tx, clickedProp.ty, clickedProp.prop);
+                        player.targetBreakProp = null;
+                        player.moving = false;
+                    } else {
+                        player.targetX = clickedProp.px;
+                        player.targetY = clickedProp.py;
+                        player.moving = true;
+                    }
+                    return;
+                }
                 // Check ground items first
                 let clickedItem = false;
                 for (let i = groundItems.length - 1; i >= 0; i--) {
@@ -11768,6 +11821,7 @@
                         player.moving = true;
                         player.attacking = false;
                         player.attackTarget = null;
+                        player.targetBreakProp = null;
                         clickedItem = true;
                         break;
                     }
@@ -11778,6 +11832,7 @@
                     player.moving = true;
                     player.attacking = false;
                     player.attackTarget = null;
+                    player.targetBreakProp = null;
                 }
             }
         }
