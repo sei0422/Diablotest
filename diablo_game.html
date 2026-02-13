@@ -1679,6 +1679,63 @@
         return true;
     }
 
+    const DUNGEON_PROP_PROFILES = {
+        cathedral: {
+            common: ['kenney_barrel', 'kenney_barrels', 'kenney_barrels_stacked', 'kenney_crate', 'kenney_crates'],
+            support: ['kenney_chair', 'kenney_woodpile'],
+            feature: ['kenney_table_short', 'kenney_table_round'],
+            commonMod: 173, supportMod: 389, featureMod: 557
+        },
+        desert: {
+            common: ['kenney_crate', 'kenney_crates', 'kenney_woodpile', 'kenney_barrel'],
+            support: ['kenney_chair'],
+            feature: ['kenney_table_short'],
+            commonMod: 161, supportMod: 347, featureMod: 521
+        },
+        jungle: {
+            common: ['kenney_woodpile', 'kenney_crate', 'kenney_barrel', 'kenney_barrels'],
+            support: ['kenney_chair', 'kenney_barrels_stacked'],
+            feature: ['kenney_table_round', 'kenney_table_short'],
+            commonMod: 157, supportMod: 331, featureMod: 503
+        },
+        hell: {
+            common: ['kenney_barrel', 'kenney_barrels_stacked', 'kenney_crate'],
+            support: ['kenney_crates'],
+            feature: ['kenney_table_short'],
+            commonMod: 211, supportMod: 419, featureMod: 677
+        },
+        ice: {
+            common: ['kenney_crate', 'kenney_crates', 'kenney_barrel'],
+            support: ['kenney_chair', 'kenney_barrels'],
+            feature: ['kenney_table_round'],
+            commonMod: 181, supportMod: 373, featureMod: 601
+        }
+    };
+
+    const DUNGEON_PROP_SCALE = {
+        kenney_barrels_stacked: 1.08,
+        kenney_table_round: 1.08,
+        kenney_table_short: 1.08,
+        kenney_chair: 0.96
+    };
+
+    function pickDungeonPropForTheme(theme, h, allowFeature) {
+        const profile = DUNGEON_PROP_PROFILES[theme] || DUNGEON_PROP_PROFILES.cathedral;
+        if (h % profile.commonMod === 0) {
+            const key = profile.common[h % profile.common.length];
+            return { key, scale: DUNGEON_PROP_SCALE[key] || 1 };
+        }
+        if (h % profile.supportMod === 0) {
+            const key = profile.support[h % profile.support.length];
+            return { key, scale: DUNGEON_PROP_SCALE[key] || 1 };
+        }
+        if (allowFeature && h % profile.featureMod === 0) {
+            const key = profile.feature[h % profile.feature.length];
+            return { key, scale: DUNGEON_PROP_SCALE[key] || 1 };
+        }
+        return null;
+    }
+
     const ITEM_ICON_SPRITE = {
         '\u2694': 'iSword', '\ud83e\udea3': 'iAxe', '\ud83d\udd2e': 'iStaff',
         '\ud83d\udee1': 'iShield', '\u26d1': 'iHelmet', '\ud83e\uddba': 'iArmor',
@@ -3789,16 +3846,11 @@
                         const hasSpecialNeighbor = this.get(x, y - 1) >= 2 || this.get(x, y + 1) >= 2 || this.get(x - 1, y) >= 2 || this.get(x + 1, y) >= 2;
                         if (nearWall && !hasSpecialNeighbor) {
                             const h = (((x + 17) * 73856093) ^ ((y + 31) * 19349663)) >>> 0;
-                            if (h % 173 === 0) {
-                                const wallProps = ['kenney_barrel', 'kenney_barrels', 'kenney_barrels_stacked', 'kenney_crate', 'kenney_crates', 'kenney_woodpile'];
-                                const propKey = wallProps[h % wallProps.length];
-                                const pScale = propKey === 'kenney_barrels_stacked' ? 1.08 : 1.0;
-                                drawKenneyDungeonProp(propKey, sx, sy, pScale);
-                            } else if (h % 389 === 0) {
-                                drawKenneyDungeonProp('kenney_chair', sx, sy, 0.96);
-                            } else if (h % 557 === 0 && this.get(x + 1, y) === 1 && this.get(x, y + 1) === 1) {
-                                const tableKey = (h & 1) ? 'kenney_table_short' : 'kenney_table_round';
-                                drawKenneyDungeonProp(tableKey, sx, sy, 1.08);
+                            const theme = this._tileTheme || 'cathedral';
+                            const allowFeature = this.get(x + 1, y) === 1 && this.get(x, y + 1) === 1;
+                            const prop = pickDungeonPropForTheme(theme, h, allowFeature);
+                            if (prop) {
+                                drawKenneyDungeonProp(prop.key, sx, sy, prop.scale);
                             }
                         }
 
