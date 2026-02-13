@@ -1736,6 +1736,76 @@
         return null;
     }
 
+    function getDungeonPropStateKey(tx, ty) {
+        return ty * MAP_W + tx;
+    }
+
+    function resolveDungeonPropAtTile(dng, tx, ty) {
+        if (!dng || !dng.get || dng.get(tx, ty) !== 1) return null;
+        const nearWall = dng.get(tx, ty - 1) === 0 || dng.get(tx - 1, ty) === 0 || dng.get(tx + 1, ty) === 0;
+        const hasSpecialNeighbor = dng.get(tx, ty - 1) >= 2 || dng.get(tx, ty + 1) >= 2 || dng.get(tx - 1, ty) >= 2 || dng.get(tx + 1, ty) >= 2;
+        if (!nearWall || hasSpecialNeighbor) return null;
+        const h = (((tx + 17) * 73856093) ^ ((ty + 31) * 19349663)) >>> 0;
+        const theme = dng._tileTheme || 'cathedral';
+        const allowFeature = dng.get(tx + 1, ty) === 1 && dng.get(tx, ty + 1) === 1;
+        return pickDungeonPropForTheme(theme, h, allowFeature);
+    }
+
+    function isDungeonPropBroken(dng, tx, ty) {
+        if (!dng || !dng.brokenProps) return false;
+        return dng.brokenProps.has(getDungeonPropStateKey(tx, ty));
+    }
+
+    function breakDungeonProp(tx, ty, prop) {
+        if (!dungeon || !prop || G.inTown) return false;
+        if (!dungeon.brokenProps) dungeon.brokenProps = new Set();
+        const key = getDungeonPropStateKey(tx, ty);
+        if (dungeon.brokenProps.has(key)) return false;
+        dungeon.brokenProps.add(key);
+
+        const px = tx * TILE + TILE / 2;
+        const py = ty * TILE + TILE / 2;
+        sfxHit();
+        emitParticles(px, py, '#b28a55', 14, 85, 0.35, 2, -20);
+        addFloatingText(px, py - 18, 'BREAK', '#caa06a');
+
+        const globalF = getGlobalFloor(G.act, G.actFloor, G.cycle);
+        const goldAmt = rand(6 + globalF * 2, 20 + globalF * 5);
+        G.gold += goldAmt;
+        addFloatingText(px, py - 34, `+${goldAmt}G`, '#ffd700');
+        if (Math.random() < 0.18) dropItem(px, py, generatePotion(Math.random() < 0.6 ? 'hp' : 'mp'));
+        if (Math.random() < 0.08) dropItem(px, py, generateItem(globalF, Math.random() < 0.15 ? 'magic' : null));
+        addLog('壊せるオブジェクトを破壊した', '#b28a55');
+        return true;
+    }
+
+    function tryBreakNearbyDungeonProps(cx, cy, range, maxBreak = 1) {
+        if (!dungeon || G.inTown || maxBreak <= 0) return 0;
+        const tRange = Math.ceil(range / TILE);
+        const tx0 = Math.floor(cx / TILE), ty0 = Math.floor(cy / TILE);
+        const candidates = [];
+        for (let ty = ty0 - tRange; ty <= ty0 + tRange; ty++) {
+            for (let tx = tx0 - tRange; tx <= tx0 + tRange; tx++) {
+                const prop = resolveDungeonPropAtTile(dungeon, tx, ty);
+                if (!prop || isDungeonPropBroken(dungeon, tx, ty)) continue;
+                const px = tx * TILE + TILE / 2;
+                const py = ty * TILE + TILE / 2;
+                const d = dist(cx, cy, px, py);
+                if (d <= range) candidates.push({ tx, ty, prop, d });
+            }
+        }
+        if (!candidates.length) return 0;
+        candidates.sort((a, b) => a.d - b.d);
+        let broken = 0;
+        for (const c of candidates) {
+            if (breakDungeonProp(c.tx, c.ty, c.prop)) {
+                broken++;
+                if (broken >= maxBreak) break;
+            }
+        }
+        return broken;
+    }
+
     const ITEM_ICON_SPRITE = {
         '\u2694': 'iSword', '\ud83e\udea3': 'iAxe', '\ud83d\udd2e': 'iStaff',
         '\ud83d\udee1': 'iShield', '\u26d1': 'iHelmet', '\ud83e\uddba': 'iArmor',
@@ -3516,6 +3586,7 @@
             this.tiles = new Uint8Array(MAP_W * MAP_H); // 0=wall, 1=floor, 2=stairs, 3=chest
             this.rooms = [];
             this.explored = new Uint8Array(MAP_W * MAP_H);
+            this.brokenProps = new Set();
             this.minimapDirty = true;
             this.minimapCache = null;
             this.torchPositions = []; // cached torch world positions
@@ -3842,16 +3913,9 @@
                         }
 
                         // Sparse dungeon props near walls for variety without visual noise
-                        const nearWall = this.get(x, y - 1) === 0 || this.get(x - 1, y) === 0 || this.get(x + 1, y) === 0;
-                        const hasSpecialNeighbor = this.get(x, y - 1) >= 2 || this.get(x, y + 1) >= 2 || this.get(x - 1, y) >= 2 || this.get(x + 1, y) >= 2;
-                        if (nearWall && !hasSpecialNeighbor) {
-                            const h = (((x + 17) * 73856093) ^ ((y + 31) * 19349663)) >>> 0;
-                            const theme = this._tileTheme || 'cathedral';
-                            const allowFeature = this.get(x + 1, y) === 1 && this.get(x, y + 1) === 1;
-                            const prop = pickDungeonPropForTheme(theme, h, allowFeature);
-                            if (prop) {
-                                drawKenneyDungeonProp(prop.key, sx, sy, prop.scale);
-                            }
+                        const prop = resolveDungeonPropAtTile(this, x, y);
+                        if (prop && !isDungeonPropBroken(this, x, y)) {
+                            drawKenneyDungeonProp(prop.key, sx, sy, prop.scale);
                         }
 
                     } else if (t === 2) {
@@ -6107,14 +6171,17 @@
                 case 'melee_burst': {
                     const mult = getSkillValue(skDef, 'baseMult', lvl) * (1 + synDmg);
                     sfxHit();
+                    let hitMonster = false;
                     for (const m of monsters) {
                         if (m.alive && dist(this.x, this.y, m.x, m.y) < skDef.range) {
                             const isCrit = Math.random() * 100 < this.getCritChance();
                             const d = dmg * mult * (isCrit ? this.getCritDamage() / 100 : 1);
                             monsterTakeDmg(m, d, isCrit);
+                            hitMonster = true;
                             break; // Single target
                         }
                     }
+                    if (!hitMonster) tryBreakNearbyDungeonProps(this.x, this.y, skDef.range || 60, 1);
                     this.attackAnimT = 0.3;
                     emitParticles(this.x, this.y, '#ffaa44', 10, 80, 0.4, 4, 0, 'physical', lvl);
                     break;
@@ -6123,12 +6190,15 @@
                     this.whirlwindT = 0.6;
                     sfxWhirlwind();
                     const mult = getSkillValue(skDef, 'baseMult', lvl) * (1 + synDmg);
+                    let hitCount = 0;
                     for (const m of monsters) {
                         if (m.alive && dist(this.x, this.y, m.x, m.y) < skDef.range) {
                             const isCrit = Math.random() * 100 < this.getCritChance();
                             monsterTakeDmg(m, dmg * mult * (isCrit ? player.getCritDamage() / 100 : 1), isCrit);
+                            hitCount++;
                         }
                     }
+                    if (hitCount === 0) tryBreakNearbyDungeonProps(this.x, this.y, skDef.range || 100, 2);
                     emitParticles(this.x, this.y, '#88aaff', 20, 100, 0.5, 4, 0, 'physical', lvl);
                     break;
                 }
@@ -6788,6 +6858,9 @@
                         const isCrit = Math.random() * 100 < this.getCritChance();
                         const finalDmg = isCrit ? dmg * this.getCritDamage() / 100 : dmg;
                         monsterTakeDmg(this.attackTarget, finalDmg, isCrit);
+                        if (this.attackTarget.hp <= 0 || !this.attackTarget.alive) {
+                            tryBreakNearbyDungeonProps(this.x, this.y, 52, 1);
+                        }
                         let atkSpdPct = (this.passiveBonuses && this.passiveBonuses.attackSpeed) || 0;
                         for (const slot of Object.values(this.equipment)) {
                             if (!slot) continue;
@@ -13829,6 +13902,7 @@
                     }
                 }
             }
+            saveData.brokenProps = dungeon && dungeon.brokenProps ? Array.from(dungeon.brokenProps) : [];
             localStorage.setItem(getSaveKey(slot), JSON.stringify(saveData));
             addLog(`ゲームをセーブしました！(スロット${slot})`, '#00ff88');
             addFloatingText(player.x, player.y - 30, 'SAVED!', '#00ff88', false, true);
@@ -14016,6 +14090,9 @@
                         }
                     }
                 }
+            }
+            if (Array.isArray(save.brokenProps)) {
+                dungeon.brokenProps = new Set(save.brokenProps);
             }
 
             // THEN restore player position
