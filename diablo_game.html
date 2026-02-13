@@ -1375,16 +1375,21 @@
             // --- New Creature Sprites (Phase 1) ---
             creature_demon: 'asset/opengameart/creatures/demon.png',
             creature_minotaur: 'asset/opengameart/creatures/minotaur.png',
-            // --- Spell VFX (Phase 2) ---
-            spell_fire_green: 'asset/opengameart/spell_anims/fire_green.png',
-            spell_fire_purple: 'asset/opengameart/spell_anims/fire_purple.png',
-            spell_fire_yellow: 'asset/opengameart/spell_anims/fire_yellow.png',
-            spell_fireball_blue: 'asset/opengameart/spell_anims/fireball_blue.png',
-            spell_sphere_blue: 'asset/opengameart/spell_anims/sphere_blue.png',
-            spell_sphere_purple: 'asset/opengameart/spell_anims/sphere_purple.png',
-            spell_sphere_yellow: 'asset/opengameart/spell_anims/sphere_yellow.png',
-            spell_skull_smoke_green: 'asset/opengameart/spell_anims/skull_smoke_green.png',
-            spell_skull_smoke_purple: 'asset/opengameart/spell_anims/skull_smoke_purple.png',
+	            // --- Spell VFX (Phase 2) ---
+	            spell_fire_green: 'asset/opengameart/spell_anims/fire_green.png',
+	            spell_fire_purple: 'asset/opengameart/spell_anims/fire_purple.png',
+	            spell_fire_yellow: 'asset/opengameart/spell_anims/fire_yellow.png',
+	            spell_fireball_blue: 'asset/opengameart/spell_anims/fireball_blue.png',
+	            // --- Spell Effects (Unused pack → now used as Diablo2-ish impact GIFs) ---
+	            fx_sign_of_fire: 'asset/opengameart/spell_effects/fx4_sign_of_fire.gif',
+	            fx_black_explosion: 'asset/opengameart/spell_effects/fx10_blackExplosion.gif',
+	            fx_rain_ground: 'asset/opengameart/spell_effects/fx9_rainOnGround.gif',
+	            fx_energy_ball: 'asset/opengameart/spell_effects/fx7_energyBall.gif',
+	            spell_sphere_blue: 'asset/opengameart/spell_anims/sphere_blue.png',
+	            spell_sphere_purple: 'asset/opengameart/spell_anims/sphere_purple.png',
+	            spell_sphere_yellow: 'asset/opengameart/spell_anims/sphere_yellow.png',
+	            spell_skull_smoke_green: 'asset/opengameart/spell_anims/skull_smoke_green.png',
+	            spell_skull_smoke_purple: 'asset/opengameart/spell_anims/skull_smoke_purple.png',
             spell_arrows_green: 'asset/opengameart/spell_anims/arrows_green.png',
             spell_arrows_yellow: 'asset/opengameart/spell_anims/arrows_yellow.png',
             vfx_impact_air: 'asset/opengameart/vfx/rpg_vfx_pack/16_frames/vfx_sequence_x16_air.png',
@@ -1474,9 +1479,9 @@
     // getFacingDir8 returns: 0=S, 1=SW, 2=W, 3=NW, 4=N, 5=NE, 6=E, 7=SE
     // Remap: game dir → sprite row for that screen direction
     const OGA_DIR_REMAP = [6, 7, 0, 1, 2, 3, 4, 5];
-    // Projectile sheets use different direction order: W,SW,S,SE,E,NE,N,NW
+    // Projectile sheets direction order (see fireball_0.png / icicle_0.png): E,SE,S,SW,W,NW,N,NE
     // Game dir: S(0),SW(1),W(2),NW(3),N(4),NE(5),E(6),SE(7)
-    const OGA_PROJ_DIR_REMAP = [2, 1, 0, 7, 6, 5, 4, 3];
+    const OGA_PROJ_DIR_REMAP = [2, 3, 4, 5, 6, 7, 0, 1];
 
 
     // Draw OGA creature sprite (8-dir, animated walk cycle)
@@ -3126,20 +3131,21 @@
         floatingTexts.push({ x, y, text: String(text), color, life: 1.2, maxLife: 1.2, big, vy: -60 });
     }
 
-    // ========== SPELL IMPACT EFFECT SYSTEM ==========
-    const worldEffects = [];
-    const SPELL_ANIM_MAP = {
-        fire: { key: 'spell_fireball', cols: 4, cellW: 512, cellH: 384, frames: 40, duration: 0.5 },
-        ice: { key: 'spell_flash_freeze', cols: 8, cellW: 512, cellH: 512, frames: 96, duration: 0.6 },
-        heal: { key: 'spell_flash_heal', cols: 5, cellW: 288, cellH: 320, frames: 60, duration: 0.8 },
-        lightning: { key: 'spell_fire_yellow', cols: 7, cellW: 96, cellH: 96, frames: 70, duration: 0.5 },
-        poison: { key: 'spell_fire_green', cols: 7, cellW: 96, cellH: 96, frames: 70, duration: 0.5 },
-        dark: { key: 'spell_fire_purple', cols: 7, cellW: 96, cellH: 96, frames: 70, duration: 0.5 },
-        cold: { key: 'spell_fireball_blue', cols: 4, cellW: 512, cellH: 384, frames: 40, duration: 0.5 },
-        buff_ice: { key: 'spell_sphere_blue', cols: 6, cellW: 128, cellH: 128, frames: 30, duration: 0.8 },
-        buff_dark: { key: 'spell_sphere_purple', cols: 6, cellW: 128, cellH: 128, frames: 30, duration: 0.8 },
-        buff_lightning: { key: 'spell_sphere_yellow', cols: 6, cellW: 128, cellH: 128, frames: 30, duration: 0.8 },
-        skull_poison: { key: 'spell_skull_smoke_green', cols: 19, cellW: 192, cellH: 512, frames: 19, duration: 0.6 },
+	    // ========== SPELL IMPACT EFFECT SYSTEM ==========
+	    const worldEffects = [];
+	    const SPELL_ANIM_MAP = {
+	        // Prefer Diablo2-like punchy impact GIFs when available.
+	        fire: { mode: 'gif', key: 'fx_sign_of_fire', duration: 0.55, drawMult: 3.1 },
+	        ice: { key: 'spell_flash_freeze', cols: 8, cellW: 512, cellH: 512, frames: 96, duration: 0.6 },
+	        heal: { key: 'spell_flash_heal', cols: 5, cellW: 288, cellH: 320, frames: 60, duration: 0.8 },
+	        lightning: { mode: 'gif', key: 'fx_energy_ball', duration: 0.55, drawMult: 3.0 },
+	        poison: { mode: 'gif', key: 'fx_rain_ground', duration: 0.6, drawMult: 3.3 },
+	        dark: { mode: 'gif', key: 'fx_black_explosion', duration: 0.6, drawMult: 3.2 },
+	        cold: { key: 'spell_fireball_blue', cols: 4, cellW: 512, cellH: 384, frames: 40, duration: 0.5 },
+	        buff_ice: { key: 'spell_sphere_blue', cols: 6, cellW: 128, cellH: 128, frames: 30, duration: 0.8 },
+	        buff_dark: { key: 'spell_sphere_purple', cols: 6, cellW: 128, cellH: 128, frames: 30, duration: 0.8 },
+	        buff_lightning: { key: 'spell_sphere_yellow', cols: 6, cellW: 128, cellH: 128, frames: 30, duration: 0.8 },
+	        skull_poison: { key: 'spell_skull_smoke_green', cols: 19, cellW: 192, cellH: 512, frames: 19, duration: 0.6 },
         skull_dark: { key: 'spell_skull_smoke_purple', cols: 19, cellW: 192, cellH: 512, frames: 19, duration: 0.6 },
         arrows_poison: { key: 'spell_arrows_green', cols: 4, cellW: 256, cellH: 256, frames: 24, duration: 0.5 },
         arrows_lightning: { key: 'spell_arrows_yellow', cols: 4, cellW: 256, cellH: 256, frames: 24, duration: 0.5 },
@@ -3148,29 +3154,39 @@
         if (!type || !SPELL_ANIM_MAP[type]) return;
         worldEffects.push({ x: wx, y: wy, type, scale: scale || 1, start: G.time });
     }
-    function drawWorldEffects(camX, camY) {
-        for (let i = worldEffects.length - 1; i >= 0; i--) {
-            const eff = worldEffects[i];
-            const anim = SPELL_ANIM_MAP[eff.type];
-            if (!anim) { worldEffects.splice(i, 1); continue; }
-            const img = OGA[anim.key];
-            if (!img) { worldEffects.splice(i, 1); continue; }
-            const elapsed = G.time - eff.start;
-            if (elapsed >= anim.duration) { worldEffects.splice(i, 1); continue; }
-            const progress = elapsed / anim.duration;
-            const frame = Math.min(Math.floor(progress * anim.frames), anim.frames - 1);
-            const col = frame % anim.cols;
-            const row = Math.floor(frame / anim.cols);
-            const sx = col * anim.cellW, sy = row * anim.cellH;
-            const drawSz = TILE * 2.5 * eff.scale;
-            const dx = eff.x - camX - drawSz / 2;
-            const dy = eff.y - camY - drawSz / 2;
-            const prevAlpha = ctx.globalAlpha;
-            ctx.globalAlpha = (1 - progress * 0.7) * 0.8;
-            ctx.drawImage(img, sx, sy, anim.cellW, anim.cellH, dx, dy, drawSz, drawSz);
-            ctx.globalAlpha = prevAlpha;
-        }
-    }
+	    function drawWorldEffects(camX, camY) {
+	        for (let i = worldEffects.length - 1; i >= 0; i--) {
+	            const eff = worldEffects[i];
+	            const anim = SPELL_ANIM_MAP[eff.type];
+	            if (!anim) { worldEffects.splice(i, 1); continue; }
+	            const img = OGA[anim.key];
+	            if (!img) { worldEffects.splice(i, 1); continue; }
+	            const elapsed = G.time - eff.start;
+	            if (elapsed >= anim.duration) { worldEffects.splice(i, 1); continue; }
+	            const progress = elapsed / anim.duration;
+	            const prevAlpha = ctx.globalAlpha;
+	            ctx.globalAlpha = (1 - progress * 0.7) * 0.8;
+
+	            if (anim.mode === 'gif') {
+	                const drawSz = TILE * (anim.drawMult || 3.0) * eff.scale;
+	                const dx = eff.x - camX - drawSz / 2;
+	                const dy = eff.y - camY - drawSz / 2;
+	                // Animated GIFs advance internally; we just keep drawing them each frame.
+	                ctx.drawImage(img, dx, dy, drawSz, drawSz);
+	            } else {
+	                const frame = Math.min(Math.floor(progress * anim.frames), anim.frames - 1);
+	                const col = frame % anim.cols;
+	                const row = Math.floor(frame / anim.cols);
+	                const sx = col * anim.cellW, sy = row * anim.cellH;
+	                const drawSz = TILE * 2.5 * eff.scale;
+	                const dx = eff.x - camX - drawSz / 2;
+	                const dy = eff.y - camY - drawSz / 2;
+	                ctx.drawImage(img, sx, sy, anim.cellW, anim.cellH, dx, dy, drawSz, drawSz);
+	            }
+
+	            ctx.globalAlpha = prevAlpha;
+	        }
+	    }
 
     // ========== TILE TEXTURE SYSTEM (Offscreen Canvas) ==========
     // Pre-render tile textures for much better visual quality
