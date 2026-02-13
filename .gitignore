@@ -7,3 +7,52 @@
 *.swp
 *.swo
 *~
+
+# Local handover note (session memo)
+HANDOVER.md
+
+# Large/raw asset sources and generated previews
+asset/downloads/
+asset/isometric_hero_heroine_blend/
+asset/render_test/
+asset/sprites/
+sprite_diag.html
+
+# Optional/raw OpenGameArt packs not required for runtime
+asset/opengameart/creatures/minotaur_sprites/
+asset/opengameart/kenney_dungeon/Angle/
+asset/opengameart/kenney_dungeon/Characters/
+asset/opengameart/kenney_dungeon/Samples/
+asset/opengameart/kenney_dungeon/Information.png
+asset/opengameart/kenney_dungeon/License.txt
+asset/opengameart/kenney_dungeon/Instructions.url
+asset/opengameart/kenney_dungeon/Preview.png
+asset/opengameart/kenney_dungeon/Sample.png
+asset/opengameart/kenney_dungeon/Patreon.url
+asset/opengameart/kenney_dungeon/Kenney.url
+asset/opengameart/kenney_dungeon/Isometric/
+asset/opengameart/kenney_ui/
+asset/opengameart/rpg_icons/
+asset/opengameart/ui/ui_pieces/
+
+# Extra spell/VFX sources not currently used in code
+asset/opengameart/spell_anims/cauterize.png
+asset/opengameart/spell_anims/feather.png
+asset/opengameart/spell_anims/flash01.png
+asset/opengameart/spell_anims/flash02.png
+asset/opengameart/spell_anims/flash03.png
+asset/opengameart/spell_anims/flash04.png
+asset/opengameart/spell_anims/smoke.png
+asset/opengameart/spell_anims/smoke_glow.png
+asset/opengameart/spell_anims/wings.png
+asset/opengameart/spell_anims/license.txt
+asset/opengameart/vfx/rpg_vfx_pack/32_frames/
+asset/opengameart/vfx/rpg_vfx_pack/64_frames/
+asset/opengameart/vfx/rpg_vfx_pack/README.txt
+asset/opengameart/vfx/rpg_vfx_pack/rpg_vfx_pack_preview.gif
+asset/opengameart/vfx/rpg_vfx_pack/16_frames/vfx_sequence_x16_blood_2.png
+asset/opengameart/vfx/rpg_vfx_pack/16_frames/vfx_sequence_x16_earth_2.png
+asset/opengameart/vfx/rpg_vfx_pack/16_frames/vfx_sequence_x16_impact_air_1.png
+asset/opengameart/vfx/rpg_vfx_pack/16_frames/vfx_sequence_x16_impact_divine_2.png
+asset/opengameart/vfx/rpg_vfx_pack/16_frames/vfx_sequence_x16_impact_earth_1.png
+asset/opengameart/vfx/rpg_vfx_pack/16_frames/vfx_sequence_x16_pierce.png
