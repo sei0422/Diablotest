@@ -1368,7 +1368,7 @@
             spell_fireball: 'asset/opengameart/spell_anims/fireball.png',
             spell_flash_freeze: 'asset/opengameart/spell_anims/flash_freeze.png',
             spell_flash_heal: 'asset/opengameart/spell_anims/flash_heal.png',
-            // Kenney Isometric: only stairs kept (used for stair tile rendering)
+            // Kenney Isometric dungeon props
             kenney_stairs: 'asset/opengameart/kenney_dungeon/Isometric/stairs_S.png',
             // 2D Pixel Dungeon tileset (16px grid, 10×10 cells, dark pixel art dungeon)
             pixel_dungeon_ts: 'asset/2D Pixel Dungeon Asset Pack/character and tileset/Dungeon_Tileset.png',
@@ -1430,7 +1430,14 @@
             // Kenney Isometric props (256x512px, _S = south view)
             kenney_barrel: 'asset/opengameart/kenney_dungeon/Isometric/barrel_S.png',
             kenney_barrels: 'asset/opengameart/kenney_dungeon/Isometric/barrels_S.png',
+            kenney_barrels_stacked: 'asset/opengameart/kenney_dungeon/Isometric/barrelsStacked_S.png',
+            kenney_chair: 'asset/opengameart/kenney_dungeon/Isometric/chair_S.png',
             kenney_chest_closed: 'asset/opengameart/kenney_dungeon/Isometric/chestClosed_S.png',
+            kenney_table_round: 'asset/opengameart/kenney_dungeon/Isometric/tableRound_S.png',
+            kenney_table_short: 'asset/opengameart/kenney_dungeon/Isometric/tableShort_S.png',
+            kenney_crate: 'asset/opengameart/kenney_dungeon/Isometric/woodenCrate_S.png',
+            kenney_crates: 'asset/opengameart/kenney_dungeon/Isometric/woodenCrates_S.png',
+            kenney_woodpile: 'asset/opengameart/kenney_dungeon/Isometric/woodenPile_S.png',
             kenney_stone_floor: 'asset/opengameart/kenney_dungeon/Isometric/stone_S.png',
             kenney_wall: 'asset/opengameart/kenney_dungeon/Isometric/stoneWall_S.png',
             kenney_wall_aged: 'asset/opengameart/kenney_dungeon/Isometric/stoneWallAged_S.png',
@@ -1653,6 +1660,22 @@
             ctx.drawImage(SPRITES[a[0]], a[1], a[2], SP, SP, dx, dy, dw, dh);
         }
         ctx.imageSmoothingEnabled = prevSmooth;
+        return true;
+    }
+
+    function drawKenneyDungeonProp(key, tileSx, tileSy, scale = 1) {
+        const img = OGA[key];
+        if (!img) return false;
+        const drawW = Math.round(TILE * scale);
+        const drawH = Math.round(drawW * (img.height / img.width));
+        const dx = tileSx + (TILE - drawW) / 2;
+        const dy = tileSy + TILE - drawH;
+        // Soft contact shadow to anchor props on floor
+        ctx.fillStyle = 'rgba(0,0,0,0.12)';
+        ctx.beginPath();
+        ctx.ellipse(tileSx + TILE / 2, tileSy + TILE - 4, drawW * 0.28, Math.max(2, drawW * 0.08), 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.drawImage(img, dx, dy, drawW, drawH);
         return true;
     }
 
@@ -3759,6 +3782,24 @@
                         }
                         if (this.get(x - 1, y) === 0) {
                             ctx.drawImage(TILE_TEXTURES['shadow_left'], sx, sy);
+                        }
+
+                        // Sparse dungeon props near walls for variety without visual noise
+                        const nearWall = this.get(x, y - 1) === 0 || this.get(x - 1, y) === 0 || this.get(x + 1, y) === 0;
+                        const hasSpecialNeighbor = this.get(x, y - 1) >= 2 || this.get(x, y + 1) >= 2 || this.get(x - 1, y) >= 2 || this.get(x + 1, y) >= 2;
+                        if (nearWall && !hasSpecialNeighbor) {
+                            const h = (((x + 17) * 73856093) ^ ((y + 31) * 19349663)) >>> 0;
+                            if (h % 173 === 0) {
+                                const wallProps = ['kenney_barrel', 'kenney_barrels', 'kenney_barrels_stacked', 'kenney_crate', 'kenney_crates', 'kenney_woodpile'];
+                                const propKey = wallProps[h % wallProps.length];
+                                const pScale = propKey === 'kenney_barrels_stacked' ? 1.08 : 1.0;
+                                drawKenneyDungeonProp(propKey, sx, sy, pScale);
+                            } else if (h % 389 === 0) {
+                                drawKenneyDungeonProp('kenney_chair', sx, sy, 0.96);
+                            } else if (h % 557 === 0 && this.get(x + 1, y) === 1 && this.get(x, y + 1) === 1) {
+                                const tableKey = (h & 1) ? 'kenney_table_short' : 'kenney_table_round';
+                                drawKenneyDungeonProp(tableKey, sx, sy, 1.08);
+                            }
                         }
 
                     } else if (t === 2) {
