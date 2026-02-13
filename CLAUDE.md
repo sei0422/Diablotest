@@ -25,26 +25,6 @@
 - Town mode (`G.inTown`) disables combat, enables NPC interaction
 - All town UI panels use window-exposed functions for onclick handlers
 
-## Claude Code local profile switching
+## Claude Code settings
 
-Use this helper to prepare a local profile and swap it with the current project settings.
-
-```bash
-# 1) Create local profile from current settings
-./tools/claudecode_profile.sh init
-
-# 2) Edit local profile
-# file: .claude/settings.local.caloudecode.json
-
-# 3) Replace active settings with local profile
-./tools/claudecode_profile.sh switch-local
-
-# 4) Restore previous settings when needed
-./tools/claudecode_profile.sh restore
-```
-
-If you want to run Claude with the local profile without replacing active settings:
-
-```bash
-./tools/claudecode_profile.sh run-local
-```
+This repo does not include project-specific helper scripts for Claude Code settings/profile switching.
