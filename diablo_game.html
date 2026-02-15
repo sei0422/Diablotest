@@ -2476,31 +2476,61 @@
              wallColors:{primary:'#44382c',secondary:'#403428',tertiary:'#3e3226'},
              lightTint:{warm:'rgba(255,160,64,',cold:'rgba(0,0,5,'},
              monsterTypes:['skeleton','zombie'], bossType:'skeleton_king', bossFloor:5,
-             townName:'修道院の村', townBG:'#1a140e' },
+             townName:'修道院の村', townBG:'#1a140e',
+             areas:[
+                 {name:'聖堂入口', floors:[1,2], density:'low'},
+                 {name:'地下墓地', floors:[3,4], density:'medium'},
+                 {name:'骸骨王の間', floors:[5], density:'boss'}
+             ],
+             monsterPool:{common:['skeleton','zombie'], elite:[], boss:['skeleton_king']} },
         2: { name:'砂漠遺跡', nameEn:'Desert Ruins', floors:5, tileTheme:'desert',
              floorColors:{base:[38,32,22], wall:'#5a4830', mortar:'#2a2018'},
              wallColors:{primary:'#6a5838',secondary:'#5e4e30',tertiary:'#524428'},
              lightTint:{warm:'rgba(255,180,80,',cold:'rgba(10,5,0,'},
              monsterTypes:['mummy','scarab','sand_golem'], bossType:'sand_worm', bossFloor:5,
-             townName:'砂漠のオアシス', townBG:'#1e1a10' },
+             townName:'砂漠のオアシス', townBG:'#1e1a10',
+             areas:[
+                 {name:'砂漠の門', floors:[1,2], density:'low'},
+                 {name:'古代墓地', floors:[3,4], density:'medium'},
+                 {name:'砂虫の巣', floors:[5], density:'boss'}
+             ],
+             monsterPool:{common:['mummy','scarab','sand_golem'], elite:[], boss:['sand_worm']} },
         3: { name:'密林神殿', nameEn:'Jungle Temple', floors:5, tileTheme:'jungle',
              floorColors:{base:[18,28,16], wall:'#2a3a22', mortar:'#162010'},
              wallColors:{primary:'#304828',secondary:'#2a4022',tertiary:'#263a1e'},
              lightTint:{warm:'rgba(180,220,100,',cold:'rgba(0,10,5,'},
              monsterTypes:['treeant','poison_spider','jungle_shaman'], bossType:'archmage', bossFloor:5,
-             townName:'クラスト港', townBG:'#0e1a0e' },
+             townName:'クラスト港', townBG:'#0e1a0e',
+             areas:[
+                 {name:'密林の入口', floors:[1,2], density:'low'},
+                 {name:'蜘蛛の洞窟', floors:[3,4], density:'medium'},
+                 {name:'大魔導師の間', floors:[5], density:'boss'}
+             ],
+             monsterPool:{common:['treeant','poison_spider','jungle_shaman'], elite:[], boss:['archmage']} },
         4: { name:'地獄', nameEn:'Hell', floors:3, tileTheme:'hell',
              floorColors:{base:[30,10,8], wall:'#4a1a10', mortar:'#280e08'},
              wallColors:{primary:'#5a2018',secondary:'#4e1a12',tertiary:'#42160e'},
              lightTint:{warm:'rgba(255,80,30,',cold:'rgba(20,0,0,'},
              monsterTypes:['demon','hellhound','imp'], bossType:'demon_lord', bossFloor:3,
-             townName:'要塞', townBG:'#1a0808' },
+             townName:'要塞', townBG:'#1a0808',
+             areas:[
+                 {name:'地獄の門', floors:[1], density:'medium'},
+                 {name:'炎獄', floors:[2], density:'high'},
+                 {name:'魔王の間', floors:[3], density:'boss'}
+             ],
+             monsterPool:{common:['demon','hellhound','imp'], elite:[], boss:['demon_lord']} },
         5: { name:'氷の山', nameEn:'Frozen Mountain', floors:5, tileTheme:'ice',
              floorColors:{base:[18,22,30], wall:'#283848', mortar:'#1a2430'},
              wallColors:{primary:'#304050',secondary:'#283848',tertiary:'#223040'},
              lightTint:{warm:'rgba(100,150,255,',cold:'rgba(0,0,20,'},
              monsterTypes:['frost_zombie','ice_wraith','yeti'], bossType:'ice_queen', bossFloor:5,
-             townName:'ハログス', townBG:'#0a1020' }
+             townName:'ハログス', townBG:'#0a1020',
+             areas:[
+                 {name:'氷の入口', floors:[1,2], density:'low'},
+                 {name:'凍てつく洞窟', floors:[3,4], density:'medium'},
+                 {name:'氷の女王の間', floors:[5], density:'boss'}
+             ],
+             monsterPool:{common:['frost_zombie','ice_wraith','yeti'], elite:[], boss:['ice_queen']} }
     };
     const TOTAL_ACT_FLOORS = 23; // 5+5+5+3+5
 
@@ -2517,6 +2547,15 @@
         let f = cycle * TOTAL_ACT_FLOORS;
         for (let a = 1; a < act; a++) f += ACT_DEFS[a].floors;
         return f + actFloor;
+    }
+    // D2-style area system: Get current area for a given act and actFloor
+    function getCurrentArea(act, actFloor) {
+        const actDef = ACT_DEFS[act];
+        if (!actDef || !actDef.areas) return null;
+        for (const area of actDef.areas) {
+            if (area.floors.includes(actFloor)) return area;
+        }
+        return null;
     }
     // D2-style monster level table (fixed per area, not scaling)
     // NOTE: Act1 is tuned so Floor1 starts at mlvl=1 (like Blood Moor) to avoid L1 "MISS" spam.
@@ -9604,8 +9643,20 @@
             monsters.length = 0;
             groundItems.length = 0;
 
-            // Spawn monsters using ACT-specific types
-            const count = 15 + G.actFloor * 8;
+            // D2-style area system: Get current area for density and display
+            const currentArea = getCurrentArea(G.act, G.actFloor);
+
+            // Spawn monsters using ACT-specific types with area density
+            let count = 15 + G.actFloor * 8; // default: medium
+            if (currentArea) {
+                // D2-style density control: low/medium/high/boss
+                switch (currentArea.density) {
+                    case 'low':    count = 10 + G.actFloor * 5; break;
+                    case 'medium': count = 15 + G.actFloor * 8; break;
+                    case 'high':   count = 20 + G.actFloor * 12; break;
+                    case 'boss':   count = 5 + G.actFloor * 2; break; // fewer normal monsters on boss floors
+                }
+            }
             const types = actDef.monsterTypes;
 
             for (let i = 0; i < count; i++) {
@@ -9630,7 +9681,9 @@
                 addLog(`⚠ ${bd ? bd.name : 'ボス'}が現れた！`, '#ff0000');
             }
 
-            addLog(`ACT${G.act} ${actDef.name} - 第${G.actFloor}層${G.cycle > 0 ? ' (' + (G.cycle+1) + '周目)' : ''}`, '#aaaaff');
+            // D2-style area name in log
+            const areaName = currentArea ? ` [${currentArea.name}]` : '';
+            addLog(`ACT${G.act} ${actDef.name} - 第${G.actFloor}層${areaName}${G.cycle > 0 ? ' (' + (G.cycle+1) + '周目)' : ''}`, '#aaaaff');
         }
 
         // Switch back to normal RNG after dungeon generation
@@ -14430,9 +14483,19 @@
         ctx.textAlign = 'right';
         ctx.fillText(G.inTown ? '町' : `${G.actFloor}F`, mmX - 5, mmY + 16);
 
+        // Area name (D2-style area system)
+        if (!G.inTown) {
+            const currentArea = getCurrentArea(G.act, G.actFloor);
+            if (currentArea) {
+                ctx.font = `10px ${FONT_UI}`;
+                ctx.fillStyle = '#b8a070';
+                ctx.fillText(currentArea.name, mmX - 5, mmY + 28);
+            }
+        }
+
         ctx.font = `11px ${FONT_UI}`;
         ctx.fillStyle = '#cc6666';
-        ctx.fillText(`敵: ${aliveMonsterCount}`, mmX - 5, mmY + 32);
+        ctx.fillText(`敵: ${aliveMonsterCount}`, mmX - 5, mmY + G.inTown ? 32 : 42);
 
         // Auto-pickup indicator
         if (G.autoPickup) {
