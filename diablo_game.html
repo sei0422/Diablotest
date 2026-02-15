@@ -1103,6 +1103,7 @@
     <div id="dialogPanel" class="ui-panel town-panel" style="display:none"></div>
     <div id="shopPanel" class="ui-panel town-panel" style="display:none"></div>
     <div id="blacksmithPanel" class="ui-panel town-panel" style="display:none"></div>
+    <div id="gamblePanel" class="ui-panel town-panel" style="display:none"></div>
     <div id="stashPanel" class="ui-panel town-panel" style="display:none;width:520px"></div>
     <div id="waypointPanel" class="ui-panel town-panel" style="display:none"></div>
     <div id="questPanel" class="ui-panel town-panel" style="display:none"></div>
@@ -4296,6 +4297,23 @@
         nightmare: { common: 0.50, magic: 0.32, rare: 0.12, legendary: 0.04, unique: 0.02 },
         hell: { common: 0.30, magic: 0.37, rare: 0.20, legendary: 0.08, unique: 0.05 }
     };
+
+    // D2-style gambling rarity table (no common items, higher unique chance)
+    const GAMBLE_RARITY_TABLE = {
+        common: 0.0,    // Never get common from gambling
+        magic: 0.90,    // 90% magic
+        rare: 0.08,     // 8% rare
+        legendary: 0.015, // 1.5% legendary
+        unique: 0.005   // 0.5% unique
+    };
+
+    // Gambling item categories (D2-style: fixed cost per category)
+    const GAMBLE_ITEMS = [
+        { type: 'ring', name: '指輪', cost: 5000, icon: '💍' },
+        { type: 'amulet', name: 'アミュレット', cost: 8000, icon: '📿' },
+        { type: 'weapon', name: '武器(ランダム)', cost: 15000, icon: '⚔' },
+        { type: 'armor', name: '防具(ランダム)', cost: 20000, icon: '🛡' }
+    ];
 
     function pickRarity(baseRoll, mf, diffDrop) {
         const difficulty = G.difficulty || 'normal';
@@ -9898,7 +9916,7 @@
         G.townUIMode = null;
         G.activeNPC = null;
         G.dialogState = 0;
-        const panels = ['dialogPanel','shopPanel','blacksmithPanel','stashPanel','waypointPanel','questPanel','uberPanel','mercenaryPanel','gamblingPanel'];
+        const panels = ['dialogPanel','shopPanel','blacksmithPanel','gamblePanel','stashPanel','waypointPanel','questPanel','uberPanel','mercenaryPanel'];
         for (const id of panels) {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
@@ -9921,7 +9939,7 @@
             case 'waypoint': openWaypointUI(npc); break;
             case 'uber_portal': openUberPortalUI(npc); break;
             case 'mercenary': openMercenaryUI(npc); break;
-            case 'gamble': openGamblingUI(npc); break;
+            case 'gamble': openGambleUI(npc); break;
         }
     }
 
@@ -10001,6 +10019,88 @@
         player.inventory.splice(idx, 1);
         addLog(`${item.name}${isPotion(item) && (item.qty || 1) > 1 ? ' x' + (item.qty || 1) : ''} を売却 (+${totalPrice}G)`, '#ffd700');
         renderShopUI();
+    };
+
+    // ========== GAMBLING SYSTEM (D2-style) ==========
+    function openGambleUI(npc) {
+        G.townUIMode = 'gamble';
+        const panel = document.getElementById('gamblePanel');
+        if (!panel) return;
+        panel.style.display = 'block';
+        renderGambleUI();
+    }
+    function renderGambleUI() {
+        const panel = document.getElementById('gamblePanel');
+        if (!panel) return;
+        let html = `<div class="panel-header">🎲 ${G.activeNPC ? G.activeNPC.name : 'ギャンブラー'} <span style="float:right;color:#ffd700">💰 ${G.gold}G</span></div>`;
+        html += `<p style="font-size:11px;color:#aaa;margin:4px 0">ギャンブルでレアアイテムを狙え！（Magic 90%, Rare 8%, Legendary 1.5%, Unique 0.5%）</p>`;
+        html += '<div class="shop-grid">';
+
+        for (let i = 0; i < GAMBLE_ITEMS.length; i++) {
+            const g = GAMBLE_ITEMS[i];
+            const canBuy = G.gold >= g.cost;
+            html += `<div class="shop-item ${canBuy ? '' : 'disabled'}" onclick="gambleItem(${i})" title="${escapeHtml(g.name)}">
+                <span style="font-size:18px">${g.icon}</span>
+                <span style="color:#ffaa00;font-size:11px">${escapeHtml(g.name)}</span>
+                <span style="color:#ffd700;font-size:10px">${g.cost}G</span>
+            </div>`;
+        }
+        html += '</div>';
+        html += `<button class="town-btn" onclick="closeTownUI()" style="margin-top:8px">閉じる</button>`;
+        panel.innerHTML = html;
+    }
+    window.gambleItem = function(idx) {
+        const g = GAMBLE_ITEMS[idx];
+        if (!g || G.gold < g.cost) {
+            addLog('ゴールドが足りない', '#ff4444');
+            return;
+        }
+        if (player.inventory.length >= player.maxInv) {
+            addLog('インベントリが一杯', '#ff4444');
+            return;
+        }
+
+        // Deduct gold
+        G.gold -= g.cost;
+
+        // Determine item level: player.level ± 3 (D2-style level variance)
+        const itemLevel = Math.max(1, player.level + rand(-3, 3));
+
+        // Pick rarity from gambling table (no common items)
+        const rarityRoll = Math.random();
+        let cumulativeProb = 0;
+        let rarity = 'magic'; // fallback
+        for (const [r, prob] of Object.entries(GAMBLE_RARITY_TABLE)) {
+            cumulativeProb += prob;
+            if (rarityRoll < cumulativeProb) {
+                rarity = r;
+                break;
+            }
+        }
+
+        // Generate item based on category
+        let item;
+        if (g.type === 'weapon') {
+            // Random weapon type
+            const weaponTypes = ['sword', 'axe', 'staff'];
+            const wType = weaponTypes[rand(0, weaponTypes.length - 1)];
+            item = generateItem(itemLevel, wType, rarity);
+        } else if (g.type === 'armor') {
+            // Random armor type (exclude weapon/accessory)
+            const armorTypes = ['helmet', 'armor', 'shield', 'boots'];
+            const aType = armorTypes[rand(0, armorTypes.length - 1)];
+            item = generateItem(itemLevel, aType, rarity);
+        } else {
+            // Ring or Amulet
+            item = generateItem(itemLevel, g.type, rarity);
+        }
+
+        player.inventory.push(item);
+        const rarityColor = RARITY[rarity] ? RARITY[rarity].color : '#ffaa00';
+        addLog(`🎲 ギャンブル結果: ${item.name} (${RARITY[rarity].name})`, rarityColor);
+        emitParticles(player.x, player.y, rarityColor, 15, 60, 0.5, 3, -20);
+        sfxPowerup();
+        renderGambleUI();
     };
 
     let smithTab = 'enhance'; // 'enhance' or 'socket'
