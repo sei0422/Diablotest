@@ -1775,14 +1775,15 @@
         addFloatingText(px, py - 18, 'BREAK', '#caa06a');
 
         const globalF = getGlobalFloor(G.act, G.actFloor, G.cycle);
-        const goldAmt = rand(6 + globalF * 2, 20 + globalF * 5);
-        G.gold += goldAmt;
-        addFloatingText(px, py - 34, `+${goldAmt}G`, '#ffd700');
-        if (Math.random() < 0.18) dropItem(px, py, generatePotion(Math.random() < 0.6 ? 'hp' : 'mp'));
-        if (Math.random() < 0.08) dropItem(px, py, generateItem(globalF, Math.random() < 0.15 ? 'magic' : null));
-        addLog('壊せるオブジェクトを破壊した', '#b28a55');
-        return true;
-    }
+	        const goldAmt = rand(6 + globalF * 2, 20 + globalF * 5);
+	        G.gold += goldAmt;
+	        addFloatingText(px, py - 34, `+${goldAmt}G`, '#ffd700');
+	        // D2-ish: breakables are nice-to-have, not loot pinatas.
+	        if (Math.random() < 0.08) dropItem(px, py, generatePotion(Math.random() < 0.65 ? 'hp' : 'mp'));
+	        if (Math.random() < 0.03) dropItem(px, py, generateItem(globalF, Math.random() < 0.08 ? 'magic' : null));
+	        addLog('壊せるオブジェクトを破壊した', '#b28a55');
+	        return true;
+	    }
 
     function tryBreakNearbyDungeonProps(cx, cy, range, maxBreak = 1) {
         if (!dungeon || G.inTown || maxBreak <= 0) return 0;
@@ -2248,6 +2249,70 @@
     // --- Constants ---
     const TILE = 40;
     const MAP_W = 60, MAP_H = 60;
+
+    // ========== PROJECTION (Top-Down / Isometric) ==========
+    // Keep simulation in "world pixels" (top-down), but project for rendering and mouse picking.
+    // This lets us iterate toward a D2-like look without rewriting physics/collision first.
+    function isIsoView() { return !!(typeof SETTINGS !== 'undefined' && SETTINGS.isometricView); }
+    function _getIsoCamWorld() {
+        // In iso view we track the camera by center-world position (player follow).
+        // Fallback to current `G.camX/G.camY` if older state doesn't have center cached yet.
+        const camWX = (G.camWX != null) ? G.camWX : (typeof player !== 'undefined' ? (player.x || 0) : 0);
+        const camWY = (G.camWY != null) ? G.camWY : (typeof player !== 'undefined' ? (player.y || 0) : 0);
+        return { camWX, camWY };
+    }
+    function worldToScreen(wx, wy) {
+        if (!isIsoView()) return { x: wx - G.camX, y: wy - G.camY };
+        const { camWX, camWY } = _getIsoCamWorld();
+        // For TILE=40: diamond width ~40, height ~20.
+        const ix = (wx - wy) * 0.5;
+        const iy = (wx + wy) * 0.25;
+        const camIX = (camWX - camWY) * 0.5;
+        const camIY = (camWX + camWY) * 0.25;
+        return { x: (ix - camIX) + W / 2, y: (iy - camIY) + H / 2 };
+    }
+    function screenToWorld(sx, sy) {
+        if (!isIsoView()) return { x: sx + G.camX, y: sy + G.camY };
+        const { camWX, camWY } = _getIsoCamWorld();
+        const camIX = (camWX - camWY) * 0.5;
+        const camIY = (camWX + camWY) * 0.25;
+        const ix = (sx - W / 2) + camIX;
+        const iy = (sy - H / 2) + camIY;
+        // Inverse of:
+        // ix = (wx - wy)/2
+        // iy = (wx + wy)/4
+        const wx = ix + 2 * iy;
+        const wy = 2 * iy - ix;
+        return { x: wx, y: wy };
+    }
+    function depthKey(wx, wy) {
+        // Depth sort should be camera-independent.
+        return isIsoView() ? (wx + wy) : wy;
+    }
+    function groundYOffset() {
+        // Existing art assumes a square tile with "ground" at TILE/2.
+        // In iso mode, the ground plane is visually flatter, so reduce offsets a bit.
+        return isIsoView() ? (TILE / 4) : (TILE / 2);
+    }
+    function drawIsoDiamond(tex, cx, cy, w, h, alpha = 1, filter = null, fillFallback = null) {
+        ctx.save();
+        if (filter) ctx.filter = filter;
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - h / 2);
+        ctx.lineTo(cx + w / 2, cy);
+        ctx.lineTo(cx, cy + h / 2);
+        ctx.lineTo(cx - w / 2, cy);
+        ctx.closePath();
+        ctx.clip();
+        if (tex) {
+            ctx.drawImage(tex, cx - w / 2, cy - h / 2, w, h);
+        } else if (fillFallback) {
+            ctx.fillStyle = fillFallback;
+            ctx.fillRect(cx - w / 2, cy - h / 2, w, h);
+        }
+        ctx.restore();
+    }
     const MAX_PARTICLES = 1500; // Diablo風：パーティクル数の上限を3倍に（500→1500）
     const PLAYER_DRAW_SCALE = 1.8;
     const MONSTER_DRAW_SCALES = {
@@ -2339,7 +2404,10 @@
         reducedParticles: false,
         filmGrain: true,
         showFPS: false,
-        showDamageNumbers: true
+        showDamageNumbers: true,
+        // Experimental: pseudo-isometric projection (closer to Diablo 2 feel).
+        // Toggle at runtime with the `V` key.
+        isometricView: false
     };
 
     function loadSettings() {
@@ -2451,8 +2519,10 @@
         return f + actFloor;
     }
     // D2-style monster level table (fixed per area, not scaling)
+    // NOTE: Act1 is tuned so Floor1 starts at mlvl=1 (like Blood Moor) to avoid L1 "MISS" spam.
     const NORMAL_MLVL_TABLE = {
-        1: [3, 5, 7, 9, 12],
+        // Act1 (compressed progression, end ~12)
+        1: [1, 3, 6, 9, 12],
         2: [14, 16, 18, 20, 22],
         3: [23, 25, 27, 29, 30],
         4: [32, 36, 40],
@@ -2816,7 +2886,8 @@
         }
         draw(cx, cy) {
             const lifeRatio = clamp(this.life / this.maxLife, 0, 1);
-            const sx = this.x - cx, sy = this.y - cy;
+            const sp = worldToScreen(this.x, this.y);
+            const sx = sp.x, sy = sp.y;
 
             // Base size with attribute scaling
             let s = this.size * (0.5 + lifeRatio * 0.5);
@@ -3023,7 +3094,8 @@
             this.life -= dt;
         }
         draw(cx, cy) {
-            const sx = this.x - cx, sy = this.y - cy;
+            const sp = worldToScreen(this.x, this.y);
+            const sx = sp.x, sy = sp.y;
             if (sx < -50 || sx > W + 50 || sy < -50 || sy > H + 50) return;
             const a = clamp(this.life / this.maxLife, 0, 1) * (this.life < 1 ? this.life : 1);
             ctx.globalAlpha = a * this.alpha;
@@ -3073,8 +3145,10 @@
         ctx.globalAlpha = 1;
         for (let i = 0; i < 12; i++) {
             const phase = G.time * 0.3 + i * 1.7;
-            const fx = player.x + Math.sin(phase * 0.7 + i * 2.1) * 200 - cx;
-            const fy = player.y + Math.cos(phase * 0.5 + i * 1.3) * 150 - cy;
+            const fwx = player.x + Math.sin(phase * 0.7 + i * 2.1) * 200;
+            const fwy = player.y + Math.cos(phase * 0.5 + i * 1.3) * 150;
+            const fsp = worldToScreen(fwx, fwy);
+            const fx = fsp.x, fy = fsp.y;
             const fogR = 60 + Math.sin(phase + i) * 20;
             const fogA = 0.06 + Math.sin(phase * 0.8 + i * 0.9) * 0.02;
             const fg = ctx.createRadialGradient(fx, fy, 0, fx, fy, fogR);
@@ -3105,7 +3179,8 @@
     }
     function drawBloodPools(cx, cy) {
         for (const bp of bloodPools) {
-            const sx = bp.x - cx, sy = bp.y - cy;
+            const sp = worldToScreen(bp.x, bp.y);
+            const sx = sp.x, sy = sp.y;
             if (sx < -50 || sx > W + 50 || sy < -50 || sy > H + 50) continue;
             ctx.save();
             ctx.translate(sx, sy + 2);
@@ -3166,11 +3241,12 @@
 	            const progress = elapsed / anim.duration;
 	            const prevAlpha = ctx.globalAlpha;
 	            ctx.globalAlpha = (1 - progress * 0.7) * 0.8;
+                const esp = worldToScreen(eff.x, eff.y);
 
 	            if (anim.mode === 'gif') {
 	                const drawSz = TILE * (anim.drawMult || 3.0) * eff.scale;
-	                const dx = eff.x - camX - drawSz / 2;
-	                const dy = eff.y - camY - drawSz / 2;
+	                const dx = esp.x - drawSz / 2;
+	                const dy = esp.y - drawSz / 2;
 	                // Animated GIFs advance internally; we just keep drawing them each frame.
 	                ctx.drawImage(img, dx, dy, drawSz, drawSz);
 	            } else {
@@ -3179,8 +3255,8 @@
 	                const row = Math.floor(frame / anim.cols);
 	                const sx = col * anim.cellW, sy = row * anim.cellH;
 	                const drawSz = TILE * 2.5 * eff.scale;
-	                const dx = eff.x - camX - drawSz / 2;
-	                const dy = eff.y - camY - drawSz / 2;
+	                const dx = esp.x - drawSz / 2;
+	                const dy = esp.y - drawSz / 2;
 	                ctx.drawImage(img, sx, sy, anim.cellW, anim.cellH, dx, dy, drawSz, drawSz);
 	            }
 
@@ -3827,6 +3903,10 @@
         }
 
         draw(camX, camY) {
+            if (isIsoView()) {
+                this.drawIso();
+                return;
+            }
             const startX = Math.max(0, Math.floor(camX / TILE) - 1);
             const startY = Math.max(0, Math.floor(camY / TILE) - 1);
             const endX = Math.min(MAP_W, startX + Math.ceil(W / TILE) + 3);
@@ -4007,6 +4087,87 @@
                         ctx.arc(sx + TILE/2, sy + TILE/2, TILE * 0.6, 0, Math.PI * 2);
                         ctx.fill();
                         ctx.globalAlpha = 1;
+                    }
+                }
+            }
+        }
+
+        drawIso() {
+            // Painter order for diamond tiles: back-to-front by (x + y).
+            // In iso mode we draw the whole map (60x60 = 3600 tiles), which is acceptable and simpler.
+            const diamondW = TILE;
+            const diamondH = TILE / 2;
+            const drawVariant = (x, y) => (((x * 2654435761 + y * 2246822519) >>> 0) % 9);
+
+            for (let sum = 0; sum <= (MAP_W - 1) + (MAP_H - 1); sum++) {
+                const x0 = Math.max(0, sum - (MAP_H - 1));
+                const x1 = Math.min(MAP_W - 1, sum);
+                for (let x = x0; x <= x1; x++) {
+                    const y = sum - x;
+                    const t = this.get(x, y);
+
+                    const wx = x * TILE + TILE / 2;
+                    const wy = y * TILE + TILE / 2;
+                    const sp = worldToScreen(wx, wy);
+                    const sx = sp.x, sy = sp.y;
+
+                    // Basic culling
+                    if (sx < -diamondW || sx > W + diamondW || sy < -diamondH * 2 || sy > H + diamondH * 2) continue;
+
+                    if (t === 1 || t === 2 || t === 3) {
+                        const variant = drawVariant(x, y);
+                        const tex = TILE_TEXTURES['floor_' + variant];
+                        drawIsoDiamond(tex, sx, sy, diamondW, diamondH, 1, null, '#202020');
+                    } else {
+                        // Wall: draw top diamond + a simple south-facing vertical face for depth.
+                        const wallTex = (x + y) % 2 === 0 ? TILE_TEXTURES['wall'] : TILE_TEXTURES['wall2'];
+                        drawIsoDiamond(wallTex, sx, sy, diamondW, diamondH, 1, 'brightness(0.55)', '#0a0a0a');
+
+                        // South face (only if adjacent to walkable tile below).
+                        if (this.walkable(x, y + 1)) {
+                            const wallH = Math.round(diamondH * 1.6);
+                            const g = ctx.createLinearGradient(0, sy, 0, sy + wallH);
+                            g.addColorStop(0, 'rgba(0,0,0,0.25)');
+                            g.addColorStop(1, 'rgba(0,0,0,0.55)');
+                            ctx.fillStyle = g;
+                            ctx.beginPath();
+                            ctx.moveTo(sx - diamondW / 2, sy);
+                            ctx.lineTo(sx + diamondW / 2, sy);
+                            ctx.lineTo(sx + diamondW / 2, sy + wallH);
+                            ctx.lineTo(sx - diamondW / 2, sy + wallH);
+                            ctx.closePath();
+                            ctx.fill();
+                            // Edge line for readability
+                            ctx.globalAlpha = 0.35;
+                            ctx.strokeStyle = '#000';
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(sx - diamondW / 2, sy);
+                            ctx.lineTo(sx + diamondW / 2, sy);
+                            ctx.stroke();
+                            ctx.globalAlpha = 1;
+                        }
+                    }
+
+                    // Overlay props on walkable tiles (stairs/chest only for now).
+                    if (t === 2) {
+                        if (ogaLoaded && OGA.kenney_stairs) {
+                            const ksW = Math.round(TILE * 1.2);
+                            const ksH = Math.round(ksW * (OGA.kenney_stairs.height / OGA.kenney_stairs.width));
+                            ctx.drawImage(OGA.kenney_stairs, sx - ksW / 2, sy - ksH + diamondH * 0.2, ksW, ksH);
+                        } else {
+                            drawSpr('stairsDown', sx - TILE / 2, sy - TILE / 2, TILE, TILE);
+                        }
+                    } else if (t === 3) {
+                        if (ogaLoaded && OGA.dt_chest_closed) {
+                            const chImg = OGA.dt_chest_closed;
+                            const cSz = Math.min(chImg.width, chImg.height);
+                            const cx = (chImg.width - cSz) / 2;
+                            const cy = (chImg.height - cSz) / 2;
+                            ctx.drawImage(chImg, cx, cy, cSz, cSz, sx - TILE / 2, sy - TILE / 2, TILE, TILE);
+                        } else {
+                            drawSpr('chestClosed', sx - TILE / 2, sy - TILE / 2, TILE, TILE);
+                        }
                     }
                 }
             }
@@ -4679,14 +4840,14 @@
             promotions: ['assassin', 'ranger'],
             skills: [
                 // Branch 0: 弓スキル
-                { id: 'r_firearrow', name: 'ファイアアロー', icon: '🔥', mp: 8, cd: 0.8, branch: 0, desc: '炎を纏った矢を放つ', prereq: null, effect: 'projectile_fire', baseMult: [1.6, 1.9, 2.2, 2.6, 3.2], speed: 400, reqLevel: 1, skillType: 'active', synergies: [{ from: 'r_coldarrow', bonus: 0.06, type: 'damage' }] },
-                { id: 'r_coldarrow', name: 'コールドアロー', icon: '❄', mp: 10, cd: 1.2, branch: 0, desc: '冷気を纏った矢を放つ', prereq: 'r_firearrow', effect: 'projectile_fire', baseMult: [1.4, 1.7, 2.0, 2.4, 3.0], speed: 380, reqLevel: 1, skillType: 'active', synergies: [{ from: 'r_firearrow', bonus: 0.06, type: 'damage' }] },
+	                { id: 'r_firearrow', name: 'ファイアアロー', icon: '🔥', mp: 8, cd: 0.8, branch: 0, desc: '炎を纏った矢を放つ', prereq: null, effect: 'projectile_fire', iconEff: 'arrow_fire', baseMult: [1.6, 1.9, 2.2, 2.6, 3.2], speed: 400, reqLevel: 1, skillType: 'active', synergies: [{ from: 'r_coldarrow', bonus: 0.06, type: 'damage' }] },
+	                { id: 'r_coldarrow', name: 'コールドアロー', icon: '❄', mp: 10, cd: 1.2, branch: 0, desc: '冷気を纏った矢を放つ', prereq: 'r_firearrow', effect: 'projectile_fire', iconEff: 'arrow_cold', baseMult: [1.4, 1.7, 2.0, 2.4, 3.0], speed: 380, reqLevel: 1, skillType: 'active', synergies: [{ from: 'r_firearrow', bonus: 0.06, type: 'damage' }] },
                 { id: 'r_multishot', name: 'マルチプルショット', icon: '🌟', mp: 22, cd: 2.5, branch: 0, desc: '複数の矢を同時に放つ', prereq: 'r_coldarrow', effect: 'multi_shot', arrows: [3, 4, 5, 6, 8], baseMult: [1.0, 1.3, 1.6, 2.0, 2.5], reqLevel: 12, skillType: 'active', synergies: [{ from: 'r_firearrow', bonus: 0.05, type: 'damage' }, { from: 'r_guidedarrow', bonus: 0.05, type: 'damage' }] },
-                { id: 'r_guidedarrow', name: 'ガイデッドアロー', icon: '🎯', mp: 18, cd: 1.5, branch: 0, desc: '敵を追尾する矢を放つ', prereq: 'r_firearrow', effect: 'projectile_fire', baseMult: [2.2, 2.8, 3.5, 4.2, 5.0], speed: 500, reqLevel: 6, skillType: 'active', synergies: [{ from: 'r_firearrow', bonus: 0.08, type: 'damage' }] },
+	                { id: 'r_guidedarrow', name: 'ガイデッドアロー', icon: '🎯', mp: 18, cd: 1.5, branch: 0, desc: '敵を追尾する矢を放つ', prereq: 'r_firearrow', effect: 'projectile_fire', iconEff: 'arrow_magic', baseMult: [2.2, 2.8, 3.5, 4.2, 5.0], speed: 500, reqLevel: 6, skillType: 'active', synergies: [{ from: 'r_firearrow', bonus: 0.08, type: 'damage' }] },
                 { id: 'r_strafe', name: 'ストレイフ', icon: '🏹', mp: 35, cd: 5.0, branch: 0, desc: '矢の連射で敵を制圧する', prereq: 'r_multishot', effect: 'arrow_rain', baseMult: [2.0, 2.6, 3.2, 4.0, 5.0], range: 100, reqLevel: 18, skillType: 'active', synergies: [{ from: 'r_multishot', bonus: 0.08, type: 'damage' }] },
                 { id: 'r_immolation', name: 'イモレーションアロー', icon: '🔥', mp: 40, cd: 6.0, branch: 0, desc: '炎の雨を降らせる', prereq: 'r_strafe', effect: 'arrow_rain', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 110, reqLevel: 24, skillType: 'active', synergies: [{ from: 'r_firearrow', bonus: 0.10, type: 'damage' }] },
                 { id: 'r_freezingarrow', name: 'フリージングアロー', icon: '🧊', mp: 45, cd: 7.0, branch: 0, desc: '周囲を凍結させる矢を放つ', prereq: 'r_immolation', effect: 'frost_nova', baseMult: [2.0, 2.8, 3.5, 4.5, 6.0], freeze: [2, 3, 4, 5, 6], reqLevel: 30, skillType: 'active', synergies: [{ from: 'r_coldarrow', bonus: 0.08, type: 'freeze' }] },
-                { id: 'r_magicarrow', name: 'マジックアロー', icon: '✨', mp: 55, cd: 8.0, branch: 0, desc: '魔力を凝縮した究極の矢', prereq: 'r_freezingarrow', effect: 'projectile_fire', baseMult: [4.0, 5.0, 6.5, 8.0, 10.0], speed: 550, reqLevel: 30, skillType: 'active', synergies: [{ from: 'r_guidedarrow', bonus: 0.10, type: 'damage' }, { from: 'r_multishot', bonus: 0.08, type: 'damage' }] },
+	                { id: 'r_magicarrow', name: 'マジックアロー', icon: '✨', mp: 55, cd: 8.0, branch: 0, desc: '魔力を凝縮した究極の矢', prereq: 'r_freezingarrow', effect: 'projectile_fire', iconEff: 'arrow_magic', baseMult: [4.0, 5.0, 6.5, 8.0, 10.0], speed: 550, reqLevel: 30, skillType: 'active', synergies: [{ from: 'r_guidedarrow', bonus: 0.10, type: 'damage' }, { from: 'r_multishot', bonus: 0.08, type: 'damage' }] },
                 // Branch 1: ジャベリン
                 { id: 'r_jab', name: 'ジャブ', icon: '🔱', mp: 8, cd: 1.0, branch: 1, desc: '素早い連続突き', prereq: null, effect: 'melee_burst', baseMult: [1.8, 2.1, 2.5, 3.0, 3.6], range: 55, reqLevel: 1, skillType: 'active' },
                 { id: 'r_poisonjav', name: 'ポイズンジャベリン', icon: '☠', mp: 14, cd: 3.0, branch: 1, desc: '毒を塗った投槍を投げる', prereq: 'r_jab', effect: 'buff_poison', duration: [4, 5, 6, 8, 10], dps: [5, 8, 12, 18, 25], reqLevel: 6, skillType: 'active', synergies: [{ from: 'r_jab', bonus: 0.06, type: 'damage' }] },
@@ -4724,9 +4885,9 @@
             promotions: ['pyromancer', 'cryomancer'],
             skills: [
                 // Branch 0: ファイアスペル
-                { id: 's_firebolt', name: 'ファイアボルト', icon: '🔥', mp: 6, cd: 0.5, branch: 0, desc: '火炎の弾を撃ち出す', prereq: null, effect: 'projectile_fire', baseMult: [1.4, 1.7, 2.0, 2.4, 3.0], speed: 350, reqLevel: 1, skillType: 'active', synergies: [{ from: 's_fireball', bonus: 0.06, type: 'damage' }, { from: 's_firemastery_p', bonus: 0.04, type: 'damage' }] },
+	                { id: 's_firebolt', name: 'ファイアボルト', icon: '🔥', mp: 6, cd: 0.5, branch: 0, desc: '火炎の弾を撃ち出す', prereq: null, effect: 'projectile_fire', iconEff: 'bolt_fire', baseMult: [1.4, 1.7, 2.0, 2.4, 3.0], speed: 350, reqLevel: 1, skillType: 'active', synergies: [{ from: 's_fireball', bonus: 0.06, type: 'damage' }, { from: 's_firemastery_p', bonus: 0.04, type: 'damage' }] },
                 { id: 's_warmth_p', name: '暖気', icon: '🌡', mp: 0, cd: 0, branch: 0, desc: 'マナ自然回復を常時上昇', prereq: 's_firebolt', reqLevel: 1, skillType: 'passive', passiveEffect: { stat: 'manaRegen', baseBonus: 1, perLevel: 1 } },
-                { id: 's_fireball', name: 'ファイアボール', icon: '☀', mp: 18, cd: 1.5, branch: 0, desc: '爆発する火球を放つ', prereq: 's_firebolt', effect: 'projectile_fire', baseMult: [2.2, 2.8, 3.5, 4.2, 5.5], speed: 320, reqLevel: 6, skillType: 'active', synergies: [{ from: 's_firebolt', bonus: 0.14, type: 'damage' }, { from: 's_firemastery_p', bonus: 0.04, type: 'damage' }] },
+	                { id: 's_fireball', name: 'ファイアボール', icon: '☀', mp: 18, cd: 1.5, branch: 0, desc: '爆発する火球を放つ', prereq: 's_firebolt', effect: 'projectile_fire', iconEff: 'bolt_fire', baseMult: [2.2, 2.8, 3.5, 4.2, 5.5], speed: 320, reqLevel: 6, skillType: 'active', synergies: [{ from: 's_firebolt', bonus: 0.14, type: 'damage' }, { from: 's_firemastery_p', bonus: 0.04, type: 'damage' }] },
                 { id: 's_warmth', name: 'ウォームス', icon: '🌡', mp: 12, cd: 10.0, branch: 0, desc: 'マナ回復のオーラを展開', prereq: 's_firebolt', effect: 'buff_aura', duration: [8, 10, 12, 15, 20], regen: [3, 5, 8, 12, 16], reduction: [0.1, 0.15, 0.2, 0.25, 0.3], reqLevel: 6, skillType: 'active', synergies: [{ from: 's_warmth_p', bonus: 0.07, type: 'duration' }] },
                 { id: 's_firewall', name: 'ファイアウォール', icon: '🧱', mp: 25, cd: 5.0, branch: 0, desc: '炎の壁を展開する', prereq: 's_fireball', effect: 'consecrate', baseMult: [0.6, 0.8, 1.0, 1.3, 1.6], range: 80, duration: [3, 4, 5, 6, 8], reqLevel: 12, skillType: 'active', synergies: [{ from: 's_firebolt', bonus: 0.08, type: 'damage' }, { from: 's_firemastery_p', bonus: 0.04, type: 'damage' }] },
                 { id: 's_firemastery_p', name: '火炎の極意', icon: '🔥', mp: 0, cd: 0, branch: 0, desc: '火炎ダメージを常時上昇', prereq: 's_fireball', reqLevel: 12, skillType: 'passive', passiveEffect: { stat: 'damagePercent', baseBonus: 4, perLevel: 4 } },
@@ -4746,7 +4907,7 @@
                 { id: 's_ltgmastery', name: 'ライトニングマスタリー', icon: '⚡', mp: 40, cd: 12.0, branch: 1, desc: '雷の力を極限まで高める', prereq: 's_nova', effect: 'buff_atkspd', duration: [6, 8, 10, 14, 18], bonus: [0.3, 0.4, 0.5, 0.6, 0.8], reqLevel: 24, skillType: 'active' },
                 { id: 's_thunderstorm', name: 'サンダーストーム', icon: '⛈', mp: 55, cd: 10.0, branch: 1, desc: '雷雲を召喚し敵を打つ', prereq: 's_ltgmastery', effect: 'consecrate', baseMult: [1.0, 1.4, 1.8, 2.4, 3.2], range: 120, duration: [6, 8, 10, 13, 16], reqLevel: 30, skillType: 'active', synergies: [{ from: 's_lightning', bonus: 0.10, type: 'damage' }, { from: 's_nova', bonus: 0.10, type: 'damage' }] },
                 // Branch 2: コールドスペル
-                { id: 's_icebolt', name: 'アイスボルト', icon: '🔷', mp: 6, cd: 0.8, branch: 2, desc: '氷の弾を撃ち出す', prereq: null, effect: 'projectile_fire', baseMult: [1.2, 1.5, 1.8, 2.2, 2.8], speed: 380, reqLevel: 1, skillType: 'active', synergies: [{ from: 's_frostnova', bonus: 0.06, type: 'damage' }] },
+	                { id: 's_icebolt', name: 'アイスボルト', icon: '🔷', mp: 6, cd: 0.8, branch: 2, desc: '氷の弾を撃ち出す', prereq: null, effect: 'projectile_fire', iconEff: 'bolt_cold', baseMult: [1.2, 1.5, 1.8, 2.2, 2.8], speed: 380, reqLevel: 1, skillType: 'active', synergies: [{ from: 's_frostnova', bonus: 0.06, type: 'damage' }] },
                 { id: 's_frozenarmor', name: 'フローズンアーマー', icon: '🛡', mp: 15, cd: 10.0, branch: 2, desc: '氷の鎧で被ダメージ軽減', prereq: 's_icebolt', effect: 'buff_defense', duration: [6, 8, 10, 12, 16], reduction: [0.3, 0.4, 0.45, 0.5, 0.6], reqLevel: 6, skillType: 'active' },
                 { id: 's_frostnova', name: 'フロストノヴァ', icon: '❄', mp: 18, cd: 4.0, branch: 2, desc: '冷気の波動で周囲を凍結', prereq: 's_icebolt', effect: 'frost_nova', baseMult: [0.8, 1.0, 1.4, 1.8, 2.4], freeze: [2, 2, 3, 4, 5], reqLevel: 6, skillType: 'active', synergies: [{ from: 's_icebolt', bonus: 0.10, type: 'damage' }, { from: 's_icebolt', bonus: 0.05, type: 'freeze' }] },
                 { id: 's_glacialspike', name: 'グレイシャルスパイク', icon: '🧊', mp: 22, cd: 3.0, branch: 2, desc: '氷の棘で敵を凍らせる', prereq: 's_frostnova', effect: 'frost_nova', baseMult: [1.5, 2.0, 2.5, 3.2, 4.0], freeze: [2, 3, 3, 4, 5], reqLevel: 12, skillType: 'active', synergies: [{ from: 's_frostnova', bonus: 0.10, type: 'damage' }, { from: 's_icebolt', bonus: 0.06, type: 'freeze' }] },
@@ -4910,15 +5071,15 @@
             promotions: [],
             skills: [
                 // Branch 0: アーチェリー
-                { id: 'rg_guided', name: 'ガイデッドアロー', icon: '🎯', mp: 10, cd: 0.8, branch: 0, desc: '追尾する矢を放つ', prereq: null, effect: 'projectile_fire', baseMult: [1.8, 2.2, 2.6, 3.2, 4.0], speed: 500, reqLevel: 1, skillType: 'active' },
-                { id: 'rg_coldarrow', name: 'コールドアロー', icon: '❄', mp: 12, cd: 1.2, branch: 0, desc: '冷気の矢で敵を減速', prereq: 'rg_guided', effect: 'projectile_fire', baseMult: [1.6, 2.0, 2.4, 3.0, 3.8], speed: 420, reqLevel: 6, skillType: 'active', synergies: [{ from: 'rg_guided', bonus: 0.08, type: 'damage' }] },
+	                { id: 'rg_guided', name: 'ガイデッドアロー', icon: '🎯', mp: 10, cd: 0.8, branch: 0, desc: '追尾する矢を放つ', prereq: null, effect: 'projectile_fire', iconEff: 'arrow_magic', baseMult: [1.8, 2.2, 2.6, 3.2, 4.0], speed: 500, reqLevel: 1, skillType: 'active' },
+	                { id: 'rg_coldarrow', name: 'コールドアロー', icon: '❄', mp: 12, cd: 1.2, branch: 0, desc: '冷気の矢で敵を減速', prereq: 'rg_guided', effect: 'projectile_fire', iconEff: 'arrow_cold', baseMult: [1.6, 2.0, 2.4, 3.0, 3.8], speed: 420, reqLevel: 6, skillType: 'active', synergies: [{ from: 'rg_guided', bonus: 0.08, type: 'damage' }] },
                 { id: 'rg_multishot', name: 'マルチプルショット', icon: '🌟', mp: 20, cd: 2.0, branch: 0, desc: '複数の矢を同時に放つ', prereq: 'rg_guided', effect: 'multi_shot', arrows: [3, 4, 5, 6, 8], baseMult: [1.0, 1.3, 1.6, 2.0, 2.5], reqLevel: 6, skillType: 'active', synergies: [{ from: 'rg_guided', bonus: 0.06, type: 'damage' }, { from: 'rg_hawkeye_p', bonus: 0.03, type: 'damage' }] },
                 { id: 'rg_hawkeye_p', name: '鷹の目', icon: '🦅', mp: 0, cd: 0, branch: 0, desc: 'ダメージを常時上昇', prereq: 'rg_guided', reqLevel: 6, skillType: 'passive', passiveEffect: { stat: 'damagePercent', baseBonus: 3, perLevel: 2.5 } },
                 { id: 'rg_strafe', name: 'ストレイフ', icon: '🏹', mp: 25, cd: 2.5, branch: 0, desc: '矢の嵐で敵を制圧する', prereq: 'rg_multishot', effect: 'multi_shot', arrows: [4, 5, 6, 8, 10], baseMult: [1.2, 1.5, 1.8, 2.2, 2.8], reqLevel: 12, skillType: 'active', synergies: [{ from: 'rg_multishot', bonus: 0.10, type: 'damage' }] },
                 { id: 'rg_explodingarrow', name: 'エクスプローディングアロー', icon: '💥', mp: 28, cd: 4.0, branch: 0, desc: '爆発する矢を放つ', prereq: 'rg_coldarrow', effect: 'arrow_rain', baseMult: [2.0, 2.5, 3.2, 4.0, 5.0], range: 90, reqLevel: 12, skillType: 'active', synergies: [{ from: 'rg_coldarrow', bonus: 0.08, type: 'damage' }] },
                 { id: 'rg_immolation', name: 'イモレーションアロー', icon: '🔥', mp: 35, cd: 6.0, branch: 0, desc: '炎の雨を降らせる矢', prereq: 'rg_explodingarrow', effect: 'arrow_rain', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 100, reqLevel: 18, skillType: 'active', synergies: [{ from: 'rg_explodingarrow', bonus: 0.10, type: 'damage' }] },
                 { id: 'rg_freezingarrow', name: 'フリージングアロー', icon: '🧊', mp: 42, cd: 6.0, branch: 0, desc: '周囲を凍結させる氷の矢', prereq: 'rg_immolation', effect: 'frost_nova', baseMult: [2.0, 2.5, 3.2, 4.0, 5.5], freeze: [2, 3, 3, 4, 5], reqLevel: 24, skillType: 'active', synergies: [{ from: 'rg_coldarrow', bonus: 0.10, type: 'freeze' }, { from: 'rg_immolation', bonus: 0.08, type: 'damage' }] },
-                { id: 'rg_magicarrow', name: 'マジックアロー', icon: '✨', mp: 55, cd: 8.0, branch: 0, desc: '魔力を凝縮した究極の矢', prereq: 'rg_freezingarrow', effect: 'projectile_fire', baseMult: [4.0, 5.0, 6.5, 8.0, 10.5], speed: 550, reqLevel: 30, skillType: 'active', synergies: [{ from: 'rg_guided', bonus: 0.12, type: 'damage' }, { from: 'rg_hawkeye_p', bonus: 0.04, type: 'damage' }] },
+	                { id: 'rg_magicarrow', name: 'マジックアロー', icon: '✨', mp: 55, cd: 8.0, branch: 0, desc: '魔力を凝縮した究極の矢', prereq: 'rg_freezingarrow', effect: 'projectile_fire', iconEff: 'arrow_magic', baseMult: [4.0, 5.0, 6.5, 8.0, 10.5], speed: 550, reqLevel: 30, skillType: 'active', synergies: [{ from: 'rg_guided', bonus: 0.12, type: 'damage' }, { from: 'rg_hawkeye_p', bonus: 0.04, type: 'damage' }] },
                 // Branch 1: スピアスキル
                 { id: 'rg_jab', name: 'ジャブ', icon: '🔱', mp: 8, cd: 1.0, branch: 1, desc: '素早い連続突き', prereq: null, effect: 'melee_burst', baseMult: [1.8, 2.2, 2.6, 3.2, 4.0], range: 58, reqLevel: 1, skillType: 'active' },
                 { id: 'rg_chargedstrike', name: 'チャージドストライク', icon: '⚡', mp: 14, cd: 2.0, branch: 1, desc: '帯電した連撃', prereq: 'rg_jab', effect: 'melee_burst', baseMult: [2.0, 2.5, 3.2, 4.0, 5.0], range: 60, reqLevel: 6, skillType: 'active', synergies: [{ from: 'rg_jab', bonus: 0.08, type: 'damage' }] },
@@ -4956,8 +5117,8 @@
             promotions: [],
             skills: [
                 // Branch 0: ファイアスペル
-                { id: 'py_firebolt', name: 'ファイアボルト', icon: '🔥', mp: 6, cd: 0.5, branch: 0, desc: '火炎の弾を撃ち出す', prereq: null, effect: 'projectile_fire', baseMult: [1.8, 2.2, 2.6, 3.2, 4.0], speed: 360, reqLevel: 1, skillType: 'active', synergies: [{ from: 'py_flameheart_p', bonus: 0.04, type: 'damage' }] },
-                { id: 'py_fireball', name: 'ファイアボール', icon: '☀', mp: 14, cd: 0.8, branch: 0, desc: '爆発する火球を放つ', prereq: 'py_firebolt', effect: 'projectile_fire', baseMult: [2.5, 3.0, 3.8, 4.5, 5.5], speed: 380, reqLevel: 6, skillType: 'active', synergies: [{ from: 'py_firebolt', bonus: 0.12, type: 'damage' }, { from: 'py_flameheart_p', bonus: 0.04, type: 'damage' }] },
+	                { id: 'py_firebolt', name: 'ファイアボルト', icon: '🔥', mp: 6, cd: 0.5, branch: 0, desc: '火炎の弾を撃ち出す', prereq: null, effect: 'projectile_fire', iconEff: 'bolt_fire', baseMult: [1.8, 2.2, 2.6, 3.2, 4.0], speed: 360, reqLevel: 1, skillType: 'active', synergies: [{ from: 'py_flameheart_p', bonus: 0.04, type: 'damage' }] },
+	                { id: 'py_fireball', name: 'ファイアボール', icon: '☀', mp: 14, cd: 0.8, branch: 0, desc: '爆発する火球を放つ', prereq: 'py_firebolt', effect: 'projectile_fire', iconEff: 'bolt_fire', baseMult: [2.5, 3.0, 3.8, 4.5, 5.5], speed: 380, reqLevel: 6, skillType: 'active', synergies: [{ from: 'py_firebolt', bonus: 0.12, type: 'damage' }, { from: 'py_flameheart_p', bonus: 0.04, type: 'damage' }] },
                 { id: 'py_flameheart_p', name: '炎の心臓', icon: '❤‍🔥', mp: 0, cd: 0, branch: 0, desc: '火炎ダメージを常時上昇', prereq: 'py_firebolt', reqLevel: 6, skillType: 'passive', passiveEffect: { stat: 'damagePercent', baseBonus: 4, perLevel: 3 } },
                 { id: 'py_firewall', name: 'ファイアウォール', icon: '🧱', mp: 22, cd: 4.0, branch: 0, desc: '炎の壁を展開する', prereq: 'py_fireball', effect: 'consecrate', baseMult: [0.7, 0.9, 1.2, 1.5, 2.0], range: 80, duration: [3, 4, 5, 7, 9], reqLevel: 12, skillType: 'active', synergies: [{ from: 'py_fireball', bonus: 0.08, type: 'damage' }] },
                 { id: 'py_combustion', name: 'コンバッション', icon: '💥', mp: 28, cd: 5.0, branch: 0, desc: '爆発で周囲を焼き尽くす', prereq: 'py_firewall', effect: 'meteor', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 90, reqLevel: 12, skillType: 'active', synergies: [{ from: 'py_firebolt', bonus: 0.10, type: 'damage' }, { from: 'py_fireball', bonus: 0.10, type: 'damage' }] },
@@ -5002,9 +5163,9 @@
             promotions: [],
             skills: [
                 // Branch 0: コールドスペル
-                { id: 'cy_icebolt', name: 'アイスボルト', icon: '🔷', mp: 6, cd: 0.5, branch: 0, desc: '氷の弾を撃ち出す', prereq: null, effect: 'projectile_fire', baseMult: [1.4, 1.7, 2.0, 2.4, 3.0], speed: 380, reqLevel: 1, skillType: 'active' },
-                { id: 'cy_iceblast', name: 'アイスブラスト', icon: '💎', mp: 12, cd: 0.8, branch: 0, desc: '氷の衝撃波を放つ', prereq: 'cy_icebolt', effect: 'projectile_fire', baseMult: [1.8, 2.2, 2.6, 3.2, 4.0], speed: 400, reqLevel: 6, skillType: 'active', synergies: [{ from: 'cy_icebolt', bonus: 0.10, type: 'damage' }] },
-                { id: 'cy_frostbolt', name: 'フロストボルト', icon: '🔵', mp: 16, cd: 1.5, branch: 0, desc: '冷気の弾を放つ', prereq: 'cy_iceblast', effect: 'projectile_fire', baseMult: [2.2, 2.8, 3.5, 4.2, 5.2], speed: 360, reqLevel: 6, skillType: 'active', synergies: [{ from: 'cy_iceblast', bonus: 0.08, type: 'damage' }] },
+	                { id: 'cy_icebolt', name: 'アイスボルト', icon: '🔷', mp: 6, cd: 0.5, branch: 0, desc: '氷の弾を撃ち出す', prereq: null, effect: 'projectile_fire', iconEff: 'bolt_cold', baseMult: [1.4, 1.7, 2.0, 2.4, 3.0], speed: 380, reqLevel: 1, skillType: 'active' },
+	                { id: 'cy_iceblast', name: 'アイスブラスト', icon: '💎', mp: 12, cd: 0.8, branch: 0, desc: '氷の衝撃波を放つ', prereq: 'cy_icebolt', effect: 'projectile_fire', iconEff: 'bolt_cold', baseMult: [1.8, 2.2, 2.6, 3.2, 4.0], speed: 400, reqLevel: 6, skillType: 'active', synergies: [{ from: 'cy_icebolt', bonus: 0.10, type: 'damage' }] },
+	                { id: 'cy_frostbolt', name: 'フロストボルト', icon: '🔵', mp: 16, cd: 1.5, branch: 0, desc: '冷気の弾を放つ', prereq: 'cy_iceblast', effect: 'projectile_fire', iconEff: 'bolt_cold', baseMult: [2.2, 2.8, 3.5, 4.2, 5.2], speed: 360, reqLevel: 6, skillType: 'active', synergies: [{ from: 'cy_iceblast', bonus: 0.08, type: 'damage' }] },
                 { id: 'cy_glacialspike', name: 'グレイシャルスパイク', icon: '❄', mp: 22, cd: 3.0, branch: 0, desc: '氷の棘で敵を凍らせる', prereq: 'cy_frostbolt', effect: 'frost_nova', baseMult: [1.5, 2.0, 2.5, 3.2, 4.2], freeze: [2, 3, 3, 4, 5], reqLevel: 12, skillType: 'active', synergies: [{ from: 'cy_frostbolt', bonus: 0.10, type: 'damage' }, { from: 'cy_icebolt', bonus: 0.06, type: 'freeze' }] },
                 { id: 'cy_blizzard', name: 'ブリザード', icon: '🌨', mp: 38, cd: 6.0, branch: 0, desc: '氷の嵐を降らせる', prereq: 'cy_glacialspike', effect: 'arrow_rain', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 130, reqLevel: 18, skillType: 'active', synergies: [{ from: 'cy_glacialspike', bonus: 0.10, type: 'damage' }, { from: 'cy_frostbolt', bonus: 0.08, type: 'damage' }] },
                 { id: 'cy_iceorb', name: 'アイスオーブ', icon: '🌐', mp: 42, cd: 7.0, branch: 0, desc: '氷の球体を放つ', prereq: 'cy_blizzard', effect: 'frozen_orb', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], speed: 180, shardCount: [5, 6, 8, 10, 12], reqLevel: 24, skillType: 'active', synergies: [{ from: 'cy_blizzard', bonus: 0.10, type: 'damage' }, { from: 'cy_permafrostmastery_p', bonus: 0.04, type: 'damage' }] },
@@ -5051,11 +5212,13 @@
         ]
     };
 
-    const PROMOTION_LEVEL = 10;
+    // Promotion is a major power spike; gate it behind an early milestone (Act1 boss) so it doesn't happen too soon.
+    const PROMOTION_LEVEL = 12;
     let promotionPending = false;
 
     function checkPromotion() {
-        if (player.level >= PROMOTION_LEVEL && !promotionPending) {
+        const act1BossDefeated = !!(G.bossesDefeated && G.bossesDefeated.skeleton_king);
+        if (player.level >= PROMOTION_LEVEL && act1BossDefeated && !promotionPending) {
             const classDef = CLASS_DEFS[G.playerClass];
             if (classDef.tier === 0 && classDef.promotions && classDef.promotions.length > 0) {
                 promotionPending = true;
@@ -5070,7 +5233,7 @@
         if (!promos) return;
         const overlay = DOM.promotionOverlay;
         const content = DOM.promotionContent;
-        let html = '<div style="text-align:center;margin-bottom:15px"><span style="color:#ffd700;font-size:22px;font-weight:bold;text-shadow:0 0 10px #ffd700">クラスチェンジ</span><br><span style="color:#aaa;font-size:12px">レベル10到達！上位クラスを選択してください</span></div>';
+        let html = `<div style="text-align:center;margin-bottom:15px"><span style="color:#ffd700;font-size:22px;font-weight:bold;text-shadow:0 0 10px #ffd700">クラスチェンジ</span><br><span style="color:#aaa;font-size:12px">Lv.${PROMOTION_LEVEL} かつ 骸骨王討伐達成！上位クラスを選択してください</span></div>`;
         for (const p of promos) {
             const cd = CLASS_DEFS[p.key];
             html += `<div class="promo-card" onclick="doPromotion('${p.key}')">
@@ -5105,17 +5268,10 @@
                 player.skillLevels[sk.id] = 0;
             }
         }
-        // Unlock first active skill in each branch
-        for (let b = 0; b < newDef.branches.length; b++) {
-            const firstActive = newDef.skills.find(s => s.branch === b && s.skillType !== 'passive');
-            if (firstActive) {
-                player.skillLevels[firstActive.id] = Math.max(1, player.skillLevels[firstActive.id] || 0);
-            }
-        }
-        // Give bonus skill points (increased for Diablo 2 style system)
-        player.skillPoints = (player.skillPoints || 0) + 5;
-        // Rebuild skill bar from new class
-        rebuildSkillBar();
+        // Do NOT auto-unlock promoted skills: keep base-class skills relevant and let the player choose point allocation.
+        // Give a small one-time point bonus (still a power bump, but not an instant "swap everything" moment).
+        player.skillPoints = (player.skillPoints || 0) + 2;
+        // Keep skill bar as-is (player may be in combat). The new skills can be assigned manually.
         player.recalcStats();
         player.hp = player.maxHP;
         player.mp = player.maxMP;
@@ -5150,6 +5306,38 @@
 
     // ========== SKILL VALUE HELPERS (Diablo 2 Style) ==========
     const SKILL_MAX_LEVEL = 20;
+    const LEGACY_SKILL_TUNING = {
+        // Keep base-class (tier0) skills relevant after promotion.
+        // Goal: base skills stay as reliable, cheap, low-CD staples; promoted skills become higher-ceiling point sinks.
+        baseSkillDmgMultAtPromo: 1.18,
+        baseSkillDmgMultPerLevelAfterPromo: 0.02,
+        baseSkillDmgMultCap: 0.32, // +32% max on top of baseSkillDmgMultAtPromo
+        baseSkillMpCostMult: 0.85,
+        baseSkillCdMult: 0.90
+    };
+
+    function _isPromotedClass() {
+        const cd = CLASS_DEFS[G.playerClass];
+        return !!(cd && cd.tier > 0 && cd.baseClass && CLASS_DEFS[cd.baseClass]);
+    }
+    function _isBaseClassSkillId(skillId) {
+        if (!_isPromotedClass()) return false;
+        const cd = CLASS_DEFS[G.playerClass];
+        const base = CLASS_DEFS[cd.baseClass];
+        if (!base || !base.skills) return false;
+        return base.skills.some(s => s.id === skillId);
+    }
+    function getLegacySkillTuning(skDef) {
+        if (!skDef || !_isBaseClassSkillId(skDef.id)) return { dmgMult: 1, mpCostMult: 1, cdMult: 1 };
+        const over = Math.max(0, (player.level || 1) - PROMOTION_LEVEL);
+        const extra = Math.min(LEGACY_SKILL_TUNING.baseSkillDmgMultCap, over * LEGACY_SKILL_TUNING.baseSkillDmgMultPerLevelAfterPromo);
+        const dmgMult = LEGACY_SKILL_TUNING.baseSkillDmgMultAtPromo + extra;
+        return {
+            dmgMult,
+            mpCostMult: LEGACY_SKILL_TUNING.baseSkillMpCostMult,
+            cdMult: LEGACY_SKILL_TUNING.baseSkillCdMult
+        };
+    }
 
     // Get a skill property value at given level, supporting both arrays and formula params
     function getSkillValue(skDef, prop, level) {
@@ -5375,26 +5563,26 @@
         selectOrSwapSkillSlot(slot);
     };
 
-    window.assignSkill = function(skillId) {
-        if (skillSelectSlot < 1 || skillSelectSlot > 6) {
-            addLog('先にスロットを選択してください', '#ffaa44');
-            return;
-        }
-        const allSkills = getAllAvailableSkills();
-        const sk = allSkills.find(s => s.id === skillId);
-        if (!sk) return;
-        if ((player.skillLevels[sk.id] || 0) < 1) return;
-        if (sk.skillType === 'passive') {
-            addLog('パッシブスキルはスロットに配置できません', '#ff8844');
-            return;
-        }
-        const slvl = player.skillLevels[sk.id] || 1;
-        player.skills[skillSelectSlot] = {
-            id: sk.id, name: sk.name, icon: sk.icon, effect: sk.effect,
-            mp: getSkillMPCost(sk, slvl), cooldown: 0, maxCD: getSkillCooldown(sk, slvl), desc: sk.desc
-        };
-        showSkillSelectUI();
-    };
+	    window.assignSkill = function(skillId) {
+	        if (skillSelectSlot < 1 || skillSelectSlot > 6) {
+	            addLog('先にスロットを選択してください', '#ffaa44');
+	            return;
+	        }
+	        const allSkills = getAllAvailableSkills();
+	        const sk = allSkills.find(s => s.id === skillId);
+	        if (!sk) return;
+	        if ((player.skillLevels[sk.id] || 0) < 1) return;
+	        if (sk.skillType === 'passive') {
+	            addLog('パッシブスキルはスロットに配置できません', '#ff8844');
+	            return;
+	        }
+	        const slvl = player.skillLevels[sk.id] || 1;
+	        player.skills[skillSelectSlot] = {
+	            id: sk.id, name: sk.name, icon: sk.icon, effect: sk.effect, iconEff: sk.iconEff,
+	            mp: getSkillMPCost(sk, slvl), cooldown: 0, maxCD: getSkillCooldown(sk, slvl), desc: sk.desc
+	        };
+	        showSkillSelectUI();
+	    };
 
     window.removeSkillSlot = function(slot) {
         const s = slot || skillSelectSlot;
@@ -5487,16 +5675,16 @@
         skillSelectSlot = targetSlot;
         showSkillSelectUI();
     };
-    window.quickAssignSkill = function(skillId) {
-        // スキルツリーから直接スロットに割り当て
-        const allSkills = getAllAvailableSkills();
-        const sk = allSkills.find(s => s.id === skillId);
-        if (!sk || (player.skillLevels[sk.id] || 0) < 1) return;
-        // Passive skills cannot be assigned to slots
-        if (sk.skillType === 'passive') {
-            addLog('パッシブスキルはスロットに配置できません（常時発動）', '#ff8844');
-            return;
-        }
+	    window.quickAssignSkill = function(skillId) {
+	        // スキルツリーから直接スロットに割り当て
+	        const allSkills = getAllAvailableSkills();
+	        const sk = allSkills.find(s => s.id === skillId);
+	        if (!sk || (player.skillLevels[sk.id] || 0) < 1) return;
+	        // Passive skills cannot be assigned to slots
+	        if (sk.skillType === 'passive') {
+	            addLog('パッシブスキルはスロットに配置できません（常時発動）', '#ff8844');
+	            return;
+	        }
 
         // 空いているスロットを探す
         let emptySlot = 0;
@@ -5507,15 +5695,15 @@
             }
         }
 
-        if (emptySlot > 0) {
-            // 空きスロットに自動割り当て
-            const slvl = player.skillLevels[sk.id] || 1;
-            player.skills[emptySlot] = {
-                id: sk.id, name: sk.name, icon: sk.icon, effect: sk.effect,
-                mp: getSkillMPCost(sk, slvl), cooldown: 0, maxCD: getSkillCooldown(sk, slvl), desc: sk.desc
-            };
-            addLog(`${sk.name} をスロット${emptySlot}に設定！`, '#66ff66');
-        } else {
+	        if (emptySlot > 0) {
+	            // 空きスロットに自動割り当て
+	            const slvl = player.skillLevels[sk.id] || 1;
+	            player.skills[emptySlot] = {
+	                id: sk.id, name: sk.name, icon: sk.icon, effect: sk.effect, iconEff: sk.iconEff,
+	                mp: getSkillMPCost(sk, slvl), cooldown: 0, maxCD: getSkillCooldown(sk, slvl), desc: sk.desc
+	            };
+	            addLog(`${sk.name} をスロット${emptySlot}に設定！`, '#66ff66');
+	        } else {
             // 空きがない場合はスロット選択画面を開く
             addLog('スロットが満杯です。入れ替えてください', '#ffaa44');
             skillSelectSlot = 1;
@@ -5597,6 +5785,102 @@
         return true;
     }
 
+    // ========== PATHFINDING (A*) ==========
+    // Click-to-move feels "Diablo-like" only when characters can route around walls smoothly.
+    // We path on the dungeon tile grid and drive movement via waypoint centers in world pixels.
+    function _isTileWalkable(tx, ty) {
+        return dungeon && typeof dungeon.walkable === 'function' ? dungeon.walkable(tx, ty) : false;
+    }
+    function _findNearestWalkableTile(tx, ty, maxR = 6) {
+        if (_isTileWalkable(tx, ty)) return { tx, ty };
+        for (let r = 1; r <= maxR; r++) {
+            for (let dy = -r; dy <= r; dy++) {
+                for (let dx = -r; dx <= r; dx++) {
+                    if (Math.abs(dx) !== r && Math.abs(dy) !== r) continue; // ring only
+                    const nx = tx + dx, ny = ty + dy;
+                    if (nx < 0 || ny < 0 || nx >= MAP_W || ny >= MAP_H) continue;
+                    if (_isTileWalkable(nx, ny)) return { tx: nx, ty: ny };
+                }
+            }
+        }
+        return null;
+    }
+    function _aStarPath(startTx, startTy, goalTx, goalTy, maxExpanded = 3500) {
+        // 4-way movement (D2-ish grid routing).
+        const start = _findNearestWalkableTile(startTx, startTy, 2);
+        const goal = _findNearestWalkableTile(goalTx, goalTy, 6);
+        if (!start || !goal) return null;
+        if (start.tx === goal.tx && start.ty === goal.ty) return [{ tx: start.tx, ty: start.ty }];
+
+        const idx = (x, y) => y * MAP_W + x;
+        const h = (x, y) => Math.abs(x - goal.tx) + Math.abs(y - goal.ty);
+
+        const open = [];
+        const cameFrom = new Int32Array(MAP_W * MAP_H);
+        cameFrom.fill(-1);
+        const gScore = new Float32Array(MAP_W * MAP_H);
+        gScore.fill(Infinity);
+        const fScore = new Float32Array(MAP_W * MAP_H);
+        fScore.fill(Infinity);
+        const inOpen = new Uint8Array(MAP_W * MAP_H);
+
+        const sI = idx(start.tx, start.ty);
+        gScore[sI] = 0;
+        fScore[sI] = h(start.tx, start.ty);
+        open.push({ x: start.tx, y: start.ty, f: fScore[sI] });
+        inOpen[sI] = 1;
+
+        let expanded = 0;
+        while (open.length > 0 && expanded < maxExpanded) {
+            // Pick best f (small grid; linear scan is fine).
+            let best = 0;
+            for (let i = 1; i < open.length; i++) if (open[i].f < open[best].f) best = i;
+            const cur = open[best];
+            open[best] = open[open.length - 1];
+            open.pop();
+            inOpen[idx(cur.x, cur.y)] = 0;
+            expanded++;
+
+            if (cur.x === goal.tx && cur.y === goal.ty) {
+                // Reconstruct
+                const path = [];
+                let ci = idx(cur.x, cur.y);
+                while (ci !== -1) {
+                    const x = ci % MAP_W;
+                    const y = (ci / MAP_W) | 0;
+                    path.push({ tx: x, ty: y });
+                    ci = cameFrom[ci];
+                }
+                path.reverse();
+                return path;
+            }
+
+            const curI = idx(cur.x, cur.y);
+            const baseG = gScore[curI];
+            const nbs = [
+                [cur.x + 1, cur.y],
+                [cur.x - 1, cur.y],
+                [cur.x, cur.y + 1],
+                [cur.x, cur.y - 1]
+            ];
+            for (const [nx, ny] of nbs) {
+                if (nx < 0 || ny < 0 || nx >= MAP_W || ny >= MAP_H) continue;
+                if (!_isTileWalkable(nx, ny)) continue;
+                const ni = idx(nx, ny);
+                const tentativeG = baseG + 1;
+                if (tentativeG >= gScore[ni]) continue;
+                cameFrom[ni] = curI;
+                gScore[ni] = tentativeG;
+                fScore[ni] = tentativeG + h(nx, ny);
+                if (!inOpen[ni]) {
+                    inOpen[ni] = 1;
+                    open.push({ x: nx, y: ny, f: fScore[ni] });
+                }
+            }
+        }
+        return null;
+    }
+
     // ========== GROUND ITEMS ==========
     const groundItems = [];
     class GroundItem {
@@ -5620,6 +5904,13 @@
         acceleration: 2500, // 加速度（ハクスラ用に高速）
         deceleration: 3000, // 減速度（キビキビ感）
         moving: false,
+        // Click-move path (tile-based A*). Waypoints are in world pixels.
+        path: null, // [{x,y}, ...]
+        pathIdx: 0,
+        _pathGoalX: 0,
+        _pathGoalY: 0,
+        _stuckT: 0,
+        _attackRepathT: 0,
         targetBreakProp: null, // {tx, ty}
         attacking: false,
         attackTarget: null,
@@ -5682,6 +5973,38 @@
         className: '戦士',
         skills: {
             // 初期は空 - プレイヤーが自分で設定する
+        },
+
+        setMoveTarget(wx, wy) {
+            this._pathGoalX = wx;
+            this._pathGoalY = wy;
+            const stx = Math.floor(this.x / TILE), sty = Math.floor(this.y / TILE);
+            const gtx = Math.floor(wx / TILE), gty = Math.floor(wy / TILE);
+            const tiles = _aStarPath(stx, sty, gtx, gty);
+            if (tiles && tiles.length > 0) {
+                const pts = [];
+                for (const t of tiles) {
+                    pts.push({ x: t.tx * TILE + TILE / 2, y: t.ty * TILE + TILE / 2 });
+                }
+                this.path = pts;
+                this.pathIdx = 0;
+            } else {
+                // Fallback: direct target (might get stuck; player can re-click).
+                this.path = null;
+                this.pathIdx = 0;
+            }
+            this.targetX = wx;
+            this.targetY = wy;
+            this.moving = true;
+        },
+
+        getWeaponReach() {
+            const w = this.equipment.weapon;
+            const t = w ? w.typeKey : null;
+            if (t === 'staff') return 62;
+            if (t === 'axe') return 54;
+            if (t === 'sword') return 52;
+            return 50;
         },
 
         getAttackDmg() {
@@ -5939,7 +6262,9 @@
             // D2-style hit check (monster attacking player) - only for melee/physical
             if (attackerLevel && attackerAR) {
                 const pDef = this.getDefense();
-                const hitChance = calcHitChance(attackerLevel, attackerAR, this.level, pDef);
+                // Player defense already reduces damage in this game; still, allow it to matter for hit checks too.
+                // (We compensate by keeping monster AR fairly modest at low levels.)
+                const hitChance = calcHitChance(attackerLevel, attackerAR, this.level, pDef, 1.0);
                 if (Math.random() * 100 >= hitChance) {
                     addFloatingText(this.x, this.y - 20, 'MISS', '#888888');
                     return;
@@ -6184,15 +6509,19 @@
             // Apply +skill bonus from equipment
             const itemSkillBonus = this.getSkillBonus() + ((this.setBonuses && this.setBonuses.skillBonus) || 0);
             lvl = Math.min(20, lvl + itemSkillBonus);
+            // Base-class (tier0) skills get a small "legacy mastery" boost after promotion so they stay relevant.
+            const legacy = getLegacySkillTuning(skDef);
             // Use scaled MP cost
-            const mpCost = getSkillMPCost(skDef, lvl);
+            const mpCost = Math.round(getSkillMPCost(skDef, lvl) * legacy.mpCostMult);
             if (this.mp < mpCost) return;
 
             this.mp -= mpCost;
-            sk.cooldown = getSkillCooldown(skDef, lvl);
+            sk.cooldown = getSkillCooldown(skDef, lvl) * legacy.cdMult;
 
-            const wx = mx + G.camX, wy = my + G.camY;
+            const wp = screenToWorld(mx, my);
+            const wx = wp.x, wy = wp.y;
             let dmg = this.getAttackDmg();
+            dmg *= legacy.dmgMult;
             // Apply passive damage bonus
             const pb = this.passiveBonuses || {};
             dmg *= (1 + (pb.damagePercent || 0) / 100);
@@ -6884,11 +7213,13 @@
             // Attack cooldown
             if (this.attackCooldown > 0) this.attackCooldown -= dt;
             if (this.attackAnimT > 0) this.attackAnimT -= dt;
+            if (this._attackRepathT > 0) this._attackRepathT -= dt;
 
             // Attack target
             if (this.attacking && this.attackTarget && this.attackTarget.alive) {
                 const d = dist(this.x, this.y, this.attackTarget.x, this.attackTarget.y);
-                if (d < 50) {
+                const reach = this.getWeaponReach();
+                if (d < reach) {
                     if (this.attackCooldown <= 0) {
                         const dmg = this.getAttackDmg();
                         const isCrit = Math.random() * 100 < this.getCritChance();
@@ -6917,10 +7248,20 @@
                         }
                     }
                     this.moving = false;
+                    this.path = null;
+                    this.pathIdx = 0;
                 } else {
-                    this.targetX = this.attackTarget.x;
-                    this.targetY = this.attackTarget.y;
-                    this.moving = true;
+                    // Re-path occasionally so we can route around walls while chasing.
+                    const goalTx = Math.floor(this.attackTarget.x / TILE);
+                    const goalTy = Math.floor(this.attackTarget.y / TILE);
+                    const curGoalTx = Math.floor((this._pathGoalX || 0) / TILE);
+                    const curGoalTy = Math.floor((this._pathGoalY || 0) / TILE);
+                    if (!this.path || this._attackRepathT <= 0 || goalTx !== curGoalTx || goalTy !== curGoalTy) {
+                        this.setMoveTarget(this.attackTarget.x, this.attackTarget.y);
+                        this._attackRepathT = 0.25;
+                    } else {
+                        this.moving = true;
+                    }
                 }
             }
 
@@ -6995,6 +7336,12 @@
             // Movement with proper circle collision
             if (this.moving) {
                 sfxFootstep();
+                // If we have a path, drive target from waypoints.
+                if (this.path && this.pathIdx < this.path.length) {
+                    const wp = this.path[this.pathIdx];
+                    this.targetX = wp.x;
+                    this.targetY = wp.y;
+                }
                 const dx = this.targetX - this.x;
                 const dy = this.targetY - this.y;
                 const d = Math.hypot(dx, dy);
@@ -7012,14 +7359,32 @@
 
                     if (canMoveBoth) {
                         this.x = nx; this.y = ny;
+                        this._stuckT = 0;
                     } else if (canMoveX) {
                         this.x += mx * step;
+                        this._stuckT = 0;
                     } else if (canMoveY) {
                         this.y += my * step;
+                        this._stuckT = 0;
+                    } else {
+                        // Stuck: try to re-path toward the goal after a short delay.
+                        this._stuckT = (this._stuckT || 0) + dt;
+                        if (this._stuckT > 0.35) {
+                            this._stuckT = 0;
+                            // Re-plan only for click-move paths (not while actively attacking).
+                            if (!this.attacking) this.setMoveTarget(this._pathGoalX, this._pathGoalY);
+                        }
                     }
                     // else: stuck, don't move
                 } else {
-                    this.moving = false;
+                    // Advance waypoint, or stop if done.
+                    if (this.path && this.pathIdx < this.path.length - 1) {
+                        this.pathIdx++;
+                    } else {
+                        this.moving = false;
+                        this.path = null;
+                        this.pathIdx = 0;
+                    }
                 }
             }
 
@@ -7041,7 +7406,10 @@
         },
 
         draw(cx, cy) {
-            const sx = this.x - cx, sy = this.y - cy;
+            // Ignore `cx/cy` in iso mode; we project from world to screen instead.
+            const sp = worldToScreen(this.x, this.y);
+            const sx = sp.x, sy = sp.y;
+            const gy = groundYOffset();
 
             // Magic Shield aura
             if (this.shieldT > 0) {
@@ -7098,7 +7466,7 @@
             const mpFrac = this.mp / this.maxMP;
             const barW = 36;
             const barX = sx - barW/2;
-            const pBarY = sy + TILE/2 + 4;
+            const pBarY = sy + gy + 4;
             // HP bar background
             ctx.fillStyle = '#1a0000';
             ctx.fillRect(barX, pBarY, barW, 4);
@@ -7147,6 +7515,7 @@
             const S = PLAYER_DRAW_SCALE;
             const drawSize = TILE * S;
             const flipX = this.targetX < this.x - 2;
+            const gy = groundYOffset();
 
             // Minimal procedural transforms (real animation is in sprite frames now)
             let bounce = 0, tilt = 0, scaleX = 1, scaleY = 1;
@@ -7164,13 +7533,13 @@
 
             // Drop shadow
             const shadowRx = drawSize * 0.28, shadowRy = 5;
-            const shG = ctx.createRadialGradient(sx, sy + TILE/2, 0, sx, sy + TILE/2, shadowRx);
+            const shG = ctx.createRadialGradient(sx, sy + gy, 0, sx, sy + gy, shadowRx);
             shG.addColorStop(0, 'rgba(0,0,0,0.4)');
             shG.addColorStop(0.6, 'rgba(0,0,0,0.15)');
             shG.addColorStop(1, 'rgba(0,0,0,0)');
             ctx.fillStyle = shG;
             ctx.beginPath();
-            ctx.ellipse(sx, sy + TILE/2, shadowRx, shadowRy, 0, 0, Math.PI * 2);
+            ctx.ellipse(sx, sy + gy, shadowRx, shadowRy, 0, 0, Math.PI * 2);
             ctx.fill();
 
             ctx.save();
@@ -7197,16 +7566,16 @@
                 }
                 const hiDrawSize = drawSize * 2.0;
                 // FLARE sprites: feet at 75% of cell height. Align feet with shadow (at TILE/2)
-                const hiDy = TILE/2 - hiDrawSize * 0.75;
+                const hiDy = gy - hiDrawSize * 0.75;
                 if (!drawHiResSpr(classKey, animName, dirIdx, G.time, -hiDrawSize/2, hiDy, hiDrawSize, hiDrawSize)) {
                     // Fallback: pixel art sprite
-                    if (!drawSpr(spriteKey, -drawSize/2, -drawSize + TILE/2, drawSize, drawSize, flipX)) {
+                    if (!drawSpr(spriteKey, -drawSize/2, -drawSize + gy, drawSize, drawSize, flipX)) {
                         ctx.fillStyle = '#888'; ctx.fillRect(-drawSize/4, -drawSize/4, drawSize/2, drawSize/2);
                     }
                 }
             } else {
                 // Fallback: original pixel art sprite
-                if (!drawSpr(spriteKey, -drawSize/2, -drawSize + TILE/2, drawSize, drawSize, flipX)) {
+                if (!drawSpr(spriteKey, -drawSize/2, -drawSize + gy, drawSize, drawSize, flipX)) {
                     ctx.fillStyle = '#888'; ctx.fillRect(-drawSize/4, -drawSize/4, drawSize/2, drawSize/2);
                 }
             }
@@ -7342,7 +7711,8 @@
         }
         update(dt) { this.x += this.vx * dt; this.y += this.vy * dt; this.life -= dt; emitParticles(this.x, this.y, this.color, 1, 18, 0.2, 2, 0); }
         draw(cx, cy) {
-            const sx = this.x - cx, sy = this.y - cy;
+            const sp = worldToScreen(this.x, this.y);
+            const sx = sp.x, sy = sp.y;
             if (sx < -20 || sx > W + 20 || sy < -20 || sy > H + 20) return;
             ctx.globalAlpha = 0.9; ctx.fillStyle = this.color;
             ctx.beginPath(); ctx.arc(sx, sy, this.r, 0, Math.PI * 2); ctx.fill();
@@ -7529,7 +7899,8 @@
         }
         draw(cx, cy) {
             if (!this.alive) return;
-            const sx = this.x - cx, sy = this.y - cy;
+            const sp = worldToScreen(this.x, this.y);
+            const sx = sp.x, sy = sp.y;
             if (sx < -60 || sx > W + 60 || sy < -60 || sy > H + 60) return;
             // Shadow
             ctx.fillStyle = 'rgba(0,0,0,0.3)';
@@ -7892,7 +8263,7 @@
                                 this.atkCD = 1.0; return;
                             }
                         }
-                        const monAR = (this.dmg || 10) * 2 + (this.level || 1) * 5;
+                        const monAR = getMonsterAR(this);
                         player.takeDamage(meleeDmg, meleeElement, this.level || 1, monAR);
                         this.atkCD = 1.0;
                     }
@@ -7908,7 +8279,8 @@
         }
 
         draw(cx, cy) {
-            const sx = this.x - cx + (this.knockbackX || 0), sy = this.y - cy + (this.knockbackY || 0);
+            const sp = worldToScreen(this.x + (this.knockbackX || 0), this.y + (this.knockbackY || 0));
+            const sx = sp.x, sy = sp.y;
             const mScale = this.drawScale || 1;
             if (sx < -80 * mScale || sx > W + 80 * mScale || sy < -80 * mScale || sy > H + 80 * mScale) return;
 
@@ -8439,7 +8811,8 @@
             this.life -= dt;
         }
         draw(cx, cy) {
-            const sx = this.x - cx, sy = this.y - cy;
+            const sp = worldToScreen(this.x, this.y);
+            const sx = sp.x, sy = sp.y;
             if (sx < -20 || sx > W + 20 || sy < -20 || sy > H + 20) return;
             ctx.globalAlpha = 0.8;
             ctx.fillStyle = this.color;
@@ -8634,16 +9007,35 @@
         }
     }
 
-    // D2-style hit chance: 100 * 2*aLvl/(aLvl+dLvl) * AR/(AR+Def), clamped 5-95%
-    function calcHitChance(attackerLevel, attackRating, defenderLevel, defense) {
-        const lvlFactor = 2 * attackerLevel / (attackerLevel + defenderLevel + 1);
-        const arFactor = attackRating / (attackRating + defense + 1);
-        return Math.min(95, Math.max(5, Math.round(100 * lvlFactor * arFactor)));
+    // D2-inspired hit chance (clamped): 100 * (2*aLvl/(aLvl+dLvl)) * (AR/(AR+Def)).
+    // Note: In this game, "defense" is also used for damage reduction, so we allow scaling here to avoid double-dipping.
+    function calcHitChance(attackerLevel, attackRating, defenderLevel, defense, defenseScale = 0.40) {
+        const aLvl = Math.max(1, attackerLevel | 0);
+        const dLvl = Math.max(1, defenderLevel | 0);
+        const ar = Math.max(0, attackRating || 0);
+        const effDef = Math.max(0, defense || 0) * Math.max(0, defenseScale || 0);
+
+        const lvlFactor = (2 * aLvl) / (aLvl + dLvl);
+        const arFactor = (ar <= 0) ? 0 : (ar / (ar + effDef));
+        let chance = Math.round(100 * lvlFactor * arFactor);
+        if (!isFinite(chance)) chance = 5;
+        return Math.min(95, Math.max(5, chance));
     }
     function getPlayerAR() {
         const totalDex = player.getTotalStat('dex');
         const totalStr = player.getTotalStat('str');
-        return totalStr * 2 + totalDex * 4 + player.level * 5;
+        // Make early-game hits reliable; let Defense still matter via calcHitChance scaling.
+        return totalStr * 2 + totalDex * 5 + player.level * 8;
+    }
+    function getMonsterAR(m) {
+        // D2-ish: AR grows mainly by level; avoid tying AR too strongly to raw damage.
+        const lvl = Math.max(1, (m && m.level) ? (m.level | 0) : 1);
+        const dmg = Math.max(1, (m && m.dmg) ? (m.dmg | 0) : 10);
+        let ar = Math.round(4 + lvl * 6 + dmg * 0.25);
+        if (m && m.isBoss) ar = Math.round(ar * 1.6);
+        else if (m && m.isUnique) ar = Math.round(ar * 1.25);
+        else if (m && m.isChampion) ar = Math.round(ar * 1.15);
+        return Math.max(1, ar);
     }
 
     function monsterTakeDmg(m, dmg, isCrit, element) {
@@ -8651,7 +9043,8 @@
         const playerAR = getPlayerAR();
         const mDef = m.defense || 0;
         const mLvl = m.level || getMonsterLevel(G.act, G.actFloor);
-        const hitChance = calcHitChance(player.level, playerAR, mLvl, mDef);
+        // Monsters in this game already reduce damage via defense, so scale it down for hit checks to avoid too many misses.
+        const hitChance = calcHitChance(player.level, playerAR, mLvl, mDef, 0.40);
         if (Math.random() * 100 >= hitChance) {
             addFloatingText(m.x, m.y - m.r - 10, 'MISS', '#888888');
             return;
@@ -8673,9 +9066,17 @@
         m.hitFlash = 0.1;
         m.lastHitElement = element || 'physical';
         addFloatingText(m.x, m.y - m.r - 10, Math.round(dmg), isCrit ? '#ffff00' : '#ff6666', isCrit);
+
+        // Hitstop: small freeze on impactful hits (melee contact / crit) for D2-like punch.
+        const meleeContact = dist(player.x, player.y, m.x, m.y) < (player.getWeaponReach() + 10);
+        if (isCrit || (meleeContact && (element == null || element === 'physical'))) {
+            const t = isCrit ? 0.06 : 0.035;
+            G.hitStopT = Math.max(G.hitStopT || 0, t);
+        }
         // Knockback (hit stagger)
         const hitAngle = Math.atan2(m.y - player.y, m.x - player.x);
-        const kbDist = isCrit ? 12 : 6;
+        const kbBase = isCrit ? 10 : 5;
+        const kbDist = kbBase + Math.min(14, Math.sqrt(Math.max(1, dmg)) * 0.6);
         m.knockbackX = Math.cos(hitAngle) * kbDist;
         m.knockbackY = Math.sin(hitAngle) * kbDist;
         // Hit spark particles (white flash + colored sparks)
@@ -8739,36 +9140,61 @@
             const goldAmt = Math.round(rand(Math.max(1, m.def.xp * 0.5), m.def.xp * 1.5) * goldMult);
             G.gold += goldAmt;
             addFloatingText(m.x, m.y - m.r - 25, `+${goldAmt}G`, '#ffd700');
-            // Drop loot (champion/unique guaranteed better drops)
-            if (m.isUnique) {
-                for (let i = 0; i < rand(3, 5); i++) dropItem(m.x, m.y, generateItem(globalF, Math.random() < 0.5 ? 'legendary' : 'rare'));
-                dropItem(m.x, m.y, generateItem(globalF, 'legendary'));
-            } else if (m.isChampion) {
-                for (let i = 0; i < rand(2, 3); i++) dropItem(m.x, m.y, generateItem(globalF, Math.random() < 0.3 ? 'rare' : 'magic'));
-            } else if (Math.random() < m.def.loot * 0.7) {
-                const count = (m.isBoss || m.type === 'demonlord') ? rand(2, 4) : 1;
-                for (let i = 0; i < count; i++) dropItem(m.x, m.y, generateItem(globalF));
-            }
-            if (Math.random() < 0.15) dropItem(m.x, m.y, generatePotion('hp'));
-            if (Math.random() < 0.06) dropItem(m.x, m.y, generatePotion('mp'));
-            // Rare rejuvenation drop from champion/unique/boss
-            if ((m.isChampion || m.isUnique || m.isBoss) && Math.random() < 0.08) dropItem(m.x, m.y, generatePotion('rejuv'));
-            // Charm drops (5% normal, 15% champion, 25% unique, 40% boss)
-            const charmChance = m.isBoss ? 0.40 : m.isUnique ? 0.25 : m.isChampion ? 0.15 : 0.05;
-            if (Math.random() < charmChance) dropItem(m.x, m.y, generateCharm(globalF));
-            // Rune drops (8% base, champion 20%, unique 35%, boss guaranteed)
-            const runeChance = m.isBoss ? 1.0 : m.isUnique ? 0.35 : m.isChampion ? 0.20 : 0.08;
-            if (Math.random() < runeChance) {
-                const runeItem = generateRune(globalF);
-                dropItem(m.x, m.y, runeItem);
-                if (runeItem.runeDef.tier === 3) {
-                    addLog(`★ 高級ルーン『${runeItem.runeDef.name}』がドロップ！`, '#ff8800');
-                    sfxLegendary();
-                }
-            }
-            if (m.isBoss) { // Boss drops extra rune
-                dropItem(m.x, m.y, generateRune(globalF));
-            }
+	            // Drop loot (D2-ish: most mobs drop nothing; champs/uniques/bosses are better, but not showers)
+	            const diffDrop = DIFFICULTY_DEFS[G.difficulty || 'normal'].dropBonus || 0;
+	            function dropRolledItem(rarityHint) { dropItem(m.x, m.y, generateItem(globalF, rarityHint || null)); }
+
+	            // Item drop chance baseline (derived from monster def + difficulty)
+	            let itemChance = (m.def.loot || 0.4) * 0.25 + diffDrop * 0.15; // ~0.10 base for loot=0.4
+	            if (m.isChampion) itemChance += 0.18;
+	            if (m.isUnique) itemChance += 0.28;
+	            if (m.isBoss || m.type === 'demonlord') itemChance += 0.38;
+	            itemChance = Math.max(0, Math.min(0.85, itemChance));
+
+	            if (m.isBoss || m.type === 'demonlord') {
+	                // 2 guaranteed magic+ (rare is still uncommon), plus a couple of extra rolls.
+	                dropRolledItem(Math.random() < (0.08 + diffDrop * 0.15) ? 'rare' : 'magic');
+	                dropRolledItem(Math.random() < (0.06 + diffDrop * 0.12) ? 'rare' : 'magic');
+	                if (Math.random() < itemChance) dropRolledItem(Math.random() < 0.10 ? 'rare' : null);
+	                if (Math.random() < itemChance * 0.6) dropRolledItem(Math.random() < 0.06 ? 'rare' : 'magic');
+	            } else if (m.isUnique) {
+	                if (Math.random() < itemChance) dropRolledItem(Math.random() < 0.16 ? 'rare' : 'magic');
+	                if (Math.random() < itemChance * 0.75) dropRolledItem(Math.random() < 0.08 ? 'rare' : 'magic');
+	            } else if (m.isChampion) {
+	                if (Math.random() < itemChance) dropRolledItem(Math.random() < 0.10 ? 'rare' : 'magic');
+	            } else {
+	                if (Math.random() < itemChance) dropRolledItem(Math.random() < 0.15 ? 'magic' : null);
+	            }
+
+	            // Potions: common, but not every kill. Bosses drop more.
+	            const hpChance = (m.isBoss || m.type === 'demonlord') ? 0.22 : m.isUnique ? 0.14 : m.isChampion ? 0.12 : 0.08;
+	            const mpChance = (m.isBoss || m.type === 'demonlord') ? 0.14 : m.isUnique ? 0.10 : m.isChampion ? 0.08 : 0.05;
+	            if (Math.random() < hpChance) dropItem(m.x, m.y, generatePotion('hp'));
+	            if (Math.random() < mpChance) dropItem(m.x, m.y, generatePotion('mp'));
+
+	            // Rejuvenation: rare bonus for special monsters.
+	            if ((m.isChampion || m.isUnique || m.isBoss || m.type === 'demonlord') && Math.random() < 0.04) {
+	                dropItem(m.x, m.y, generatePotion('rejuv'));
+	            }
+
+	            // Charms: uncommon.
+	            const charmChance = (m.isBoss || m.type === 'demonlord') ? 0.10 : m.isUnique ? 0.05 : m.isChampion ? 0.03 : 0.01;
+	            if (Math.random() < charmChance) dropItem(m.x, m.y, generateCharm(globalF));
+
+	            // Runes: low chance, scaled a bit with difficulty.
+	            const runeChance = (m.isBoss || m.type === 'demonlord') ? 0.05 : m.isUnique ? 0.02 : m.isChampion ? 0.012 : 0.006;
+	            const runeRoll = Math.min(0.10, runeChance + diffDrop * 0.02);
+	            if (Math.random() < runeRoll) {
+	                const runeItem = generateRune(globalF);
+	                dropItem(m.x, m.y, runeItem);
+	                if (runeItem.runeDef.tier === 3) {
+	                    addLog(`★ 高級ルーン『${runeItem.runeDef.name}』がドロップ！`, '#ff8800');
+	                    sfxLegendary();
+	                }
+	            } else if ((m.isBoss || m.type === 'demonlord') && Math.random() < 0.02 + diffDrop * 0.02) {
+	                // Bosses get a small second roll, but not guaranteed.
+	                dropItem(m.x, m.y, generateRune(globalF));
+	            }
             // Boss defeat with screen shake + white flash
             if (m.isBoss && m.bossKey) {
                 G.shakeT = 0.6; G.shakeAmt = 15;
@@ -8776,6 +9202,8 @@
                 emitParticles(m.x, m.y, '#ffffff', 12, 120, 0.4, 5, 0);
                 G.bossesDefeated[m.bossKey] = (G.bossesDefeated[m.bossKey] || 0) + 1;
                 checkQuestProgress('boss_killed', m.bossKey);
+                // Promotion gating uses boss defeat; trigger the check here too (otherwise you'd need another level-up).
+                checkPromotion();
                 // Uber key drop from Act bosses on Nightmare/Hell
                 if (G.difficulty !== 'normal') {
                     const keyChance = G.difficulty === 'hell' ? 0.33 : 0.10;
@@ -8949,7 +9377,8 @@
             emitParticles(this.x, this.y, this.color, 1, 20, 0.2, 2, 0);
         }
         draw(cx, cy) {
-            const px = this.x - cx, py = this.y - cy;
+            const sp = worldToScreen(this.x, this.y);
+            const px = sp.x, py = sp.y;
 
             // Try OGA projectile sprite first
             if (ogaLoaded && this.attribute && OGA_PROJ_MAP[this.attribute]) {
@@ -8991,9 +9420,11 @@
                             ctx.globalAlpha = (i / this.trail.length) * 0.3;
                             ctx.strokeStyle = this.color;
                             ctx.lineWidth = this.r * (i / this.trail.length);
+                            const a0 = worldToScreen(this.trail[i-1].x, this.trail[i-1].y);
+                            const a1 = worldToScreen(this.trail[i].x, this.trail[i].y);
                             ctx.beginPath();
-                            ctx.moveTo(this.trail[i-1].x - cx, this.trail[i-1].y - cy);
-                            ctx.lineTo(this.trail[i].x - cx, this.trail[i].y - cy);
+                            ctx.moveTo(a0.x, a0.y);
+                            ctx.lineTo(a1.x, a1.y);
                             ctx.stroke();
                         }
                         ctx.restore();
@@ -9022,9 +9453,11 @@
                     ctx.globalAlpha = a;
                     ctx.strokeStyle = this.color;
                     ctx.lineWidth = this.r * (i / this.trail.length) * 1.5;
+                    const a0 = worldToScreen(this.trail[i-1].x, this.trail[i-1].y);
+                    const a1 = worldToScreen(this.trail[i].x, this.trail[i].y);
                     ctx.beginPath();
-                    ctx.moveTo(this.trail[i-1].x - cx, this.trail[i-1].y - cy);
-                    ctx.lineTo(this.trail[i].x - cx, this.trail[i].y - cy);
+                    ctx.moveTo(a0.x, a0.y);
+                    ctx.lineTo(a1.x, a1.y);
                     ctx.stroke();
                 }
                 ctx.restore();
@@ -9062,7 +9495,7 @@
                 ctx.strokeStyle = auraColor;
                 ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.arc(this.x - cx, this.y - cy, auraSize, 0, Math.PI * 2);
+                ctx.arc(px, py, auraSize, 0, Math.PI * 2);
                 ctx.stroke();
                 ctx.globalAlpha = 1;
             }
@@ -10449,7 +10882,7 @@
             h += `<div style="color:#4488ff;font-size:11px;margin:2px 0"><b>INT（知力）</b> ─ 最大MPを増加</div>`;
 
             h += `<div class="help-sub-title">クラス昇格（転職）</div>`;
-            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">レベル${PROMOTION_LEVEL}到達で上位クラスに昇格可能。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">Lv.${PROMOTION_LEVEL} かつ Act1ボス（骸骨王）討伐で上位クラスに昇格可能。</div>`;
             h += `<div style="color:#ccc;font-size:11px;margin:4px 0">各基本クラスは2つの上位クラスから選択できます。</div>`;
             h += `<div class="help-tip">上位クラスは基本クラスのスキルに加え、新しいスキルツリーを獲得。両方のスキルを使用可能。</div>`;
 
@@ -10464,8 +10897,10 @@
                 } else if (cd.tier === 0) {
                     const promos = CLASS_PROMOTIONS[G.playerClass] || [];
                     if (promos.length > 0) {
-                        const canPromote = player.level >= PROMOTION_LEVEL;
-                        h += `<div style="color:${canPromote ? '#ffaa44' : '#888'};font-size:11px;margin:4px 0">${canPromote ? '⚡ 昇格可能！' : `Lv.${PROMOTION_LEVEL}で昇格可能 (あと${PROMOTION_LEVEL - player.level})`}</div>`;
+                        const act1BossDefeated = !!(G.bossesDefeated && G.bossesDefeated.skeleton_king);
+                        const canPromote = (player.level >= PROMOTION_LEVEL) && act1BossDefeated;
+                        const why = !act1BossDefeated ? '骸骨王討伐が必要' : `Lv.${PROMOTION_LEVEL} (あと${PROMOTION_LEVEL - player.level})`;
+                        h += `<div style="color:${canPromote ? '#ffaa44' : '#888'};font-size:11px;margin:4px 0">${canPromote ? '⚡ 昇格可能！' : `昇格条件: ${why}`}</div>`;
                         h += `<div style="font-size:11px;color:#ccc;margin:4px 0">昇格先：</div>`;
                         for (const p of promos) {
                             const pDef = CLASS_DEFS[p.key];
@@ -11806,7 +12241,8 @@
                 player.selectedSkill = skillSlot;
                 return;
             }
-            const wx = mouse.x + G.camX, wy = mouse.y + G.camY;
+            const wp = screenToWorld(mouse.x, mouse.y);
+            const wx = wp.x, wy = wp.y;
 
             // Check if clicking a monster
             let clickedMonster = null;
@@ -11821,9 +12257,7 @@
                 player.targetBreakProp = null;
                 player.attacking = true;
                 player.attackTarget = clickedMonster;
-                player.moving = true;
-                player.targetX = clickedMonster.x;
-                player.targetY = clickedMonster.y;
+                player.setMoveTarget(clickedMonster.x, clickedMonster.y);
             } else {
                 const clickedProp = getClickableDungeonPropAtWorld(wx, wy);
                 if (clickedProp) {
@@ -11835,9 +12269,7 @@
                         player.targetBreakProp = null;
                         player.moving = false;
                     } else {
-                        player.targetX = clickedProp.px;
-                        player.targetY = clickedProp.py;
-                        player.moving = true;
+                        player.setMoveTarget(clickedProp.px, clickedProp.py);
                     }
                     return;
                 }
@@ -11847,9 +12279,7 @@
                     const gi = groundItems[i];
                     if (dist(wx, wy, gi.x, gi.y) < 25) {
                         // Move to item then pick up
-                        player.targetX = gi.x;
-                        player.targetY = gi.y;
-                        player.moving = true;
+                        player.setMoveTarget(gi.x, gi.y);
                         player.attacking = false;
                         player.attackTarget = null;
                         player.targetBreakProp = null;
@@ -11858,9 +12288,7 @@
                     }
                 }
                 if (!clickedItem) {
-                    player.targetX = wx;
-                    player.targetY = wy;
-                    player.moving = true;
+                    player.setMoveTarget(wx, wy);
                     player.attacking = false;
                     player.attackTarget = null;
                     player.targetBreakProp = null;
@@ -11952,6 +12380,21 @@
         // Save/Load
         if (e.code === 'F5') { e.preventDefault(); saveGame(); return; }
         if (e.code === 'F8') { e.preventDefault(); loadGame(); return; }
+
+        // View toggle (experimental): pseudo-isometric projection
+        if (e.code === 'F7') {
+            e.preventDefault();
+            SETTINGS.isometricView = !SETTINGS.isometricView;
+            saveSettings();
+            if (SETTINGS.isometricView) {
+                G.camWX = player.x; G.camWY = player.y;
+            } else {
+                G.camX = player.x - W / 2;
+                G.camY = player.y - H / 2;
+            }
+            addLog(`視点: ${SETTINGS.isometricView ? 'ISO' : 'TOP'} (F7で切替)`, '#88bbff');
+            return;
+        }
 
         if (skillSelectOpen) {
             if (e.code === 'Escape' || e.code === 'KeyR') {
@@ -12047,8 +12490,9 @@
                 if (d < nearestD) { nearestD = d; nearest = m; }
             }
             if (nearest) {
-                tx = nearest.x - G.camX;
-                ty = nearest.y - G.camY;
+                const sp = worldToScreen(nearest.x, nearest.y);
+                tx = sp.x;
+                ty = sp.y;
             }
             player.useSkill(tx, ty);
             return;
@@ -12145,8 +12589,9 @@
                 if (d < nearestD) { nearestD = d; nearest = m; }
             }
             if (nearest) {
-                tx = nearest.x - G.camX;
-                ty = nearest.y - G.camY;
+                const sp = worldToScreen(nearest.x, nearest.y);
+                tx = sp.x;
+                ty = sp.y;
             }
             player.useSkill(tx, ty);
         }
@@ -12160,8 +12605,9 @@
                 if (d < nearestD) { nearestD = d; nearest = m; }
             }
             if (nearest) {
-                tx = nearest.x - G.camX;
-                ty = nearest.y - G.camY;
+                const sp = worldToScreen(nearest.x, nearest.y);
+                tx = sp.x;
+                ty = sp.y;
             }
             player.useSkill(tx, ty);
         }
@@ -12175,8 +12621,9 @@
                 if (d < nearestD) { nearestD = d; nearest = m; }
             }
             if (nearest) {
-                tx = nearest.x - G.camX;
-                ty = nearest.y - G.camY;
+                const sp = worldToScreen(nearest.x, nearest.y);
+                tx = sp.x;
+                ty = sp.y;
             }
             player.useSkill(tx, ty);
         }
@@ -12190,8 +12637,9 @@
                 if (d < nearestD) { nearestD = d; nearest = m; }
             }
             if (nearest) {
-                tx = nearest.x - G.camX;
-                ty = nearest.y - G.camY;
+                const sp = worldToScreen(nearest.x, nearest.y);
+                tx = sp.x;
+                ty = sp.y;
             }
             player.useSkill(tx, ty);
         }
@@ -12205,8 +12653,9 @@
                 if (d < nearestD) { nearestD = d; nearest = m; }
             }
             if (nearest) {
-                tx = nearest.x - G.camX;
-                ty = nearest.y - G.camY;
+                const sp = worldToScreen(nearest.x, nearest.y);
+                tx = sp.x;
+                ty = sp.y;
             }
             player.useSkill(tx, ty);
         }
@@ -12220,8 +12669,9 @@
                 if (d < nearestD) { nearestD = d; nearest = m; }
             }
             if (nearest) {
-                tx = nearest.x - G.camX;
-                ty = nearest.y - G.camY;
+                const sp = worldToScreen(nearest.x, nearest.y);
+                tx = sp.x;
+                ty = sp.y;
             }
             player.useSkill(tx, ty);
         }
@@ -12380,7 +12830,8 @@
     // ========== DRAWING HELPERS ==========
     function drawLighting() {
         if (typeof dungeon.reveal === 'function') dungeon.reveal(player.x, player.y, 300);
-        const px = player.x - G.camX, py = player.y - G.camY;
+        const psp = worldToScreen(player.x, player.y);
+        const px = psp.x, py = psp.y;
         const flicker = Math.sin(G.time * 4.7) * 8 + Math.sin(G.time * 7.3) * 4;
 
         // Town: gentle ambient darkness (no offscreen needed)
@@ -12440,9 +12891,9 @@
             const dx = t.wx - player.x, dy = t.wy - player.y;
             const d = Math.sqrt(dx*dx + dy*dy);
             if (d > torchMaxDist) continue;
-            const screenX = t.wx - G.camX, screenY = t.wy - G.camY;
-            if (screenX < -160 || screenX > W + 160 || screenY < -160 || screenY > H + 160) continue;
-            visibleTorches.push({ sx: screenX, sy: screenY, d, seed: t.seed });
+            const tsp = worldToScreen(t.wx, t.wy);
+            if (tsp.x < -160 || tsp.x > W + 160 || tsp.y < -160 || tsp.y > H + 160) continue;
+            visibleTorches.push({ sx: tsp.x, sy: tsp.y, d, seed: t.seed });
             if (visibleTorches.length >= 24) break;
         }
 
@@ -12543,7 +12994,8 @@
         const beamRarities = { rare: true, legendary: true, unique: true, runeword: true };
         for (const gi of groundItems) {
             gi.bobT += 0.02;
-            const sx = gi.x - G.camX, sy = gi.y - G.camY + Math.sin(gi.bobT) * 3;
+            const sp = worldToScreen(gi.x, gi.y);
+            const sx = sp.x, sy = sp.y + Math.sin(gi.bobT) * 3;
             if (sx < -30 || sx > W + 30 || sy < -60 || sy > H + 30) continue;
 
             const c = gi.item.rarity.color;
@@ -12621,6 +13073,47 @@
         }
     }
 
+    function drawActorsDepthSorted() {
+        // Core D2 "feel" relies heavily on correct overlap. Sort by depth so entities
+        // in front/behind each other read properly.
+        const entries = [];
+        for (const m of monsters) {
+            if (!m) continue;
+            entries.push({ k: depthKey(m.x, m.y), draw: () => m.draw(G.camX, G.camY) });
+        }
+        if (mercenary && mercenary.alive) {
+            entries.push({ k: depthKey(mercenary.x, mercenary.y), draw: () => mercenary.draw(G.camX, G.camY) });
+        }
+        if (G.minions) {
+            for (const mn of G.minions) {
+                if (!mn) continue;
+                entries.push({
+                    k: depthKey(mn.x, mn.y),
+                    draw: () => {
+                        const msp = worldToScreen(mn.x, mn.y);
+                        const mx = msp.x, my = msp.y;
+                        const pulse = 0.5 + Math.sin(G.time * 4) * 0.2;
+                        ctx.globalAlpha = 0.7 + pulse * 0.3;
+                        ctx.fillStyle = '#88ccff';
+                        ctx.beginPath(); ctx.arc(mx, my - 4, 10, 0, Math.PI * 2); ctx.fill();
+                        ctx.globalAlpha = pulse * 0.3;
+                        ctx.fillStyle = '#aaddff';
+                        ctx.beginPath(); ctx.arc(mx, my - 4, 16, 0, Math.PI * 2); ctx.fill();
+                        ctx.globalAlpha = 1;
+                        const hpPct = mn.hp / mn.maxHP;
+                        ctx.fillStyle = '#333'; ctx.fillRect(mx - 12, my - 18, 24, 3);
+                        ctx.fillStyle = hpPct > 0.5 ? '#00cc00' : '#cc6600';
+                        ctx.fillRect(mx - 12, my - 18, 24 * hpPct, 3);
+                    }
+                });
+            }
+        }
+        entries.push({ k: depthKey(player.x, player.y), draw: () => player.draw(G.camX, G.camY) });
+
+        entries.sort((a, b) => a.k - b.k);
+        for (const e of entries) e.draw();
+    }
+
     // D2-style globe frame helper
     function drawGlobeFrame(cx, cy, r) {
         // Outer dark ring
@@ -12662,10 +13155,10 @@
 
     // Canvas-drawn skill icon shapes (pixel-art style, replaces emoji)
     // Draws icon centered at origin (caller must translate). eff = effect string, size = icon diameter.
-    function _drawSkillIconShape(ctx, eff, size) {
-        const half = size / 2;
-        // --- Specific effect matches first ---
-        if (eff === 'chain_lightning') {
+	    function _drawSkillIconShape(ctx, eff, size) {
+	        const half = size / 2;
+	        // --- Specific effect matches first ---
+	        if (eff === 'chain_lightning') {
             ctx.strokeStyle = '#ffdd44'; ctx.lineWidth = Math.max(1.5, size/10); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
             ctx.beginPath();
             ctx.moveTo(-half*0.2, -half*0.8);
@@ -12930,22 +13423,70 @@
             ctx.beginPath(); ctx.arc(-half*0.05, half*0.25, half*0.25, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = 'rgba(170,170,170,0.4)';
             ctx.beginPath(); ctx.arc(0, -half*0.15, half*0.2, 0, Math.PI*2); ctx.fill();
-        } else if (eff === 'place_trap') {
-            ctx.strokeStyle = '#cc8844'; ctx.lineWidth = Math.max(1.2, size/12);
-            ctx.beginPath(); ctx.arc(0, 0, half*0.3, 0, Math.PI*2); ctx.stroke();
-            for (let a = 0; a < 8; a++) {
-                const ang = a * Math.PI / 4;
-                const ix = Math.cos(ang)*half*0.3, iy = Math.sin(ang)*half*0.3;
-                const ox = Math.cos(ang)*half*0.55, oy = Math.sin(ang)*half*0.55;
-                ctx.beginPath(); ctx.moveTo(ix, iy); ctx.lineTo(ox, oy); ctx.stroke();
-            }
-            ctx.fillStyle = '#cc8844';
-            ctx.beginPath(); ctx.arc(0, 0, half*0.12, 0, Math.PI*2); ctx.fill();
-        // --- Generic includes-based matches ---
-        } else if (eff.includes('fire') || eff.includes('pyro')) {
-            ctx.fillStyle = '#ff6622';
-            ctx.beginPath();
-            ctx.moveTo(0, -half); ctx.quadraticCurveTo(half*0.7, -half*0.3, half*0.5, half*0.4);
+	        } else if (eff === 'place_trap') {
+	            ctx.strokeStyle = '#cc8844'; ctx.lineWidth = Math.max(1.2, size/12);
+	            ctx.beginPath(); ctx.arc(0, 0, half*0.3, 0, Math.PI*2); ctx.stroke();
+	            for (let a = 0; a < 8; a++) {
+	                const ang = a * Math.PI / 4;
+	                const ix = Math.cos(ang)*half*0.3, iy = Math.sin(ang)*half*0.3;
+	                const ox = Math.cos(ang)*half*0.55, oy = Math.sin(ang)*half*0.55;
+	                ctx.beginPath(); ctx.moveTo(ix, iy); ctx.lineTo(ox, oy); ctx.stroke();
+	            }
+	            ctx.fillStyle = '#cc8844';
+	            ctx.beginPath(); ctx.arc(0, 0, half*0.12, 0, Math.PI*2); ctx.fill();
+	        } else if (eff.startsWith('arrow_') || eff.startsWith('bolt_')) {
+	            // Element-tinted projectiles (icons should match the actual skill element even if effect routing is generic).
+	            const parts = eff.split('_');
+	            const kind = parts[0] || 'arrow';
+	            const elem = parts[1] || 'physical';
+	            const pal = {
+	                fire: { main: '#ff6622', hi: '#ffcc44' },
+	                cold: { main: '#88ddff', hi: '#ccf0ff' },
+	                ice: { main: '#88ddff', hi: '#ccf0ff' },
+	                lightning: { main: '#ffdd44', hi: '#fff8cc' },
+	                poison: { main: '#44cc44', hi: '#aaffaa' },
+	                magic: { main: '#bb88ff', hi: '#e6d0ff' },
+	                arcane: { main: '#bb88ff', hi: '#e6d0ff' },
+	                physical: { main: '#ccaa66', hi: '#aaaaaa' }
+	            }[elem] || { main: '#ccaa66', hi: '#aaaaaa' };
+
+	            if (kind === 'bolt') {
+	                // Bolt: orb + streak.
+	                ctx.strokeStyle = pal.main; ctx.lineWidth = Math.max(1.5, size/10); ctx.lineCap = 'round';
+	                ctx.beginPath();
+	                ctx.moveTo(-half*0.6, half*0.4);
+	                ctx.lineTo(half*0.5, -half*0.5);
+	                ctx.stroke();
+	                ctx.fillStyle = pal.main;
+	                ctx.beginPath(); ctx.arc(half*0.25, -half*0.25, half*0.22, 0, Math.PI*2); ctx.fill();
+	                ctx.fillStyle = pal.hi;
+	                ctx.beginPath(); ctx.arc(half*0.2, -half*0.3, half*0.11, 0, Math.PI*2); ctx.fill();
+	            } else {
+	                // Arrow: shaft + head.
+	                ctx.strokeStyle = pal.main; ctx.lineWidth = Math.max(1.6, size/10); ctx.lineCap = 'round';
+	                ctx.beginPath();
+	                ctx.moveTo(-half*0.55, half*0.35);
+	                ctx.lineTo(half*0.45, -half*0.45);
+	                ctx.stroke();
+	                ctx.fillStyle = pal.hi;
+	                ctx.beginPath();
+	                ctx.moveTo(half*0.45, -half*0.45);
+	                ctx.lineTo(half*0.72, -half*0.18);
+	                ctx.lineTo(half*0.25, -half*0.18);
+	                ctx.fill();
+	                // tiny fletching
+	                ctx.fillStyle = 'rgba(255,255,255,0.15)';
+	                ctx.beginPath();
+	                ctx.moveTo(-half*0.55, half*0.35);
+	                ctx.lineTo(-half*0.75, half*0.25);
+	                ctx.lineTo(-half*0.6, half*0.1);
+	                ctx.fill();
+	            }
+	        // --- Generic includes-based matches ---
+	        } else if (eff.includes('fire') || eff.includes('pyro')) {
+	            ctx.fillStyle = '#ff6622';
+	            ctx.beginPath();
+	            ctx.moveTo(0, -half); ctx.quadraticCurveTo(half*0.7, -half*0.3, half*0.5, half*0.4);
             ctx.lineTo(0, half*0.1); ctx.lineTo(-half*0.5, half*0.4);
             ctx.quadraticCurveTo(-half*0.7, -half*0.3, 0, -half); ctx.fill();
             ctx.fillStyle = '#ffcc44';
@@ -13019,35 +13560,41 @@
             ctx.closePath(); ctx.fill();
             ctx.strokeStyle = '#888888'; ctx.lineWidth = 1; ctx.stroke();
         }
-    }
+	    }
 
-    // data URL cache for skill icons used in HTML panels
-    const _skillIconDataURLCache = {};
-    function getSkillIconDataURL(sk, size) {
-        const eff = sk.effect || (sk.skillType === 'passive' ? '_passive' : '_default');
-        const key = eff + '_' + size;
-        if (_skillIconDataURLCache[key]) return _skillIconDataURLCache[key];
-        const cvs = document.createElement('canvas');
-        cvs.width = size; cvs.height = size;
+	    // data URL cache for skill icons used in HTML panels
+		    const _skillIconDataURLCache = {};
+		    let _skillIconEffById = {};
+		    function getSkillIconDataURL(sk, size) {
+		        const eff = sk.iconEff || (sk.id ? _skillIconEffById[sk.id] : undefined) || sk.effect || (sk.skillType === 'passive' ? '_passive' : '_default');
+		        const key = eff + '_' + size;
+		        if (_skillIconDataURLCache[key]) return _skillIconDataURLCache[key];
+		        const cvs = document.createElement('canvas');
+		        cvs.width = size; cvs.height = size;
         const c = cvs.getContext('2d');
         c.translate(size / 2, size / 2);
         _drawSkillIconShape(c, eff, size);
         _skillIconDataURLCache[key] = cvs.toDataURL();
         return _skillIconDataURLCache[key];
     }
-    function preRenderSkillIcons() {
-        if (!G.playerClass || !CLASS_DEFS[G.playerClass]) return;
-        const skills = getAllAvailableSkills();
-        if (!skills || skills.length === 0) return;
-        const sizes = [18, 20, 28, 40];
-        const effs = new Set();
-        for (const sk of skills) {
-            effs.add(sk.effect || (sk.skillType === 'passive' ? '_passive' : '_default'));
-        }
-        for (const eff of effs) {
-            for (const sz of sizes) {
-                const key = eff + '_' + sz;
-                if (_skillIconDataURLCache[key]) continue;
+		    function preRenderSkillIcons() {
+		        if (!G.playerClass || !CLASS_DEFS[G.playerClass]) return;
+		        const skills = getAllAvailableSkills();
+		        if (!skills || skills.length === 0) return;
+		        // Cache id -> iconEff to keep UI icons correct even if slot objects were serialized without iconEff.
+		        _skillIconEffById = {};
+		        for (const sk of skills) {
+		            if (sk && sk.id && sk.iconEff) _skillIconEffById[sk.id] = sk.iconEff;
+		        }
+		        const sizes = [18, 20, 28, 40];
+		        const effs = new Set();
+		        for (const sk of skills) {
+		            effs.add(sk.iconEff || sk.effect || (sk.skillType === 'passive' ? '_passive' : '_default'));
+		        }
+	        for (const eff of effs) {
+	            for (const sz of sizes) {
+	                const key = eff + '_' + sz;
+	                if (_skillIconDataURLCache[key]) continue;
                 const cvs = document.createElement('canvas');
                 cvs.width = sz; cvs.height = sz;
                 const c = cvs.getContext('2d');
@@ -13095,13 +13642,28 @@
         return _skillIconDataURLCache[key];
     }
 
-    // Canvas-drawn skill icon (uses _drawSkillIconShape, no emoji fallback)
-    function _drawSkillIcon(ctx, sk, cx, cy, size) {
-        const eff = sk.effect || (sk.skillType === 'passive' ? '_passive' : '_default');
-        ctx.save();
-        ctx.translate(cx, cy);
-        _drawSkillIconShape(ctx, eff, size);
-        ctx.restore();
+	    // Canvas-drawn skill icon (uses _drawSkillIconShape, no emoji fallback)
+	    function _drawSkillIcon(ctx, sk, cx, cy, size) {
+	        const eff = sk.iconEff || sk.effect || (sk.skillType === 'passive' ? '_passive' : '_default');
+	        ctx.save();
+	        ctx.translate(cx, cy);
+	        _drawSkillIconShape(ctx, eff, size);
+	        ctx.restore();
+    }
+
+    // CanvasRenderingContext2D.roundRect is not supported everywhere; provide a fallback path helper.
+    function pathRoundRect(c, x, y, w, h, r) {
+        if (c.roundRect) { c.roundRect(x, y, w, h, r); return; }
+        const rr = Math.max(0, Math.min(r, Math.min(w, h) / 2));
+        c.moveTo(x + rr, y);
+        c.lineTo(x + w - rr, y);
+        c.quadraticCurveTo(x + w, y, x + w, y + rr);
+        c.lineTo(x + w, y + h - rr);
+        c.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+        c.lineTo(x + rr, y + h);
+        c.quadraticCurveTo(x, y + h, x, y + h - rr);
+        c.lineTo(x, y + rr);
+        c.quadraticCurveTo(x, y, x + rr, y);
     }
 
     // ========== OVERLAY MAP (TAB key) ==========
@@ -13269,7 +13831,7 @@
             if (TILE_TEXTURES['grain']) ctx.drawImage(TILE_TEXTURES['grain'], nx, barY, 64, barH);
         }
         ctx.globalAlpha = 1;
-        // Gold metal trim top line
+        // Gold metal trim top line (keep it subtle; strong 1px lines read as "weird line" on some displays)
         const trimG = ctx.createLinearGradient(0, barY - 1, W, barY - 1);
         trimG.addColorStop(0, '#654321');
         trimG.addColorStop(0.2, '#c4a44a');
@@ -13277,12 +13839,15 @@
         trimG.addColorStop(0.8, '#c4a44a');
         trimG.addColorStop(1, '#654321');
         ctx.strokeStyle = trimG;
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(0, barY); ctx.lineTo(W, barY); ctx.stroke();
+        ctx.lineWidth = 1;
+        ctx.globalAlpha = 0.75;
+        ctx.beginPath(); ctx.moveTo(0, barY + 0.5); ctx.lineTo(W, barY + 0.5); ctx.stroke();
         // Secondary dark line below trim
         ctx.strokeStyle = '#1a1208';
         ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(0, barY + 2); ctx.lineTo(W, barY + 2); ctx.stroke();
+        ctx.globalAlpha = 0.55;
+        ctx.beginPath(); ctx.moveTo(0, barY + 1.5); ctx.lineTo(W, barY + 1.5); ctx.stroke();
+        ctx.globalAlpha = 1;
 
         // Health & Mana Globes
         const globeR = 30;
@@ -13518,9 +14083,9 @@
                 // D2-style potion icon (canvas-drawn, matches dark fantasy HUD)
                 const pcx = bx + beltSlotW / 2, pcy = beltY + beltSlotH / 2;
                 ctx.fillStyle = '#880000'; ctx.beginPath();
-                ctx.roundRect(pcx - 4, pcy - 6, 8, 12, 2); ctx.fill();
+                pathRoundRect(ctx, pcx - 4, pcy - 6, 8, 12, 2); ctx.fill();
                 ctx.fillStyle = '#cc2200'; ctx.beginPath();
-                ctx.roundRect(pcx - 3, pcy - 5, 6, 7, 1); ctx.fill();
+                pathRoundRect(ctx, pcx - 3, pcy - 5, 6, 7, 1); ctx.fill();
                 ctx.fillStyle = '#553322'; ctx.fillRect(pcx - 3, pcy - 8, 6, 3);
             }
         }
@@ -13545,9 +14110,9 @@
                 // D2-style mana potion icon (canvas-drawn, matches dark fantasy HUD)
                 const mcx = bx + beltSlotW / 2, mcy = beltY + beltSlotH / 2;
                 ctx.fillStyle = '#000088'; ctx.beginPath();
-                ctx.roundRect(mcx - 4, mcy - 6, 8, 12, 2); ctx.fill();
+                pathRoundRect(ctx, mcx - 4, mcy - 6, 8, 12, 2); ctx.fill();
                 ctx.fillStyle = '#2244cc'; ctx.beginPath();
-                ctx.roundRect(mcx - 3, mcy - 5, 6, 7, 1); ctx.fill();
+                pathRoundRect(ctx, mcx - 3, mcy - 5, 6, 7, 1); ctx.fill();
                 ctx.fillStyle = '#553322'; ctx.fillRect(mcx - 3, mcy - 8, 6, 3);
             }
         }
@@ -13860,8 +14425,9 @@
     function drawFloatingTexts() {
         for (const ft of floatingTexts) {
             const elapsed = ft.maxLife - ft.life;
-            const sx = ft.x - G.camX + Math.sin(elapsed * 4 + ft.x * 0.1) * 3;
-            const sy = ft.y - G.camY + ft.vy * elapsed;
+            const sp = worldToScreen(ft.x, ft.y);
+            const sx = sp.x + Math.sin(elapsed * 4 + ft.x * 0.1) * 3;
+            const sy = sp.y + ft.vy * elapsed;
             const a = clamp(ft.life / ft.maxLife, 0, 1);
             // Critical: scale-down animation (start big, shrink)
             let fontSize = ft.big ? 24 : 16;
@@ -13941,16 +14507,16 @@
             }
             saveData.player.potionInv = player.potionInv.map(it => serializeItem(it));
             saveData.player.charmInv = player.charmInv.map(it => serializeItem(it));
-            saveData.player.skills = {};
-            for (let i = 1; i <= 6; i++) {
-                const sk = player.skills[i];
-                if (sk) { // 空スロット対応
-                    saveData.player.skills[i] = {
-                        id: sk.id, name: sk.name, icon: sk.icon, effect: sk.effect,
-                        mp: sk.mp, maxCD: sk.maxCD, desc: sk.desc
-                    };
-                }
-            }
+	            saveData.player.skills = {};
+	            for (let i = 1; i <= 6; i++) {
+	                const sk = player.skills[i];
+	                if (sk) { // 空スロット対応
+	                    saveData.player.skills[i] = {
+	                        id: sk.id, name: sk.name, icon: sk.icon, effect: sk.effect, iconEff: sk.iconEff,
+	                        mp: sk.mp, maxCD: sk.maxCD, desc: sk.desc
+	                    };
+	                }
+	            }
             // Save only alive monsters (dead ones stay dead on load, skip if in town)
             saveData.monsters = G.inTown ? [] : monsters.filter(m => m.alive).map(m => ({
                 x: m.x, y: m.y, type: m.type,
@@ -14195,20 +14761,21 @@
 
             // Restore skills with proper maxCD lookup (using new scaled formulas)
             player.skills = {}; // 他のセーブファイルのスキル汚染を防ぐ
-            if (p.skills) {
-                const allSkills = getAllAvailableSkills();
-                for (let i = 1; i <= 6; i++) {
-                    if (p.skills[i]) {
-                        const skillDef = allSkills.find(sk => sk.id === p.skills[i].id);
-                        if (skillDef && skillDef.skillType === 'passive') continue; // Don't restore passive skills to slots
-                        const slvl = player.skillLevels[p.skills[i].id] || 1;
-                        const maxCD = skillDef ? getSkillCooldown(skillDef, slvl) : (p.skills[i].maxCD || 0);
-                        const mp = skillDef ? getSkillMPCost(skillDef, slvl) : (p.skills[i].mp || 0);
-                        const effect = p.skills[i].effect || (skillDef ? skillDef.effect : undefined);
-                        player.skills[i] = { ...p.skills[i], cooldown: 0, maxCD: maxCD, mp: mp, effect: effect };
-                    }
-                }
-            }
+	            if (p.skills) {
+	                const allSkills = getAllAvailableSkills();
+	                for (let i = 1; i <= 6; i++) {
+	                    if (p.skills[i]) {
+	                        const skillDef = allSkills.find(sk => sk.id === p.skills[i].id);
+	                        if (skillDef && skillDef.skillType === 'passive') continue; // Don't restore passive skills to slots
+	                        const slvl = player.skillLevels[p.skills[i].id] || 1;
+	                        const maxCD = skillDef ? getSkillCooldown(skillDef, slvl) : (p.skills[i].maxCD || 0);
+	                        const mp = skillDef ? getSkillMPCost(skillDef, slvl) : (p.skills[i].mp || 0);
+	                        const effect = p.skills[i].effect || (skillDef ? skillDef.effect : undefined);
+	                        const iconEff = p.skills[i].iconEff || (skillDef ? skillDef.iconEff : undefined);
+	                        player.skills[i] = { ...p.skills[i], cooldown: 0, maxCD: maxCD, mp: mp, effect: effect, iconEff: iconEff };
+	                    }
+	                }
+	            }
             // Recalculate passives on load
             recalcPassives();
             // セーブデータにskillsがない場合も空のまま
@@ -14328,7 +14895,12 @@
         fpsFrames++;
         if (fpsAcc >= 0.5) { fps = fpsFrames / fpsAcc; fpsAcc = 0; fpsFrames = 0; }
 
-        const canUpdate = !G.paused;
+        let canUpdate = !G.paused;
+        // Hitstop: freeze updates briefly, but keep rendering.
+        if (canUpdate && (G.hitStopT || 0) > 0) {
+            G.hitStopT = Math.max(0, (G.hitStopT || 0) - dt);
+            canUpdate = false;
+        }
         let aliveMonsterCount = 0;
         for (let i = 0; i < monsters.length; i++) if (monsters[i].alive) aliveMonsterCount++;
         if (canUpdate) {
@@ -14609,8 +15181,14 @@
 
         // Camera
         if (canUpdate) {
-            G.camX = lerp(G.camX, player.x - W / 2, 0.1);
-            G.camY = lerp(G.camY, player.y - H / 2, 0.1);
+            if (isIsoView()) {
+                if (G.camWX == null) { G.camWX = player.x; G.camWY = player.y; }
+                G.camWX = lerp(G.camWX, player.x, 0.1);
+                G.camWY = lerp(G.camWY, player.y, 0.1);
+            } else {
+                G.camX = lerp(G.camX, player.x - W / 2, 0.1);
+                G.camY = lerp(G.camY, player.y - H / 2, 0.1);
+            }
         }
 
         // Screen shake
@@ -14644,7 +15222,8 @@
 
         // Meteor warning circle
         if (player.meteorT > 0 && G.meteorX) {
-            const mx = G.meteorX - G.camX, my = G.meteorY - G.camY;
+            const msp = worldToScreen(G.meteorX, G.meteorY);
+            const mx = msp.x, my = msp.y;
             const pulse = 0.3 + Math.sin(G.time * 12) * 0.2;
             ctx.strokeStyle = `rgba(255,80,0,${pulse})`;
             ctx.lineWidth = 2;
@@ -14667,7 +15246,8 @@
         // Draw traps
         if (G.traps) {
             for (const tr of G.traps) {
-                const tx = tr.x - G.camX, ty = tr.y - G.camY;
+                const tsp = worldToScreen(tr.x, tr.y);
+                const tx = tsp.x, ty = tsp.y;
                 const pulse = 0.4 + Math.sin(G.time * 5) * 0.15;
                 ctx.strokeStyle = `rgba(255,100,0,${pulse})`;
                 ctx.lineWidth = 1;
@@ -14688,17 +15268,18 @@
         }
         for (const p of projectiles) p.draw(G.camX, G.camY);
         for (const ep of enemyProjectiles) ep.draw(G.camX, G.camY);
-        for (const m of monsters) m.draw(G.camX, G.camY);
+        if (!G.inTown) {
+            drawActorsDepthSorted();
+        }
         drawWorldEffects(G.camX, G.camY);
-        // Draw mercenary
-        if (mercenary && mercenary.alive) mercenary.draw(G.camX, G.camY);
         for (const mp of mercProjectiles) mp.draw(G.camX, G.camY);
         // Draw town NPCs
         if (G.inTown) {
             const npcSprSize = 48; // rendered sprite size (ATLAS fallback)
             const npcHiSize = TILE * PLAYER_DRAW_SCALE * 2.0; // match player hi-res size
             for (const npc of townNPCs) {
-                const nx = npc.x - G.camX, ny = npc.y - G.camY;
+                const nsp = worldToScreen(npc.x, npc.y);
+                const nx = nsp.x, ny = nsp.y;
                 if (nx < -100 || nx > W + 100 || ny < -100 || ny > H + 100) continue;
                 let npcDrawn = false;
                 const bob = Math.sin(G.time * 1.5 + npc.x * 0.1) * 1.5;
@@ -14715,16 +15296,16 @@
                     else if (npc.type === 'quest' || npc.type === 'uber_portal') { npcAnim = 'cast'; npcTimeScale = 0.3; }
                     // Drop shadow
                     const shadowRx = TILE * PLAYER_DRAW_SCALE * 0.28;
-                    const shG = ctx.createRadialGradient(nx, ny + TILE/2, 0, nx, ny + TILE/2, shadowRx);
+                    const shG = ctx.createRadialGradient(nx, ny + groundYOffset(), 0, nx, ny + groundYOffset(), shadowRx);
                     shG.addColorStop(0, 'rgba(0,0,0,0.35)');
                     shG.addColorStop(0.6, 'rgba(0,0,0,0.12)');
                     shG.addColorStop(1, 'rgba(0,0,0,0)');
                     ctx.fillStyle = shG;
                     ctx.beginPath();
-                    ctx.ellipse(nx, ny + TILE/2, shadowRx, 5, 0, 0, Math.PI * 2);
+                    ctx.ellipse(nx, ny + groundYOffset(), shadowRx, 5, 0, 0, Math.PI * 2);
                     ctx.fill();
                     // Draw hi-res animated sprite
-                    const hiDy = ny + bob + TILE/2 - npcHiSize * 0.75;
+                    const hiDy = ny + bob + groundYOffset() - npcHiSize * 0.75;
                     if (drawHiResSpr(npc.hiresClass, npcAnim, npcDir, G.time * npcTimeScale, nx - npcHiSize/2, hiDy, npcHiSize, npcHiSize)) {
                         npcDrawn = true;
                     }
@@ -14773,7 +15354,8 @@
             const portalWX = r0.cx * TILE + TILE/2 + 60;
             const portalWY = r0.cy * TILE + TILE/2;
             G._portalScreenX = portalWX; G._portalScreenY = portalWY; // for interaction check
-            const ppx = portalWX - G.camX, ppy = portalWY - G.camY;
+            const psp = worldToScreen(portalWX, portalWY);
+            const ppx = psp.x, ppy = psp.y;
             if (ppx > -80 && ppx < W + 80 && ppy > -80 && ppy < H + 80) {
                 // Swirling blue oval portal
                 ctx.save();
@@ -14823,25 +15405,31 @@
             }
         }
 
-        // Draw summoned minions
-        if (G.minions) {
-            for (const mn of G.minions) {
-                const mx = mn.x - G.camX, my = mn.y - G.camY;
-                const pulse = 0.5 + Math.sin(G.time * 4) * 0.2;
-                ctx.globalAlpha = 0.7 + pulse * 0.3;
-                ctx.fillStyle = '#88ccff';
-                ctx.beginPath(); ctx.arc(mx, my - 4, 10, 0, Math.PI * 2); ctx.fill();
-                ctx.globalAlpha = pulse * 0.3;
-                ctx.fillStyle = '#aaddff';
-                ctx.beginPath(); ctx.arc(mx, my - 4, 16, 0, Math.PI * 2); ctx.fill();
-                ctx.globalAlpha = 1;
-                const hpPct = mn.hp / mn.maxHP;
-                ctx.fillStyle = '#333'; ctx.fillRect(mx - 12, my - 18, 24, 3);
-                ctx.fillStyle = hpPct > 0.5 ? '#00cc00' : '#cc6600';
-                ctx.fillRect(mx - 12, my - 18, 24 * hpPct, 3);
+        // Town: keep original ordering for NPC/town visuals.
+        if (G.inTown) {
+            // Draw mercenary
+            if (mercenary && mercenary.alive) mercenary.draw(G.camX, G.camY);
+            // Draw summoned minions
+            if (G.minions) {
+                for (const mn of G.minions) {
+                    const msp = worldToScreen(mn.x, mn.y);
+                    const mx = msp.x, my = msp.y;
+                    const pulse = 0.5 + Math.sin(G.time * 4) * 0.2;
+                    ctx.globalAlpha = 0.7 + pulse * 0.3;
+                    ctx.fillStyle = '#88ccff';
+                    ctx.beginPath(); ctx.arc(mx, my - 4, 10, 0, Math.PI * 2); ctx.fill();
+                    ctx.globalAlpha = pulse * 0.3;
+                    ctx.fillStyle = '#aaddff';
+                    ctx.beginPath(); ctx.arc(mx, my - 4, 16, 0, Math.PI * 2); ctx.fill();
+                    ctx.globalAlpha = 1;
+                    const hpPct = mn.hp / mn.maxHP;
+                    ctx.fillStyle = '#333'; ctx.fillRect(mx - 12, my - 18, 24, 3);
+                    ctx.fillStyle = hpPct > 0.5 ? '#00cc00' : '#cc6600';
+                    ctx.fillRect(mx - 12, my - 18, 24 * hpPct, 3);
+                }
             }
+            player.draw(G.camX, G.camY);
         }
-        player.draw(G.camX, G.camY);
         for (const p of particles) p.draw(G.camX, G.camY);
         drawFloatingTexts();
         drawLighting();
@@ -14893,7 +15481,8 @@
         if (G.portalCasting && G.portalTimer > 0) {
             const prog = 1 - G.portalTimer / 2.0;
             // Swirling blue portal effect around player
-            const px = player.x - G.camX, py = player.y - G.camY;
+            const psp = worldToScreen(player.x, player.y);
+            const px = psp.x, py = psp.y;
             ctx.save();
             for (let i = 0; i < 12; i++) {
                 const angle = G.time * 3 + (i * Math.PI * 2 / 12);
@@ -14963,7 +15552,10 @@
     // Tooltip on hover (ground items + skill bar)
     canvas.addEventListener('mousemove', e => {
         if (!G.started || G.paused || isPanelVisible(DOM.settingsPanel) || skillSelectOpen) { DOM.tooltip.style.display = 'none'; return; }
-        const wx = e.clientX + G.camX, wy = e.clientY + G.camY;
+        const mp = getCanvasMousePos(e);
+        const mx = mp.x, my = mp.y;
+        const wp = screenToWorld(mx, my);
+        const wx = wp.x, wy = wp.y;
         const tt = DOM.tooltip;
         let found = false;
 
@@ -14975,7 +15567,7 @@
         const skY = H - 62;
         for (let i = 1; i <= numSk; i++) {
             const sx = skStartX + (i - 1) * (skW + skGap);
-            if (e.clientX >= sx && e.clientX <= sx + skW && e.clientY >= skY && e.clientY <= skY + 48) {
+            if (mx >= sx && mx <= sx + skW && my >= skY && my <= skY + 48) {
                 const sk = player.skills[i];
                 if (!sk) {
                     tt.innerHTML = `<div class="tt-name" style="color:#888">空スロット</div><div class="tt-type">キー: ${i}</div>`;
