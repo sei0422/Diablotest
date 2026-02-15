@@ -2650,6 +2650,8 @@
 
     // ========== QUEST DEFINITIONS ==========
     const QUEST_DEFS = {
+        q_act1_den: { act:1, name:'悪の巣窟', type:'kill_count', target:30,
+            desc:'地下聖堂の悪しき力を浄化せよ', rewards:{xp:300, gold:200, skillReset:true} },
         q_act1_main: { act:1, name:'骸骨王の討伐', type:'kill_boss', target:'skeleton_king',
             desc:'地下聖堂の最深部に巣くう骸骨王を倒せ', rewards:{xp:1000, gold:500, item:'rare'} },
         q_act1_clear: { act:1, name:'聖堂の浄化', type:'kill_count', target:50,
@@ -9356,6 +9358,10 @@
             player.inventory.push(item);
             addLog(`報酬アイテム: ${item.name}`, item.rarity.color);
         }
+        if (qdef.rewards.skillReset) {
+            player.skillResetAvailable = true;
+            addLog('★ スキルリセット権を獲得！（町の長老に話しかけてスキルを振り直せます）', '#ff88ff');
+        }
         addLog(`クエスト完了報酬: +${qdef.rewards.xp || 0} XP, +${qdef.rewards.gold || 0} G`, '#ffd700');
         return true;
     }
@@ -10388,6 +10394,29 @@
         renderGamblingUI();
     };
 
+    // D2-style skill reset (quest reward)
+    window.resetSkills = function() {
+        if (!player.skillResetAvailable) {
+            addLog('スキルリセット権がありません', '#ff4444');
+            return;
+        }
+        const totalPoints = Object.values(player.skillLevels || {}).reduce((a, b) => a + b, 0);
+        player.skillLevels = {};
+        player.skills = [
+            { id: null, cooldown: 0 },
+            { id: null, cooldown: 0 },
+            { id: null, cooldown: 0 },
+            { id: null, cooldown: 0 }
+        ];
+        player.skillPoints = (player.skillPoints || 0) + totalPoints;
+        player.skillResetAvailable = false;
+        recalcPassives();
+        player.recalcStats();
+        addLog(`スキルをリセットしました（+${totalPoints} スキルポイント）`, '#ff88ff');
+        sfxLevelUp();
+        emitParticles(player.x, player.y, '#ff88ff', 20, 80, 0.6, 4, -30);
+    };
+
     function openStashUI(npc) {
         G.townUIMode = 'stash';
         const panel = document.getElementById('stashPanel');
@@ -10496,6 +10525,15 @@
                 html += `<div class="quest-item locked"><span style="color:#555">🔒 ${qdef.name} (前提未達成)</span></div>`;
             }
         }
+
+        // Skill reset button (if available)
+        if (player.skillResetAvailable) {
+            html += `<div style="margin-top:12px;padding:8px;background:rgba(255,136,255,0.1);border:1px solid #ff88ff;border-radius:4px">
+                <div style="color:#ff88ff;font-size:12px;margin-bottom:4px">✨ スキルリセット権利あり</div>
+                <button class="town-btn" onclick="resetSkills();renderQuestUI()" style="background:#ff88ff;color:#000">スキルをリセットする</button>
+            </div>`;
+        }
+
         html += `<button class="town-btn" onclick="closeTownUI()" style="margin-top:8px">閉じる</button>`;
         panel.innerHTML = html;
     }
