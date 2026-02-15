@@ -4315,6 +4315,36 @@
         { type: 'armor', name: '防具(ランダム)', cost: 20000, icon: '🛡' }
     ];
 
+    // D2-style item pricing system: base prices by item type
+    const ITEM_BASE_PRICES = {
+        // Weapons
+        sword: 100,
+        axe: 120,
+        staff: 200,
+        // Armor
+        helmet: 80,
+        armor: 200,
+        shield: 150,
+        boots: 60,
+        // Accessories
+        ring: 300,
+        amulet: 500,
+        // Special
+        rune: 1000,
+        potion: 50,
+        manaPotion: 80
+    };
+
+    // D2-style rarity price multipliers (sell price = base × rarity × level_factor)
+    const RARITY_PRICE_MULT = {
+        common: 1,
+        magic: 3,
+        rare: 8,
+        legendary: 20,
+        unique: 50,
+        runeword: 100
+    };
+
     function pickRarity(baseRoll, mf, diffDrop) {
         const difficulty = G.difficulty || 'normal';
         const table = RARITY_TABLES[difficulty];
@@ -9434,30 +9464,75 @@
     }
 
     // ========== SHOP / ECONOMY ==========
+    // D2-style price calculation: base price × rarity multiplier × level factor
     function calculateSellPrice(item) {
-        const base = { common:10, magic:30, rare:80, legendary:200, unique:500, runeword:800 };
-        const b = base[item.rarityKey] || 10;
-        const lvl = item.itemLevel || 1;
-        return Math.round(b * (1 + (lvl - 1) * 0.12));
+        // Special handling for potions
+        if (isPotion(item)) {
+            const potionPrices = {
+                hp1: 50, hp2: 100, hp3: 200, hp4: 350, hp5: 600,
+                mp1: 80, mp2: 150, mp3: 300,
+                rejuv: 500, fullrejuv: 2000
+            };
+            return potionPrices[item.typeKey] || 50;
+        }
+
+        // Special handling for runes
+        if (isRune(item)) {
+            const runeTier = item.runeTier || 1;
+            return Math.round(1000 * Math.pow(2, runeTier - 1)); // Exponential pricing for runes
+        }
+
+        // Get base price by item type
+        const basePrice = ITEM_BASE_PRICES[item.typeKey] || 100;
+
+        // Get rarity multiplier
+        const rarityMult = RARITY_PRICE_MULT[item.rarityKey] || 1;
+
+        // Level factor (D2-style: price increases with item level)
+        const itemLevel = item.itemLevel || 1;
+        const levelFactor = 1 + (itemLevel - 1) * 0.1;
+
+        return Math.round(basePrice * rarityMult * levelFactor);
     }
-    function calculateBuyPrice(item) { return calculateSellPrice(item) * 3; }
+
+    // D2-style buy price: sell price × 5 (NPC sells at 5x the buy-back price)
+    // This means if you sell for 100G, NPC sells it for 500G (buy-back is 20% of sell price)
+    function calculateBuyPrice(item) {
+        return calculateSellPrice(item) * 5;
+    }
     function calculateSmithCost(item) {
         const base = { common:100, magic:250, rare:500, legendary:1000, unique:2000, runeword:2500 };
         const b = base[item.rarityKey] || 100;
         const lvl = item.itemLevel || 1;
         return Math.round(b * (1 + (lvl - 1) * 0.15));
     }
+    // D2-style shop item generation: level-appropriate items with controlled rarity
     function generateShopItems(act) {
         const items = [];
-        const globalF = getGlobalFloor(act, 1, G.cycle);
-        for (let i = 0; i < 8; i++) {
-            const forceRarity = Math.random() < 0.3 ? 'magic' : (Math.random() < 0.1 ? 'rare' : null);
-            items.push(generateItem(globalF, forceRarity));
+        // Use player level for item generation (D2 style: shop items scale with player level)
+        const itemLevel = Math.max(1, player.level + rand(-2, 2));
+
+        // Generate 8-12 equipment items (D2-style variety)
+        const equipCount = 8 + rand(0, 4);
+        for (let i = 0; i < equipCount; i++) {
+            // D2-style rarity distribution for shops: mostly normal/magic, rare is uncommon
+            const rarityRoll = Math.random();
+            let forceRarity = null;
+            if (rarityRoll < 0.10) {
+                forceRarity = 'rare'; // 10% rare
+            } else if (rarityRoll < 0.40) {
+                forceRarity = 'magic'; // 30% magic
+            }
+            // 60% common (forceRarity = null)
+
+            items.push(generateItem(itemLevel, forceRarity));
         }
+
         // Always include potions (tiered by act)
         for (let i = 0; i < 3; i++) items.push(generatePotion('hp', act));
         for (let i = 0; i < 3; i++) items.push(generatePotion('mp', act));
         if (act >= 3) items.push(generatePotion('rejuv'));
+
         return items;
     }
 
