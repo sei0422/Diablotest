@@ -2528,6 +2528,20 @@
         4: [32, 36, 40],
         5: [42, 46, 50, 55, 60]
     };
+    // D2-style staged XP curve: linear → exponential → gentle
+    function getXPForLevel(level) {
+        if (level <= 30) {
+            // Lv 1-30: Linear (beginner-friendly)
+            return Math.round(100 * level * 1.15);
+        } else if (level <= 70) {
+            // Lv 30-70: Exponential (core gameplay)
+            return Math.round(5000 * Math.pow(level - 30, 2.2));
+        } else {
+            // Lv 70-99: Gentle (endgame grind)
+            return Math.round(80000 * Math.pow(level - 70, 1.5) + 500000);
+        }
+    }
+
     function getMonsterLevel(act, actFloor) {
         const floors = NORMAL_MLVL_TABLE[act] || NORMAL_MLVL_TABLE[1];
         const base = floors[Math.max(0, Math.min(actFloor - 1, floors.length - 1))] || floors[floors.length - 1];
@@ -4234,22 +4248,38 @@
     function effMF(mf, factor) {
         return (mf * factor) / (mf + factor);
     }
+
+    // D2-style difficulty-based drop tables
+    const RARITY_TABLES = {
+        normal: { common: 0.70, magic: 0.24, rare: 0.04, legendary: 0.015, unique: 0.005 },
+        nightmare: { common: 0.50, magic: 0.32, rare: 0.12, legendary: 0.04, unique: 0.02 },
+        hell: { common: 0.30, magic: 0.37, rare: 0.20, legendary: 0.08, unique: 0.05 }
+    };
+
     function pickRarity(baseRoll, mf, diffDrop) {
+        const difficulty = G.difficulty || 'normal';
+        const table = RARITY_TABLES[difficulty];
+
         // Apply quality-specific effective MF (D2 formula: diminishing returns)
         // Factors: unique=250, legendary=400, rare=600, magic=full MF
         const applyMF = (effectiveMF) => {
             const boost = 1 + effectiveMF / 100 + diffDrop;
             return baseRoll / boost;
         };
+
         const uniqueR = applyMF(effMF(mf, 250));
-        if (uniqueR >= 0.993) return 'unique';     // ~0.7% base
+        if (uniqueR >= (1 - table.unique)) return 'unique';
+
         const legendR = applyMF(effMF(mf, 400));
-        if (legendR >= 0.96) return 'legendary';    // ~3.3% base
+        if (legendR >= (1 - table.unique - table.legendary)) return 'legendary';
+
         const rareR = applyMF(effMF(mf, 600));
-        if (rareR >= 0.85) return 'rare';           // ~11% base
+        if (rareR >= (1 - table.unique - table.legendary - table.rare)) return 'rare';
+
         const magicR = applyMF(mf);
-        if (magicR >= 0.60) return 'magic';         // ~25% base
-        return 'common';                            // ~60% base
+        if (magicR >= (1 - table.unique - table.legendary - table.rare - table.magic)) return 'magic';
+
+        return 'common';
     }
     function getAffixCount(rarity) {
         return Array.isArray(rarity.affixes)
@@ -6260,7 +6290,7 @@
                 this.level++;
                 this.statPoints += 5;
                 this.skillPoints = (this.skillPoints || 0) + 1;
-                this.xpToNext = Math.round(120 * Math.pow(1.28, this.level - 1));
+                this.xpToNext = getXPForLevel(this.level);
                 this.recalcStats();
                 this.hp = this.maxHP;
                 this.mp = this.maxMP;
@@ -7761,7 +7791,7 @@
             while (this.xp >= this.xpToNext) {
                 this.xp -= this.xpToNext;
                 this.level++;
-                this.xpToNext = Math.round(80 * Math.pow(1.25, this.level - 1));
+                this.xpToNext = getXPForLevel(this.level);
                 this.recalcStats(false);
                 this.hp = this.maxHP; // Full heal on level up
                 addLog(`${this.name}がLv.${this.level}に上がった！`, '#e6c36a');
