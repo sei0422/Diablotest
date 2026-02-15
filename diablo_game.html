@@ -4030,6 +4030,19 @@
                         // Sparse dungeon props near walls for variety without visual noise
                         const prop = resolveDungeonPropAtTile(this, x, y);
                         if (prop && !isDungeonPropBroken(this, x, y)) {
+                            // Highlight if hovered or targeted
+                            const isHovered = hoveredProp && hoveredProp.tx === x && hoveredProp.ty === y;
+                            const isTargeted = player.targetBreakProp && player.targetBreakProp.tx === x && player.targetBreakProp.ty === y;
+                            if (isHovered || isTargeted) {
+                                const highlightColor = isTargeted ? 'rgba(255,200,80,0.4)' : 'rgba(255,220,120,0.35)';
+                                const glowRadius = TILE * 0.8;
+                                const glow = ctx.createRadialGradient(sx + TILE/2, sy + TILE/2, 0, sx + TILE/2, sy + TILE/2, glowRadius);
+                                glow.addColorStop(0, highlightColor);
+                                glow.addColorStop(0.5, 'rgba(255,200,80,0.15)');
+                                glow.addColorStop(1, 'rgba(255,180,60,0)');
+                                ctx.fillStyle = glow;
+                                ctx.fillRect(sx - glowRadius/2, sy - glowRadius/2, glowRadius * 1.5, glowRadius * 1.5);
+                            }
                             drawKenneyDungeonProp(prop.key, sx, sy, prop.scale);
                         }
 
@@ -12191,6 +12204,7 @@
 
     // ========== INPUT ==========
     let mouse = { x: 0, y: 0 };
+    let hoveredProp = null; // {tx, ty} - currently hovered breakable prop
     let keysDown = {};
     function getCanvasMousePos(e) {
         // Use canvas-local coordinates; clientX/Y breaks aiming if canvas isn't at (0,0) or is CSS-scaled.
@@ -12219,6 +12233,22 @@
     canvas.addEventListener('mousemove', e => {
         const p = getCanvasMousePos(e);
         mouse.x = p.x; mouse.y = p.y;
+
+        // Detect hovered breakable prop (dungeon only)
+        if (G.started && !G.inTown && !G.paused && !isPanelVisible(DOM.settingsPanel)) {
+            const wp = screenToWorld(mouse.x, mouse.y);
+            const clickedProp = getClickableDungeonPropAtWorld(wp.x, wp.y);
+            if (clickedProp) {
+                hoveredProp = { tx: clickedProp.tx, ty: clickedProp.ty };
+                canvas.style.cursor = 'pointer';
+            } else {
+                hoveredProp = null;
+                canvas.style.cursor = 'default';
+            }
+        } else {
+            hoveredProp = null;
+            canvas.style.cursor = 'default';
+        }
     }, { passive: true });
 
     canvas.addEventListener('contextmenu', e => { e.preventDefault(); });
