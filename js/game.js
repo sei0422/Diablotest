@@ -30,7 +30,7 @@ function loadSprites() {
                 tileTexturesReady = true;
                 console.log('Tile textures regenerated with sprites');
             }
-        } catch(e) { console.warn('Sprite texture override deferred:', e); }
+        } catch (e) { console.warn('Sprite texture override deferred:', e); }
     }
     function loadOne(key, src, retries) {
         const img = new Image();
@@ -60,66 +60,66 @@ loadSprites();
 const SP = 32; // sprite pixel size in sprite sheet
 const ATLAS = {
     // tiles.png (544x832, 32px grid)
-    wallTop:['tiles',0,64], wallSide1:['tiles',32,64], wallSide2:['tiles',64,64],
-    deepWall:['tiles',0,96], catWallSide:['tiles',32,160],
-    floorBlank:['tiles',0,192], floor1:['tiles',32,192],
-    floor2:['tiles',64,192], floor3:['tiles',96,192],
-    stairsDown:['tiles',224,512], chestClosed:['tiles',0,544], chestOpen:['tiles',32,544],
-    blood1:['tiles',0,704], blood2:['tiles',32,704],
-    corpse1:['tiles',0,672], corpse2:['tiles',32,672],
+    wallTop: ['tiles', 0, 64], wallSide1: ['tiles', 32, 64], wallSide2: ['tiles', 64, 64],
+    deepWall: ['tiles', 0, 96], catWallSide: ['tiles', 32, 160],
+    floorBlank: ['tiles', 0, 192], floor1: ['tiles', 32, 192],
+    floor2: ['tiles', 64, 192], floor3: ['tiles', 96, 192],
+    stairsDown: ['tiles', 224, 512], chestClosed: ['tiles', 0, 544], chestOpen: ['tiles', 32, 544],
+    blood1: ['tiles', 0, 704], blood2: ['tiles', 32, 704],
+    corpse1: ['tiles', 0, 672], corpse2: ['tiles', 32, 672],
     // monsters.png (384x416, 32px grid)
-    skeleton:['monsters',0,128], skelArcher:['monsters',32,128],
-    lich:['monsters',64,128], deathKnight:['monsters',96,128],
-    zombie:['monsters',128,128], ghoul:['monsters',160,128],
-    banshee:['monsters',0,160], wraith:['monsters',64,160],
-    imp:['monsters',32,352], minotaur:['monsters',224,224],
+    skeleton: ['monsters', 0, 128], skelArcher: ['monsters', 32, 128],
+    lich: ['monsters', 64, 128], deathKnight: ['monsters', 96, 128],
+    zombie: ['monsters', 128, 128], ghoul: ['monsters', 160, 128],
+    banshee: ['monsters', 0, 160], wraith: ['monsters', 64, 160],
+    imp: ['monsters', 32, 352], minotaur: ['monsters', 224, 224],
     // rogues.png (224x224, 32px grid)
-    knight:['rogues',0,32], fighter:['rogues',32,32],
-    ranger:['rogues',64,0], rogueChar:['rogues',96,0],
-    wizardF:['rogues',0,128], wizardM:['rogues',32,128],
+    knight: ['rogues', 0, 32], fighter: ['rogues', 32, 32],
+    ranger: ['rogues', 64, 0], rogueChar: ['rogues', 96, 0],
+    wizardF: ['rogues', 0, 128], wizardM: ['rogues', 32, 128],
     // items.png (352x832, 32px grid)
-    iSword:['items',96,0], iAxe:['items',32,96], iStaff:['items',0,320],
-    iShield:['items',32,352], iHelmet:['items',128,480], iArmor:['items',96,384],
-    iRing:['items',0,544], iAmulet:['items',0,512], iBoots:['items',32,448],
-    iPotion:['items',32,608], iGold:['items',0,768],
+    iSword: ['items', 96, 0], iAxe: ['items', 32, 96], iStaff: ['items', 0, 320],
+    iShield: ['items', 32, 352], iHelmet: ['items', 128, 480], iArmor: ['items', 96, 384],
+    iRing: ['items', 0, 544], iAmulet: ['items', 0, 512], iBoots: ['items', 32, 448],
+    iPotion: ['items', 32, 608], iGold: ['items', 0, 768],
     // animated-tiles.png torch lit frames (row 5, y=160)
-    torch0:['animTiles',0,160], torch1:['animTiles',32,160],
-    torch2:['animTiles',64,160], torch3:['animTiles',96,160],
-    torch4:['animTiles',128,160], torch5:['animTiles',160,160],
+    torch0: ['animTiles', 0, 160], torch1: ['animTiles', 32, 160],
+    torch2: ['animTiles', 64, 160], torch3: ['animTiles', 96, 160],
+    torch4: ['animTiles', 128, 160], torch5: ['animTiles', 160, 160],
     // === Promoted class sprites (rogues.png) ===
-    paladin:['rogues',128,32],    // shield knight
-    berserker:['rogues',0,96],    // male barbarian
-    assassin:['rogues',128,0],    // bandit
-    rangerCls:['rogues',64,0],    // ranger
-    pyromancer:['rogues',0,128],  // female wizard
-    cryomancer:['rogues',64,128], // druid (ice-themed)
-    monk:['rogues',0,64],         // monk
-    templar:['rogues',128,64],    // templar
-    warlock:['rogues',160,128],   // warlock (6th col row5)
-    fencer:['rogues',128,96],     // fencer
-    priest:['rogues',32,64],      // priest
+    paladin: ['rogues', 128, 32],    // shield knight
+    berserker: ['rogues', 0, 96],    // male barbarian
+    assassin: ['rogues', 128, 0],    // bandit
+    rangerCls: ['rogues', 64, 0],    // ranger
+    pyromancer: ['rogues', 0, 128],  // female wizard
+    cryomancer: ['rogues', 64, 128], // druid (ice-themed)
+    monk: ['rogues', 0, 64],         // monk
+    templar: ['rogues', 128, 64],    // templar
+    warlock: ['rogues', 160, 128],   // warlock (6th col row5)
+    fencer: ['rogues', 128, 96],     // fencer
+    priest: ['rogues', 32, 64],      // priest
     // === Town NPC sprites (rogues.png rows 6-7) ===
-    npcFarmerWheat:['rogues',0,160],   // farmer (wheat thresher)
-    npcFarmerScythe:['rogues',32,160], // farmer (scythe)
-    npcFarmerFork:['rogues',64,160],   // farmer (pitchfork)
-    npcBaker:['rogues',96,160],        // baker
-    npcBlacksmith:['rogues',128,160],  // blacksmith
-    npcScholar:['rogues',160,160],     // scholar
-    npcPeasant1:['rogues',0,192],      // peasant / coalburner
-    npcPeasant2:['rogues',32,192],     // peasant
-    npcShopkeep:['rogues',64,192],     // shopkeep
-    npcElderlyW:['rogues',96,192],     // elderly woman
-    npcElderlyM:['rogues',128,192],    // elderly man
-    npcDesertSage:['rogues',96,128],   // desert sage
-    npcWarClericF:['rogues',64,64],    // female war cleric
-    npcWarClericM:['rogues',96,64],    // male war cleric
+    npcFarmerWheat: ['rogues', 0, 160],   // farmer (wheat thresher)
+    npcFarmerScythe: ['rogues', 32, 160], // farmer (scythe)
+    npcFarmerFork: ['rogues', 64, 160],   // farmer (pitchfork)
+    npcBaker: ['rogues', 96, 160],        // baker
+    npcBlacksmith: ['rogues', 128, 160],  // blacksmith
+    npcScholar: ['rogues', 160, 160],     // scholar
+    npcPeasant1: ['rogues', 0, 192],      // peasant / coalburner
+    npcPeasant2: ['rogues', 32, 192],     // peasant
+    npcShopkeep: ['rogues', 64, 192],     // shopkeep
+    npcElderlyW: ['rogues', 96, 192],     // elderly woman
+    npcElderlyM: ['rogues', 128, 192],    // elderly man
+    npcDesertSage: ['rogues', 96, 128],   // desert sage
+    npcWarClericF: ['rogues', 64, 64],    // female war cleric
+    npcWarClericM: ['rogues', 96, 64],    // male war cleric
 };
 
 // --- Hi-Res Animated Sprite System (FLARE-based 8-dir multi-frame) ---
 const HIRES_SPRITES = {};
 let hiresSpritesLoaded = false;
 const HIRES_SP = 128; // pixel size per cell
-const HIRES_DIR_ORDER = ['S','SW','W','NW','N','NE','E','SE'];
+const HIRES_DIR_ORDER = ['S', 'SW', 'W', 'NW', 'N', 'NE', 'E', 'SE'];
 // Class → sprite sheet prefix mapping
 const HIRES_CLASS_MAP = {
     warrior: 'warrior', paladin: 'warrior', berserker: 'warrior',
@@ -128,11 +128,11 @@ const HIRES_CLASS_MAP = {
 };
 // Animation configs: frames per animation, fps
 const HIRES_ANIM_CONFIG = {
-    run:    { frames: 8, fps: 15 },
-    stance: { frames: 4, fps: 5  },
-    swing:  { frames: 4, fps: 10 },
-    cast:   { frames: 4, fps: 10 },
-    shoot:  { frames: 4, fps: 10 },
+    run: { frames: 8, fps: 15 },
+    stance: { frames: 4, fps: 5 },
+    swing: { frames: 4, fps: 10 },
+    cast: { frames: 4, fps: 10 },
+    shoot: { frames: 4, fps: 10 },
 };
 
 function loadHiResSprites() {
@@ -262,21 +262,21 @@ function loadOGASprites() {
         // --- New Creature Sprites (Phase 1) ---
         creature_demon: 'asset/opengameart/creatures/demon.png',
         creature_minotaur: 'asset/opengameart/creatures/minotaur.png',
-	            // --- Spell VFX (Phase 2) ---
-	            spell_fire_green: 'asset/opengameart/spell_anims/fire_green.png',
-	            spell_fire_purple: 'asset/opengameart/spell_anims/fire_purple.png',
-	            spell_fire_yellow: 'asset/opengameart/spell_anims/fire_yellow.png',
-	            spell_fireball_blue: 'asset/opengameart/spell_anims/fireball_blue.png',
-	            // --- Spell Effects (Unused pack → now used as Diablo2-ish impact GIFs) ---
-	            fx_sign_of_fire: 'asset/opengameart/spell_effects/fx4_sign_of_fire.gif',
-	            fx_black_explosion: 'asset/opengameart/spell_effects/fx10_blackExplosion.gif',
-	            fx_rain_ground: 'asset/opengameart/spell_effects/fx9_rainOnGround.gif',
-	            fx_energy_ball: 'asset/opengameart/spell_effects/fx7_energyBall.gif',
-	            spell_sphere_blue: 'asset/opengameart/spell_anims/sphere_blue.png',
-	            spell_sphere_purple: 'asset/opengameart/spell_anims/sphere_purple.png',
-	            spell_sphere_yellow: 'asset/opengameart/spell_anims/sphere_yellow.png',
-	            spell_skull_smoke_green: 'asset/opengameart/spell_anims/skull_smoke_green.png',
-	            spell_skull_smoke_purple: 'asset/opengameart/spell_anims/skull_smoke_purple.png',
+        // --- Spell VFX (Phase 2) ---
+        spell_fire_green: 'asset/opengameart/spell_anims/fire_green.png',
+        spell_fire_purple: 'asset/opengameart/spell_anims/fire_purple.png',
+        spell_fire_yellow: 'asset/opengameart/spell_anims/fire_yellow.png',
+        spell_fireball_blue: 'asset/opengameart/spell_anims/fireball_blue.png',
+        // --- Spell Effects (Unused pack → now used as Diablo2-ish impact GIFs) ---
+        fx_sign_of_fire: 'asset/opengameart/spell_effects/fx4_sign_of_fire.gif',
+        fx_black_explosion: 'asset/opengameart/spell_effects/fx10_blackExplosion.gif',
+        fx_rain_ground: 'asset/opengameart/spell_effects/fx9_rainOnGround.gif',
+        fx_energy_ball: 'asset/opengameart/spell_effects/fx7_energyBall.gif',
+        spell_sphere_blue: 'asset/opengameart/spell_anims/sphere_blue.png',
+        spell_sphere_purple: 'asset/opengameart/spell_anims/sphere_purple.png',
+        spell_sphere_yellow: 'asset/opengameart/spell_anims/sphere_yellow.png',
+        spell_skull_smoke_green: 'asset/opengameart/spell_anims/skull_smoke_green.png',
+        spell_skull_smoke_purple: 'asset/opengameart/spell_anims/skull_smoke_purple.png',
         spell_arrows_green: 'asset/opengameart/spell_anims/arrows_green.png',
         spell_arrows_yellow: 'asset/opengameart/spell_anims/arrows_yellow.png',
         vfx_impact_air: 'asset/opengameart/vfx/rpg_vfx_pack/16_frames/vfx_sequence_x16_air.png',
@@ -439,8 +439,10 @@ const OGA_ITEM_ICON_MAP = {
 // Rarity-based icon overrides (rare+ items get alternate icon variants)
 function getItemIconKey(typeKey, rarity) {
     if (rarity >= 3) { // rare or better
-        const rareOverrides = { ring: 'icon_ring2', amulet: 'icon_necklace2', rune: 'icon_rune2',
-            shield: 'icon_case', helmet: 'icon_case2', grandCharm: 'icon_crystal' };
+        const rareOverrides = {
+            ring: 'icon_ring2', amulet: 'icon_necklace2', rune: 'icon_rune2',
+            shield: 'icon_case', helmet: 'icon_case2', grandCharm: 'icon_crystal'
+        };
         if (rareOverrides[typeKey]) return rareOverrides[typeKey];
     }
     return OGA_ITEM_ICON_MAP[typeKey] || null;
@@ -478,7 +480,7 @@ function getFacingDir8(dx, dy) {
     // atan2(dy,dx): right=0, down=PI/2, left=PI, up=-PI/2
     // Our sprite order: S(0), SW(1), W(2), NW(3), N(4), NE(5), E(6), SE(7)
     // S = down = PI/2, SW = 3PI/4, W = PI, NW = -3PI/4, N = -PI/2, NE = -PI/4, E = 0, SE = PI/4
-    const dirAngles = [Math.PI/2, Math.PI*3/4, Math.PI, -Math.PI*3/4, -Math.PI/2, -Math.PI/4, 0, Math.PI/4];
+    const dirAngles = [Math.PI / 2, Math.PI * 3 / 4, Math.PI, -Math.PI * 3 / 4, -Math.PI / 2, -Math.PI / 4, 0, Math.PI / 4];
     let bestIdx = 0, bestDist = Infinity;
     for (let i = 0; i < 8; i++) {
         let diff = Math.abs(angle - dirAngles[i]);
@@ -541,7 +543,7 @@ function drawSpr(key, dx, dy, dw, dh, flipX, dropShadow) {
     if (dropShadow) {
         ctx.fillStyle = 'rgba(0,0,0,0.25)';
         ctx.beginPath();
-        ctx.ellipse(dx + dw/2, dy + dh - 2, dw * 0.35, 3, 0, 0, Math.PI * 2);
+        ctx.ellipse(dx + dw / 2, dy + dh - 2, dw * 0.35, 3, 0, 0, Math.PI * 2);
         ctx.fill();
     }
     if (flipX) {
@@ -662,15 +664,15 @@ function breakDungeonProp(tx, ty, prop) {
     addFloatingText(px, py - 18, 'BREAK', '#caa06a');
 
     const globalF = getGlobalFloor(G.act, G.actFloor, G.cycle);
-	        const goldAmt = rand(6 + globalF * 2, 20 + globalF * 5);
-	        G.gold += goldAmt;
-	        addFloatingText(px, py - 34, `+${goldAmt}G`, '#ffd700');
-	        // D2-ish: breakables are nice-to-have, not loot pinatas.
-	        if (Math.random() < 0.08) dropItem(px, py, generatePotion(Math.random() < 0.65 ? 'hp' : 'mp'));
-	        if (Math.random() < 0.03) dropItem(px, py, generateItem(globalF, Math.random() < 0.08 ? 'magic' : null));
-	        addLog('壊せるオブジェクトを破壊した', '#b28a55');
-	        return true;
-	    }
+    const goldAmt = rand(6 + globalF * 2, 20 + globalF * 5);
+    G.gold += goldAmt;
+    addFloatingText(px, py - 34, `+${goldAmt}G`, '#ffd700');
+    // D2-ish: breakables are nice-to-have, not loot pinatas.
+    if (Math.random() < 0.08) dropItem(px, py, generatePotion(Math.random() < 0.65 ? 'hp' : 'mp'));
+    if (Math.random() < 0.03) dropItem(px, py, generateItem(globalF, Math.random() < 0.08 ? 'magic' : null));
+    addLog('壊せるオブジェクトを破壊した', '#b28a55');
+    return true;
+}
 
 function tryBreakNearbyDungeonProps(cx, cy, range, maxBreak = 1) {
     if (!dungeon || G.inTown || maxBreak <= 0) return 0;
@@ -1091,34 +1093,34 @@ let ambientDripTimer = 0;
 // ACT-specific ambient sound sets
 const ACT_AMBIENT = {
     1: [ // Cathedral: drips, chains, stone, ghosts
-        () => { const f=1500+Math.random()*1000; playSound(f,'sine',0.06,0.025); setTimeout(()=>playSound(f*0.7,'sine',0.05,0.015),100+Math.random()*80); },
-        () => { for(let i=0;i<3;i++) setTimeout(()=>playNoise(0.02,0.015,4000+Math.random()*2000),i*60); },
-        () => { playSweep(60,40,0.3,'sawtooth',0.008); },
-        () => { playSweep(200,150,0.6,'sine',0.01); setTimeout(()=>playSweep(170,130,0.4,'sine',0.006),300); }
+        () => { const f = 1500 + Math.random() * 1000; playSound(f, 'sine', 0.06, 0.025); setTimeout(() => playSound(f * 0.7, 'sine', 0.05, 0.015), 100 + Math.random() * 80); },
+        () => { for (let i = 0; i < 3; i++) setTimeout(() => playNoise(0.02, 0.015, 4000 + Math.random() * 2000), i * 60); },
+        () => { playSweep(60, 40, 0.3, 'sawtooth', 0.008); },
+        () => { playSweep(200, 150, 0.6, 'sine', 0.01); setTimeout(() => playSweep(170, 130, 0.4, 'sine', 0.006), 300); }
     ],
     2: [ // Desert: wind, sand, distant rumble
-        () => { playNoise(1.0,0.015,600); playSweep(300,100,0.8,'sine',0.004); },
-        () => { playNoise(0.3,0.01,1200); },
-        () => { playNoise(0.5,0.015,250); playSound(30,'sine',0.4,0.008); },
-        () => { playSweep(800,400,0.5,'sine',0.003); }
+        () => { playNoise(1.0, 0.015, 600); playSweep(300, 100, 0.8, 'sine', 0.004); },
+        () => { playNoise(0.3, 0.01, 1200); },
+        () => { playNoise(0.5, 0.015, 250); playSound(30, 'sine', 0.4, 0.008); },
+        () => { playSweep(800, 400, 0.5, 'sine', 0.003); }
     ],
     3: [ // Jungle: insects, birds, rain, frogs
-        () => { for(let i=0;i<5;i++) setTimeout(()=>playSound(3000+Math.random()*2000,'sine',0.02,0.008),i*40); },
-        () => { playSweep(2000,1500,0.3,'sine',0.006); setTimeout(()=>playSweep(1800,1200,0.25,'sine',0.004),200); },
-        () => { for(let i=0;i<8;i++) setTimeout(()=>playNoise(0.01,0.004,6000),i*30+Math.random()*20); },
-        () => { playSound(150,'square',0.1,0.008); setTimeout(()=>playSound(120,'square',0.08,0.006),200); }
+        () => { for (let i = 0; i < 5; i++) setTimeout(() => playSound(3000 + Math.random() * 2000, 'sine', 0.02, 0.008), i * 40); },
+        () => { playSweep(2000, 1500, 0.3, 'sine', 0.006); setTimeout(() => playSweep(1800, 1200, 0.25, 'sine', 0.004), 200); },
+        () => { for (let i = 0; i < 8; i++) setTimeout(() => playNoise(0.01, 0.004, 6000), i * 30 + Math.random() * 20); },
+        () => { playSound(150, 'square', 0.1, 0.008); setTimeout(() => playSound(120, 'square', 0.08, 0.006), 200); }
     ],
     4: [ // Hell: fire, screams, explosions, lava
-        () => { playNoise(0.8,0.02,200); playSound(25,'sawtooth',0.6,0.01); },
-        () => { playSweep(400,100,0.5,'sawtooth',0.012); },
-        () => { playNoise(0.2,0.025,150); playSound(40,'sine',0.3,0.015); },
-        () => { playSweep(600,200,0.4,'sine',0.008); setTimeout(()=>playSweep(500,150,0.3,'sine',0.005),150); }
+        () => { playNoise(0.8, 0.02, 200); playSound(25, 'sawtooth', 0.6, 0.01); },
+        () => { playSweep(400, 100, 0.5, 'sawtooth', 0.012); },
+        () => { playNoise(0.2, 0.025, 150); playSound(40, 'sine', 0.3, 0.015); },
+        () => { playSweep(600, 200, 0.4, 'sine', 0.008); setTimeout(() => playSweep(500, 150, 0.3, 'sine', 0.005), 150); }
     ],
     5: [ // Ice: wind, cracking ice, crystals, howl
-        () => { playNoise(1.2,0.012,1000); playSweep(500,300,0.8,'sine',0.003); },
-        () => { playSound(2500,'sine',0.03,0.015); setTimeout(()=>playSound(3000,'sine',0.02,0.01),100); },
-        () => { for(let i=0;i<3;i++) setTimeout(()=>playSound(4000+Math.random()*1000,'sine',0.01,0.006),i*80); },
-        () => { playSweep(300,150,0.8,'sine',0.008); }
+        () => { playNoise(1.2, 0.012, 1000); playSweep(500, 300, 0.8, 'sine', 0.003); },
+        () => { playSound(2500, 'sine', 0.03, 0.015); setTimeout(() => playSound(3000, 'sine', 0.02, 0.01), 100); },
+        () => { for (let i = 0; i < 3; i++) setTimeout(() => playSound(4000 + Math.random() * 1000, 'sine', 0.01, 0.006), i * 80); },
+        () => { playSweep(300, 150, 0.8, 'sine', 0.008); }
     ]
 };
 
@@ -1320,7 +1322,7 @@ function initSaveSlot() {
         if (slot >= 1 && slot <= SAVE_SLOT_COUNT) G.saveSlot = slot;
     } catch (e) { /* ignore */ }
 }
-window.setSaveSlot = function(slot) {
+window.setSaveSlot = function (slot) {
     if (slot < 1 || slot > SAVE_SLOT_COUNT) return;
     G.saveSlot = slot;
     try { localStorage.setItem(SAVE_SLOT_KEY, String(slot)); } catch (e) { /* ignore */ }
@@ -1358,66 +1360,76 @@ renderTitleSaveMenu();
 
 // ========== ACT / CHAPTER DEFINITIONS ==========
 const ACT_DEFS = {
-    1: { name:'地下聖堂', nameEn:'Cathedral', floors:5, tileTheme:'cathedral',
-         floorColors:{base:[24,22,20], wall:'#3d3228', mortar:'#1e1610'},
-         wallColors:{primary:'#44382c',secondary:'#403428',tertiary:'#3e3226'},
-         lightTint:{warm:'rgba(255,160,64,',cold:'rgba(0,0,5,'},
-         monsterTypes:['skeleton','zombie'], bossType:'skeleton_king', bossFloor:5,
-         townName:'修道院の村', townBG:'#1a140e',
-         areas:[
-             {name:'聖堂入口', floors:[1,2], density:'low'},
-             {name:'地下墓地', floors:[3,4], density:'medium'},
-             {name:'骸骨王の間', floors:[5], density:'boss'}
-         ],
-         monsterPool:{common:['skeleton','zombie'], elite:[], boss:['skeleton_king']} },
-    2: { name:'砂漠遺跡', nameEn:'Desert Ruins', floors:5, tileTheme:'desert',
-         floorColors:{base:[38,32,22], wall:'#5a4830', mortar:'#2a2018'},
-         wallColors:{primary:'#6a5838',secondary:'#5e4e30',tertiary:'#524428'},
-         lightTint:{warm:'rgba(255,180,80,',cold:'rgba(10,5,0,'},
-         monsterTypes:['mummy','scarab','sand_golem'], bossType:'sand_worm', bossFloor:5,
-         townName:'砂漠のオアシス', townBG:'#1e1a10',
-         areas:[
-             {name:'砂漠の門', floors:[1,2], density:'low'},
-             {name:'古代墓地', floors:[3,4], density:'medium'},
-             {name:'砂虫の巣', floors:[5], density:'boss'}
-         ],
-         monsterPool:{common:['mummy','scarab','sand_golem'], elite:[], boss:['sand_worm']} },
-    3: { name:'密林神殿', nameEn:'Jungle Temple', floors:5, tileTheme:'jungle',
-         floorColors:{base:[18,28,16], wall:'#2a3a22', mortar:'#162010'},
-         wallColors:{primary:'#304828',secondary:'#2a4022',tertiary:'#263a1e'},
-         lightTint:{warm:'rgba(180,220,100,',cold:'rgba(0,10,5,'},
-         monsterTypes:['treeant','poison_spider','jungle_shaman'], bossType:'archmage', bossFloor:5,
-         townName:'クラスト港', townBG:'#0e1a0e',
-         areas:[
-             {name:'密林の入口', floors:[1,2], density:'low'},
-             {name:'蜘蛛の洞窟', floors:[3,4], density:'medium'},
-             {name:'大魔導師の間', floors:[5], density:'boss'}
-         ],
-         monsterPool:{common:['treeant','poison_spider','jungle_shaman'], elite:[], boss:['archmage']} },
-    4: { name:'地獄', nameEn:'Hell', floors:3, tileTheme:'hell',
-         floorColors:{base:[30,10,8], wall:'#4a1a10', mortar:'#280e08'},
-         wallColors:{primary:'#5a2018',secondary:'#4e1a12',tertiary:'#42160e'},
-         lightTint:{warm:'rgba(255,80,30,',cold:'rgba(20,0,0,'},
-         monsterTypes:['demon','hellhound','imp'], bossType:'demon_lord', bossFloor:3,
-         townName:'要塞', townBG:'#1a0808',
-         areas:[
-             {name:'地獄の門', floors:[1], density:'medium'},
-             {name:'炎獄', floors:[2], density:'high'},
-             {name:'魔王の間', floors:[3], density:'boss'}
-         ],
-         monsterPool:{common:['demon','hellhound','imp'], elite:[], boss:['demon_lord']} },
-    5: { name:'氷の山', nameEn:'Frozen Mountain', floors:5, tileTheme:'ice',
-         floorColors:{base:[18,22,30], wall:'#283848', mortar:'#1a2430'},
-         wallColors:{primary:'#304050',secondary:'#283848',tertiary:'#223040'},
-         lightTint:{warm:'rgba(100,150,255,',cold:'rgba(0,0,20,'},
-         monsterTypes:['frost_zombie','ice_wraith','yeti'], bossType:'ice_queen', bossFloor:5,
-         townName:'ハログス', townBG:'#0a1020',
-         areas:[
-             {name:'氷の入口', floors:[1,2], density:'low'},
-             {name:'凍てつく洞窟', floors:[3,4], density:'medium'},
-             {name:'氷の女王の間', floors:[5], density:'boss'}
-         ],
-         monsterPool:{common:['frost_zombie','ice_wraith','yeti'], elite:[], boss:['ice_queen']} }
+    1: {
+        name: '地下聖堂', nameEn: 'Cathedral', floors: 5, tileTheme: 'cathedral',
+        floorColors: { base: [24, 22, 20], wall: '#3d3228', mortar: '#1e1610' },
+        wallColors: { primary: '#44382c', secondary: '#403428', tertiary: '#3e3226' },
+        lightTint: { warm: 'rgba(255,160,64,', cold: 'rgba(0,0,5,' },
+        monsterTypes: ['skeleton', 'zombie'], bossType: 'skeleton_king', bossFloor: 5,
+        townName: '修道院の村', townBG: '#1a140e',
+        areas: [
+            { name: '聖堂入口', floors: [1, 2], density: 'low' },
+            { name: '地下墓地', floors: [3, 4], density: 'medium' },
+            { name: '骸骨王の間', floors: [5], density: 'boss' }
+        ],
+        monsterPool: { common: ['skeleton', 'zombie'], elite: [], boss: ['skeleton_king'] }
+    },
+    2: {
+        name: '砂漠遺跡', nameEn: 'Desert Ruins', floors: 5, tileTheme: 'desert',
+        floorColors: { base: [38, 32, 22], wall: '#5a4830', mortar: '#2a2018' },
+        wallColors: { primary: '#6a5838', secondary: '#5e4e30', tertiary: '#524428' },
+        lightTint: { warm: 'rgba(255,180,80,', cold: 'rgba(10,5,0,' },
+        monsterTypes: ['mummy', 'scarab', 'sand_golem'], bossType: 'sand_worm', bossFloor: 5,
+        townName: '砂漠のオアシス', townBG: '#1e1a10',
+        areas: [
+            { name: '砂漠の門', floors: [1, 2], density: 'low' },
+            { name: '古代墓地', floors: [3, 4], density: 'medium' },
+            { name: '砂虫の巣', floors: [5], density: 'boss' }
+        ],
+        monsterPool: { common: ['mummy', 'scarab', 'sand_golem'], elite: [], boss: ['sand_worm'] }
+    },
+    3: {
+        name: '密林神殿', nameEn: 'Jungle Temple', floors: 5, tileTheme: 'jungle',
+        floorColors: { base: [18, 28, 16], wall: '#2a3a22', mortar: '#162010' },
+        wallColors: { primary: '#304828', secondary: '#2a4022', tertiary: '#263a1e' },
+        lightTint: { warm: 'rgba(180,220,100,', cold: 'rgba(0,10,5,' },
+        monsterTypes: ['treeant', 'poison_spider', 'jungle_shaman'], bossType: 'archmage', bossFloor: 5,
+        townName: 'クラスト港', townBG: '#0e1a0e',
+        areas: [
+            { name: '密林の入口', floors: [1, 2], density: 'low' },
+            { name: '蜘蛛の洞窟', floors: [3, 4], density: 'medium' },
+            { name: '大魔導師の間', floors: [5], density: 'boss' }
+        ],
+        monsterPool: { common: ['treeant', 'poison_spider', 'jungle_shaman'], elite: [], boss: ['archmage'] }
+    },
+    4: {
+        name: '地獄', nameEn: 'Hell', floors: 3, tileTheme: 'hell',
+        floorColors: { base: [30, 10, 8], wall: '#4a1a10', mortar: '#280e08' },
+        wallColors: { primary: '#5a2018', secondary: '#4e1a12', tertiary: '#42160e' },
+        lightTint: { warm: 'rgba(255,80,30,', cold: 'rgba(20,0,0,' },
+        monsterTypes: ['demon', 'hellhound', 'imp'], bossType: 'demon_lord', bossFloor: 3,
+        townName: '要塞', townBG: '#1a0808',
+        areas: [
+            { name: '地獄の門', floors: [1], density: 'medium' },
+            { name: '炎獄', floors: [2], density: 'high' },
+            { name: '魔王の間', floors: [3], density: 'boss' }
+        ],
+        monsterPool: { common: ['demon', 'hellhound', 'imp'], elite: [], boss: ['demon_lord'] }
+    },
+    5: {
+        name: '氷の山', nameEn: 'Frozen Mountain', floors: 5, tileTheme: 'ice',
+        floorColors: { base: [18, 22, 30], wall: '#283848', mortar: '#1a2430' },
+        wallColors: { primary: '#304050', secondary: '#283848', tertiary: '#223040' },
+        lightTint: { warm: 'rgba(100,150,255,', cold: 'rgba(0,0,20,' },
+        monsterTypes: ['frost_zombie', 'ice_wraith', 'yeti'], bossType: 'ice_queen', bossFloor: 5,
+        townName: 'ハログス', townBG: '#0a1020',
+        areas: [
+            { name: '氷の入口', floors: [1, 2], density: 'low' },
+            { name: '凍てつく洞窟', floors: [3, 4], density: 'medium' },
+            { name: '氷の女王の間', floors: [5], density: 'boss' }
+        ],
+        monsterPool: { common: ['frost_zombie', 'ice_wraith', 'yeti'], elite: [], boss: ['ice_queen'] }
+    }
 };
 const TOTAL_ACT_FLOORS = 23; // 5+5+5+3+5
 
@@ -1489,9 +1501,9 @@ function getXPPenalty(playerLevel, monsterLevel) {
 }
 function getCurrentActDef() { return ACT_DEFS[G.act]; }
 const DIFFICULTY_DEFS = {
-    normal:    { name: 'ノーマル', color: '#cccccc', mult: 1.0, xpMult: 1.0, dropBonus: 0, respenalty: 0 },
+    normal: { name: 'ノーマル', color: '#cccccc', mult: 1.0, xpMult: 1.0, dropBonus: 0, respenalty: 0 },
     nightmare: { name: 'ナイトメア', color: '#ffaa44', mult: 1.7, xpMult: 1.5, dropBonus: 0.15, respenalty: 40 },
-    hell:      { name: 'ヘル', color: '#ff4444', mult: 2.8, xpMult: 2.0, dropBonus: 0.30, respenalty: 100 }
+    hell: { name: 'ヘル', color: '#ff4444', mult: 2.8, xpMult: 2.0, dropBonus: 0.30, respenalty: 100 }
 };
 function getDifficultyMult() { return DIFFICULTY_DEFS[G.difficulty || 'normal'].mult; }
 function getCycleMult() { return (1 + G.cycle * 0.6) * getDifficultyMult(); }
@@ -1499,68 +1511,84 @@ function isBossFloor() { return G.actFloor === getCurrentActDef().bossFloor; }
 
 // ========== BOSS DEFINITIONS ==========
 const BOSS_DEFS = {
-    skeleton_king: { name:'骸骨王', icon:'👑💀', hp:1024, dmg:40, spd:55, r:22, xp:1000, defense:25,
-        color:'#d4a44a', phases:[
-            {hpPct:1.0, type:'melee'},
-            {hpPct:0.6, type:'summon', count:4, summonType:'skeleton', cd:8},
-            {hpPct:0.3, type:'nova', count:12, cd:5, projSpd:200, projDmg:25, projColor:'#ffffaa'}
-        ]},
-    sand_worm: { name:'砂蟲', icon:'🐛', hp:2000, dmg:50, spd:50, r:24, xp:1500, defense:90,
-        color:'#aa8833', phases:[
-            {hpPct:1.0, type:'burrow', cd:6},
-            {hpPct:0.6, type:'poison_spray', cd:4, count:5, projSpd:180, projDmg:20, projColor:'#44cc00'},
-            {hpPct:0.3, type:'quake', cd:5, dmg:30, radius:150}
-        ]},
-    archmage: { name:'大魔導師', icon:'🧙', hp:3000, dmg:55, spd:65, r:18, xp:2000, defense:70,
-        color:'#6644cc', phases:[
-            {hpPct:1.0, type:'teleport_attack', cd:3},
-            {hpPct:0.6, type:'nova', count:8, cd:4, projSpd:220, projDmg:30, projColor:'#aa44ff'},
-            {hpPct:0.3, type:'summon', count:3, summonType:'jungle_shaman', cd:10}
-        ]},
-    demon_lord: { name:'魔王', icon:'👿🔥', hp:5000, dmg:70, spd:60, r:26, xp:3000, defense:120,
-        color:'#cc2200', phases:[
-            {hpPct:1.0, type:'melee'},
-            {hpPct:0.75, type:'fire_breath', cd:5, count:7, projSpd:200, projDmg:35, projColor:'#ff6600'},
-            {hpPct:0.5, type:'summon', count:3, summonType:'demon', cd:10},
-            {hpPct:0.25, type:'meteor', cd:8, count:5, dmg:50, radius:80}
-        ]},
-    ice_queen: { name:'氷の女王', icon:'👸❄', hp:8000, dmg:80, spd:60, r:20, xp:4000, defense:150,
-        color:'#88ccff', phases:[
-            {hpPct:1.0, type:'nova', count:6, cd:3, projSpd:200, projDmg:25, projColor:'#aaddff'},
-            {hpPct:0.5, type:'freeze_aura', cd:6, radius:120, dmg:15},
-            {hpPct:0.25, type:'blizzard', cd:8, count:12, dmg:35, radius:200}
-        ]}
+    skeleton_king: {
+        name: '骸骨王', icon: '👑💀', hp: 1024, dmg: 40, spd: 55, r: 22, xp: 1000, defense: 25,
+        color: '#d4a44a', phases: [
+            { hpPct: 1.0, type: 'melee' },
+            { hpPct: 0.6, type: 'summon', count: 4, summonType: 'skeleton', cd: 8 },
+            { hpPct: 0.3, type: 'nova', count: 12, cd: 5, projSpd: 200, projDmg: 25, projColor: '#ffffaa' }
+        ]
+    },
+    sand_worm: {
+        name: '砂蟲', icon: '🐛', hp: 2000, dmg: 50, spd: 50, r: 24, xp: 1500, defense: 90,
+        color: '#aa8833', phases: [
+            { hpPct: 1.0, type: 'burrow', cd: 6 },
+            { hpPct: 0.6, type: 'poison_spray', cd: 4, count: 5, projSpd: 180, projDmg: 20, projColor: '#44cc00' },
+            { hpPct: 0.3, type: 'quake', cd: 5, dmg: 30, radius: 150 }
+        ]
+    },
+    archmage: {
+        name: '大魔導師', icon: '🧙', hp: 3000, dmg: 55, spd: 65, r: 18, xp: 2000, defense: 70,
+        color: '#6644cc', phases: [
+            { hpPct: 1.0, type: 'teleport_attack', cd: 3 },
+            { hpPct: 0.6, type: 'nova', count: 8, cd: 4, projSpd: 220, projDmg: 30, projColor: '#aa44ff' },
+            { hpPct: 0.3, type: 'summon', count: 3, summonType: 'jungle_shaman', cd: 10 }
+        ]
+    },
+    demon_lord: {
+        name: '魔王', icon: '👿🔥', hp: 5000, dmg: 70, spd: 60, r: 26, xp: 3000, defense: 120,
+        color: '#cc2200', phases: [
+            { hpPct: 1.0, type: 'melee' },
+            { hpPct: 0.75, type: 'fire_breath', cd: 5, count: 7, projSpd: 200, projDmg: 35, projColor: '#ff6600' },
+            { hpPct: 0.5, type: 'summon', count: 3, summonType: 'demon', cd: 10 },
+            { hpPct: 0.25, type: 'meteor', cd: 8, count: 5, dmg: 50, radius: 80 }
+        ]
+    },
+    ice_queen: {
+        name: '氷の女王', icon: '👸❄', hp: 8000, dmg: 80, spd: 60, r: 20, xp: 4000, defense: 150,
+        color: '#88ccff', phases: [
+            { hpPct: 1.0, type: 'nova', count: 6, cd: 3, projSpd: 200, projDmg: 25, projColor: '#aaddff' },
+            { hpPct: 0.5, type: 'freeze_aura', cd: 6, radius: 120, dmg: 15 },
+            { hpPct: 0.25, type: 'blizzard', cd: 8, count: 12, dmg: 35, radius: 200 }
+        ]
+    }
 };
 
 // ========== UBER BOSS SYSTEM ==========
 // 3 Uber Keys drop from Act bosses on Nightmare/Hell difficulty
 // Combine all 3 keys at the Uber NPC to open a portal to the Uber Tristram
 const UBER_KEY_DEFS = {
-    key_terror:   { name: '恐怖の鍵', icon: '🗝', color: '#ff4444', desc: '混沌の門を開く鍵の1つ', fromBoss: 'demon_lord' },
-    key_hate:     { name: '憎悪の鍵', icon: '🗝', color: '#44ff44', desc: '混沌の門を開く鍵の1つ', fromBoss: 'archmage' },
+    key_terror: { name: '恐怖の鍵', icon: '🗝', color: '#ff4444', desc: '混沌の門を開く鍵の1つ', fromBoss: 'demon_lord' },
+    key_hate: { name: '憎悪の鍵', icon: '🗝', color: '#44ff44', desc: '混沌の門を開く鍵の1つ', fromBoss: 'archmage' },
     key_destruction: { name: '破壊の鍵', icon: '🗝', color: '#4488ff', desc: '混沌の門を開く鍵の1つ', fromBoss: 'ice_queen' }
 };
 const UBER_BOSS_DEFS = {
-    uber_diablo: { name: 'パンデモニウム・ディアブロ', icon: '👿🔥', hp: 30000, dmg: 180, spd: 70, r: 30, xp: 15000, defense: 400,
+    uber_diablo: {
+        name: 'パンデモニウム・ディアブロ', icon: '👿🔥', hp: 30000, dmg: 180, spd: 70, r: 30, xp: 15000, defense: 400,
         color: '#ff2200', immunities: { fire: 100, lightning: 50 }, phases: [
             { hpPct: 1.0, type: 'melee' },
             { hpPct: 0.75, type: 'fire_breath', cd: 4, count: 10, projSpd: 250, projDmg: 80, projColor: '#ff4400' },
             { hpPct: 0.5, type: 'nova', count: 16, cd: 3, projSpd: 220, projDmg: 60, projColor: '#ff6600' },
             { hpPct: 0.25, type: 'meteor', cd: 6, count: 8, dmg: 100, radius: 120 }
-        ]},
-    uber_mephisto: { name: 'パンデモニウム・メフィスト', icon: '🧙‍♂️💀', hp: 22000, dmg: 150, spd: 80, r: 24, xp: 12000, defense: 350,
+        ]
+    },
+    uber_mephisto: {
+        name: 'パンデモニウム・メフィスト', icon: '🧙‍♂️💀', hp: 22000, dmg: 150, spd: 80, r: 24, xp: 12000, defense: 350,
         color: '#6644cc', immunities: { cold: 100, poison: 50 }, phases: [
             { hpPct: 1.0, type: 'teleport_attack', cd: 2 },
             { hpPct: 0.6, type: 'nova', count: 12, cd: 3, projSpd: 240, projDmg: 70, projColor: '#aa44ff' },
             { hpPct: 0.3, type: 'summon', count: 4, summonType: 'demon', cd: 8 }
-        ]},
-    uber_baal: { name: 'パンデモニウム・バール', icon: '👁🌀', hp: 40000, dmg: 200, spd: 65, r: 32, xp: 20000, defense: 500,
+        ]
+    },
+    uber_baal: {
+        name: 'パンデモニウム・バール', icon: '👁🌀', hp: 40000, dmg: 200, spd: 65, r: 32, xp: 20000, defense: 500,
         color: '#88ccff', immunities: { cold: 100, fire: 50 }, phases: [
             { hpPct: 1.0, type: 'nova', count: 8, cd: 4, projSpd: 200, projDmg: 50, projColor: '#aaddff' },
             { hpPct: 0.7, type: 'freeze_aura', cd: 5, radius: 150, dmg: 30 },
             { hpPct: 0.4, type: 'summon', count: 5, summonType: 'frost_zombie', cd: 7 },
             { hpPct: 0.2, type: 'blizzard', cd: 6, count: 16, dmg: 70, radius: 250 }
-        ]}
+        ]
+    }
 };
 // Torch reward for uber completion
 const UBER_TORCH_DEF = {
@@ -1576,77 +1604,99 @@ const UBER_TORCH_DEF = {
 
 // ========== QUEST DEFINITIONS ==========
 const QUEST_DEFS = {
-    q_act1_den: { act:1, name:'悪の巣窟', type:'kill_count', target:30,
-        desc:'地下聖堂の悪しき力を浄化せよ', rewards:{xp:300, gold:200, skillReset:true} },
-    q_act1_main: { act:1, name:'骸骨王の討伐', type:'kill_boss', target:'skeleton_king',
-        desc:'地下聖堂の最深部に巣くう骸骨王を倒せ', rewards:{xp:1000, gold:500, item:'rare'} },
-    q_act1_clear: { act:1, name:'聖堂の浄化', type:'kill_count', target:50,
-        desc:'地下聖堂のモンスターを50体倒せ', rewards:{xp:500, gold:300} },
-    q_act2_main: { act:2, name:'砂蟲の退治', type:'kill_boss', target:'sand_worm', prereq:'q_act1_main',
-        desc:'砂漠の地下に潜む巨大砂蟲を倒せ', rewards:{xp:1500, gold:800, item:'rare'} },
-    q_act2_clear: { act:2, name:'遺跡の調査', type:'kill_count', target:60,
-        desc:'砂漠遺跡のモンスターを60体倒せ', rewards:{xp:800, gold:400} },
-    q_act3_main: { act:3, name:'大魔導師の打倒', type:'kill_boss', target:'archmage', prereq:'q_act2_main',
-        desc:'密林神殿の大魔導師を倒せ', rewards:{xp:2000, gold:1200, item:'legendary'} },
-    q_act3_clear: { act:3, name:'密林の制圧', type:'kill_count', target:70,
-        desc:'密林神殿のモンスターを70体倒せ', rewards:{xp:1000, gold:500} },
-    q_act4_main: { act:4, name:'魔王の討滅', type:'kill_boss', target:'demon_lord', prereq:'q_act3_main',
-        desc:'地獄の奥底に君臨する魔王を倒せ', rewards:{xp:3000, gold:2000, item:'legendary'} },
-    q_act4_clear: { act:4, name:'地獄の鎮圧', type:'kill_count', target:50,
-        desc:'地獄のモンスターを50体倒せ', rewards:{xp:1500, gold:800} },
-    q_act5_main: { act:5, name:'氷の女王の討伐', type:'kill_boss', target:'ice_queen', prereq:'q_act4_main',
-        desc:'氷の山頂に住む氷の女王を倒せ', rewards:{xp:4000, gold:3000, item:'unique'} },
-    q_act5_clear: { act:5, name:'氷山の掃討', type:'kill_count', target:80,
-        desc:'氷の山のモンスターを80体倒せ', rewards:{xp:2000, gold:1000} }
+    q_act1_den: {
+        act: 1, name: '悪の巣窟', type: 'kill_count', target: 30,
+        desc: '地下聖堂の悪しき力を浄化せよ', rewards: { xp: 300, gold: 200, skillReset: true }
+    },
+    q_act1_main: {
+        act: 1, name: '骸骨王の討伐', type: 'kill_boss', target: 'skeleton_king',
+        desc: '地下聖堂の最深部に巣くう骸骨王を倒せ', rewards: { xp: 1000, gold: 500, item: 'rare' }
+    },
+    q_act1_clear: {
+        act: 1, name: '聖堂の浄化', type: 'kill_count', target: 50,
+        desc: '地下聖堂のモンスターを50体倒せ', rewards: { xp: 500, gold: 300 }
+    },
+    q_act2_main: {
+        act: 2, name: '砂蟲の退治', type: 'kill_boss', target: 'sand_worm', prereq: 'q_act1_main',
+        desc: '砂漠の地下に潜む巨大砂蟲を倒せ', rewards: { xp: 1500, gold: 800, item: 'rare' }
+    },
+    q_act2_clear: {
+        act: 2, name: '遺跡の調査', type: 'kill_count', target: 60,
+        desc: '砂漠遺跡のモンスターを60体倒せ', rewards: { xp: 800, gold: 400 }
+    },
+    q_act3_main: {
+        act: 3, name: '大魔導師の打倒', type: 'kill_boss', target: 'archmage', prereq: 'q_act2_main',
+        desc: '密林神殿の大魔導師を倒せ', rewards: { xp: 2000, gold: 1200, item: 'legendary' }
+    },
+    q_act3_clear: {
+        act: 3, name: '密林の制圧', type: 'kill_count', target: 70,
+        desc: '密林神殿のモンスターを70体倒せ', rewards: { xp: 1000, gold: 500 }
+    },
+    q_act4_main: {
+        act: 4, name: '魔王の討滅', type: 'kill_boss', target: 'demon_lord', prereq: 'q_act3_main',
+        desc: '地獄の奥底に君臨する魔王を倒せ', rewards: { xp: 3000, gold: 2000, item: 'legendary' }
+    },
+    q_act4_clear: {
+        act: 4, name: '地獄の鎮圧', type: 'kill_count', target: 50,
+        desc: '地獄のモンスターを50体倒せ', rewards: { xp: 1500, gold: 800 }
+    },
+    q_act5_main: {
+        act: 5, name: '氷の女王の討伐', type: 'kill_boss', target: 'ice_queen', prereq: 'q_act4_main',
+        desc: '氷の山頂に住む氷の女王を倒せ', rewards: { xp: 4000, gold: 3000, item: 'unique' }
+    },
+    q_act5_clear: {
+        act: 5, name: '氷山の掃討', type: 'kill_count', target: 80,
+        desc: '氷の山のモンスターを80体倒せ', rewards: { xp: 2000, gold: 1000 }
+    }
 };
 
 // ========== TOWN NPC DEFINITIONS ==========
 const TOWN_NPC_DEFS = {
     1: [
-        { id:'merchant_1', name:'商人マーロ', icon:'🧑‍💼', sprite:'npcShopkeep', hiresClass:'rogue', type:'shop', dialog:['品物を見ていくかい？何でも揃ってるよ。','良い防具があれば命を救うぞ。'] },
-        { id:'smith_1', name:'鍛冶屋グリスウォルド', icon:'⚒', sprite:'npcBlacksmith', hiresClass:'warrior', type:'blacksmith', dialog:['武器を鍛えてやろう。','良い鉄を使えば、切れ味が違う。'] },
-        { id:'stash_1', name:'倉庫番カイン', icon:'📦', sprite:'npcScholar', hiresClass:'base', type:'stash', dialog:['預かり物はここに置いていけ。','倉庫はいつでも使えるぞ。'] },
-        { id:'quest_1', name:'長老アカラ', icon:'👵', sprite:'npcElderlyW', hiresClass:'mage', type:'quest', dialog:['勇者よ、地下聖堂の魔物を退治してくれ。','骸骨王が復活したのだ...'] },
-        { id:'wp_1', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] },
-        { id:'merc_1', name:'傭兵ギルド長カシア', icon:'⚔', sprite:'npcWarClericF', hiresClass:'warrior', type:'mercenary', dialog:['傭兵を雇いたいか？腕利きが揃ってるよ。'] },
-        { id:'gamble_1', name:'賭博師ガイード', icon:'🎰', sprite:'npcPeasant1', hiresClass:'rogue', type:'gamble', dialog:['運試しはどうだい？何が出るかは開けてのお楽しみさ。'] }
+        { id: 'merchant_1', name: '商人マーロ', icon: '🧑‍💼', sprite: 'npcShopkeep', hiresClass: 'rogue', type: 'shop', dialog: ['品物を見ていくかい？何でも揃ってるよ。', '良い防具があれば命を救うぞ。'] },
+        { id: 'smith_1', name: '鍛冶屋グリスウォルド', icon: '⚒', sprite: 'npcBlacksmith', hiresClass: 'warrior', type: 'blacksmith', dialog: ['武器を鍛えてやろう。', '良い鉄を使えば、切れ味が違う。'] },
+        { id: 'stash_1', name: '倉庫番カイン', icon: '📦', sprite: 'npcScholar', hiresClass: 'base', type: 'stash', dialog: ['預かり物はここに置いていけ。', '倉庫はいつでも使えるぞ。'] },
+        { id: 'quest_1', name: '長老アカラ', icon: '👵', sprite: 'npcElderlyW', hiresClass: 'mage', type: 'quest', dialog: ['勇者よ、地下聖堂の魔物を退治してくれ。', '骸骨王が復活したのだ...'] },
+        { id: 'wp_1', name: 'ウェイポイント', icon: '🌀', type: 'waypoint', dialog: [] },
+        { id: 'merc_1', name: '傭兵ギルド長カシア', icon: '⚔', sprite: 'npcWarClericF', hiresClass: 'warrior', type: 'mercenary', dialog: ['傭兵を雇いたいか？腕利きが揃ってるよ。'] },
+        { id: 'gamble_1', name: '賭博師ガイード', icon: '🎰', sprite: 'npcPeasant1', hiresClass: 'rogue', type: 'gamble', dialog: ['運試しはどうだい？何が出るかは開けてのお楽しみさ。'] }
     ],
     2: [
-        { id:'merchant_2', name:'商人エルジクス', icon:'🧑‍💼', sprite:'npcShopkeep', hiresClass:'rogue', type:'shop', dialog:['砂漠の品は珍しいぞ。','水よりも価値のある物がある。'] },
-        { id:'smith_2', name:'鍛冶屋ファーラ', icon:'⚒', sprite:'npcBlacksmith', hiresClass:'warrior', type:'blacksmith', dialog:['砂漠の鉄は硬いが...鍛えがいがある。'] },
-        { id:'stash_2', name:'倉庫番メシフ', icon:'📦', sprite:'npcPeasant1', hiresClass:'base', type:'stash', dialog:['荷物はここに預けろ。'] },
-        { id:'quest_2', name:'賢者ドロガン', icon:'🧔', sprite:'npcDesertSage', hiresClass:'mage', type:'quest', dialog:['砂漠の地下に巨大な蟲がいる...退治してくれ。'] },
-        { id:'wp_2', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] },
-        { id:'merc_2', name:'傭兵隊長グレイズ', icon:'⚔', sprite:'npcWarClericM', hiresClass:'warrior', type:'mercenary', dialog:['砂漠で鍛えた兵がいる。雇うか？'] },
-        { id:'gamble_2', name:'賭博師アルール', icon:'🎰', sprite:'npcPeasant1', hiresClass:'rogue', type:'gamble', dialog:['砂漠の宝石が入ってるかもよ？'] }
+        { id: 'merchant_2', name: '商人エルジクス', icon: '🧑‍💼', sprite: 'npcShopkeep', hiresClass: 'rogue', type: 'shop', dialog: ['砂漠の品は珍しいぞ。', '水よりも価値のある物がある。'] },
+        { id: 'smith_2', name: '鍛冶屋ファーラ', icon: '⚒', sprite: 'npcBlacksmith', hiresClass: 'warrior', type: 'blacksmith', dialog: ['砂漠の鉄は硬いが...鍛えがいがある。'] },
+        { id: 'stash_2', name: '倉庫番メシフ', icon: '📦', sprite: 'npcPeasant1', hiresClass: 'base', type: 'stash', dialog: ['荷物はここに預けろ。'] },
+        { id: 'quest_2', name: '賢者ドロガン', icon: '🧔', sprite: 'npcDesertSage', hiresClass: 'mage', type: 'quest', dialog: ['砂漠の地下に巨大な蟲がいる...退治してくれ。'] },
+        { id: 'wp_2', name: 'ウェイポイント', icon: '🌀', type: 'waypoint', dialog: [] },
+        { id: 'merc_2', name: '傭兵隊長グレイズ', icon: '⚔', sprite: 'npcWarClericM', hiresClass: 'warrior', type: 'mercenary', dialog: ['砂漠で鍛えた兵がいる。雇うか？'] },
+        { id: 'gamble_2', name: '賭博師アルール', icon: '🎰', sprite: 'npcPeasant1', hiresClass: 'rogue', type: 'gamble', dialog: ['砂漠の宝石が入ってるかもよ？'] }
     ],
     3: [
-        { id:'merchant_3', name:'商人アシェラ', icon:'🧑‍💼', sprite:'npcShopkeep', hiresClass:'rogue', type:'shop', dialog:['密林の収穫品だ、見てくれ。'] },
-        { id:'smith_3', name:'鍛冶屋ヘファスト', icon:'⚒', sprite:'npcBlacksmith', hiresClass:'warrior', type:'blacksmith', dialog:['神殿の金属は特殊だ...鍛え直してやろう。'] },
-        { id:'stash_3', name:'倉庫番ナタリヤ', icon:'📦', sprite:'npcWarClericF', hiresClass:'base', type:'stash', dialog:['安全に保管してあるわ。'] },
-        { id:'quest_3', name:'巫女オーマス', icon:'🧙‍♀', sprite:'npcWarClericM', hiresClass:'mage', type:'quest', dialog:['大魔導師が神殿を支配している...倒してくれ。'] },
-        { id:'wp_3', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] },
-        { id:'merc_3', name:'傭兵長アシェラ', icon:'⚔', sprite:'npcWarClericF', hiresClass:'warrior', type:'mercenary', dialog:['密林の戦士を紹介しよう。'] },
-        { id:'gamble_3', name:'賭博師リア', icon:'🎰', sprite:'npcElderlyW', hiresClass:'rogue', type:'gamble', dialog:['密林には隠された宝がある...賭けてみるかい？'] }
+        { id: 'merchant_3', name: '商人アシェラ', icon: '🧑‍💼', sprite: 'npcShopkeep', hiresClass: 'rogue', type: 'shop', dialog: ['密林の収穫品だ、見てくれ。'] },
+        { id: 'smith_3', name: '鍛冶屋ヘファスト', icon: '⚒', sprite: 'npcBlacksmith', hiresClass: 'warrior', type: 'blacksmith', dialog: ['神殿の金属は特殊だ...鍛え直してやろう。'] },
+        { id: 'stash_3', name: '倉庫番ナタリヤ', icon: '📦', sprite: 'npcWarClericF', hiresClass: 'base', type: 'stash', dialog: ['安全に保管してあるわ。'] },
+        { id: 'quest_3', name: '巫女オーマス', icon: '🧙‍♀', sprite: 'npcWarClericM', hiresClass: 'mage', type: 'quest', dialog: ['大魔導師が神殿を支配している...倒してくれ。'] },
+        { id: 'wp_3', name: 'ウェイポイント', icon: '🌀', type: 'waypoint', dialog: [] },
+        { id: 'merc_3', name: '傭兵長アシェラ', icon: '⚔', sprite: 'npcWarClericF', hiresClass: 'warrior', type: 'mercenary', dialog: ['密林の戦士を紹介しよう。'] },
+        { id: 'gamble_3', name: '賭博師リア', icon: '🎰', sprite: 'npcElderlyW', hiresClass: 'rogue', type: 'gamble', dialog: ['密林には隠された宝がある...賭けてみるかい？'] }
     ],
     4: [
-        { id:'merchant_4', name:'商人ジャメラ', icon:'🧑‍💼', sprite:'npcShopkeep', hiresClass:'rogue', type:'shop', dialog:['地獄でも商売は続く...'] },
-        { id:'smith_4', name:'鍛冶屋ハルバ', icon:'⚒', sprite:'npcBlacksmith', hiresClass:'warrior', type:'blacksmith', dialog:['地獄の炎で鍛えた武器は一味違う。'] },
-        { id:'stash_4', name:'倉庫番ティラエル', icon:'📦', sprite:'templar', hiresClass:'base', type:'stash', dialog:['ここなら安全だ。'] },
-        { id:'quest_4', name:'天使ハラティ', icon:'👼', sprite:'priest', hiresClass:'mage', type:'quest', dialog:['魔王を倒さねば世界が滅ぶ...頼む。'] },
-        { id:'wp_4', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] },
-        { id:'merc_4', name:'傭兵ギルド長ティリエル', icon:'⚔', sprite:'templar', hiresClass:'warrior', type:'mercenary', dialog:['地獄でも戦える兵士がいる。'] },
-        { id:'gamble_4', name:'賭博師ジャム', icon:'🎰', sprite:'npcDesertSage', hiresClass:'rogue', type:'gamble', dialog:['地獄の品を賭けてみるか？命を賭ける価値はあるぞ。'] }
+        { id: 'merchant_4', name: '商人ジャメラ', icon: '🧑‍💼', sprite: 'npcShopkeep', hiresClass: 'rogue', type: 'shop', dialog: ['地獄でも商売は続く...'] },
+        { id: 'smith_4', name: '鍛冶屋ハルバ', icon: '⚒', sprite: 'npcBlacksmith', hiresClass: 'warrior', type: 'blacksmith', dialog: ['地獄の炎で鍛えた武器は一味違う。'] },
+        { id: 'stash_4', name: '倉庫番ティラエル', icon: '📦', sprite: 'templar', hiresClass: 'base', type: 'stash', dialog: ['ここなら安全だ。'] },
+        { id: 'quest_4', name: '天使ハラティ', icon: '👼', sprite: 'priest', hiresClass: 'mage', type: 'quest', dialog: ['魔王を倒さねば世界が滅ぶ...頼む。'] },
+        { id: 'wp_4', name: 'ウェイポイント', icon: '🌀', type: 'waypoint', dialog: [] },
+        { id: 'merc_4', name: '傭兵ギルド長ティリエル', icon: '⚔', sprite: 'templar', hiresClass: 'warrior', type: 'mercenary', dialog: ['地獄でも戦える兵士がいる。'] },
+        { id: 'gamble_4', name: '賭博師ジャム', icon: '🎰', sprite: 'npcDesertSage', hiresClass: 'rogue', type: 'gamble', dialog: ['地獄の品を賭けてみるか？命を賭ける価値はあるぞ。'] }
     ],
     5: [
-        { id:'merchant_5', name:'商人アーニャ', icon:'🧑‍💼', sprite:'npcShopkeep', hiresClass:'rogue', type:'shop', dialog:['氷の品は貴重よ。'] },
-        { id:'smith_5', name:'鍛冶屋ラーズク', icon:'⚒', sprite:'npcBlacksmith', hiresClass:'warrior', type:'blacksmith', dialog:['凍てつく金属...だが鍛えられる。'] },
-        { id:'stash_5', name:'倉庫番ニーラサック', icon:'📦', sprite:'npcElderlyM', hiresClass:'base', type:'stash', dialog:['預かるぞ。'] },
-        { id:'quest_5', name:'賢者マラス', icon:'🧓', sprite:'npcElderlyM', hiresClass:'mage', type:'quest', dialog:['氷の女王が山を支配している...最後の戦いだ。'] },
-        { id:'wp_5', name:'ウェイポイント', icon:'🌀', type:'waypoint', dialog:[] },
-        { id:'uber_5', name:'闘技場の門番', icon:'🌀', sprite:'npcScholar', hiresClass:'mage', type:'uber_portal', dialog:['3つの鍵を集めたか？パンデモニウムへの門を開こう...'], requireDifficulty: true },
-        { id:'merc_5', name:'傭兵長ラーズク', icon:'⚔', sprite:'npcWarClericM', hiresClass:'warrior', type:'mercenary', dialog:['氷の戦士を紹介しよう。'] },
-        { id:'gamble_5', name:'賭博師ニーラ', icon:'🎰', sprite:'npcElderlyW', hiresClass:'rogue', type:'gamble', dialog:['氷の中に眠る宝...引き当てられるかしら？'] }
+        { id: 'merchant_5', name: '商人アーニャ', icon: '🧑‍💼', sprite: 'npcShopkeep', hiresClass: 'rogue', type: 'shop', dialog: ['氷の品は貴重よ。'] },
+        { id: 'smith_5', name: '鍛冶屋ラーズク', icon: '⚒', sprite: 'npcBlacksmith', hiresClass: 'warrior', type: 'blacksmith', dialog: ['凍てつく金属...だが鍛えられる。'] },
+        { id: 'stash_5', name: '倉庫番ニーラサック', icon: '📦', sprite: 'npcElderlyM', hiresClass: 'base', type: 'stash', dialog: ['預かるぞ。'] },
+        { id: 'quest_5', name: '賢者マラス', icon: '🧓', sprite: 'npcElderlyM', hiresClass: 'mage', type: 'quest', dialog: ['氷の女王が山を支配している...最後の戦いだ。'] },
+        { id: 'wp_5', name: 'ウェイポイント', icon: '🌀', type: 'waypoint', dialog: [] },
+        { id: 'uber_5', name: '闘技場の門番', icon: '🌀', sprite: 'npcScholar', hiresClass: 'mage', type: 'uber_portal', dialog: ['3つの鍵を集めたか？パンデモニウムへの門を開こう...'], requireDifficulty: true },
+        { id: 'merc_5', name: '傭兵長ラーズク', icon: '⚔', sprite: 'npcWarClericM', hiresClass: 'warrior', type: 'mercenary', dialog: ['氷の戦士を紹介しよう。'] },
+        { id: 'gamble_5', name: '賭博師ニーラ', icon: '🎰', sprite: 'npcElderlyW', hiresClass: 'rogue', type: 'gamble', dialog: ['氷の中に眠る宝...引き当てられるかしら？'] }
     ]
 };
 
@@ -1665,7 +1715,7 @@ function _rng() { return _useSeededRng ? mulberry32() : Math.random(); }
 
 // --- Utility ---
 function escapeHtml(str) {
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 const rand = (a, b) => Math.floor(_rng() * (b - a + 1)) + a;
 const randf = (a, b) => _rng() * (b - a) + a;
@@ -1913,13 +1963,13 @@ function emitParticles(x, y, color, count, speed = 80, life = 0.5, size = 3, gra
         const a = randf(0, Math.PI * 2);
         const s = randf(20, speed);
         particles.push(new Particle(
-            x + randf(-4,4),
-            y + randf(-4,4),
-            Math.cos(a)*s,
-            Math.sin(a)*s,
+            x + randf(-4, 4),
+            y + randf(-4, 4),
+            Math.cos(a) * s,
+            Math.sin(a) * s,
             color,
-            randf(life*0.5, life),
-            randf(size*0.5, size*1.5),
+            randf(life * 0.5, life),
+            randf(size * 0.5, size * 1.5),
             grav,
             attribute,  // NEW
             skillLevel  // NEW
@@ -1931,7 +1981,7 @@ function emitParticles(x, y, color, count, speed = 80, life = 0.5, size = 3, gra
         setTimeout(() => {
             if (particles.length < MAX_PARTICLES - 5) {
                 for (let i = 0; i < 3; i++) {
-                    particles.push(new Particle(x, y, randf(-20,20), randf(-20,20), color, 0.2, 1, 0, attribute, skillLevel));
+                    particles.push(new Particle(x, y, randf(-20, 20), randf(-20, 20), color, 0.2, 1, 0, attribute, skillLevel));
                 }
             }
         }, 50);
@@ -2148,21 +2198,21 @@ function addFloatingText(x, y, text, color, big = false, force = false) {
     floatingTexts.push({ x, y, text: String(text), color, life: 1.2, maxLife: 1.2, big, vy: -60 });
 }
 
-	    // ========== SPELL IMPACT EFFECT SYSTEM ==========
-	    const worldEffects = [];
-	    const SPELL_ANIM_MAP = {
-	        // Prefer Diablo2-like punchy impact GIFs when available.
-	        fire: { mode: 'gif', key: 'fx_sign_of_fire', duration: 0.55, drawMult: 3.1 },
-	        ice: { key: 'spell_flash_freeze', cols: 8, cellW: 512, cellH: 512, frames: 96, duration: 0.6 },
-	        heal: { key: 'spell_flash_heal', cols: 5, cellW: 288, cellH: 320, frames: 60, duration: 0.8 },
-	        lightning: { mode: 'gif', key: 'fx_energy_ball', duration: 0.55, drawMult: 3.0 },
-	        poison: { mode: 'gif', key: 'fx_rain_ground', duration: 0.6, drawMult: 3.3 },
-	        dark: { mode: 'gif', key: 'fx_black_explosion', duration: 0.6, drawMult: 3.2 },
-	        cold: { key: 'spell_fireball_blue', cols: 4, cellW: 512, cellH: 384, frames: 40, duration: 0.5 },
-	        buff_ice: { key: 'spell_sphere_blue', cols: 6, cellW: 128, cellH: 128, frames: 30, duration: 0.8 },
-	        buff_dark: { key: 'spell_sphere_purple', cols: 6, cellW: 128, cellH: 128, frames: 30, duration: 0.8 },
-	        buff_lightning: { key: 'spell_sphere_yellow', cols: 6, cellW: 128, cellH: 128, frames: 30, duration: 0.8 },
-	        skull_poison: { key: 'spell_skull_smoke_green', cols: 19, cellW: 192, cellH: 512, frames: 19, duration: 0.6 },
+// ========== SPELL IMPACT EFFECT SYSTEM ==========
+const worldEffects = [];
+const SPELL_ANIM_MAP = {
+    // Prefer Diablo2-like punchy impact GIFs when available.
+    fire: { mode: 'gif', key: 'fx_sign_of_fire', duration: 0.55, drawMult: 3.1 },
+    ice: { key: 'spell_flash_freeze', cols: 8, cellW: 512, cellH: 512, frames: 96, duration: 0.6 },
+    heal: { key: 'spell_flash_heal', cols: 5, cellW: 288, cellH: 320, frames: 60, duration: 0.8 },
+    lightning: { mode: 'gif', key: 'fx_energy_ball', duration: 0.55, drawMult: 3.0 },
+    poison: { mode: 'gif', key: 'fx_rain_ground', duration: 0.6, drawMult: 3.3 },
+    dark: { mode: 'gif', key: 'fx_black_explosion', duration: 0.6, drawMult: 3.2 },
+    cold: { key: 'spell_fireball_blue', cols: 4, cellW: 512, cellH: 384, frames: 40, duration: 0.5 },
+    buff_ice: { key: 'spell_sphere_blue', cols: 6, cellW: 128, cellH: 128, frames: 30, duration: 0.8 },
+    buff_dark: { key: 'spell_sphere_purple', cols: 6, cellW: 128, cellH: 128, frames: 30, duration: 0.8 },
+    buff_lightning: { key: 'spell_sphere_yellow', cols: 6, cellW: 128, cellH: 128, frames: 30, duration: 0.8 },
+    skull_poison: { key: 'spell_skull_smoke_green', cols: 19, cellW: 192, cellH: 512, frames: 19, duration: 0.6 },
     skull_dark: { key: 'spell_skull_smoke_purple', cols: 19, cellW: 192, cellH: 512, frames: 19, duration: 0.6 },
     arrows_poison: { key: 'spell_arrows_green', cols: 4, cellW: 256, cellH: 256, frames: 24, duration: 0.5 },
     arrows_lightning: { key: 'spell_arrows_yellow', cols: 4, cellW: 256, cellH: 256, frames: 24, duration: 0.5 },
@@ -2171,40 +2221,40 @@ function spawnWorldEffect(wx, wy, type, scale) {
     if (!type || !SPELL_ANIM_MAP[type]) return;
     worldEffects.push({ x: wx, y: wy, type, scale: scale || 1, start: G.time });
 }
-	    function drawWorldEffects(camX, camY) {
-	        for (let i = worldEffects.length - 1; i >= 0; i--) {
-	            const eff = worldEffects[i];
-	            const anim = SPELL_ANIM_MAP[eff.type];
-	            if (!anim) { worldEffects.splice(i, 1); continue; }
-	            const img = OGA[anim.key];
-	            if (!img) { worldEffects.splice(i, 1); continue; }
-	            const elapsed = G.time - eff.start;
-	            if (elapsed >= anim.duration) { worldEffects.splice(i, 1); continue; }
-	            const progress = elapsed / anim.duration;
-	            const prevAlpha = ctx.globalAlpha;
-	            ctx.globalAlpha = (1 - progress * 0.7) * 0.8;
-            const esp = worldToScreen(eff.x, eff.y);
+function drawWorldEffects(camX, camY) {
+    for (let i = worldEffects.length - 1; i >= 0; i--) {
+        const eff = worldEffects[i];
+        const anim = SPELL_ANIM_MAP[eff.type];
+        if (!anim) { worldEffects.splice(i, 1); continue; }
+        const img = OGA[anim.key];
+        if (!img) { worldEffects.splice(i, 1); continue; }
+        const elapsed = G.time - eff.start;
+        if (elapsed >= anim.duration) { worldEffects.splice(i, 1); continue; }
+        const progress = elapsed / anim.duration;
+        const prevAlpha = ctx.globalAlpha;
+        ctx.globalAlpha = (1 - progress * 0.7) * 0.8;
+        const esp = worldToScreen(eff.x, eff.y);
 
-	            if (anim.mode === 'gif') {
-	                const drawSz = TILE * (anim.drawMult || 3.0) * eff.scale;
-	                const dx = esp.x - drawSz / 2;
-	                const dy = esp.y - drawSz / 2;
-	                // Animated GIFs advance internally; we just keep drawing them each frame.
-	                ctx.drawImage(img, dx, dy, drawSz, drawSz);
-	            } else {
-	                const frame = Math.min(Math.floor(progress * anim.frames), anim.frames - 1);
-	                const col = frame % anim.cols;
-	                const row = Math.floor(frame / anim.cols);
-	                const sx = col * anim.cellW, sy = row * anim.cellH;
-	                const drawSz = TILE * 2.5 * eff.scale;
-	                const dx = esp.x - drawSz / 2;
-	                const dy = esp.y - drawSz / 2;
-	                ctx.drawImage(img, sx, sy, anim.cellW, anim.cellH, dx, dy, drawSz, drawSz);
-	            }
+        if (anim.mode === 'gif') {
+            const drawSz = TILE * (anim.drawMult || 3.0) * eff.scale;
+            const dx = esp.x - drawSz / 2;
+            const dy = esp.y - drawSz / 2;
+            // Animated GIFs advance internally; we just keep drawing them each frame.
+            ctx.drawImage(img, dx, dy, drawSz, drawSz);
+        } else {
+            const frame = Math.min(Math.floor(progress * anim.frames), anim.frames - 1);
+            const col = frame % anim.cols;
+            const row = Math.floor(frame / anim.cols);
+            const sx = col * anim.cellW, sy = row * anim.cellH;
+            const drawSz = TILE * 2.5 * eff.scale;
+            const dx = esp.x - drawSz / 2;
+            const dy = esp.y - drawSz / 2;
+            ctx.drawImage(img, sx, sy, anim.cellW, anim.cellH, dx, dy, drawSz, drawSz);
+        }
 
-	            ctx.globalAlpha = prevAlpha;
-	        }
-	    }
+        ctx.globalAlpha = prevAlpha;
+    }
+}
 
 // ========== TILE TEXTURE SYSTEM (Offscreen Canvas) ==========
 // Pre-render tile textures for much better visual quality
@@ -2213,7 +2263,7 @@ const TILE_TEXTURES = {};
 function generateTileTextures(theme) {
     theme = theme || 'cathedral';
     const actDef = Object.values(ACT_DEFS).find(a => a.tileTheme === theme) || ACT_DEFS[1];
-    const themeColors = actDef.floorColors || { base: [24,22,20] };
+    const themeColors = actDef.floorColors || { base: [24, 22, 20] };
     const themeWall = actDef.wallColors || {};
 
     // Helper: create noise pattern on a canvas
@@ -2223,8 +2273,8 @@ function generateTileTextures(theme) {
         for (let i = 0; i < d.length; i += 4) {
             const n = (Math.random() - 0.5) * intensity;
             d[i] = clamp(d[i] + n * r, 0, 255);
-            d[i+1] = clamp(d[i+1] + n * g, 0, 255);
-            d[i+2] = clamp(d[i+2] + n * b, 0, 255);
+            d[i + 1] = clamp(d[i + 1] + n * g, 0, 255);
+            d[i + 2] = clamp(d[i + 2] + n * b, 0, 255);
         }
         tctx.putImageData(id, 0, 0);
     }
@@ -2332,9 +2382,9 @@ function generateTileTextures(theme) {
     wc2.fillStyle = '#44382c';
     wc2.fillRect(2, thirdH + 1, TILE - 4, thirdH - 2);
     wc2.fillStyle = '#3c3026';
-    wc2.fillRect(2, thirdH * 2 + 1, TILE * 2/3 - 3, thirdH - 3);
+    wc2.fillRect(2, thirdH * 2 + 1, TILE * 2 / 3 - 3, thirdH - 3);
     wc2.fillStyle = '#403428';
-    wc2.fillRect(TILE * 2/3 + 1, thirdH * 2 + 1, TILE / 3 - 3, thirdH - 3);
+    wc2.fillRect(TILE * 2 / 3 + 1, thirdH * 2 + 1, TILE / 3 - 3, thirdH - 3);
     wc2.strokeStyle = '#1e1610';
     wc2.lineWidth = 1;
     wc2.beginPath();
@@ -2344,7 +2394,7 @@ function generateTileTextures(theme) {
     wc2.beginPath();
     wc2.moveTo(TILE / 2, 0); wc2.lineTo(TILE / 2, thirdH); wc2.stroke();
     wc2.beginPath();
-    wc2.moveTo(TILE * 2/3, thirdH * 2); wc2.lineTo(TILE * 2/3, TILE); wc2.stroke();
+    wc2.moveTo(TILE * 2 / 3, thirdH * 2); wc2.lineTo(TILE * 2 / 3, TILE); wc2.stroke();
     wc2.fillStyle = 'rgba(255,240,200,0.04)';
     wc2.fillRect(0, 0, TILE, 2);
     addNoise(wc2, TILE, TILE, 10, 1, 0.85, 0.65);
@@ -2434,8 +2484,8 @@ function generateTileTextures(theme) {
     const gdata = gid.data;
     for (let i = 0; i < gdata.length; i += 4) {
         const v = (Math.random() * 30) | 0;
-        gdata[i] = gdata[i+1] = gdata[i+2] = v;
-        gdata[i+3] = 25;
+        gdata[i] = gdata[i + 1] = gdata[i + 2] = v;
+        gdata[i + 3] = 25;
     }
     gctx.putImageData(gid, 0, 0);
     TILE_TEXTURES['grain'] = grainC;
@@ -2443,9 +2493,9 @@ function generateTileTextures(theme) {
     // Override tile textures with sprite sheet if loaded
     if (spritesLoaded && SPRITES.tiles) {
         const overrides = {
-            wall:'wallTop', wall2:'wallSide1', deep_wall:'deepWall',
-            floor_0:'floorBlank', floor_1:'floor1', floor_2:'floor2', floor_3:'floor3',
-            blood_0:'blood1', blood_1:'blood2', blood_2:'corpse1'
+            wall: 'wallTop', wall2: 'wallSide1', deep_wall: 'deepWall',
+            floor_0: 'floorBlank', floor_1: 'floor1', floor_2: 'floor2', floor_3: 'floor3',
+            blood_0: 'blood1', blood_1: 'blood2', blood_2: 'corpse1'
         };
         for (const [texKey, atlasKey] of Object.entries(overrides)) {
             const a = ATLAS[atlasKey];
@@ -2472,7 +2522,7 @@ function generateTileTextures(theme) {
     // --- DUNGEON TILESET OVERRIDE (pre-rendered 3D stone tiles) ---
     // Replaces procedural floor tiles with dungeon_tileset isometric tiles
     // Crop strategy: top face of isometric block (sx=25, sy=0, sw=400, sh=215)
-    const DT_TILES = ['dt_tile1','dt_tile2','dt_tile3','dt_tile4','dt_tile5','dt_tile6','dt_tile7'];
+    const DT_TILES = ['dt_tile1', 'dt_tile2', 'dt_tile3', 'dt_tile4', 'dt_tile5', 'dt_tile6', 'dt_tile7'];
     const DT_ACT_TINT = {
         cathedral: null,                    // gray stone as-is
         desert: 'rgb(240,220,180)',         // warm sandstone
@@ -2562,9 +2612,9 @@ function generateTileTextures(theme) {
         // Floor tiles: 9 variants from the auto-tile interior region
         // In the 10×10 grid, cols 1-3 rows 1-3 contain floor and transition tiles
         const pdFloor = [
-            [1,1], [2,1], [3,1],
-            [1,2], [2,2], [3,2],
-            [1,3], [2,3], [3,3],
+            [1, 1], [2, 1], [3, 1],
+            [1, 2], [2, 2], [3, 2],
+            [1, 3], [2, 3], [3, 3],
         ];
         for (let v = 0; v < 9; v++) {
             const [col, row] = pdFloor[v];
@@ -2618,7 +2668,7 @@ function generateTileTextures(theme) {
     }
 
     // --- GLOBAL DARKENING PASS (multiply composite) ---
-    const darkenKeys = ['floor_0','floor_1','floor_2','floor_3','floor_4','floor_5','floor_6','floor_7','floor_8','wall','wall2'];
+    const darkenKeys = ['floor_0', 'floor_1', 'floor_2', 'floor_3', 'floor_4', 'floor_5', 'floor_6', 'floor_7', 'floor_8', 'wall', 'wall2'];
     for (const key of darkenKeys) {
         const tex = TILE_TEXTURES[key];
         if (!tex) continue;
@@ -2626,7 +2676,7 @@ function generateTileTextures(theme) {
         tc.globalCompositeOperation = 'multiply';
         // Minimal darkening for pixel art tileset (preserve detail), heavier for procedural
         tc.fillStyle = ogaLoaded && OGA.pixel_dungeon_ts ? 'rgb(252,250,248)' :
-                       (ogaLoaded && OGA.dt_tile1 ? 'rgb(240,235,230)' : 'rgb(220,215,210)');
+            (ogaLoaded && OGA.dt_tile1 ? 'rgb(240,235,230)' : 'rgb(220,215,210)');
         tc.fillRect(0, 0, tex.width, tex.height);
         tc.globalCompositeOperation = 'source-over';
     }
@@ -2651,9 +2701,9 @@ class Dungeon {
         for (let y = 0; y < MAP_H; y++) {
             for (let x = 0; x < MAP_W; x++) {
                 if (this.get(x, y) !== 0) continue;
-                const isExposed = this.walkable(x, y+1) || this.walkable(x+1, y) || this.walkable(x-1, y) || this.walkable(x, y-1);
+                const isExposed = this.walkable(x, y + 1) || this.walkable(x + 1, y) || this.walkable(x - 1, y) || this.walkable(x, y - 1);
                 if (isExposed && (x * 7 + y * 13) % 29 === 0) {
-                    this.torchPositions.push({ wx: x * TILE + TILE/2, wy: y * TILE + TILE/2 - 4, seed: x * 3 + y * 5 });
+                    this.torchPositions.push({ wx: x * TILE + TILE / 2, wy: y * TILE + TILE / 2 - 4, seed: x * 3 + y * 5 });
                 }
             }
         }
@@ -2703,14 +2753,14 @@ class Dungeon {
             }
             if (!valid) continue;
 
-            this.rooms.push({ x: rx, y: ry, w, h, cx: rx + (w>>1), cy: ry + (h>>1) });
+            this.rooms.push({ x: rx, y: ry, w, h, cx: rx + (w >> 1), cy: ry + (h >> 1) });
 
             // Carve room with optional irregular edges
             for (let yy = ry; yy < ry + h; yy++) {
                 for (let xx = rx; xx < rx + w; xx++) {
                     // Cut corners for organic feel
                     const isCorner = (xx === rx && yy === ry) || (xx === rx + w - 1 && yy === ry) ||
-                                    (xx === rx && yy === ry + h - 1) || (xx === rx + w - 1 && yy === ry + h - 1);
+                        (xx === rx && yy === ry + h - 1) || (xx === rx + w - 1 && yy === ry + h - 1);
                     if (isCorner && _rng() < 0.4) continue;
                     this.set(xx, yy, 1);
                 }
@@ -2835,7 +2885,7 @@ class Dungeon {
             for (let dx = -tr; dx <= tr; dx++) {
                 const xx = tx + dx, yy = ty + dy;
                 if (xx >= 0 && xx < MAP_W && yy >= 0 && yy < MAP_H) {
-                    if (dx*dx + dy*dy <= tr*tr) {
+                    if (dx * dx + dy * dy <= tr * tr) {
                         if (!this.explored[this.idx(xx, yy)]) this.minimapDirty = true;
                         this.explored[this.idx(xx, yy)] = 1;
                     }
@@ -2905,26 +2955,26 @@ class Dungeon {
                         const fl = Math.sin(G.time * 8 + x * 3 + y * 5) * 3;
                         // Outer soft glow (large, faint)
                         const outerR = 55 + fl * 4;
-                        const outerG = ctx.createRadialGradient(sx + TILE/2, sy + TILE/2 - 4, 0, sx + TILE/2, sy + TILE/2 - 4, outerR);
+                        const outerG = ctx.createRadialGradient(sx + TILE / 2, sy + TILE / 2 - 4, 0, sx + TILE / 2, sy + TILE / 2 - 4, outerR);
                         outerG.addColorStop(0, 'rgba(255,160,64,0.15)');
                         outerG.addColorStop(0.4, 'rgba(255,96,16,0.06)');
                         outerG.addColorStop(1, 'rgba(255,80,10,0)');
                         ctx.fillStyle = outerG;
-                        ctx.fillRect(sx + TILE/2 - outerR, sy + TILE/2 - 4 - outerR, outerR * 2, outerR * 2);
+                        ctx.fillRect(sx + TILE / 2 - outerR, sy + TILE / 2 - 4 - outerR, outerR * 2, outerR * 2);
                         drawSpr('torch' + torchFrame, sx, sy, TILE, TILE);
                         // Inner core glow (small, bright)
                         const innerR = 12 + fl;
-                        const innerG = ctx.createRadialGradient(sx + TILE/2, sy + TILE/2 - 8, 0, sx + TILE/2, sy + TILE/2 - 8, innerR);
+                        const innerG = ctx.createRadialGradient(sx + TILE / 2, sy + TILE / 2 - 8, 0, sx + TILE / 2, sy + TILE / 2 - 8, innerR);
                         innerG.addColorStop(0, 'rgba(255,220,140,0.3)');
                         innerG.addColorStop(0.5, 'rgba(255,160,64,0.12)');
                         innerG.addColorStop(1, 'rgba(255,128,32,0)');
                         ctx.fillStyle = innerG;
-                        ctx.fillRect(sx + TILE/2 - innerR, sy + TILE/2 - 8 - innerR, innerR * 2, innerR * 2);
+                        ctx.fillRect(sx + TILE / 2 - innerR, sy + TILE / 2 - 8 - innerR, innerR * 2, innerR * 2);
                     }
 
                     // Pillar detection (isolated wall surrounded by floor on 3+ sides)
                     if (isExposed) {
-                        const floorCount = (hasFloorBelow?1:0) + (this.walkable(x+1,y)?1:0) + (this.walkable(x-1,y)?1:0) + (this.walkable(x,y-1)?1:0);
+                        const floorCount = (hasFloorBelow ? 1 : 0) + (this.walkable(x + 1, y) ? 1 : 0) + (this.walkable(x - 1, y) ? 1 : 0) + (this.walkable(x, y - 1) ? 1 : 0);
                         if (floorCount >= 3) {
                             // Draw as pillar with highlight
                             ctx.fillStyle = 'rgba(255,240,200,0.03)';
@@ -2978,12 +3028,12 @@ class Dungeon {
                         if (isHovered || isTargeted) {
                             const highlightColor = isTargeted ? 'rgba(255,200,80,0.4)' : 'rgba(255,220,120,0.35)';
                             const glowRadius = TILE * 0.8;
-                            const glow = ctx.createRadialGradient(sx + TILE/2, sy + TILE/2, 0, sx + TILE/2, sy + TILE/2, glowRadius);
+                            const glow = ctx.createRadialGradient(sx + TILE / 2, sy + TILE / 2, 0, sx + TILE / 2, sy + TILE / 2, glowRadius);
                             glow.addColorStop(0, highlightColor);
                             glow.addColorStop(0.5, 'rgba(255,200,80,0.15)');
                             glow.addColorStop(1, 'rgba(255,180,60,0)');
                             ctx.fillStyle = glow;
-                            ctx.fillRect(sx - glowRadius/2, sy - glowRadius/2, glowRadius * 1.5, glowRadius * 1.5);
+                            ctx.fillRect(sx - glowRadius / 2, sy - glowRadius / 2, glowRadius * 1.5, glowRadius * 1.5);
                         }
                         drawKenneyDungeonProp(prop.key, sx, sy, prop.scale);
                     }
@@ -3002,19 +3052,19 @@ class Dungeon {
 
                     // D2-style gold ethereal glow
                     const glowPulse = Math.sin(G.time * 2.5) * 0.05;
-                    const sg = ctx.createRadialGradient(sx + TILE/2, sy + TILE/2, 0, sx + TILE/2, sy + TILE/2, TILE * 1.3);
+                    const sg = ctx.createRadialGradient(sx + TILE / 2, sy + TILE / 2, 0, sx + TILE / 2, sy + TILE / 2, TILE * 1.3);
                     sg.addColorStop(0, `rgba(200,170,80,${0.3 + glowPulse})`);
                     sg.addColorStop(0.3, `rgba(180,140,50,${0.15 + glowPulse})`);
                     sg.addColorStop(0.6, 'rgba(160,120,40,0.05)');
                     sg.addColorStop(1, 'rgba(140,100,30,0)');
                     ctx.fillStyle = sg;
-                    ctx.fillRect(sx - TILE/2, sy - TILE/2, TILE * 2, TILE * 2);
+                    ctx.fillRect(sx - TILE / 2, sy - TILE / 2, TILE * 2, TILE * 2);
 
                     // Gold sparkles
                     for (let i = 0; i < 4; i++) {
                         const sa = G.time * 2 + i * 1.57;
-                        const spx = sx + TILE/2 + Math.cos(sa) * 14;
-                        const spy = sy + TILE/2 + Math.sin(sa * 1.3) * 10 - 4;
+                        const spx = sx + TILE / 2 + Math.cos(sa) * 14;
+                        const spy = sy + TILE / 2 + Math.sin(sa * 1.3) * 10 - 4;
                         ctx.fillStyle = `rgba(220,190,100,${0.25 + Math.sin(sa * 3) * 0.15})`;
                         ctx.beginPath();
                         ctx.arc(spx, spy, 1.5, 0, Math.PI * 2);
@@ -3039,7 +3089,7 @@ class Dungeon {
                     ctx.globalAlpha = 0.12;
                     ctx.fillStyle = '#c8a030';
                     ctx.beginPath();
-                    ctx.arc(sx + TILE/2, sy + TILE/2, TILE * 0.6, 0, Math.PI * 2);
+                    ctx.arc(sx + TILE / 2, sy + TILE / 2, TILE * 0.6, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.globalAlpha = 1;
                 }
@@ -3131,16 +3181,16 @@ class Dungeon {
 
 // ========== ITEM SYSTEM ==========
 const ITEM_TYPES = {
-    sword:   { name: '剣', icon: '⚔', slot: 'weapon', baseDmg: [5, 12] },
-    axe:     { name: '戦斧', icon: '🪓', slot: 'weapon', baseDmg: [8, 16] },
-    staff:   { name: '杖', icon: '🔮', slot: 'weapon', baseDmg: [5, 12] },
-    shield:  { name: '盾', icon: '🛡', slot: 'offhand', baseDef: [3, 8] },
-    helmet:  { name: '兜', icon: '⛑', slot: 'head', baseDef: [2, 5] },
-    armor:   { name: '鎧', icon: '🦺', slot: 'body', baseDef: [4, 10] },
-    ring:    { name: '指輪', icon: '💍', slot: 'ring', baseDef: [0, 1] },
-    amulet:  { name: '護符', icon: '📿', slot: 'amulet', baseDef: [0, 1] },
-    boots:   { name: '靴', icon: '👢', slot: 'feet', baseDef: [1, 4] },
-    rune:    { name: 'ルーン', icon: '🔶', slot: null },
+    sword: { name: '剣', icon: '⚔', slot: 'weapon', baseDmg: [5, 12] },
+    axe: { name: '戦斧', icon: '🪓', slot: 'weapon', baseDmg: [8, 16] },
+    staff: { name: '杖', icon: '🔮', slot: 'weapon', baseDmg: [5, 12] },
+    shield: { name: '盾', icon: '🛡', slot: 'offhand', baseDef: [3, 8] },
+    helmet: { name: '兜', icon: '⛑', slot: 'head', baseDef: [2, 5] },
+    armor: { name: '鎧', icon: '🦺', slot: 'body', baseDef: [4, 10] },
+    ring: { name: '指輪', icon: '💍', slot: 'ring', baseDef: [0, 1] },
+    amulet: { name: '護符', icon: '📿', slot: 'amulet', baseDef: [0, 1] },
+    boots: { name: '靴', icon: '👢', slot: 'feet', baseDef: [1, 4] },
+    rune: { name: 'ルーン', icon: '🔶', slot: null },
     quest_key: { name: '鍵', icon: '🗝', slot: null },
     // Tiered HP potions (D2-style, heal over time)
     hp1: { name: '下級HP薬', icon: '🧪', slot: null, potionType: 'hp', tier: 1, heal: 45, healDur: 7 },
@@ -3156,20 +3206,20 @@ const ITEM_TYPES = {
     rejuv: { name: '回復のポーション', icon: '💜', slot: null, potionType: 'rejuv', rejuvPct: 0.35 },
     fullrejuv: { name: '完全回復のポーション', icon: '💎', slot: null, potionType: 'rejuv', rejuvPct: 1.0 },
     // Charms (D2-style: passive bonuses while in charm inventory)
-    smallCharm:  { name: '小チャーム', icon: '🔹', slot: null, charmSize: 1 },
+    smallCharm: { name: '小チャーム', icon: '🔹', slot: null, charmSize: 1 },
     mediumCharm: { name: '中チャーム', icon: '🔷', slot: null, charmSize: 2 },
-    grandCharm:  { name: '大チャーム', icon: '💠', slot: null, charmSize: 3 },
+    grandCharm: { name: '大チャーム', icon: '💠', slot: null, charmSize: 3 },
     // Legacy aliases (backward compat for old saves)
     potion: { name: 'HP回復薬', icon: '🧪', slot: null, potionType: 'hp', tier: 1, heal: 45, healDur: 7 },
     manaPotion: { name: 'MP回復薬', icon: '💧', slot: null, potionType: 'mp', tier: 1, healMP: 30, healDur: 5 }
 };
 
 const RARITY = {
-    common:    { name: 'コモン', color: '#cccccc', affixes: 0, mult: 1 },
-    magic:     { name: 'マジック', color: '#6688ff', affixes: [1,2], mult: 1.3 },
-    rare:      { name: 'レア', color: '#ffdd44', affixes: [2,3], mult: 1.6 },
-    legendary: { name: 'レジェンダリー', color: '#ff8800', affixes: [3,4], mult: 2.0 },
-    unique:    { name: 'ユニーク', color: '#00dd66', affixes: [4,5], mult: 2.5 }
+    common: { name: 'コモン', color: '#cccccc', affixes: 0, mult: 1 },
+    magic: { name: 'マジック', color: '#6688ff', affixes: [1, 2], mult: 1.3 },
+    rare: { name: 'レア', color: '#ffdd44', affixes: [2, 3], mult: 1.6 },
+    legendary: { name: 'レジェンダリー', color: '#ff8800', affixes: [3, 4], mult: 2.0 },
+    unique: { name: 'ユニーク', color: '#00dd66', affixes: [4, 5], mult: 2.5 }
 };
 
 // D2-style diminishing returns for Magic Find per quality tier
@@ -3387,28 +3437,28 @@ function getActiveSetBonuses() {
 
 // ========== RUNE & RUNEWORD SYSTEM ==========
 const RUNE_DEFS = [
-    { id: 0,  name: 'El',   icon: '᚛', color: '#cccccc', tier: 1, effect: { stat: 'def',        value: 2  }, desc: '+2 防御' },
-    { id: 1,  name: 'Eld',  icon: '᚜', color: '#cccccc', tier: 1, effect: { stat: 'dmgPct',     value: 5  }, desc: '+5% ダメージ' },
-    { id: 2,  name: 'Tir',  icon: '᚝', color: '#cccccc', tier: 1, effect: { stat: 'mp',         value: 10 }, desc: '+10 MP' },
-    { id: 3,  name: 'Nef',  icon: '᚞', color: '#cccccc', tier: 1, effect: { stat: 'def',        value: 5  }, desc: '+5 防御' },
-    { id: 4,  name: 'Ith',  icon: '᚟', color: '#6688ff', tier: 2, effect: { stat: 'dmgPct',     value: 8  }, desc: '+8% ダメージ' },
-    { id: 5,  name: 'Ral',  icon: 'ᚠ', color: '#ff6633', tier: 2, effect: { stat: 'fireRes',    value: 10 }, desc: '+10% 火炎耐性' },
-    { id: 6,  name: 'Ort',  icon: 'ᚡ', color: '#ffdd44', tier: 2, effect: { stat: 'lightRes',   value: 10 }, desc: '+10% 雷耐性' },
-    { id: 7,  name: 'Thul', icon: 'ᚢ', color: '#66ccff', tier: 2, effect: { stat: 'coldRes',    value: 10 }, desc: '+10% 冷気耐性' },
-    { id: 8,  name: 'Amn',  icon: 'ᚣ', color: '#ff8800', tier: 2, effect: { stat: 'lifesteal',  value: 3  }, desc: '+3% ライフスティール' },
-    { id: 9,  name: 'Sol',  icon: 'ᚤ', color: '#ff8800', tier: 2, effect: { stat: 'hp',         value: 20 }, desc: '+20 HP' },
-    { id: 10, name: 'Um',   icon: 'ᚥ', color: '#ff8800', tier: 3, effect: { stat: 'allRes',     value: 8  }, desc: '+8% 全耐性' },
-    { id: 11, name: 'Mal',  icon: 'ᚦ', color: '#ff4444', tier: 3, effect: { stat: 'critChance', value: 3  }, desc: '+3% クリティカル率' },
-    { id: 12, name: 'Ist',  icon: 'ᚧ', color: '#ff4444', tier: 3, effect: { stat: 'magicFind',  value: 15 }, desc: '+15% マジックファインド' },
-    { id: 13, name: 'Lo',   icon: 'ᚨ', color: '#ff4444', tier: 3, effect: { stat: 'critDmg',    value: 10 }, desc: '+10% クリティカルダメージ' },
-    { id: 14, name: 'Zod',  icon: 'ᚩ', color: '#00dd66', tier: 3, effect: { stat: 'skillBonus', value: 1  }, desc: '+1 全スキルレベル' }
+    { id: 0, name: 'El', icon: '᚛', color: '#cccccc', tier: 1, effect: { stat: 'def', value: 2 }, desc: '+2 防御' },
+    { id: 1, name: 'Eld', icon: '᚜', color: '#cccccc', tier: 1, effect: { stat: 'dmgPct', value: 5 }, desc: '+5% ダメージ' },
+    { id: 2, name: 'Tir', icon: '᚝', color: '#cccccc', tier: 1, effect: { stat: 'mp', value: 10 }, desc: '+10 MP' },
+    { id: 3, name: 'Nef', icon: '᚞', color: '#cccccc', tier: 1, effect: { stat: 'def', value: 5 }, desc: '+5 防御' },
+    { id: 4, name: 'Ith', icon: '᚟', color: '#6688ff', tier: 2, effect: { stat: 'dmgPct', value: 8 }, desc: '+8% ダメージ' },
+    { id: 5, name: 'Ral', icon: 'ᚠ', color: '#ff6633', tier: 2, effect: { stat: 'fireRes', value: 10 }, desc: '+10% 火炎耐性' },
+    { id: 6, name: 'Ort', icon: 'ᚡ', color: '#ffdd44', tier: 2, effect: { stat: 'lightRes', value: 10 }, desc: '+10% 雷耐性' },
+    { id: 7, name: 'Thul', icon: 'ᚢ', color: '#66ccff', tier: 2, effect: { stat: 'coldRes', value: 10 }, desc: '+10% 冷気耐性' },
+    { id: 8, name: 'Amn', icon: 'ᚣ', color: '#ff8800', tier: 2, effect: { stat: 'lifesteal', value: 3 }, desc: '+3% ライフスティール' },
+    { id: 9, name: 'Sol', icon: 'ᚤ', color: '#ff8800', tier: 2, effect: { stat: 'hp', value: 20 }, desc: '+20 HP' },
+    { id: 10, name: 'Um', icon: 'ᚥ', color: '#ff8800', tier: 3, effect: { stat: 'allRes', value: 8 }, desc: '+8% 全耐性' },
+    { id: 11, name: 'Mal', icon: 'ᚦ', color: '#ff4444', tier: 3, effect: { stat: 'critChance', value: 3 }, desc: '+3% クリティカル率' },
+    { id: 12, name: 'Ist', icon: 'ᚧ', color: '#ff4444', tier: 3, effect: { stat: 'magicFind', value: 15 }, desc: '+15% マジックファインド' },
+    { id: 13, name: 'Lo', icon: 'ᚨ', color: '#ff4444', tier: 3, effect: { stat: 'critDmg', value: 10 }, desc: '+10% クリティカルダメージ' },
+    { id: 14, name: 'Zod', icon: 'ᚩ', color: '#00dd66', tier: 3, effect: { stat: 'skillBonus', value: 1 }, desc: '+1 全スキルレベル' }
 ];
 
 const MAX_SOCKETS = { sword: 4, axe: 4, staff: 4, shield: 3, helmet: 3, armor: 4 };
 
 const RUNEWORD_DEFS = [
     {
-        name: 'Spirit',  nameJP: '精霊',
+        name: 'Spirit', nameJP: '精霊',
         runes: [2, 7, 6, 8],  // Tir + Thul + Ort + Amn
         sockets: 4,
         validTypes: ['sword', 'shield'],
@@ -3420,7 +3470,7 @@ const RUNEWORD_DEFS = [
         ]
     },
     {
-        name: 'Insight',  nameJP: '洞察',
+        name: 'Insight', nameJP: '洞察',
         runes: [5, 2, 2, 9],  // Ral + Tir + Tir + Sol
         sockets: 4,
         validTypes: ['staff'],
@@ -3431,7 +3481,7 @@ const RUNEWORD_DEFS = [
         ]
     },
     {
-        name: 'Stealth',  nameJP: '隠密',
+        name: 'Stealth', nameJP: '隠密',
         runes: [2, 4],  // Tir + Ith
         sockets: 2,
         validTypes: ['armor'],
@@ -3442,7 +3492,7 @@ const RUNEWORD_DEFS = [
         ]
     },
     {
-        name: 'Lore',  nameJP: '知識',
+        name: 'Lore', nameJP: '知識',
         runes: [6, 9],  // Ort + Sol
         sockets: 2,
         validTypes: ['helmet'],
@@ -3453,7 +3503,7 @@ const RUNEWORD_DEFS = [
         ]
     },
     {
-        name: 'Rhyme',  nameJP: '韻律',
+        name: 'Rhyme', nameJP: '韻律',
         runes: [8, 10],  // Amn + Um
         sockets: 2,
         validTypes: ['shield'],
@@ -3464,7 +3514,7 @@ const RUNEWORD_DEFS = [
         ]
     },
     {
-        name: 'Enigma',  nameJP: '謎',
+        name: 'Enigma', nameJP: '謎',
         runes: [10, 12, 14],  // Um + Ist + Zod
         sockets: 3,
         validTypes: ['armor'],
@@ -3476,7 +3526,7 @@ const RUNEWORD_DEFS = [
         ]
     },
     {
-        name: 'Fury',  nameJP: '憤怒',
+        name: 'Fury', nameJP: '憤怒',
         runes: [11, 13, 12],  // Mal + Lo + Ist
         sockets: 3,
         validTypes: ['sword', 'axe'],
@@ -3488,7 +3538,7 @@ const RUNEWORD_DEFS = [
         ]
     },
     {
-        name: 'Silence',  nameJP: '静寂',
+        name: 'Silence', nameJP: '静寂',
         runes: [1, 8, 11, 12],  // Eld + Amn + Mal + Ist
         sockets: 4,
         validTypes: ['sword', 'axe', 'staff'],
@@ -3500,7 +3550,7 @@ const RUNEWORD_DEFS = [
         ]
     },
     {
-        name: 'Ancients Pledge',  nameJP: '古の誓い',
+        name: 'Ancients Pledge', nameJP: '古の誓い',
         runes: [5, 6, 7],  // Ral + Ort + Thul
         sockets: 3,
         validTypes: ['shield'],
@@ -3512,7 +3562,7 @@ const RUNEWORD_DEFS = [
         ]
     },
     {
-        name: 'Venom',  nameJP: '猛毒',
+        name: 'Venom', nameJP: '猛毒',
         runes: [7, 13, 14],  // Thul + Lo + Zod
         sockets: 3,
         validTypes: ['sword', 'axe'],
@@ -3529,20 +3579,20 @@ function rollSockets(typeKey, rarityKey) {
     const maxSock = MAX_SOCKETS[typeKey];
     if (!maxSock) return 0;
     const chance = rarityKey === 'common' ? 0.30 :
-                   rarityKey === 'magic' ? 0.15 :
-                   rarityKey === 'rare' ? 0.10 : 0.05;
+        rarityKey === 'magic' ? 0.15 :
+            rarityKey === 'rare' ? 0.10 : 0.05;
     if (Math.random() >= chance) return 0;
     const cap = rarityKey === 'common' ? maxSock :
-                rarityKey === 'magic' ? Math.min(2, maxSock) :
-                rarityKey === 'rare' ? Math.min(2, maxSock) : 1;
+        rarityKey === 'magic' ? Math.min(2, maxSock) :
+            rarityKey === 'rare' ? Math.min(2, maxSock) : 1;
     return rand(1, cap);
 }
 
 function generateRune(floor) {
     // Higher floors → higher tier runes possible
     const tierWeights = floor < 5 ? [80, 20, 0] :
-                        floor < 10 ? [50, 40, 10] :
-                        floor < 15 ? [30, 45, 25] : [15, 40, 45];
+        floor < 10 ? [50, 40, 10] :
+            floor < 15 ? [30, 45, 25] : [15, 40, 45];
     const roll = Math.random() * 100;
     const tier = roll < tierWeights[0] ? 1 : roll < tierWeights[0] + tierWeights[1] ? 2 : 3;
     const pool = RUNE_DEFS.filter(r => r.tier === tier);
@@ -3551,8 +3601,8 @@ function generateRune(floor) {
         typeKey: 'rune', typeInfo: ITEM_TYPES.rune,
         rarityKey: tier === 3 ? 'legendary' : tier === 2 ? 'magic' : 'common',
         rarity: tier === 3 ? { name: '高級ルーン', color: '#ff8800' } :
-                tier === 2 ? { name: 'ルーン', color: '#6688ff' } :
-                             { name: 'ルーン', color: '#cccccc' },
+            tier === 2 ? { name: 'ルーン', color: '#6688ff' } :
+                { name: 'ルーン', color: '#cccccc' },
         name: `${def.name}のルーン`,
         icon: '🔶',
         runeId: def.id,
@@ -3666,7 +3716,7 @@ function generateItem(floor, forceRarity = null) {
             item.name = names[rand(0, names.length - 1)];
         } else {
             const prefixes = ['呪われし', '聖なる', '古代の', '鍛えられし', '朽ちた', '輝く', '血染めの', '影の', '蒼き', '灼熱の'];
-            const prefix = rarityKey !== 'common' ? prefixes[rand(0, prefixes.length-1)] + ' ' : '';
+            const prefix = rarityKey !== 'common' ? prefixes[rand(0, prefixes.length - 1)] + ' ' : '';
             item.name = prefix + typeInfo.name;
         }
     }
@@ -3695,13 +3745,13 @@ const CHARM_TYPES = ['smallCharm', 'mediumCharm', 'grandCharm'];
 function isCharm(item) { return CHARM_TYPES.includes(item.typeKey); }
 
 const MAX_POTION_STACK = 20;
-const HP_POTION_TYPES = ['hp1','hp2','hp3','hp4','hp5'];
-const MP_POTION_TYPES = ['mp1','mp2','mp3'];
-const REJUV_TYPES = ['rejuv','fullrejuv'];
+const HP_POTION_TYPES = ['hp1', 'hp2', 'hp3', 'hp4', 'hp5'];
+const MP_POTION_TYPES = ['mp1', 'mp2', 'mp3'];
+const REJUV_TYPES = ['rejuv', 'fullrejuv'];
 const ALL_POTION_TYPES = [...HP_POTION_TYPES, ...MP_POTION_TYPES, ...REJUV_TYPES, 'potion', 'manaPotion'];
 // Which potion tier drops/sells per act
-const HP_POTION_TIER_BY_ACT = { 1:'hp1', 2:'hp2', 3:'hp3', 4:'hp4', 5:'hp5' };
-const MP_POTION_TIER_BY_ACT = { 1:'mp1', 2:'mp2', 3:'mp3', 4:'mp3', 5:'mp3' };
+const HP_POTION_TIER_BY_ACT = { 1: 'hp1', 2: 'hp2', 3: 'hp3', 4: 'hp4', 5: 'hp5' };
+const MP_POTION_TIER_BY_ACT = { 1: 'mp1', 2: 'mp2', 3: 'mp3', 4: 'mp3', 5: 'mp3' };
 
 function isPotion(item) {
     return ALL_POTION_TYPES.includes(item.typeKey);
@@ -3738,28 +3788,30 @@ function generatePotion(potionCategory = 'hp', act = G.act || 1) {
     else if (potionCategory === 'fullrejuv') typeKey = 'fullrejuv';
     else typeKey = potionCategory; // direct typeKey
     const ti = ITEM_TYPES[typeKey] || ITEM_TYPES.hp1;
-    return { typeKey: typeKey, typeInfo: ti, rarityKey: 'common', rarity: RARITY.common,
-             icon: ti.icon, name: ti.name, affixes: [], baseDmg: null, baseDef: null, qty: 1 };
+    return {
+        typeKey: typeKey, typeInfo: ti, rarityKey: 'common', rarity: RARITY.common,
+        icon: ti.icon, name: ti.name, affixes: [], baseDmg: null, baseDef: null, qty: 1
+    };
 }
 
 // Charm affix pool (subset of AFFIXES with charm-appropriate ranges)
 const CHARM_AFFIXES = [
-    { stat: 'str', fmt: '+{v} 筋力', ranges: { 1: [1,3], 2: [2,5], 3: [3,8] } },
-    { stat: 'dex', fmt: '+{v} 敏捷', ranges: { 1: [1,3], 2: [2,5], 3: [3,8] } },
-    { stat: 'vit', fmt: '+{v} 体力', ranges: { 1: [1,3], 2: [2,5], 3: [3,8] } },
-    { stat: 'int', fmt: '+{v} 知力', ranges: { 1: [1,3], 2: [2,5], 3: [3,8] } },
-    { stat: 'hp', fmt: '+{v} HP', ranges: { 1: [5,15], 2: [10,30], 3: [20,50] } },
-    { stat: 'mp', fmt: '+{v} MP', ranges: { 1: [5,10], 2: [8,20], 3: [15,40] } },
-    { stat: 'def', fmt: '+{v} 防御', ranges: { 1: [1,4], 2: [3,8], 3: [5,12] } },
-    { stat: 'dmgPct', fmt: '+{v}% ダメージ', ranges: { 1: [2,5], 2: [4,10], 3: [6,15] } },
-    { stat: 'critChance', fmt: '+{v}% クリティカル率', ranges: { 1: [1,2], 2: [2,4], 3: [3,6] } },
-    { stat: 'fireRes', fmt: '+{v}% 火炎耐性', ranges: { 1: [3,8], 2: [5,12], 3: [8,18] } },
-    { stat: 'coldRes', fmt: '+{v}% 冷気耐性', ranges: { 1: [3,8], 2: [5,12], 3: [8,18] } },
-    { stat: 'lightRes', fmt: '+{v}% 雷耐性', ranges: { 1: [3,8], 2: [5,12], 3: [8,18] } },
-    { stat: 'poisonRes', fmt: '+{v}% 毒耐性', ranges: { 1: [3,8], 2: [5,12], 3: [8,18] } },
-    { stat: 'allRes', fmt: '+{v}% 全耐性', ranges: { 1: [1,3], 2: [2,5], 3: [3,8] } },
-    { stat: 'magicFind', fmt: '+{v}% MF', ranges: { 1: [3,7], 2: [5,12], 3: [8,20] } },
-    { stat: 'moveSpd', fmt: '+{v}% 移動速度', ranges: { 1: [2,4], 2: [3,6], 3: [5,10] } },
+    { stat: 'str', fmt: '+{v} 筋力', ranges: { 1: [1, 3], 2: [2, 5], 3: [3, 8] } },
+    { stat: 'dex', fmt: '+{v} 敏捷', ranges: { 1: [1, 3], 2: [2, 5], 3: [3, 8] } },
+    { stat: 'vit', fmt: '+{v} 体力', ranges: { 1: [1, 3], 2: [2, 5], 3: [3, 8] } },
+    { stat: 'int', fmt: '+{v} 知力', ranges: { 1: [1, 3], 2: [2, 5], 3: [3, 8] } },
+    { stat: 'hp', fmt: '+{v} HP', ranges: { 1: [5, 15], 2: [10, 30], 3: [20, 50] } },
+    { stat: 'mp', fmt: '+{v} MP', ranges: { 1: [5, 10], 2: [8, 20], 3: [15, 40] } },
+    { stat: 'def', fmt: '+{v} 防御', ranges: { 1: [1, 4], 2: [3, 8], 3: [5, 12] } },
+    { stat: 'dmgPct', fmt: '+{v}% ダメージ', ranges: { 1: [2, 5], 2: [4, 10], 3: [6, 15] } },
+    { stat: 'critChance', fmt: '+{v}% クリティカル率', ranges: { 1: [1, 2], 2: [2, 4], 3: [3, 6] } },
+    { stat: 'fireRes', fmt: '+{v}% 火炎耐性', ranges: { 1: [3, 8], 2: [5, 12], 3: [8, 18] } },
+    { stat: 'coldRes', fmt: '+{v}% 冷気耐性', ranges: { 1: [3, 8], 2: [5, 12], 3: [8, 18] } },
+    { stat: 'lightRes', fmt: '+{v}% 雷耐性', ranges: { 1: [3, 8], 2: [5, 12], 3: [8, 18] } },
+    { stat: 'poisonRes', fmt: '+{v}% 毒耐性', ranges: { 1: [3, 8], 2: [5, 12], 3: [8, 18] } },
+    { stat: 'allRes', fmt: '+{v}% 全耐性', ranges: { 1: [1, 3], 2: [2, 5], 3: [3, 8] } },
+    { stat: 'magicFind', fmt: '+{v}% MF', ranges: { 1: [3, 7], 2: [5, 12], 3: [8, 20] } },
+    { stat: 'moveSpd', fmt: '+{v}% 移動速度', ranges: { 1: [2, 4], 2: [3, 6], 3: [5, 10] } },
 ];
 
 function generateCharm(floor) {
@@ -3858,14 +3910,14 @@ const CLASS_DEFS = {
         promotions: ['assassin', 'ranger'],
         skills: [
             // Branch 0: 弓スキル
-	                { id: 'r_firearrow', name: 'ファイアアロー', icon: '🔥', mp: 8, cd: 0.8, branch: 0, desc: '炎を纏った矢を放つ', prereq: null, effect: 'projectile_fire', iconEff: 'arrow_fire', baseMult: [1.6, 1.9, 2.2, 2.6, 3.2], speed: 400, reqLevel: 1, skillType: 'active', synergies: [{ from: 'r_coldarrow', bonus: 0.06, type: 'damage' }] },
-	                { id: 'r_coldarrow', name: 'コールドアロー', icon: '❄', mp: 10, cd: 1.2, branch: 0, desc: '冷気を纏った矢を放つ', prereq: 'r_firearrow', effect: 'projectile_fire', iconEff: 'arrow_cold', baseMult: [1.4, 1.7, 2.0, 2.4, 3.0], speed: 380, reqLevel: 1, skillType: 'active', synergies: [{ from: 'r_firearrow', bonus: 0.06, type: 'damage' }] },
+            { id: 'r_firearrow', name: 'ファイアアロー', icon: '🔥', mp: 8, cd: 0.8, branch: 0, desc: '炎を纏った矢を放つ', prereq: null, effect: 'projectile_fire', iconEff: 'arrow_fire', baseMult: [1.6, 1.9, 2.2, 2.6, 3.2], speed: 400, reqLevel: 1, skillType: 'active', synergies: [{ from: 'r_coldarrow', bonus: 0.06, type: 'damage' }] },
+            { id: 'r_coldarrow', name: 'コールドアロー', icon: '❄', mp: 10, cd: 1.2, branch: 0, desc: '冷気を纏った矢を放つ', prereq: 'r_firearrow', effect: 'projectile_fire', iconEff: 'arrow_cold', baseMult: [1.4, 1.7, 2.0, 2.4, 3.0], speed: 380, reqLevel: 1, skillType: 'active', synergies: [{ from: 'r_firearrow', bonus: 0.06, type: 'damage' }] },
             { id: 'r_multishot', name: 'マルチプルショット', icon: '🌟', mp: 22, cd: 2.5, branch: 0, desc: '複数の矢を同時に放つ', prereq: 'r_coldarrow', effect: 'multi_shot', arrows: [3, 4, 5, 6, 8], baseMult: [1.0, 1.3, 1.6, 2.0, 2.5], reqLevel: 12, skillType: 'active', synergies: [{ from: 'r_firearrow', bonus: 0.05, type: 'damage' }, { from: 'r_guidedarrow', bonus: 0.05, type: 'damage' }] },
-	                { id: 'r_guidedarrow', name: 'ガイデッドアロー', icon: '🎯', mp: 18, cd: 1.5, branch: 0, desc: '敵を追尾する矢を放つ', prereq: 'r_firearrow', effect: 'projectile_fire', iconEff: 'arrow_magic', baseMult: [2.2, 2.8, 3.5, 4.2, 5.0], speed: 500, reqLevel: 6, skillType: 'active', synergies: [{ from: 'r_firearrow', bonus: 0.08, type: 'damage' }] },
+            { id: 'r_guidedarrow', name: 'ガイデッドアロー', icon: '🎯', mp: 18, cd: 1.5, branch: 0, desc: '敵を追尾する矢を放つ', prereq: 'r_firearrow', effect: 'projectile_fire', iconEff: 'arrow_magic', baseMult: [2.2, 2.8, 3.5, 4.2, 5.0], speed: 500, reqLevel: 6, skillType: 'active', synergies: [{ from: 'r_firearrow', bonus: 0.08, type: 'damage' }] },
             { id: 'r_strafe', name: 'ストレイフ', icon: '🏹', mp: 35, cd: 5.0, branch: 0, desc: '矢の連射で敵を制圧する', prereq: 'r_multishot', effect: 'arrow_rain', baseMult: [2.0, 2.6, 3.2, 4.0, 5.0], range: 100, reqLevel: 18, skillType: 'active', synergies: [{ from: 'r_multishot', bonus: 0.08, type: 'damage' }] },
             { id: 'r_immolation', name: 'イモレーションアロー', icon: '🔥', mp: 40, cd: 6.0, branch: 0, desc: '炎の雨を降らせる', prereq: 'r_strafe', effect: 'arrow_rain', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 110, reqLevel: 24, skillType: 'active', synergies: [{ from: 'r_firearrow', bonus: 0.10, type: 'damage' }] },
             { id: 'r_freezingarrow', name: 'フリージングアロー', icon: '🧊', mp: 45, cd: 7.0, branch: 0, desc: '周囲を凍結させる矢を放つ', prereq: 'r_immolation', effect: 'frost_nova', baseMult: [2.0, 2.8, 3.5, 4.5, 6.0], freeze: [2, 3, 4, 5, 6], reqLevel: 30, skillType: 'active', synergies: [{ from: 'r_coldarrow', bonus: 0.08, type: 'freeze' }] },
-	                { id: 'r_magicarrow', name: 'マジックアロー', icon: '✨', mp: 55, cd: 8.0, branch: 0, desc: '魔力を凝縮した究極の矢', prereq: 'r_freezingarrow', effect: 'projectile_fire', iconEff: 'arrow_magic', baseMult: [4.0, 5.0, 6.5, 8.0, 10.0], speed: 550, reqLevel: 30, skillType: 'active', synergies: [{ from: 'r_guidedarrow', bonus: 0.10, type: 'damage' }, { from: 'r_multishot', bonus: 0.08, type: 'damage' }] },
+            { id: 'r_magicarrow', name: 'マジックアロー', icon: '✨', mp: 55, cd: 8.0, branch: 0, desc: '魔力を凝縮した究極の矢', prereq: 'r_freezingarrow', effect: 'projectile_fire', iconEff: 'arrow_magic', baseMult: [4.0, 5.0, 6.5, 8.0, 10.0], speed: 550, reqLevel: 30, skillType: 'active', synergies: [{ from: 'r_guidedarrow', bonus: 0.10, type: 'damage' }, { from: 'r_multishot', bonus: 0.08, type: 'damage' }] },
             // Branch 1: ジャベリン
             { id: 'r_jab', name: 'ジャブ', icon: '🔱', mp: 8, cd: 1.0, branch: 1, desc: '素早い連続突き', prereq: null, effect: 'melee_burst', baseMult: [1.8, 2.1, 2.5, 3.0, 3.6], range: 55, reqLevel: 1, skillType: 'active', synergies: [{ from: 'r_powerstrike', bonus: 0.08, type: 'damage' }, { from: 'r_chargedstrike', bonus: 0.06, type: 'damage' }] },
             { id: 'r_poisonjav', name: 'ポイズンジャベリン', icon: '☠', mp: 14, cd: 3.0, branch: 1, desc: '毒を塗った投槍を投げる', prereq: 'r_jab', effect: 'buff_poison', duration: [4, 5, 6, 8, 10], dps: [5, 8, 12, 18, 25], reqLevel: 6, skillType: 'active', synergies: [{ from: 'r_jab', bonus: 0.06, type: 'damage' }] },
@@ -3903,9 +3955,9 @@ const CLASS_DEFS = {
         promotions: ['pyromancer', 'cryomancer'],
         skills: [
             // Branch 0: ファイアスペル
-	                { id: 's_firebolt', name: 'ファイアボルト', icon: '🔥', mp: 6, cd: 0.5, branch: 0, desc: '火炎の弾を撃ち出す', prereq: null, effect: 'projectile_fire', iconEff: 'bolt_fire', baseMult: [1.4, 1.7, 2.0, 2.4, 3.0], speed: 350, reqLevel: 1, skillType: 'active', synergies: [{ from: 's_fireball', bonus: 0.06, type: 'damage' }, { from: 's_firemastery_p', bonus: 0.04, type: 'damage' }] },
+            { id: 's_firebolt', name: 'ファイアボルト', icon: '🔥', mp: 6, cd: 0.5, branch: 0, desc: '火炎の弾を撃ち出す', prereq: null, effect: 'projectile_fire', iconEff: 'bolt_fire', baseMult: [1.4, 1.7, 2.0, 2.4, 3.0], speed: 350, reqLevel: 1, skillType: 'active', synergies: [{ from: 's_fireball', bonus: 0.06, type: 'damage' }, { from: 's_firemastery_p', bonus: 0.04, type: 'damage' }] },
             { id: 's_warmth_p', name: '暖気', icon: '🌡', mp: 0, cd: 0, branch: 0, desc: 'マナ自然回復を常時上昇', prereq: 's_firebolt', reqLevel: 1, skillType: 'passive', passiveEffect: { stat: 'manaRegen', baseBonus: 1, perLevel: 1 } },
-	                { id: 's_fireball', name: 'ファイアボール', icon: '☀', mp: 18, cd: 1.5, branch: 0, desc: '爆発する火球を放つ', prereq: 's_firebolt', effect: 'projectile_fire', iconEff: 'bolt_fire', baseMult: [2.2, 2.8, 3.5, 4.2, 5.5], speed: 320, reqLevel: 6, skillType: 'active', synergies: [{ from: 's_firebolt', bonus: 0.14, type: 'damage' }, { from: 's_firemastery_p', bonus: 0.04, type: 'damage' }] },
+            { id: 's_fireball', name: 'ファイアボール', icon: '☀', mp: 18, cd: 1.5, branch: 0, desc: '爆発する火球を放つ', prereq: 's_firebolt', effect: 'projectile_fire', iconEff: 'bolt_fire', baseMult: [2.2, 2.8, 3.5, 4.2, 5.5], speed: 320, reqLevel: 6, skillType: 'active', synergies: [{ from: 's_firebolt', bonus: 0.14, type: 'damage' }, { from: 's_firemastery_p', bonus: 0.04, type: 'damage' }] },
             { id: 's_warmth', name: 'ウォームス', icon: '🌡', mp: 12, cd: 10.0, branch: 0, desc: 'マナ回復のオーラを展開', prereq: 's_firebolt', effect: 'buff_aura', duration: [8, 10, 12, 15, 20], regen: [3, 5, 8, 12, 16], reduction: [0.1, 0.15, 0.2, 0.25, 0.3], reqLevel: 6, skillType: 'active', synergies: [{ from: 's_warmth_p', bonus: 0.07, type: 'duration' }] },
             { id: 's_firewall', name: 'ファイアウォール', icon: '🧱', mp: 25, cd: 5.0, branch: 0, desc: '炎の壁を展開する', prereq: 's_fireball', effect: 'consecrate', baseMult: [0.6, 0.8, 1.0, 1.3, 1.6], range: 80, duration: [3, 4, 5, 6, 8], reqLevel: 12, skillType: 'active', synergies: [{ from: 's_firebolt', bonus: 0.08, type: 'damage' }, { from: 's_firemastery_p', bonus: 0.04, type: 'damage' }] },
             { id: 's_firemastery_p', name: '火炎の極意', icon: '🔥', mp: 0, cd: 0, branch: 0, desc: '火炎ダメージを常時上昇', prereq: 's_fireball', reqLevel: 12, skillType: 'passive', passiveEffect: { stat: 'damagePercent', baseBonus: 3, perLevel: 3 } },
@@ -3925,7 +3977,7 @@ const CLASS_DEFS = {
             { id: 's_ltgmastery', name: 'ライトニングマスタリー', icon: '⚡', mp: 40, cd: 12.0, branch: 1, desc: '雷の力を極限まで高める', prereq: 's_nova', effect: 'buff_atkspd', duration: [6, 8, 10, 14, 18], bonus: [0.3, 0.4, 0.5, 0.6, 0.8], reqLevel: 24, skillType: 'active' },
             { id: 's_thunderstorm', name: 'サンダーストーム', icon: '⛈', mp: 55, cd: 10.0, branch: 1, desc: '雷雲を召喚し敵を打つ', prereq: 's_ltgmastery', effect: 'consecrate', baseMult: [1.0, 1.4, 1.8, 2.4, 3.2], range: 120, duration: [6, 8, 10, 13, 16], reqLevel: 30, skillType: 'active', synergies: [{ from: 's_lightning', bonus: 0.10, type: 'damage' }, { from: 's_nova', bonus: 0.10, type: 'damage' }] },
             // Branch 2: コールドスペル
-	                { id: 's_icebolt', name: 'アイスボルト', icon: '🔷', mp: 6, cd: 0.8, branch: 2, desc: '氷の弾を撃ち出す', prereq: null, effect: 'projectile_fire', iconEff: 'bolt_cold', baseMult: [1.2, 1.5, 1.8, 2.2, 2.8], speed: 380, reqLevel: 1, skillType: 'active', synergies: [{ from: 's_frostnova', bonus: 0.06, type: 'damage' }] },
+            { id: 's_icebolt', name: 'アイスボルト', icon: '🔷', mp: 6, cd: 0.8, branch: 2, desc: '氷の弾を撃ち出す', prereq: null, effect: 'projectile_fire', iconEff: 'bolt_cold', baseMult: [1.2, 1.5, 1.8, 2.2, 2.8], speed: 380, reqLevel: 1, skillType: 'active', synergies: [{ from: 's_frostnova', bonus: 0.06, type: 'damage' }] },
             { id: 's_frozenarmor', name: 'フローズンアーマー', icon: '🛡', mp: 15, cd: 10.0, branch: 2, desc: '氷の鎧で被ダメージ軽減', prereq: 's_icebolt', effect: 'buff_defense', duration: [6, 8, 10, 12, 16], reduction: [0.3, 0.4, 0.45, 0.5, 0.6], reqLevel: 6, skillType: 'active' },
             { id: 's_frostnova', name: 'フロストノヴァ', icon: '❄', mp: 18, cd: 4.0, branch: 2, desc: '冷気の波動で周囲を凍結', prereq: 's_icebolt', effect: 'frost_nova', baseMult: [0.8, 1.0, 1.4, 1.8, 2.4], freeze: [2, 2, 3, 4, 5], reqLevel: 6, skillType: 'active', synergies: [{ from: 's_icebolt', bonus: 0.10, type: 'damage' }, { from: 's_icebolt', bonus: 0.05, type: 'freeze' }] },
             { id: 's_glacialspike', name: 'グレイシャルスパイク', icon: '🧊', mp: 22, cd: 3.0, branch: 2, desc: '氷の棘で敵を凍らせる', prereq: 's_frostnova', effect: 'frost_nova', baseMult: [1.5, 2.0, 2.5, 3.2, 4.0], freeze: [2, 3, 3, 4, 5], reqLevel: 12, skillType: 'active', synergies: [{ from: 's_frostnova', bonus: 0.10, type: 'damage' }, { from: 's_icebolt', bonus: 0.06, type: 'freeze' }] },
@@ -4089,15 +4141,15 @@ const CLASS_DEFS = {
         promotions: [],
         skills: [
             // Branch 0: アーチェリー
-	                { id: 'rg_guided', name: 'ガイデッドアロー', icon: '🎯', mp: 10, cd: 0.8, branch: 0, desc: '追尾する矢を放つ', prereq: null, effect: 'projectile_fire', iconEff: 'arrow_magic', baseMult: [1.8, 2.2, 2.6, 3.2, 4.0], speed: 500, reqLevel: 1, skillType: 'active', synergies: [{ from: 'rg_multishot', bonus: 0.08, type: 'damage' }, { from: 'rg_magicarrow', bonus: 0.10, type: 'damage' }] },
-	                { id: 'rg_coldarrow', name: 'コールドアロー', icon: '❄', mp: 12, cd: 1.2, branch: 0, desc: '冷気の矢で敵を減速', prereq: 'rg_guided', effect: 'projectile_fire', iconEff: 'arrow_cold', baseMult: [1.6, 2.0, 2.4, 3.0, 3.8], speed: 420, reqLevel: 6, skillType: 'active', synergies: [{ from: 'rg_guided', bonus: 0.08, type: 'damage' }] },
+            { id: 'rg_guided', name: 'ガイデッドアロー', icon: '🎯', mp: 10, cd: 0.8, branch: 0, desc: '追尾する矢を放つ', prereq: null, effect: 'projectile_fire', iconEff: 'arrow_magic', baseMult: [1.8, 2.2, 2.6, 3.2, 4.0], speed: 500, reqLevel: 1, skillType: 'active', synergies: [{ from: 'rg_multishot', bonus: 0.08, type: 'damage' }, { from: 'rg_magicarrow', bonus: 0.10, type: 'damage' }] },
+            { id: 'rg_coldarrow', name: 'コールドアロー', icon: '❄', mp: 12, cd: 1.2, branch: 0, desc: '冷気の矢で敵を減速', prereq: 'rg_guided', effect: 'projectile_fire', iconEff: 'arrow_cold', baseMult: [1.6, 2.0, 2.4, 3.0, 3.8], speed: 420, reqLevel: 6, skillType: 'active', synergies: [{ from: 'rg_guided', bonus: 0.08, type: 'damage' }] },
             { id: 'rg_multishot', name: 'マルチプルショット', icon: '🌟', mp: 20, cd: 2.0, branch: 0, desc: '複数の矢を同時に放つ', prereq: 'rg_guided', effect: 'multi_shot', arrows: [3, 4, 5, 6, 8], baseMult: [1.0, 1.3, 1.6, 2.0, 2.5], reqLevel: 6, skillType: 'active', synergies: [{ from: 'rg_guided', bonus: 0.06, type: 'damage' }, { from: 'rg_hawkeye_p', bonus: 0.03, type: 'damage' }] },
             { id: 'rg_hawkeye_p', name: '鷹の目', icon: '🦅', mp: 0, cd: 0, branch: 0, desc: 'ダメージを常時上昇', prereq: 'rg_guided', reqLevel: 6, skillType: 'passive', passiveEffect: { stat: 'damagePercent', baseBonus: 3, perLevel: 3 } },
             { id: 'rg_strafe', name: 'ストレイフ', icon: '🏹', mp: 25, cd: 2.5, branch: 0, desc: '矢の嵐で敵を制圧する', prereq: 'rg_multishot', effect: 'multi_shot', arrows: [4, 5, 6, 8, 10], baseMult: [1.2, 1.5, 1.8, 2.2, 2.8], reqLevel: 12, skillType: 'active', synergies: [{ from: 'rg_multishot', bonus: 0.10, type: 'damage' }] },
             { id: 'rg_explodingarrow', name: 'エクスプローディングアロー', icon: '💥', mp: 28, cd: 4.0, branch: 0, desc: '爆発する矢を放つ', prereq: 'rg_coldarrow', effect: 'arrow_rain', baseMult: [2.0, 2.5, 3.2, 4.0, 5.0], range: 90, reqLevel: 12, skillType: 'active', synergies: [{ from: 'rg_coldarrow', bonus: 0.08, type: 'damage' }] },
             { id: 'rg_immolation', name: 'イモレーションアロー', icon: '🔥', mp: 35, cd: 6.0, branch: 0, desc: '炎の雨を降らせる矢', prereq: 'rg_explodingarrow', effect: 'arrow_rain', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 100, reqLevel: 18, skillType: 'active', synergies: [{ from: 'rg_explodingarrow', bonus: 0.10, type: 'damage' }] },
             { id: 'rg_freezingarrow', name: 'フリージングアロー', icon: '🧊', mp: 42, cd: 6.0, branch: 0, desc: '周囲を凍結させる氷の矢', prereq: 'rg_immolation', effect: 'frost_nova', baseMult: [2.0, 2.5, 3.2, 4.0, 5.5], freeze: [2, 3, 3, 4, 5], reqLevel: 24, skillType: 'active', synergies: [{ from: 'rg_coldarrow', bonus: 0.10, type: 'freeze' }, { from: 'rg_immolation', bonus: 0.08, type: 'damage' }] },
-	                { id: 'rg_magicarrow', name: 'マジックアロー', icon: '✨', mp: 55, cd: 8.0, branch: 0, desc: '魔力を凝縮した究極の矢', prereq: 'rg_freezingarrow', effect: 'projectile_fire', iconEff: 'arrow_magic', baseMult: [4.0, 5.0, 6.5, 8.0, 10.5], speed: 550, reqLevel: 30, skillType: 'active', synergies: [{ from: 'rg_guided', bonus: 0.12, type: 'damage' }, { from: 'rg_hawkeye_p', bonus: 0.04, type: 'damage' }] },
+            { id: 'rg_magicarrow', name: 'マジックアロー', icon: '✨', mp: 55, cd: 8.0, branch: 0, desc: '魔力を凝縮した究極の矢', prereq: 'rg_freezingarrow', effect: 'projectile_fire', iconEff: 'arrow_magic', baseMult: [4.0, 5.0, 6.5, 8.0, 10.5], speed: 550, reqLevel: 30, skillType: 'active', synergies: [{ from: 'rg_guided', bonus: 0.12, type: 'damage' }, { from: 'rg_hawkeye_p', bonus: 0.04, type: 'damage' }] },
             // Branch 1: スピアスキル
             { id: 'rg_jab', name: 'ジャブ', icon: '🔱', mp: 8, cd: 1.0, branch: 1, desc: '素早い連続突き', prereq: null, effect: 'melee_burst', baseMult: [1.8, 2.2, 2.6, 3.2, 4.0], range: 58, reqLevel: 1, skillType: 'active', synergies: [{ from: 'rg_chargedstrike', bonus: 0.08, type: 'damage' }, { from: 'rg_powerstrike', bonus: 0.06, type: 'damage' }] },
             { id: 'rg_chargedstrike', name: 'チャージドストライク', icon: '⚡', mp: 14, cd: 2.0, branch: 1, desc: '帯電した連撃', prereq: 'rg_jab', effect: 'melee_burst', baseMult: [2.0, 2.5, 3.2, 4.0, 5.0], range: 60, reqLevel: 6, skillType: 'active', synergies: [{ from: 'rg_jab', bonus: 0.08, type: 'damage' }] },
@@ -4135,8 +4187,8 @@ const CLASS_DEFS = {
         promotions: [],
         skills: [
             // Branch 0: ファイアスペル
-	                { id: 'py_firebolt', name: 'ファイアボルト', icon: '🔥', mp: 6, cd: 0.5, branch: 0, desc: '火炎の弾を撃ち出す', prereq: null, effect: 'projectile_fire', iconEff: 'bolt_fire', baseMult: [1.8, 2.2, 2.6, 3.2, 4.0], speed: 360, reqLevel: 1, skillType: 'active', synergies: [{ from: 'py_flameheart_p', bonus: 0.04, type: 'damage' }] },
-	                { id: 'py_fireball', name: 'ファイアボール', icon: '☀', mp: 14, cd: 0.8, branch: 0, desc: '爆発する火球を放つ', prereq: 'py_firebolt', effect: 'projectile_fire', iconEff: 'bolt_fire', baseMult: [2.5, 3.0, 3.8, 4.5, 5.5], speed: 380, reqLevel: 6, skillType: 'active', synergies: [{ from: 'py_firebolt', bonus: 0.12, type: 'damage' }, { from: 'py_flameheart_p', bonus: 0.04, type: 'damage' }] },
+            { id: 'py_firebolt', name: 'ファイアボルト', icon: '🔥', mp: 6, cd: 0.5, branch: 0, desc: '火炎の弾を撃ち出す', prereq: null, effect: 'projectile_fire', iconEff: 'bolt_fire', baseMult: [1.8, 2.2, 2.6, 3.2, 4.0], speed: 360, reqLevel: 1, skillType: 'active', synergies: [{ from: 'py_flameheart_p', bonus: 0.04, type: 'damage' }] },
+            { id: 'py_fireball', name: 'ファイアボール', icon: '☀', mp: 14, cd: 0.8, branch: 0, desc: '爆発する火球を放つ', prereq: 'py_firebolt', effect: 'projectile_fire', iconEff: 'bolt_fire', baseMult: [2.5, 3.0, 3.8, 4.5, 5.5], speed: 380, reqLevel: 6, skillType: 'active', synergies: [{ from: 'py_firebolt', bonus: 0.12, type: 'damage' }, { from: 'py_flameheart_p', bonus: 0.04, type: 'damage' }] },
             { id: 'py_flameheart_p', name: '炎の心臓', icon: '❤‍🔥', mp: 0, cd: 0, branch: 0, desc: '火炎ダメージを常時上昇', prereq: 'py_firebolt', reqLevel: 6, skillType: 'passive', passiveEffect: { stat: 'damagePercent', baseBonus: 3, perLevel: 3 } },
             { id: 'py_firewall', name: 'ファイアウォール', icon: '🧱', mp: 22, cd: 4.0, branch: 0, desc: '炎の壁を展開する', prereq: 'py_fireball', effect: 'consecrate', baseMult: [0.7, 0.9, 1.2, 1.5, 2.0], range: 80, duration: [3, 4, 5, 7, 9], reqLevel: 12, skillType: 'active', synergies: [{ from: 'py_fireball', bonus: 0.08, type: 'damage' }] },
             { id: 'py_combustion', name: 'コンバッション', icon: '💥', mp: 28, cd: 5.0, branch: 0, desc: '爆発で周囲を焼き尽くす', prereq: 'py_firewall', effect: 'meteor', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 90, reqLevel: 12, skillType: 'active', synergies: [{ from: 'py_firebolt', bonus: 0.10, type: 'damage' }, { from: 'py_fireball', bonus: 0.10, type: 'damage' }] },
@@ -4181,9 +4233,9 @@ const CLASS_DEFS = {
         promotions: [],
         skills: [
             // Branch 0: コールドスペル
-	                { id: 'cy_icebolt', name: 'アイスボルト', icon: '🔷', mp: 6, cd: 0.5, branch: 0, desc: '氷の弾を撃ち出す', prereq: null, effect: 'projectile_fire', iconEff: 'bolt_cold', baseMult: [1.4, 1.7, 2.0, 2.4, 3.0], speed: 380, reqLevel: 1, skillType: 'active' },
-	                { id: 'cy_iceblast', name: 'アイスブラスト', icon: '💎', mp: 12, cd: 0.8, branch: 0, desc: '氷の衝撃波を放つ', prereq: 'cy_icebolt', effect: 'projectile_fire', iconEff: 'bolt_cold', baseMult: [1.8, 2.2, 2.6, 3.2, 4.0], speed: 400, reqLevel: 6, skillType: 'active', synergies: [{ from: 'cy_icebolt', bonus: 0.10, type: 'damage' }] },
-	                { id: 'cy_frostbolt', name: 'フロストボルト', icon: '🔵', mp: 16, cd: 1.5, branch: 0, desc: '冷気の弾を放つ', prereq: 'cy_iceblast', effect: 'projectile_fire', iconEff: 'bolt_cold', baseMult: [2.2, 2.8, 3.5, 4.2, 5.2], speed: 360, reqLevel: 6, skillType: 'active', synergies: [{ from: 'cy_iceblast', bonus: 0.08, type: 'damage' }] },
+            { id: 'cy_icebolt', name: 'アイスボルト', icon: '🔷', mp: 6, cd: 0.5, branch: 0, desc: '氷の弾を撃ち出す', prereq: null, effect: 'projectile_fire', iconEff: 'bolt_cold', baseMult: [1.4, 1.7, 2.0, 2.4, 3.0], speed: 380, reqLevel: 1, skillType: 'active' },
+            { id: 'cy_iceblast', name: 'アイスブラスト', icon: '💎', mp: 12, cd: 0.8, branch: 0, desc: '氷の衝撃波を放つ', prereq: 'cy_icebolt', effect: 'projectile_fire', iconEff: 'bolt_cold', baseMult: [1.8, 2.2, 2.6, 3.2, 4.0], speed: 400, reqLevel: 6, skillType: 'active', synergies: [{ from: 'cy_icebolt', bonus: 0.10, type: 'damage' }] },
+            { id: 'cy_frostbolt', name: 'フロストボルト', icon: '🔵', mp: 16, cd: 1.5, branch: 0, desc: '冷気の弾を放つ', prereq: 'cy_iceblast', effect: 'projectile_fire', iconEff: 'bolt_cold', baseMult: [2.2, 2.8, 3.5, 4.2, 5.2], speed: 360, reqLevel: 6, skillType: 'active', synergies: [{ from: 'cy_iceblast', bonus: 0.08, type: 'damage' }] },
             { id: 'cy_glacialspike', name: 'グレイシャルスパイク', icon: '❄', mp: 22, cd: 3.0, branch: 0, desc: '氷の棘で敵を凍らせる', prereq: 'cy_frostbolt', effect: 'frost_nova', baseMult: [1.5, 2.0, 2.5, 3.2, 4.2], freeze: [2, 3, 3, 4, 5], reqLevel: 12, skillType: 'active', synergies: [{ from: 'cy_frostbolt', bonus: 0.10, type: 'damage' }, { from: 'cy_icebolt', bonus: 0.06, type: 'freeze' }] },
             { id: 'cy_blizzard', name: 'ブリザード', icon: '🌨', mp: 38, cd: 6.0, branch: 0, desc: '氷の嵐を降らせる', prereq: 'cy_glacialspike', effect: 'arrow_rain', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], range: 130, reqLevel: 18, skillType: 'active', synergies: [{ from: 'cy_glacialspike', bonus: 0.10, type: 'damage' }, { from: 'cy_frostbolt', bonus: 0.08, type: 'damage' }] },
             { id: 'cy_iceorb', name: 'アイスオーブ', icon: '🌐', mp: 42, cd: 7.0, branch: 0, desc: '氷の球体を放つ', prereq: 'cy_blizzard', effect: 'frozen_orb', baseMult: [2.5, 3.2, 4.0, 5.0, 6.5], speed: 180, shardCount: [5, 6, 8, 10, 12], reqLevel: 24, skillType: 'active', synergies: [{ from: 'cy_blizzard', bonus: 0.10, type: 'damage' }, { from: 'cy_permafrostmastery_p', bonus: 0.04, type: 'damage' }] },
@@ -4268,7 +4320,7 @@ function showPromotionUI() {
     DOM.pauseOverlay.style.display = 'none';
 }
 
-window.doPromotion = function(newClass) {
+window.doPromotion = function (newClass) {
     const newDef = CLASS_DEFS[newClass];
     if (!newDef) return;
     G.playerClass = newClass;
@@ -4488,7 +4540,7 @@ function showSkillSelectUI() {
         const swapFrom = skillSwapFrom === i;
         html += `<div class="skill-slot-pick ${sel ? 'selected' : ''} ${swapFrom ? 'swap-from' : ''}" onclick="pickSlot(${i})" draggable="true"
             ondragstart="onSkillSlotDragStart(event,${i})" ondragover="onSkillSlotDragOver(event)" ondrop="onSkillSlotDrop(event,${i})">
-            <div style="display:flex;align-items:center;justify-content:center;width:20px;height:20px">${sk ? `<img src="${getSkillIconDataURL(sk,20)}" width="20" height="20">` : '□'}</div>
+            <div style="display:flex;align-items:center;justify-content:center;width:20px;height:20px">${sk ? `<img src="${getSkillIconDataURL(sk, 20)}" width="20" height="20">` : '□'}</div>
             <div style="font-size:8px;color:#aaa">${i}</div>
         </div>`;
     }
@@ -4524,7 +4576,7 @@ function showSkillSelectUI() {
             const locked = lvl < 1;
             const displayMP = lvl > 0 ? getSkillMPCost(sk, lvl) : sk.mp;
             html += `<div class="skill-pick-item ${locked ? 'locked' : ''}" onclick="${locked ? '' : `assignSkill('${sk.id}')`}" onmouseenter="showSkillTooltip(event,'${sk.id}')" onmouseleave="hideTooltip()">
-                <div style="display:flex;align-items:center;justify-content:center;width:18px;height:18px"><img src="${getSkillIconDataURL(sk,18)}" width="18" height="18"></div>
+                <div style="display:flex;align-items:center;justify-content:center;width:18px;height:18px"><img src="${getSkillIconDataURL(sk, 18)}" width="18" height="18"></div>
                 <div style="font-size:9px;color:${locked ? '#666' : '#ffd700'}">${sk.name}</div>
                 <div style="font-size:8px;color:${locked ? '#444' : '#88f'}">Lv.${lvl} MP:${displayMP}</div>
             </div>`;
@@ -4577,32 +4629,32 @@ function selectOrSwapSkillSlot(slot) {
     skillSelectSlot = slot;
     showSkillSelectUI();
 }
-window.pickSlot = function(slot) {
+window.pickSlot = function (slot) {
     selectOrSwapSkillSlot(slot);
 };
 
-	    window.assignSkill = function(skillId) {
-	        if (skillSelectSlot < 1 || skillSelectSlot > 6) {
-	            addLog('先にスロットを選択してください', '#ffaa44');
-	            return;
-	        }
-	        const allSkills = getAllAvailableSkills();
-	        const sk = allSkills.find(s => s.id === skillId);
-	        if (!sk) return;
-	        if ((player.skillLevels[sk.id] || 0) < 1) return;
-	        if (sk.skillType === 'passive') {
-	            addLog('パッシブスキルはスロットに配置できません', '#ff8844');
-	            return;
-	        }
-	        const slvl = player.skillLevels[sk.id] || 1;
-	        player.skills[skillSelectSlot] = {
-	            id: sk.id, name: sk.name, icon: sk.icon, effect: sk.effect, iconEff: sk.iconEff,
-	            mp: getSkillMPCost(sk, slvl), cooldown: 0, maxCD: getSkillCooldown(sk, slvl), desc: sk.desc
-	        };
-	        showSkillSelectUI();
-	    };
+window.assignSkill = function (skillId) {
+    if (skillSelectSlot < 1 || skillSelectSlot > 6) {
+        addLog('先にスロットを選択してください', '#ffaa44');
+        return;
+    }
+    const allSkills = getAllAvailableSkills();
+    const sk = allSkills.find(s => s.id === skillId);
+    if (!sk) return;
+    if ((player.skillLevels[sk.id] || 0) < 1) return;
+    if (sk.skillType === 'passive') {
+        addLog('パッシブスキルはスロットに配置できません', '#ff8844');
+        return;
+    }
+    const slvl = player.skillLevels[sk.id] || 1;
+    player.skills[skillSelectSlot] = {
+        id: sk.id, name: sk.name, icon: sk.icon, effect: sk.effect, iconEff: sk.iconEff,
+        mp: getSkillMPCost(sk, slvl), cooldown: 0, maxCD: getSkillCooldown(sk, slvl), desc: sk.desc
+    };
+    showSkillSelectUI();
+};
 
-window.removeSkillSlot = function(slot) {
+window.removeSkillSlot = function (slot) {
     const s = slot || skillSelectSlot;
     if (!s || s < 1 || s > 6) {
         addLog('先にスロットを選択してください', '#ffaa44');
@@ -4617,7 +4669,7 @@ window.removeSkillSlot = function(slot) {
         addLog(`スロット${s}は空です`, '#888');
     }
 };
-window.removeSkillById = function(skillId) {
+window.removeSkillById = function (skillId) {
     let removed = false;
     for (let i = 1; i <= 6; i++) {
         if (player.skills[i] && player.skills[i].id === skillId) {
@@ -4634,7 +4686,7 @@ function findSlotBySkillId(skillId) {
     }
     return 0;
 }
-window.beginTreeSwap = function(skillId) {
+window.beginTreeSwap = function (skillId) {
     const slot = findSlotBySkillId(skillId);
     if (!slot) {
         addLog('このスキルはショートカットにありません', '#ffaa44');
@@ -4643,12 +4695,12 @@ window.beginTreeSwap = function(skillId) {
     treeSwapFromSlot = slot;
     updateSkillTreeUI();
 };
-window.cancelTreeSwap = function() {
+window.cancelTreeSwap = function () {
     treeSwapFromSlot = 0;
     treeSwapFromSkillId = '';
     updateSkillTreeUI();
 };
-window.treeSwapTo = function(targetSlot) {
+window.treeSwapTo = function (targetSlot) {
     if (!treeSwapFromSlot || treeSwapFromSlot === targetSlot) return;
     swapSkillSlots(treeSwapFromSlot, targetSlot);
     treeSwapFromSlot = 0;
@@ -4657,7 +4709,7 @@ window.treeSwapTo = function(targetSlot) {
 };
 window.treeSwapWithSkill = undefined;
 
-window.closeSkillSelect = function() {
+window.closeSkillSelect = function () {
     skillSelectOpen = false;
     skillSwapFrom = 0;
     skillEditMode = 'assign';
@@ -4675,34 +4727,34 @@ function openSkillEdit() {
     skillEditMode = 'assign';
     showSkillSelectUI();
 }
-window.setSkillEditMode = function(mode) {
+window.setSkillEditMode = function (mode) {
     skillEditMode = mode === 'swap' ? 'swap' : 'assign';
     skillSwapFrom = 0;
     showSkillSelectUI();
 };
-window.beginSwap = function(slot) {
+window.beginSwap = function (slot) {
     skillEditMode = 'swap';
     skillSwapFrom = slot;
     skillSelectSlot = slot;
     showSkillSelectUI();
 };
-window.forceSwapSlots = function(targetSlot) {
+window.forceSwapSlots = function (targetSlot) {
     if (!skillSwapFrom || skillSwapFrom === targetSlot) return;
     swapSkillSlots(skillSwapFrom, targetSlot);
     skillSwapFrom = 0;
     skillSelectSlot = targetSlot;
     showSkillSelectUI();
 };
-	    window.quickAssignSkill = function(skillId) {
-	        // スキルツリーから直接スロットに割り当て
-	        const allSkills = getAllAvailableSkills();
-	        const sk = allSkills.find(s => s.id === skillId);
-	        if (!sk || (player.skillLevels[sk.id] || 0) < 1) return;
-	        // Passive skills cannot be assigned to slots
-	        if (sk.skillType === 'passive') {
-	            addLog('パッシブスキルはスロットに配置できません（常時発動）', '#ff8844');
-	            return;
-	        }
+window.quickAssignSkill = function (skillId) {
+    // スキルツリーから直接スロットに割り当て
+    const allSkills = getAllAvailableSkills();
+    const sk = allSkills.find(s => s.id === skillId);
+    if (!sk || (player.skillLevels[sk.id] || 0) < 1) return;
+    // Passive skills cannot be assigned to slots
+    if (sk.skillType === 'passive') {
+        addLog('パッシブスキルはスロットに配置できません（常時発動）', '#ff8844');
+        return;
+    }
 
     // 空いているスロットを探す
     let emptySlot = 0;
@@ -4713,15 +4765,15 @@ window.forceSwapSlots = function(targetSlot) {
         }
     }
 
-	        if (emptySlot > 0) {
-	            // 空きスロットに自動割り当て
-	            const slvl = player.skillLevels[sk.id] || 1;
-	            player.skills[emptySlot] = {
-	                id: sk.id, name: sk.name, icon: sk.icon, effect: sk.effect, iconEff: sk.iconEff,
-	                mp: getSkillMPCost(sk, slvl), cooldown: 0, maxCD: getSkillCooldown(sk, slvl), desc: sk.desc
-	            };
-	            addLog(`${sk.name} をスロット${emptySlot}に設定！`, '#66ff66');
-	        } else {
+    if (emptySlot > 0) {
+        // 空きスロットに自動割り当て
+        const slvl = player.skillLevels[sk.id] || 1;
+        player.skills[emptySlot] = {
+            id: sk.id, name: sk.name, icon: sk.icon, effect: sk.effect, iconEff: sk.iconEff,
+            mp: getSkillMPCost(sk, slvl), cooldown: 0, maxCD: getSkillCooldown(sk, slvl), desc: sk.desc
+        };
+        addLog(`${sk.name} をスロット${emptySlot}に設定！`, '#66ff66');
+    } else {
         // 空きがない場合はスロット選択画面を開く
         addLog('スロットが満杯です。入れ替えてください', '#ffaa44');
         skillSelectSlot = 1;
@@ -4730,16 +4782,16 @@ window.forceSwapSlots = function(targetSlot) {
         showSkillSelectUI();
     }
 };
-window.onSkillSlotDragStart = function(e, slot) {
+window.onSkillSlotDragStart = function (e, slot) {
     if (!e || !e.dataTransfer) return;
     e.dataTransfer.setData('text/plain', String(slot));
     e.dataTransfer.effectAllowed = 'move';
 };
-window.onSkillSlotDragOver = function(e) {
+window.onSkillSlotDragOver = function (e) {
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
 };
-window.onSkillSlotDrop = function(e, slot) {
+window.onSkillSlotDrop = function (e, slot) {
     e.preventDefault();
     if (!e || !e.dataTransfer) return;
     const from = parseInt(e.dataTransfer.getData('text/plain'), 10);
@@ -4757,7 +4809,7 @@ function renderTitleSaveMenu() {
         const meta = getSaveMeta(i);
         const active = G.saveSlot === i;
         const info = meta
-            ? `Lv.${meta.level} / ${meta.act ? 'ACT' + meta.act : 'B' + meta.floor + 'F'}${meta.cycle ? ' (' + (meta.cycle+1) + '周目)' : ''} / ${meta.className}`
+            ? `Lv.${meta.level} / ${meta.act ? 'ACT' + meta.act : 'B' + meta.floor + 'F'}${meta.cycle ? ' (' + (meta.cycle + 1) + '周目)' : ''} / ${meta.className}`
             : '空';
         const time = meta && meta.timestamp
             ? new Date(meta.timestamp).toLocaleString('ja-JP')
@@ -4777,7 +4829,7 @@ function renderTitleSaveMenu() {
     DOM.titleSaveContent.innerHTML = html;
 }
 
-window.startNewGame = function(slot) {
+window.startNewGame = function (slot) {
     setSaveSlot(slot);
     if (hasSaveData(slot)) {
         const ok = confirm(`スロット${slot}にはセーブがあります。新規開始しますか？`);
@@ -4959,7 +5011,7 @@ const player = {
     invTab: 0, // 0=装備, 1=ポーション, 2=チャーム
 
     // Passive bonuses (recalculated by recalcPassives)
-    passiveBonuses: { critChance:0, damagePercent:0, defensePercent:0, attackSpeed:0, moveSpeed:0, manaRegen:0, maxHP:0, maxMP:0, lifeSteal:0, dodgeChance:0 },
+    passiveBonuses: { critChance: 0, damagePercent: 0, defensePercent: 0, attackSpeed: 0, moveSpeed: 0, manaRegen: 0, maxHP: 0, maxMP: 0, lifeSteal: 0, dodgeChance: 0 },
 
     // Skills
     selectedSkill: 1,
@@ -5363,7 +5415,7 @@ const player = {
             } else {
                 this.hp = 0;
                 G.dead = true;
-            sfxDeath();
+                sfxDeath();
                 DOM.deathScreen.style.display = 'flex';
             }
         }
@@ -5590,7 +5642,7 @@ const player = {
                 this.berserkT = dur;
                 playSound(200, 'sawtooth', 0.3, 0.1);
                 emitParticles(this.x, this.y, '#ff4400', 20, 80, 0.6, 4, -30, 'fire', lvl);
-                addLog(`狂戦士モード！(${Math.round(dur*10)/10}秒)`, '#ff4400');
+                addLog(`狂戦士モード！(${Math.round(dur * 10) / 10}秒)`, '#ff4400');
                 break;
             }
             case 'stun_aoe': {
@@ -5613,7 +5665,7 @@ const player = {
                 this.shieldReduction = getSkillValue(skDef, 'reduction', lvl);
                 sfxShield();
                 emitParticles(this.x, this.y, '#aaaaff', 12, 50, 0.5, 3, -40, 'arcane', lvl);
-                addLog(`鉄壁発動！(${Math.round(dur*10)/10}秒)`, '#aaaaff');
+                addLog(`鉄壁発動！(${Math.round(dur * 10) / 10}秒)`, '#aaaaff');
                 break;
             }
             case 'charge': {
@@ -5695,7 +5747,7 @@ const player = {
                 this.dodgeChance = getSkillValue(skDef, 'chance', lvl);
                 playSound(600, 'sine', 0.15, 0.06);
                 emitParticles(this.x, this.y, '#aaffaa', 10, 50, 0.4, 2, -30, 'arcane', lvl);
-                addLog(`回避モード！(${Math.round(dur*10)/10}秒)`, '#aaffaa');
+                addLog(`回避モード！(${Math.round(dur * 10) / 10}秒)`, '#aaffaa');
                 break;
             }
             case 'shadow_strike': {
@@ -5797,7 +5849,7 @@ const player = {
                 this.manaShieldAbsorb = getSkillValue(skDef, 'absorb', lvl);
                 sfxShield();
                 emitParticles(this.x, this.y, '#4488ff', 15, 50, 0.5, 3, -40, 'arcane', lvl);
-                addLog(`マナシールド発動！(${Math.round(dur*10)/10}秒)`, '#4488ff');
+                addLog(`マナシールド発動！(${Math.round(dur * 10) / 10}秒)`, '#4488ff');
                 break;
             }
 
@@ -5831,7 +5883,7 @@ const player = {
                 this.counterReflect = getSkillValue(skDef, 'reflect', lvl);
                 playSound(400, 'triangle', 0.15, 0.08);
                 emitParticles(this.x, this.y, '#ffcc44', 10, 40, 0.4, 3, -30, 'arcane', lvl);
-                addLog(`見切り発動！(${Math.round(dur*10)/10}秒)`, '#ffcc44');
+                addLog(`見切り発動！(${Math.round(dur * 10) / 10}秒)`, '#ffcc44');
                 break;
             }
             case 'buff_speed': {
@@ -5840,7 +5892,7 @@ const player = {
                 this.speedBuffBonus = getSkillValue(skDef, 'bonus', lvl);
                 playSound(600, 'sine', 0.12, 0.05);
                 emitParticles(this.x, this.y, '#88ffaa', 10, 50, 0.4, 2, -30, 'arcane', lvl);
-                addLog(`移動速度UP！(${Math.round(dur*10)/10}秒)`, '#88ffaa');
+                addLog(`移動速度UP！(${Math.round(dur * 10) / 10}秒)`, '#88ffaa');
                 break;
             }
             case 'buff_poison': {
@@ -5849,7 +5901,7 @@ const player = {
                 this.poisonDps = getSkillValue(skDef, 'dps', lvl) * (1 + synDmg);
                 playSound(300, 'sawtooth', 0.1, 0.06);
                 emitParticles(this.x, this.y, '#88ff44', 10, 40, 0.4, 2, -30, 'nature', lvl);
-                addLog(`毒塗り！攻撃に毒付与(${Math.round(dur*10)/10}秒)`, '#88ff44');
+                addLog(`毒塗り！攻撃に毒付与(${Math.round(dur * 10) / 10}秒)`, '#88ff44');
                 break;
             }
             case 'smoke_screen': {
@@ -5894,7 +5946,7 @@ const player = {
                 this.atkSpdBonus = getSkillValue(skDef, 'bonus', lvl);
                 playSound(500, 'triangle', 0.1, 0.05);
                 emitParticles(this.x, this.y, '#ffaa88', 10, 40, 0.3, 2, -30, 'fire', lvl);
-                addLog(`攻撃速度UP！(${Math.round(dur*10)/10}秒)`, '#ffaa88');
+                addLog(`攻撃速度UP！(${Math.round(dur * 10) / 10}秒)`, '#ffaa88');
                 break;
             }
             case 'buff_frenzy': {
@@ -5905,7 +5957,7 @@ const player = {
                 this.atkSpdBonus = getSkillValue(skDef, 'atkBonus', lvl);
                 playSound(250, 'sawtooth', 0.2, 0.1);
                 emitParticles(this.x, this.y, '#ff6644', 20, 80, 0.6, 4, -30, 'fire', lvl);
-                addLog(`フレンジー！(${Math.round(dur*10)/10}秒)`, '#ff6644');
+                addLog(`フレンジー！(${Math.round(dur * 10) / 10}秒)`, '#ff6644');
                 break;
             }
             case 'execute': {
@@ -5935,14 +5987,14 @@ const player = {
                 this.lifestealBuffPct = getSkillValue(skDef, 'pct', lvl);
                 playSound(350, 'sine', 0.12, 0.06);
                 emitParticles(this.x, this.y, '#ff4466', 10, 40, 0.4, 3, -30, 'arcane', lvl);
-                addLog(`血の刃！(${Math.round(dur*10)/10}秒)`, '#ff4466');
+                addLog(`血の刃！(${Math.round(dur * 10) / 10}秒)`, '#ff4466');
                 break;
             }
             case 'buff_undying': {
                 this.undyingT = getSkillValue(skDef, 'duration', lvl) * (1 + synDur);
                 playSound(200, 'square', 0.15, 0.1);
                 emitParticles(this.x, this.y, '#ffd700', 20, 60, 0.8, 4, -40, 'holy', lvl);
-                addLog(`不死身発動！(${Math.round(this.undyingT*10)/10}秒)`, '#ffd700');
+                addLog(`不死身発動！(${Math.round(this.undyingT * 10) / 10}秒)`, '#ffd700');
                 break;
             }
             case 'buff_stealth': {
@@ -5958,7 +6010,7 @@ const player = {
                 this.critBuffBonus = getSkillValue(skDef, 'bonus', lvl);
                 playSound(700, 'triangle', 0.1, 0.05);
                 emitParticles(this.x, this.y, '#ffdd44', 10, 40, 0.4, 2, -30, 'arcane', lvl);
-                addLog(`鷹の目！クリティカル率+${Math.round(this.critBuffBonus)}%(${Math.round(dur*10)/10}秒)`, '#ffdd44');
+                addLog(`鷹の目！クリティカル率+${Math.round(this.critBuffBonus)}%(${Math.round(dur * 10) / 10}秒)`, '#ffdd44');
                 break;
             }
             case 'buff_aura': {
@@ -5970,7 +6022,7 @@ const player = {
                 this.shieldReduction = this.auraReduction;
                 sfxShield();
                 emitParticles(this.x, this.y, '#ffdd88', 15, 60, 0.6, 4, -30, 'holy', lvl);
-                addLog(`守護のオーラ発動！(${Math.round(dur*10)/10}秒)`, '#ffdd88');
+                addLog(`守護のオーラ発動！(${Math.round(dur * 10) / 10}秒)`, '#ffdd88');
                 break;
             }
             case 'mana_drain': {
@@ -6206,7 +6258,7 @@ const player = {
             this.meteorT -= dt;
             // Warning particles
             if (G.meteorX) {
-                emitParticles(G.meteorX + randf(-50,50), G.meteorY + randf(-50,50), '#ff4400', 1, 10, 0.3, 2, -20);
+                emitParticles(G.meteorX + randf(-50, 50), G.meteorY + randf(-50, 50), '#ff4400', 1, 10, 0.3, 2, -20);
             }
             if (this.meteorT <= 0 && G.meteorX) {
                 // BOOM
@@ -6483,7 +6535,7 @@ const player = {
         const hpFrac = this.hp / this.maxHP;
         const mpFrac = this.mp / this.maxMP;
         const barW = 36;
-        const barX = sx - barW/2;
+        const barX = sx - barW / 2;
         const pBarY = sy + gy + 4;
         // HP bar background
         ctx.fillStyle = '#1a0000';
@@ -6585,16 +6637,16 @@ const player = {
             const hiDrawSize = drawSize * 2.0;
             // FLARE sprites: feet at 75% of cell height. Align feet with shadow (at TILE/2)
             const hiDy = gy - hiDrawSize * 0.75;
-            if (!drawHiResSpr(classKey, animName, dirIdx, G.time, -hiDrawSize/2, hiDy, hiDrawSize, hiDrawSize)) {
+            if (!drawHiResSpr(classKey, animName, dirIdx, G.time, -hiDrawSize / 2, hiDy, hiDrawSize, hiDrawSize)) {
                 // Fallback: pixel art sprite
-                if (!drawSpr(spriteKey, -drawSize/2, -drawSize + gy, drawSize, drawSize, flipX)) {
-                    ctx.fillStyle = '#888'; ctx.fillRect(-drawSize/4, -drawSize/4, drawSize/2, drawSize/2);
+                if (!drawSpr(spriteKey, -drawSize / 2, -drawSize + gy, drawSize, drawSize, flipX)) {
+                    ctx.fillStyle = '#888'; ctx.fillRect(-drawSize / 4, -drawSize / 4, drawSize / 2, drawSize / 2);
                 }
             }
         } else {
             // Fallback: original pixel art sprite
-            if (!drawSpr(spriteKey, -drawSize/2, -drawSize + gy, drawSize, drawSize, flipX)) {
-                ctx.fillStyle = '#888'; ctx.fillRect(-drawSize/4, -drawSize/4, drawSize/2, drawSize/2);
+            if (!drawSpr(spriteKey, -drawSize / 2, -drawSize + gy, drawSize, drawSize, flipX)) {
+                ctx.fillStyle = '#888'; ctx.fillRect(-drawSize / 4, -drawSize / 4, drawSize / 2, drawSize / 2);
             }
         }
         ctx.restore();
@@ -6603,7 +6655,7 @@ const player = {
         if (this.attacking) {
             const atkPhase = clamp(this.attackTimer * 4, 0, 1);
             // dirAngles: S=π/2, SW=3π/4, W=π, NW=-3π/4, N=-π/2, NE=-π/4, E=0, SE=π/4
-            const dirAngles8 = [Math.PI/2, Math.PI*3/4, Math.PI, -Math.PI*3/4, -Math.PI/2, -Math.PI/4, 0, Math.PI/4];
+            const dirAngles8 = [Math.PI / 2, Math.PI * 3 / 4, Math.PI, -Math.PI * 3 / 4, -Math.PI / 2, -Math.PI / 4, 0, Math.PI / 4];
             const curDir = this._lastDirIdx || 0;
             const baseAngle = hiresSpritesLoaded ? dirAngles8[curDir] : (flipX ? Math.PI : 0);
             const arcR = drawSize * 0.55;
@@ -6628,7 +6680,7 @@ const player = {
         // Aura effects for promoted classes
         const classDef = CLASS_DEFS[this.classKey];
         if (classDef && classDef.tier > 0) {
-            const colors = {paladin:'#ffd700',berserker:'#ff4400',assassin:'#8800ff',ranger:'#44ff44',pyromancer:'#ff6600',cryomancer:'#44ccff'};
+            const colors = { paladin: '#ffd700', berserker: '#ff4400', assassin: '#8800ff', ranger: '#44ff44', pyromancer: '#ff6600', cryomancer: '#44ccff' };
             const c = colors[this.classKey] || '#ffffff';
             ctx.globalAlpha = 0.08 + Math.sin(G.time * 3) * 0.04;
             ctx.fillStyle = c;
@@ -6643,8 +6695,8 @@ const player = {
         ctx.save();
         ctx.translate(sx, sy + bounce);
         if (atkTilt) ctx.rotate(atkTilt);
-        if (!drawSpr('knight', -TILE/2, -TILE/2, TILE, TILE, flipX)) {
-            ctx.fillStyle = '#888'; ctx.fillRect(-TILE/4, -TILE/4, TILE/2, TILE/2);
+        if (!drawSpr('knight', -TILE / 2, -TILE / 2, TILE, TILE, flipX)) {
+            ctx.fillStyle = '#888'; ctx.fillRect(-TILE / 4, -TILE / 4, TILE / 2, TILE / 2);
         }
         ctx.restore();
         if (this.attacking) {
@@ -6661,8 +6713,8 @@ const player = {
         ctx.save();
         ctx.translate(sx, sy + bounce);
         if (atkTilt) ctx.rotate(atkTilt);
-        if (!drawSpr('rogueChar', -TILE/2, -TILE/2, TILE, TILE, flipX)) {
-            ctx.fillStyle = '#6a6'; ctx.fillRect(-TILE/4, -TILE/4, TILE/2, TILE/2);
+        if (!drawSpr('rogueChar', -TILE / 2, -TILE / 2, TILE, TILE, flipX)) {
+            ctx.fillStyle = '#6a6'; ctx.fillRect(-TILE / 4, -TILE / 4, TILE / 2, TILE / 2);
         }
         ctx.restore();
         if (this.attacking) {
@@ -6678,8 +6730,8 @@ const player = {
         const magicGlow = 0.08 + Math.sin(G.time * 3) * 0.04;
         ctx.save();
         ctx.translate(sx, sy + bounce);
-        if (!drawSpr('wizardM', -TILE/2, -TILE/2, TILE, TILE, flipX)) {
-            ctx.fillStyle = '#66a'; ctx.fillRect(-TILE/4, -TILE/4, TILE/2, TILE/2);
+        if (!drawSpr('wizardM', -TILE / 2, -TILE / 2, TILE, TILE, flipX)) {
+            ctx.fillStyle = '#66a'; ctx.fillRect(-TILE / 4, -TILE / 4, TILE / 2, TILE / 2);
         }
         ctx.restore();
         ctx.globalAlpha = magicGlow;
@@ -6698,10 +6750,10 @@ const player = {
 
 // ========== MERCENARY SYSTEM (D2-style) ==========
 const MERCENARY_DEFS = {
-    rogue:     { name:'Rogue',     nameJP:'弓兵',   baseHP:120, baseStr:10, baseDex:18, baseInt:8,  baseDef:8,  attackType:'ranged', attackRange:180, baseSpeed:160, icon:'🏹', color:'#c98b6b', hpPerLevel:12, dmgPerLevel:2, defPerLevel:1.2, hireCost:400, reviveCostBase:200 },
-    fighter:   { name:'Fighter',   nameJP:'戦士',   baseHP:220, baseStr:18, baseDex:8,  baseInt:6,  baseDef:18, attackType:'melee',  attackRange:45,  baseSpeed:140, icon:'🛡', color:'#6c8aa6', hpPerLevel:20, dmgPerLevel:3, defPerLevel:2.0, hireCost:600, reviveCostBase:300 },
-    mage:      { name:'Mage',      nameJP:'魔法使い', baseHP:90,  baseStr:6,  baseDex:10, baseInt:22, baseDef:6,  attackType:'magic',  attackRange:160, baseSpeed:150, icon:'🧙', color:'#9a6bd6', hpPerLevel:9,  dmgPerLevel:4, defPerLevel:0.8, hireCost:700, reviveCostBase:350 },
-    priestess: { name:'Priestess', nameJP:'聖女',   baseHP:140, baseStr:8,  baseDex:12, baseInt:18, baseDef:10, attackType:'magic',  attackRange:120, baseSpeed:150, icon:'✨', color:'#e6c36a', hpPerLevel:13, dmgPerLevel:2, defPerLevel:1.1, hireCost:650, reviveCostBase:325 }
+    rogue: { name: 'Rogue', nameJP: '弓兵', baseHP: 120, baseStr: 10, baseDex: 18, baseInt: 8, baseDef: 8, attackType: 'ranged', attackRange: 180, baseSpeed: 160, icon: '🏹', color: '#c98b6b', hpPerLevel: 12, dmgPerLevel: 2, defPerLevel: 1.2, hireCost: 400, reviveCostBase: 200 },
+    fighter: { name: 'Fighter', nameJP: '戦士', baseHP: 220, baseStr: 18, baseDex: 8, baseInt: 6, baseDef: 18, attackType: 'melee', attackRange: 45, baseSpeed: 140, icon: '🛡', color: '#6c8aa6', hpPerLevel: 20, dmgPerLevel: 3, defPerLevel: 2.0, hireCost: 600, reviveCostBase: 300 },
+    mage: { name: 'Mage', nameJP: '魔法使い', baseHP: 90, baseStr: 6, baseDex: 10, baseInt: 22, baseDef: 6, attackType: 'magic', attackRange: 160, baseSpeed: 150, icon: '🧙', color: '#9a6bd6', hpPerLevel: 9, dmgPerLevel: 4, defPerLevel: 0.8, hireCost: 700, reviveCostBase: 350 },
+    priestess: { name: 'Priestess', nameJP: '聖女', baseHP: 140, baseStr: 8, baseDex: 12, baseInt: 18, baseDef: 10, attackType: 'magic', attackRange: 120, baseSpeed: 150, icon: '✨', color: '#e6c36a', hpPerLevel: 13, dmgPerLevel: 2, defPerLevel: 1.1, hireCost: 650, reviveCostBase: 325 }
 };
 const MERC_ACT_MULT = [0, 1.0, 1.3, 1.6, 2.0, 2.5];
 function getMercHireCost(typeKey) { return Math.round((MERCENARY_DEFS[typeKey]?.hireCost || 500) * (MERC_ACT_MULT[G.act] || 1)); }
@@ -6951,24 +7003,24 @@ class Mercenary {
 // Nightmare: some monsters gain resistances. Hell: some gain full immunity.
 const MONSTER_IMMUNITIES = {
     // ACT1: undead = cold resistant, physical normal
-    skeleton:      { hell: { cold: 100 }, nightmare: { cold: 50 } },
-    zombie:        { hell: { cold: 100, poison: 75 }, nightmare: { cold: 50 } },
+    skeleton: { hell: { cold: 100 }, nightmare: { cold: 50 } },
+    zombie: { hell: { cold: 100, poison: 75 }, nightmare: { cold: 50 } },
     // ACT2: desert = fire resistant
-    mummy:         { hell: { fire: 100 }, nightmare: { fire: 50 } },
-    scarab:        { hell: { poison: 100 }, nightmare: { poison: 50 } },
-    sand_golem:    { hell: { fire: 100, lightning: 75 }, nightmare: { fire: 50 } },
+    mummy: { hell: { fire: 100 }, nightmare: { fire: 50 } },
+    scarab: { hell: { poison: 100 }, nightmare: { poison: 50 } },
+    sand_golem: { hell: { fire: 100, lightning: 75 }, nightmare: { fire: 50 } },
     // ACT3: jungle = poison resistant
-    treeant:       { hell: { fire: 100 }, nightmare: { fire: 50 } },
+    treeant: { hell: { fire: 100 }, nightmare: { fire: 50 } },
     poison_spider: { hell: { poison: 100 }, nightmare: { poison: 50 } },
     jungle_shaman: { hell: { lightning: 100 }, nightmare: { lightning: 50 } },
     // ACT4: hell = fire resistant
-    demon:         { hell: { fire: 100 }, nightmare: { fire: 50 } },
-    hellhound:     { hell: { fire: 100, cold: 75 }, nightmare: { fire: 50 } },
-    imp:           { hell: { fire: 100 }, nightmare: { fire: 50 } },
+    demon: { hell: { fire: 100 }, nightmare: { fire: 50 } },
+    hellhound: { hell: { fire: 100, cold: 75 }, nightmare: { fire: 50 } },
+    imp: { hell: { fire: 100 }, nightmare: { fire: 50 } },
     // ACT5: ice = cold resistant
-    frost_zombie:  { hell: { cold: 100 }, nightmare: { cold: 50 } },
-    ice_wraith:    { hell: { cold: 100, lightning: 75 }, nightmare: { cold: 50 } },
-    yeti:          { hell: { cold: 100 }, nightmare: { cold: 50 } }
+    frost_zombie: { hell: { cold: 100 }, nightmare: { cold: 50 } },
+    ice_wraith: { hell: { cold: 100, lightning: 75 }, nightmare: { cold: 50 } },
+    yeti: { hell: { cold: 100 }, nightmare: { cold: 50 } }
 };
 const IMMUNITY_ICONS = { fire: '🔥', cold: '❄', lightning: '⚡', poison: '☠' };
 const IMMUNITY_COLORS = { fire: '#ff4400', cold: '#44aaff', lightning: '#ffdd00', poison: '#44cc00' };
@@ -6983,36 +7035,36 @@ function getMonsterImmunities(monsterType) {
 
 const MONSTER_DEFS = {
     skeleton: { name: 'スケルトン', r: 12, hp: 40, dmg: 8, spd: 60, xp: 25, color: '#9a8a6a', loot: 0.4, icon: '💀', defense: 10 },
-    zombie:   { name: 'ゾンビ', r: 14, hp: 70, dmg: 12, spd: 40, xp: 35, color: '#3a4a25', loot: 0.45, icon: '🧟', defense: 10 },
-    imp:      { name: 'インプ', r: 10, hp: 30, dmg: 15, spd: 100, xp: 45, color: '#8a2a2a', loot: 0.5, icon: '👹', defense: 10, ranged: true, projSpd: 200, projColor: '#ff4422', preferredRange: 150, projCd: 1.8, element: 'fire' },
-    ghost:    { name: 'ゴースト', r: 11, hp: 25, dmg: 10, spd: 110, xp: 55, color: '#555588', loot: 0.55, icon: '👻', defense: 10 },
-    demonlord:{ name: 'デーモンロード', r: 22, hp: 300, dmg: 30, spd: 70, xp: 300, color: '#8a1515', loot: 1.0, icon: '👿', defense: 10 },
+    zombie: { name: 'ゾンビ', r: 14, hp: 70, dmg: 12, spd: 40, xp: 35, color: '#3a4a25', loot: 0.45, icon: '🧟', defense: 10 },
+    imp: { name: 'インプ', r: 10, hp: 30, dmg: 15, spd: 100, xp: 45, color: '#8a2a2a', loot: 0.5, icon: '👹', defense: 10, ranged: true, projSpd: 200, projColor: '#ff4422', preferredRange: 150, projCd: 1.8, element: 'fire' },
+    ghost: { name: 'ゴースト', r: 11, hp: 25, dmg: 10, spd: 110, xp: 55, color: '#555588', loot: 0.55, icon: '👻', defense: 10 },
+    demonlord: { name: 'デーモンロード', r: 22, hp: 300, dmg: 30, spd: 70, xp: 300, color: '#8a1515', loot: 1.0, icon: '👿', defense: 10 },
     // ACT2 monsters
-    mummy:      { name: 'マミー', r: 14, hp: 80, dmg: 14, spd: 45, xp: 40, color: '#a89060', loot: 0.45, icon: '🧟', defense: 25 },
-    scarab:     { name: 'スカラベ', r: 9, hp: 35, dmg: 18, spd: 120, xp: 50, color: '#44662a', loot: 0.4, icon: '🪲', defense: 25 },
+    mummy: { name: 'マミー', r: 14, hp: 80, dmg: 14, spd: 45, xp: 40, color: '#a89060', loot: 0.45, icon: '🧟', defense: 25 },
+    scarab: { name: 'スカラベ', r: 9, hp: 35, dmg: 18, spd: 120, xp: 50, color: '#44662a', loot: 0.4, icon: '🪲', defense: 25 },
     sand_golem: { name: 'サンドゴーレム', r: 18, hp: 120, dmg: 20, spd: 50, xp: 60, color: '#b8a060', loot: 0.5, icon: '🗿', defense: 25 },
     // ACT3 monsters
-    treeant:        { name: 'トレアント', r: 18, hp: 100, dmg: 16, spd: 40, xp: 55, color: '#2a5a1a', loot: 0.5, icon: '🌳', defense: 50 },
-    poison_spider:  { name: '毒蜘蛛', r: 8, hp: 28, dmg: 20, spd: 130, xp: 55, color: '#44aa22', loot: 0.45, icon: '🕷', defense: 50, ranged: true, projSpd: 180, projColor: '#44cc22', preferredRange: 120, projCd: 1.5, element: 'poison' },
-    jungle_shaman:  { name: 'ジャングルシャーマン', r: 12, hp: 50, dmg: 22, spd: 70, xp: 65, color: '#558844', loot: 0.55, icon: '🧙', defense: 50, ranged: true, projSpd: 160, projColor: '#88ff44', preferredRange: 180, projCd: 2.0, element: 'poison' },
+    treeant: { name: 'トレアント', r: 18, hp: 100, dmg: 16, spd: 40, xp: 55, color: '#2a5a1a', loot: 0.5, icon: '🌳', defense: 50 },
+    poison_spider: { name: '毒蜘蛛', r: 8, hp: 28, dmg: 20, spd: 130, xp: 55, color: '#44aa22', loot: 0.45, icon: '🕷', defense: 50, ranged: true, projSpd: 180, projColor: '#44cc22', preferredRange: 120, projCd: 1.5, element: 'poison' },
+    jungle_shaman: { name: 'ジャングルシャーマン', r: 12, hp: 50, dmg: 22, spd: 70, xp: 65, color: '#558844', loot: 0.55, icon: '🧙', defense: 50, ranged: true, projSpd: 160, projColor: '#88ff44', preferredRange: 180, projCd: 2.0, element: 'poison' },
     // ACT4 monsters
-    demon:     { name: 'デーモン', r: 16, hp: 130, dmg: 25, spd: 80, xp: 150, color: '#aa2020', loot: 0.55, icon: '👹', defense: 80 },
+    demon: { name: 'デーモン', r: 16, hp: 130, dmg: 25, spd: 80, xp: 150, color: '#aa2020', loot: 0.55, icon: '👹', defense: 80 },
     hellhound: { name: 'ヘルハウンド', r: 12, hp: 70, dmg: 22, spd: 140, xp: 130, color: '#cc4400', loot: 0.50, icon: '🐕', defense: 80 },
     // ACT5 monsters
     frost_zombie: { name: 'フロストゾンビ', r: 14, hp: 140, dmg: 28, spd: 50, xp: 100, color: '#5588aa', loot: 0.45, icon: '🧟', defense: 120 },
-    ice_wraith:   { name: 'アイスレイス', r: 11, hp: 65, dmg: 24, spd: 110, xp: 110, color: '#88bbdd', loot: 0.5, icon: '👻', defense: 120, ranged: true, projSpd: 220, projColor: '#88ddff', preferredRange: 160, projCd: 1.6, element: 'cold' },
-    yeti:         { name: 'イエティ', r: 20, hp: 220, dmg: 35, spd: 60, xp: 140, color: '#aaccdd', loot: 0.55, icon: '🦍', defense: 120 }
+    ice_wraith: { name: 'アイスレイス', r: 11, hp: 65, dmg: 24, spd: 110, xp: 110, color: '#88bbdd', loot: 0.5, icon: '👻', defense: 120, ranged: true, projSpd: 220, projColor: '#88ddff', preferredRange: 160, projCd: 1.6, element: 'cold' },
+    yeti: { name: 'イエティ', r: 20, hp: 220, dmg: 35, spd: 60, xp: 140, color: '#aaccdd', loot: 0.55, icon: '🦍', defense: 120 }
 };
 
 // Champion/Unique monster affix system (D2-style)
 const CHAMPION_AFFIXES = {
     extra_strong: { name: '剛力', color: '#ff6644', dmgMult: 1.5, hpMult: 1.0 },
-    extra_fast:   { name: '俊足', color: '#44ddff', spdMult: 1.5, hpMult: 1.0 },
-    fire_enchanted:{ name: '火炎', color: '#ff4400', hpMult: 1.2, element: 'fire', auraDmg: 3, auraColor: '#ff4400' },
-    cold_enchanted:{ name: '冷気', color: '#88ddff', hpMult: 1.2, element: 'cold', auraDmg: 2, auraColor: '#88ddff', slowOnHit: 0.4 },
-    lightning_enchanted:{ name: '雷光', color: '#ffff44', hpMult: 1.2, element: 'lightning', auraDmg: 4, auraColor: '#ffff44' },
-    stone_skin:   { name: '石肌', color: '#888888', defMult: 3.0, hpMult: 1.3 },
-    cursed:       { name: '呪い', color: '#aa44aa', hpMult: 1.1, curseDmg: 1.25 },
+    extra_fast: { name: '俊足', color: '#44ddff', spdMult: 1.5, hpMult: 1.0 },
+    fire_enchanted: { name: '火炎', color: '#ff4400', hpMult: 1.2, element: 'fire', auraDmg: 3, auraColor: '#ff4400' },
+    cold_enchanted: { name: '冷気', color: '#88ddff', hpMult: 1.2, element: 'cold', auraDmg: 2, auraColor: '#88ddff', slowOnHit: 0.4 },
+    lightning_enchanted: { name: '雷光', color: '#ffff44', hpMult: 1.2, element: 'lightning', auraDmg: 4, auraColor: '#ffff44' },
+    stone_skin: { name: '石肌', color: '#888888', defMult: 3.0, hpMult: 1.3 },
+    cursed: { name: '呪い', color: '#aa44aa', hpMult: 1.1, curseDmg: 1.25 },
     spectral_hit: { name: '幽撃', color: '#cc88ff', hpMult: 1.1, ignoreDefense: true }
 };
 const CHAMPION_AFFIX_KEYS = Object.keys(CHAMPION_AFFIXES);
@@ -7290,10 +7342,10 @@ class Monster {
     }
 
     _darken(hex, factor) {
-        const r = parseInt(hex.slice(1,3),16);
-        const g = parseInt(hex.slice(3,5),16);
-        const b = parseInt(hex.slice(5,7),16);
-        return `rgb(${Math.round(r*factor)},${Math.round(g*factor)},${Math.round(b*factor)})`;
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgb(${Math.round(r * factor)},${Math.round(g * factor)},${Math.round(b * factor)})`;
     }
 
     draw(cx, cy) {
@@ -7379,7 +7431,7 @@ class Monster {
             ctx.globalAlpha *= alphaFlash;
             // FLARE sprites: feet at ~75% of cell. Align with shadow position
             const _mFeetY = this.r * mScale * 0.5 + 3;
-            _drewOGA = drawOGACreature(this.type, _dirIdx, G.time, sx - _drawSize/2, sy + _mFeetY - _drawSize * 0.78, _drawSize, _drawSize);
+            _drewOGA = drawOGACreature(this.type, _dirIdx, G.time, sx - _drawSize / 2, sy + _mFeetY - _drawSize * 0.90, _drawSize, _drawSize);
             ctx.globalAlpha = _prevAlpha;
         }
         if (!_drewOGA) {
@@ -7471,26 +7523,26 @@ class Monster {
                 // Maintain source aspect ratio (1137:356 ≈ 3.19:1)
                 const barH = Math.max(6, Math.round(bw / 3.19));
                 const hpY = sy - mScaledR - barH - 4;
-                ctx.drawImage(hpEmpty, sx - bw/2, hpY, bw, barH);
+                ctx.drawImage(hpEmpty, sx - bw / 2, hpY, bw, barH);
                 if (mHpRatio > 0) {
                     ctx.save();
                     ctx.beginPath();
-                    ctx.rect(sx - bw/2, hpY, bw * mHpRatio, barH);
+                    ctx.rect(sx - bw / 2, hpY, bw * mHpRatio, barH);
                     ctx.clip();
-                    ctx.drawImage(hpFilled, sx - bw/2, hpY, bw, barH);
+                    ctx.drawImage(hpFilled, sx - bw / 2, hpY, bw, barH);
                     ctx.restore();
                 }
             } else {
                 const hpY = sy - mScaledR - 10;
                 ctx.fillStyle = '#1a1a1a';
-                ctx.fillRect(sx - bw/2, hpY, bw, 4);
+                ctx.fillRect(sx - bw / 2, hpY, bw, 4);
                 const hpColor = this.isUnique ? '#ffd700' : this.isChampion ? '#6666ff' :
                     (mHpRatio > 0.3 ? '#00aa00' : '#dd3300');
                 ctx.fillStyle = hpColor;
-                ctx.fillRect(sx - bw/2, hpY, bw * mHpRatio, 4);
+                ctx.fillRect(sx - bw / 2, hpY, bw * mHpRatio, 4);
                 ctx.strokeStyle = '#000';
                 ctx.lineWidth = 0.5;
-                ctx.strokeRect(sx - bw/2, hpY, bw, 4);
+                ctx.strokeRect(sx - bw / 2, hpY, bw, 4);
             }
             // Immunity icons above HP bar
             if (this.immunities) {
@@ -7502,7 +7554,7 @@ class Monster {
                     for (let ii = 0; ii < immKeys.length; ii++) {
                         const ik = immKeys[ii];
                         ctx.fillStyle = IMMUNITY_COLORS[ik] || '#888';
-                        ctx.fillText(IMMUNITY_ICONS[ik] || '?', sx - totalW/2 + ii * 12 + 6, hpY - 2);
+                        ctx.fillText(IMMUNITY_ICONS[ik] || '?', sx - totalW / 2 + ii * 12 + 6, hpY - 2);
                     }
                 }
             }
@@ -7559,257 +7611,257 @@ class Monster {
         }
     }
 
-_drawHitFlash(sx, sy, alphaFlash, r, color) {
-    if (this.hitFlash > 0) {
-        const flashIntensity = this.hitFlash / 0.1;
-        const mScale = this.drawScale || 1;
-        const scaledR = r * mScale;
-        ctx.save();
-        // White outline flash (larger, bright)
-        ctx.globalCompositeOperation = 'lighter';
-        ctx.globalAlpha = flashIntensity * 0.6;
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(sx, sy, scaledR * 1.15, 0, Math.PI * 2);
-        ctx.fill();
-        // Radial impact glow
-        const impG = ctx.createRadialGradient(sx, sy, 0, sx, sy, scaledR * 2);
-        impG.addColorStop(0, `rgba(255,255,255,${flashIntensity * 0.3})`);
-        impG.addColorStop(0.4, color + Math.round(flashIntensity * 60).toString(16).padStart(2,'0'));
-        impG.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.globalAlpha = flashIntensity * 0.5;
-        ctx.fillStyle = impG;
-        ctx.beginPath();
-        ctx.arc(sx, sy, scaledR * 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-        // OGA sparks overlay for elemental hits
-        if (ogaLoaded && OGA.fx_sparks && this.lastHitElement && this.lastHitElement !== 'physical') {
-            ctx.globalAlpha = flashIntensity * 0.8;
-            drawOGASparks(this.lastHitElement, G.time, sx - scaledR, sy - scaledR, scaledR * 2, scaledR * 2);
-            ctx.globalAlpha = 1;
-        }
-        // VFX impact overlay (element-specific 16-frame strips)
-        if (ogaLoaded) {
-            let vfxImg;
-            const hitEl = this.lastHitElement;
-            if (hitEl === 'physical' || !hitEl) {
-                // Alternate between blood and impact_set2 for physical variety
-                vfxImg = ((this.type.charCodeAt(0) || 0) % 2 === 0)
-                    ? OGA.vfx_impact_blood : (OGA.vfx_impact_set2 || OGA.vfx_impact_blood);
-            } else if (hitEl === 'cold' || hitEl === 'ice') {
-                vfxImg = OGA.vfx_impact_water || OGA.vfx_impact_earth;
-            } else if (hitEl === 'lightning') {
-                vfxImg = OGA.vfx_impact_air || OGA.vfx_impact_earth;
-            } else if (hitEl === 'dark') {
-                vfxImg = OGA.vfx_impact_chaos || OGA.vfx_impact_earth;
-            } else if (hitEl === 'heal' || hitEl === 'holy') {
-                vfxImg = OGA.vfx_impact_divine || OGA.vfx_impact_earth;
-            } else {
-                vfxImg = OGA.vfx_impact_earth;
+    _drawHitFlash(sx, sy, alphaFlash, r, color) {
+        if (this.hitFlash > 0) {
+            const flashIntensity = this.hitFlash / 0.1;
+            const mScale = this.drawScale || 1;
+            const scaledR = r * mScale;
+            ctx.save();
+            // White outline flash (larger, bright)
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = flashIntensity * 0.6;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(sx, sy, scaledR * 1.15, 0, Math.PI * 2);
+            ctx.fill();
+            // Radial impact glow
+            const impG = ctx.createRadialGradient(sx, sy, 0, sx, sy, scaledR * 2);
+            impG.addColorStop(0, `rgba(255,255,255,${flashIntensity * 0.3})`);
+            impG.addColorStop(0.4, color + Math.round(flashIntensity * 60).toString(16).padStart(2, '0'));
+            impG.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.globalAlpha = flashIntensity * 0.5;
+            ctx.fillStyle = impG;
+            ctx.beginPath();
+            ctx.arc(sx, sy, scaledR * 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            // OGA sparks overlay for elemental hits
+            if (ogaLoaded && OGA.fx_sparks && this.lastHitElement && this.lastHitElement !== 'physical') {
+                ctx.globalAlpha = flashIntensity * 0.8;
+                drawOGASparks(this.lastHitElement, G.time, sx - scaledR, sy - scaledR, scaledR * 2, scaledR * 2);
+                ctx.globalAlpha = 1;
             }
-            if (vfxImg) {
-                const vfxCellSz = (vfxImg.height / 4) | 0; // 128px (4 rows of variants)
-                const vfxFrames = (vfxImg.width / vfxCellSz) | 0; // 16 or 8
-                const vfxFrame = Math.floor((1 - flashIntensity) * vfxFrames);
-                if (vfxFrame < vfxFrames) {
-                    ctx.globalAlpha = flashIntensity * 0.7;
-                    const vfxRow = (this.type.charCodeAt(0) || 0) % 4;
-                    const vfxSz = scaledR * 3;
-                    ctx.drawImage(vfxImg, vfxFrame * vfxCellSz, vfxRow * vfxCellSz, vfxCellSz, vfxCellSz,
-                        sx - vfxSz / 2, sy - vfxSz / 2, vfxSz, vfxSz);
-                    ctx.globalAlpha = 1;
+            // VFX impact overlay (element-specific 16-frame strips)
+            if (ogaLoaded) {
+                let vfxImg;
+                const hitEl = this.lastHitElement;
+                if (hitEl === 'physical' || !hitEl) {
+                    // Alternate between blood and impact_set2 for physical variety
+                    vfxImg = ((this.type.charCodeAt(0) || 0) % 2 === 0)
+                        ? OGA.vfx_impact_blood : (OGA.vfx_impact_set2 || OGA.vfx_impact_blood);
+                } else if (hitEl === 'cold' || hitEl === 'ice') {
+                    vfxImg = OGA.vfx_impact_water || OGA.vfx_impact_earth;
+                } else if (hitEl === 'lightning') {
+                    vfxImg = OGA.vfx_impact_air || OGA.vfx_impact_earth;
+                } else if (hitEl === 'dark') {
+                    vfxImg = OGA.vfx_impact_chaos || OGA.vfx_impact_earth;
+                } else if (hitEl === 'heal' || hitEl === 'holy') {
+                    vfxImg = OGA.vfx_impact_divine || OGA.vfx_impact_earth;
+                } else {
+                    vfxImg = OGA.vfx_impact_earth;
+                }
+                if (vfxImg) {
+                    const vfxCellSz = (vfxImg.height / 4) | 0; // 128px (4 rows of variants)
+                    const vfxFrames = (vfxImg.width / vfxCellSz) | 0; // 16 or 8
+                    const vfxFrame = Math.floor((1 - flashIntensity) * vfxFrames);
+                    if (vfxFrame < vfxFrames) {
+                        ctx.globalAlpha = flashIntensity * 0.7;
+                        const vfxRow = (this.type.charCodeAt(0) || 0) % 4;
+                        const vfxSz = scaledR * 3;
+                        ctx.drawImage(vfxImg, vfxFrame * vfxCellSz, vfxRow * vfxCellSz, vfxCellSz, vfxCellSz,
+                            sx - vfxSz / 2, sy - vfxSz / 2, vfxSz, vfxSz);
+                        ctx.globalAlpha = 1;
+                    }
                 }
             }
         }
     }
-}
 
-_drawSkeleton(sx, sy, alphaFlash) {
-    const flipX = player.x < this.x;
-    const s = this.drawScale || 1;
-    const dw = TILE * s, dh = TILE * s;
-    drawSpr('skeleton', sx - dw/2, sy - dh/2, dw, dh, flipX, true);
-    this._drawHitFlash(sx, sy, alphaFlash, this.r, '#ff4400');
-}
-
-_drawZombie(sx, sy, alphaFlash) {
-    const flipX = player.x < this.x;
-    const s = this.drawScale || 1;
-    const dw = TILE * s, dh = TILE * s;
-    drawSpr('zombie', sx - dw/2, sy - dh/2, dw, dh, flipX, true);
-    this._drawHitFlash(sx, sy, alphaFlash, this.r, '#ff4400');
-}
-
-_drawImp(sx, sy, alphaFlash) {
-    const flipX = player.x < this.x;
-    const s = this.drawScale || 1;
-    const dw = TILE * s, dh = TILE * s;
-    drawSpr('imp', sx - dw/2, sy - dh/2, dw, dh, flipX, true);
-    this._drawHitFlash(sx, sy, alphaFlash, this.r, '#ff4400');
-}
-
-_drawGhost(sx, sy, alphaFlash) {
-    const flipX = player.x < this.x;
-    const s = this.drawScale || 1;
-    const dw = TILE * s, dh = TILE * s;
-    ctx.globalAlpha = 0.55 + Math.sin(G.time * 3) * 0.15;
-    drawSpr('banshee', sx - dw/2, sy - dh/2, dw, dh, flipX, true);
-    ctx.globalAlpha = 1;
-    this._drawHitFlash(sx, sy, alphaFlash, this.r, '#8844ff');
-}
-
-_drawDemonLord(sx, sy, alphaFlash) {
-    const flipX = player.x < this.x;
-    const bossScale = this.drawScale || 2.0;
-    const bw = TILE * bossScale, bh = TILE * bossScale;
-
-    // Ground aura (dark pulsing circle beneath boss)
-    const auraR = TILE * 1.2;
-    const auraAlpha = 0.08 + Math.sin(G.time * 2.5) * 0.04;
-    const auraG = ctx.createRadialGradient(sx, sy + 5, 0, sx, sy + 5, auraR);
-    auraG.addColorStop(0, `rgba(180,30,0,${auraAlpha})`);
-    auraG.addColorStop(0.5, `rgba(120,10,0,${auraAlpha * 0.5})`);
-    auraG.addColorStop(1, 'rgba(80,0,0,0)');
-    ctx.fillStyle = auraG;
-    ctx.beginPath(); ctx.arc(sx, sy + 5, auraR, 0, Math.PI * 2); ctx.fill();
-
-    drawSpr('deathKnight', sx - bw/2, sy - bh/2, bw, bh, flipX);
-
-    // Fire particles around boss
-    for (let fp = 0; fp < 5; fp++) {
-        const angle = G.time * 1.5 + fp * (Math.PI * 2 / 5);
-        const fpDist = TILE * 0.6 + Math.sin(G.time * 3 + fp * 2) * 5;
-        const fpx = sx + Math.cos(angle) * fpDist;
-        const fpy = sy + Math.sin(angle) * fpDist * 0.5 - Math.abs(Math.sin(G.time * 5 + fp)) * 8;
-        const fpSize = 2 + Math.sin(G.time * 6 + fp) * 1;
-        ctx.globalAlpha = 0.3 + Math.sin(G.time * 4 + fp * 1.5) * 0.15;
-        ctx.fillStyle = '#ff6020';
-        ctx.beginPath(); ctx.arc(fpx, fpy, fpSize, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#ffaa40';
-        ctx.beginPath(); ctx.arc(fpx, fpy, fpSize * 0.5, 0, Math.PI * 2); ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-
-    // Inner glow
-    ctx.globalAlpha = 0.12 + Math.sin(G.time * 4) * 0.05;
-    ctx.fillStyle = '#ff4400';
-    ctx.beginPath(); ctx.arc(sx, sy, TILE * 0.75, 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 1;
-
-    // Double ring aura
-    ctx.strokeStyle = `rgba(200,50,50,${0.2 + Math.sin(G.time * 3) * 0.1})`;
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.arc(sx, sy, TILE * 0.9, 0, Math.PI * 2); ctx.stroke();
-    ctx.strokeStyle = `rgba(255,100,20,${0.15 + Math.sin(G.time * 4.5) * 0.08})`;
-    ctx.lineWidth = 0.8;
-    ctx.beginPath(); ctx.arc(sx, sy, TILE * 1.1, 0, Math.PI * 2); ctx.stroke();
-
-    this._drawHitFlash(sx, sy, alphaFlash, this.r * 1.3, '#ff4400');
-}
-
-_drawGeneric(sx, sy, alphaFlash) {
-    // Generic colored circle draw for new monster types (scaled)
-    const color = this.def.color || '#888';
-    const s = this.drawScale || 1;
-    const r = this.r * s;
-    // Body
-    ctx.fillStyle = this._darken(color, 0.6);
-    ctx.beginPath(); ctx.arc(sx, sy + 2 * s, r, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = color;
-    ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
-    // Highlight
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
-    ctx.beginPath(); ctx.arc(sx - r * 0.25, sy - r * 0.25, r * 0.45, 0, Math.PI * 2); ctx.fill();
-    // Eyes
-    const eyeOff = 3 * s;
-    ctx.fillStyle = '#ff0000';
-    ctx.beginPath(); ctx.arc(sx - eyeOff, sy - 2 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(sx + eyeOff, sy - 2 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
-    // Icon above
-    ctx.font = `${Math.round(r * 1.2)}px ${FONT_EMOJI}`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(this.def.icon || '?', sx, sy);
-    this._drawHitFlash(sx, sy, alphaFlash, this.r, '#ff4400');
-}
-
-_drawBoss(sx, sy, alphaFlash) {
-    const bd = BOSS_DEFS[this.bossKey] || UBER_BOSS_DEFS[this.bossKey] || {};
-    const bossScale = this.drawScale || 2.2;
-    const bw = TILE * bossScale, bh = TILE * bossScale;
-    const color = bd.color || '#ff0000';
-
-    // Ground aura
-    const auraR = TILE * 1.4;
-    const auraAlpha = 0.1 + Math.sin(G.time * 2.5) * 0.05;
-    const rr = parseInt(color.slice(1,3),16), gg = parseInt(color.slice(3,5),16), bb = parseInt(color.slice(5,7),16);
-    const aG = ctx.createRadialGradient(sx, sy + 5, 0, sx, sy + 5, auraR);
-    aG.addColorStop(0, `rgba(${rr},${gg},${bb},${auraAlpha})`);
-    aG.addColorStop(0.5, `rgba(${rr},${gg},${bb},${auraAlpha * 0.4})`);
-    aG.addColorStop(1, `rgba(${rr},${gg},${bb},0)`);
-    ctx.fillStyle = aG; ctx.beginPath(); ctx.arc(sx, sy + 5, auraR, 0, Math.PI * 2); ctx.fill();
-
-    // Boss body - large icon
-    ctx.font = `${Math.round(bw * 0.7)}px ${FONT_EMOJI}`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(bd.icon || '👿', sx, sy - 4);
-
-    // Pulsing rings
-    for (let ri = 0; ri < 2; ri++) {
-        const ringR = TILE * (0.9 + ri * 0.25);
-        const ringA = 0.15 + Math.sin(G.time * (3 + ri)) * 0.08;
-        ctx.strokeStyle = `rgba(${rr},${gg},${bb},${ringA})`;
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.arc(sx, sy, ringR, 0, Math.PI * 2); ctx.stroke();
+    _drawSkeleton(sx, sy, alphaFlash) {
+        const flipX = player.x < this.x;
+        const s = this.drawScale || 1;
+        const dw = TILE * s, dh = TILE * s;
+        drawSpr('skeleton', sx - dw / 2, sy - dh / 2, dw, dh, flipX, true);
+        this._drawHitFlash(sx, sy, alphaFlash, this.r, '#ff4400');
     }
 
-    // Rotating particles
-    for (let fp = 0; fp < 4; fp++) {
-        const angle = G.time * 1.5 + fp * (Math.PI * 2 / 4);
-        const fpDist = TILE * 0.6 + Math.sin(G.time * 3 + fp * 2) * 5;
-        const fpx = sx + Math.cos(angle) * fpDist;
-        const fpy = sy + Math.sin(angle) * fpDist * 0.5;
-        const fpSize = 2 + Math.sin(G.time * 6 + fp) * 1;
-        ctx.globalAlpha = 0.3 + Math.sin(G.time * 4 + fp * 1.5) * 0.15;
-        ctx.fillStyle = color;
-        ctx.beginPath(); ctx.arc(fpx, fpy, fpSize, 0, Math.PI * 2); ctx.fill();
+    _drawZombie(sx, sy, alphaFlash) {
+        const flipX = player.x < this.x;
+        const s = this.drawScale || 1;
+        const dw = TILE * s, dh = TILE * s;
+        drawSpr('zombie', sx - dw / 2, sy - dh / 2, dw, dh, flipX, true);
+        this._drawHitFlash(sx, sy, alphaFlash, this.r, '#ff4400');
     }
-    ctx.globalAlpha = 1;
 
-    // Boss name plate
-    ctx.font = `bold 12px ${FONT_UI}`;
-    ctx.fillStyle = '#000'; ctx.fillText(bd.name || 'BOSS', sx + 1, sy - this.r - 21);
-    ctx.fillStyle = color; ctx.fillText(bd.name || 'BOSS', sx, sy - this.r - 22);
+    _drawImp(sx, sy, alphaFlash) {
+        const flipX = player.x < this.x;
+        const s = this.drawScale || 1;
+        const dw = TILE * s, dh = TILE * s;
+        drawSpr('imp', sx - dw / 2, sy - dh / 2, dw, dh, flipX, true);
+        this._drawHitFlash(sx, sy, alphaFlash, this.r, '#ff4400');
+    }
 
-    // Boss HP bar (wider) - OGA Dark Fantasy A-series HP bar
-    const barW = 60;
-    const hpPct = clamp(this.hp / this.maxHP, 0, 1);
-    const bossHpFilled = OGA.ui_hpbar_a1 || OGA.ui_hpbar;
-    const bossHpEmpty = OGA.ui_hpbar_a2 || OGA.ui_hpbar_empty;
-    if (ogaLoaded && bossHpEmpty && bossHpFilled) {
-        // Maintain source aspect ratio (1137:356 ≈ 3.19:1)
-        const barH = Math.round(barW / 3.19);
-        const barY = sy - this.r - barH - 6;
-        ctx.drawImage(bossHpEmpty, sx - barW/2, barY, barW, barH);
-        if (hpPct > 0) {
-            ctx.save();
-            ctx.beginPath();
-            ctx.rect(sx - barW/2, barY, barW * hpPct, barH);
-            ctx.clip();
-            ctx.drawImage(bossHpFilled, sx - barW/2, barY, barW, barH);
-            ctx.restore();
+    _drawGhost(sx, sy, alphaFlash) {
+        const flipX = player.x < this.x;
+        const s = this.drawScale || 1;
+        const dw = TILE * s, dh = TILE * s;
+        ctx.globalAlpha = 0.55 + Math.sin(G.time * 3) * 0.15;
+        drawSpr('banshee', sx - dw / 2, sy - dh / 2, dw, dh, flipX, true);
+        ctx.globalAlpha = 1;
+        this._drawHitFlash(sx, sy, alphaFlash, this.r, '#8844ff');
+    }
+
+    _drawDemonLord(sx, sy, alphaFlash) {
+        const flipX = player.x < this.x;
+        const bossScale = this.drawScale || 2.0;
+        const bw = TILE * bossScale, bh = TILE * bossScale;
+
+        // Ground aura (dark pulsing circle beneath boss)
+        const auraR = TILE * 1.2;
+        const auraAlpha = 0.08 + Math.sin(G.time * 2.5) * 0.04;
+        const auraG = ctx.createRadialGradient(sx, sy + 5, 0, sx, sy + 5, auraR);
+        auraG.addColorStop(0, `rgba(180,30,0,${auraAlpha})`);
+        auraG.addColorStop(0.5, `rgba(120,10,0,${auraAlpha * 0.5})`);
+        auraG.addColorStop(1, 'rgba(80,0,0,0)');
+        ctx.fillStyle = auraG;
+        ctx.beginPath(); ctx.arc(sx, sy + 5, auraR, 0, Math.PI * 2); ctx.fill();
+
+        drawSpr('deathKnight', sx - bw / 2, sy - bh / 2, bw, bh, flipX);
+
+        // Fire particles around boss
+        for (let fp = 0; fp < 5; fp++) {
+            const angle = G.time * 1.5 + fp * (Math.PI * 2 / 5);
+            const fpDist = TILE * 0.6 + Math.sin(G.time * 3 + fp * 2) * 5;
+            const fpx = sx + Math.cos(angle) * fpDist;
+            const fpy = sy + Math.sin(angle) * fpDist * 0.5 - Math.abs(Math.sin(G.time * 5 + fp)) * 8;
+            const fpSize = 2 + Math.sin(G.time * 6 + fp) * 1;
+            ctx.globalAlpha = 0.3 + Math.sin(G.time * 4 + fp * 1.5) * 0.15;
+            ctx.fillStyle = '#ff6020';
+            ctx.beginPath(); ctx.arc(fpx, fpy, fpSize, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ffaa40';
+            ctx.beginPath(); ctx.arc(fpx, fpy, fpSize * 0.5, 0, Math.PI * 2); ctx.fill();
         }
-    } else {
-        const barH = 5;
-        ctx.fillStyle = '#333'; ctx.fillRect(sx - barW/2, sy - this.r - 14, barW, barH);
-        ctx.fillStyle = hpPct > 0.3 ? '#cc0000' : '#ff4400';
-        ctx.fillRect(sx - barW/2, sy - this.r - 14, barW * hpPct, barH);
-        ctx.strokeStyle = '#666'; ctx.lineWidth = 0.5;
-        ctx.strokeRect(sx - barW/2, sy - this.r - 14, barW, barH);
+        ctx.globalAlpha = 1;
+
+        // Inner glow
+        ctx.globalAlpha = 0.12 + Math.sin(G.time * 4) * 0.05;
+        ctx.fillStyle = '#ff4400';
+        ctx.beginPath(); ctx.arc(sx, sy, TILE * 0.75, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Double ring aura
+        ctx.strokeStyle = `rgba(200,50,50,${0.2 + Math.sin(G.time * 3) * 0.1})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(sx, sy, TILE * 0.9, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = `rgba(255,100,20,${0.15 + Math.sin(G.time * 4.5) * 0.08})`;
+        ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.arc(sx, sy, TILE * 1.1, 0, Math.PI * 2); ctx.stroke();
+
+        this._drawHitFlash(sx, sy, alphaFlash, this.r * 1.3, '#ff4400');
     }
 
-    this._drawHitFlash(sx, sy, alphaFlash, this.r * 1.3, color);
-}
+    _drawGeneric(sx, sy, alphaFlash) {
+        // Generic colored circle draw for new monster types (scaled)
+        const color = this.def.color || '#888';
+        const s = this.drawScale || 1;
+        const r = this.r * s;
+        // Body
+        ctx.fillStyle = this._darken(color, 0.6);
+        ctx.beginPath(); ctx.arc(sx, sy + 2 * s, r, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
+        // Highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        ctx.beginPath(); ctx.arc(sx - r * 0.25, sy - r * 0.25, r * 0.45, 0, Math.PI * 2); ctx.fill();
+        // Eyes
+        const eyeOff = 3 * s;
+        ctx.fillStyle = '#ff0000';
+        ctx.beginPath(); ctx.arc(sx - eyeOff, sy - 2 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(sx + eyeOff, sy - 2 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
+        // Icon above
+        ctx.font = `${Math.round(r * 1.2)}px ${FONT_EMOJI}`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(this.def.icon || '?', sx, sy);
+        this._drawHitFlash(sx, sy, alphaFlash, this.r, '#ff4400');
+    }
+
+    _drawBoss(sx, sy, alphaFlash) {
+        const bd = BOSS_DEFS[this.bossKey] || UBER_BOSS_DEFS[this.bossKey] || {};
+        const bossScale = this.drawScale || 2.2;
+        const bw = TILE * bossScale, bh = TILE * bossScale;
+        const color = bd.color || '#ff0000';
+
+        // Ground aura
+        const auraR = TILE * 1.4;
+        const auraAlpha = 0.1 + Math.sin(G.time * 2.5) * 0.05;
+        const rr = parseInt(color.slice(1, 3), 16), gg = parseInt(color.slice(3, 5), 16), bb = parseInt(color.slice(5, 7), 16);
+        const aG = ctx.createRadialGradient(sx, sy + 5, 0, sx, sy + 5, auraR);
+        aG.addColorStop(0, `rgba(${rr},${gg},${bb},${auraAlpha})`);
+        aG.addColorStop(0.5, `rgba(${rr},${gg},${bb},${auraAlpha * 0.4})`);
+        aG.addColorStop(1, `rgba(${rr},${gg},${bb},0)`);
+        ctx.fillStyle = aG; ctx.beginPath(); ctx.arc(sx, sy + 5, auraR, 0, Math.PI * 2); ctx.fill();
+
+        // Boss body - large icon
+        ctx.font = `${Math.round(bw * 0.7)}px ${FONT_EMOJI}`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(bd.icon || '👿', sx, sy - 4);
+
+        // Pulsing rings
+        for (let ri = 0; ri < 2; ri++) {
+            const ringR = TILE * (0.9 + ri * 0.25);
+            const ringA = 0.15 + Math.sin(G.time * (3 + ri)) * 0.08;
+            ctx.strokeStyle = `rgba(${rr},${gg},${bb},${ringA})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(sx, sy, ringR, 0, Math.PI * 2); ctx.stroke();
+        }
+
+        // Rotating particles
+        for (let fp = 0; fp < 4; fp++) {
+            const angle = G.time * 1.5 + fp * (Math.PI * 2 / 4);
+            const fpDist = TILE * 0.6 + Math.sin(G.time * 3 + fp * 2) * 5;
+            const fpx = sx + Math.cos(angle) * fpDist;
+            const fpy = sy + Math.sin(angle) * fpDist * 0.5;
+            const fpSize = 2 + Math.sin(G.time * 6 + fp) * 1;
+            ctx.globalAlpha = 0.3 + Math.sin(G.time * 4 + fp * 1.5) * 0.15;
+            ctx.fillStyle = color;
+            ctx.beginPath(); ctx.arc(fpx, fpy, fpSize, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        // Boss name plate
+        ctx.font = `bold 12px ${FONT_UI}`;
+        ctx.fillStyle = '#000'; ctx.fillText(bd.name || 'BOSS', sx + 1, sy - this.r - 21);
+        ctx.fillStyle = color; ctx.fillText(bd.name || 'BOSS', sx, sy - this.r - 22);
+
+        // Boss HP bar (wider) - OGA Dark Fantasy A-series HP bar
+        const barW = 60;
+        const hpPct = clamp(this.hp / this.maxHP, 0, 1);
+        const bossHpFilled = OGA.ui_hpbar_a1 || OGA.ui_hpbar;
+        const bossHpEmpty = OGA.ui_hpbar_a2 || OGA.ui_hpbar_empty;
+        if (ogaLoaded && bossHpEmpty && bossHpFilled) {
+            // Maintain source aspect ratio (1137:356 ≈ 3.19:1)
+            const barH = Math.round(barW / 3.19);
+            const barY = sy - this.r - barH - 6;
+            ctx.drawImage(bossHpEmpty, sx - barW / 2, barY, barW, barH);
+            if (hpPct > 0) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(sx - barW / 2, barY, barW * hpPct, barH);
+                ctx.clip();
+                ctx.drawImage(bossHpFilled, sx - barW / 2, barY, barW, barH);
+                ctx.restore();
+            }
+        } else {
+            const barH = 5;
+            ctx.fillStyle = '#333'; ctx.fillRect(sx - barW / 2, sy - this.r - 14, barW, barH);
+            ctx.fillStyle = hpPct > 0.3 ? '#cc0000' : '#ff4400';
+            ctx.fillRect(sx - barW / 2, sy - this.r - 14, barW * hpPct, barH);
+            ctx.strokeStyle = '#666'; ctx.lineWidth = 0.5;
+            ctx.strokeRect(sx - barW / 2, sy - this.r - 14, barW, barH);
+        }
+
+        this._drawHitFlash(sx, sy, alphaFlash, this.r * 1.3, color);
+    }
 }
 
 // ========== ENEMY PROJECTILES ==========
@@ -8158,61 +8210,61 @@ function monsterTakeDmg(m, dmg, isCrit, element) {
         const goldAmt = Math.round(rand(Math.max(1, m.def.xp * 0.5), m.def.xp * 1.5) * goldMult);
         G.gold += goldAmt;
         addFloatingText(m.x, m.y - m.r - 25, `+${goldAmt}G`, '#ffd700');
-	            // Drop loot (D2-ish: most mobs drop nothing; champs/uniques/bosses are better, but not showers)
-	            const diffDrop = DIFFICULTY_DEFS[G.difficulty || 'normal'].dropBonus || 0;
-	            function dropRolledItem(rarityHint) { dropItem(m.x, m.y, generateItem(globalF, rarityHint || null)); }
+        // Drop loot (D2-ish: most mobs drop nothing; champs/uniques/bosses are better, but not showers)
+        const diffDrop = DIFFICULTY_DEFS[G.difficulty || 'normal'].dropBonus || 0;
+        function dropRolledItem(rarityHint) { dropItem(m.x, m.y, generateItem(globalF, rarityHint || null)); }
 
-	            // Item drop chance baseline (derived from monster def + difficulty)
-	            let itemChance = (m.def.loot || 0.4) * 0.25 + diffDrop * 0.15; // ~0.10 base for loot=0.4
-	            if (m.isChampion) itemChance += 0.18;
-	            if (m.isUnique) itemChance += 0.28;
-	            if (m.isBoss || m.type === 'demonlord') itemChance += 0.38;
-	            itemChance = Math.max(0, Math.min(0.85, itemChance));
+        // Item drop chance baseline (derived from monster def + difficulty)
+        let itemChance = (m.def.loot || 0.4) * 0.25 + diffDrop * 0.15; // ~0.10 base for loot=0.4
+        if (m.isChampion) itemChance += 0.18;
+        if (m.isUnique) itemChance += 0.28;
+        if (m.isBoss || m.type === 'demonlord') itemChance += 0.38;
+        itemChance = Math.max(0, Math.min(0.85, itemChance));
 
-	            if (m.isBoss || m.type === 'demonlord') {
-	                // 2 guaranteed magic+ (rare is still uncommon), plus a couple of extra rolls.
-	                dropRolledItem(Math.random() < (0.08 + diffDrop * 0.15) ? 'rare' : 'magic');
-	                dropRolledItem(Math.random() < (0.06 + diffDrop * 0.12) ? 'rare' : 'magic');
-	                if (Math.random() < itemChance) dropRolledItem(Math.random() < 0.10 ? 'rare' : null);
-	                if (Math.random() < itemChance * 0.6) dropRolledItem(Math.random() < 0.06 ? 'rare' : 'magic');
-	            } else if (m.isUnique) {
-	                if (Math.random() < itemChance) dropRolledItem(Math.random() < 0.16 ? 'rare' : 'magic');
-	                if (Math.random() < itemChance * 0.75) dropRolledItem(Math.random() < 0.08 ? 'rare' : 'magic');
-	            } else if (m.isChampion) {
-	                if (Math.random() < itemChance) dropRolledItem(Math.random() < 0.10 ? 'rare' : 'magic');
-	            } else {
-	                if (Math.random() < itemChance) dropRolledItem(Math.random() < 0.15 ? 'magic' : null);
-	            }
+        if (m.isBoss || m.type === 'demonlord') {
+            // 2 guaranteed magic+ (rare is still uncommon), plus a couple of extra rolls.
+            dropRolledItem(Math.random() < (0.08 + diffDrop * 0.15) ? 'rare' : 'magic');
+            dropRolledItem(Math.random() < (0.06 + diffDrop * 0.12) ? 'rare' : 'magic');
+            if (Math.random() < itemChance) dropRolledItem(Math.random() < 0.10 ? 'rare' : null);
+            if (Math.random() < itemChance * 0.6) dropRolledItem(Math.random() < 0.06 ? 'rare' : 'magic');
+        } else if (m.isUnique) {
+            if (Math.random() < itemChance) dropRolledItem(Math.random() < 0.16 ? 'rare' : 'magic');
+            if (Math.random() < itemChance * 0.75) dropRolledItem(Math.random() < 0.08 ? 'rare' : 'magic');
+        } else if (m.isChampion) {
+            if (Math.random() < itemChance) dropRolledItem(Math.random() < 0.10 ? 'rare' : 'magic');
+        } else {
+            if (Math.random() < itemChance) dropRolledItem(Math.random() < 0.15 ? 'magic' : null);
+        }
 
-	            // Potions: common, but not every kill. Bosses drop more.
-	            const hpChance = (m.isBoss || m.type === 'demonlord') ? 0.22 : m.isUnique ? 0.14 : m.isChampion ? 0.12 : 0.08;
-	            const mpChance = (m.isBoss || m.type === 'demonlord') ? 0.14 : m.isUnique ? 0.10 : m.isChampion ? 0.08 : 0.05;
-	            if (Math.random() < hpChance) dropItem(m.x, m.y, generatePotion('hp'));
-	            if (Math.random() < mpChance) dropItem(m.x, m.y, generatePotion('mp'));
+        // Potions: common, but not every kill. Bosses drop more.
+        const hpChance = (m.isBoss || m.type === 'demonlord') ? 0.22 : m.isUnique ? 0.14 : m.isChampion ? 0.12 : 0.08;
+        const mpChance = (m.isBoss || m.type === 'demonlord') ? 0.14 : m.isUnique ? 0.10 : m.isChampion ? 0.08 : 0.05;
+        if (Math.random() < hpChance) dropItem(m.x, m.y, generatePotion('hp'));
+        if (Math.random() < mpChance) dropItem(m.x, m.y, generatePotion('mp'));
 
-	            // Rejuvenation: rare bonus for special monsters.
-	            if ((m.isChampion || m.isUnique || m.isBoss || m.type === 'demonlord') && Math.random() < 0.04) {
-	                dropItem(m.x, m.y, generatePotion('rejuv'));
-	            }
+        // Rejuvenation: rare bonus for special monsters.
+        if ((m.isChampion || m.isUnique || m.isBoss || m.type === 'demonlord') && Math.random() < 0.04) {
+            dropItem(m.x, m.y, generatePotion('rejuv'));
+        }
 
-	            // Charms: uncommon.
-	            const charmChance = (m.isBoss || m.type === 'demonlord') ? 0.10 : m.isUnique ? 0.05 : m.isChampion ? 0.03 : 0.01;
-	            if (Math.random() < charmChance) dropItem(m.x, m.y, generateCharm(globalF));
+        // Charms: uncommon.
+        const charmChance = (m.isBoss || m.type === 'demonlord') ? 0.10 : m.isUnique ? 0.05 : m.isChampion ? 0.03 : 0.01;
+        if (Math.random() < charmChance) dropItem(m.x, m.y, generateCharm(globalF));
 
-	            // Runes: low chance, scaled a bit with difficulty.
-	            const runeChance = (m.isBoss || m.type === 'demonlord') ? 0.05 : m.isUnique ? 0.02 : m.isChampion ? 0.012 : 0.006;
-	            const runeRoll = Math.min(0.10, runeChance + diffDrop * 0.02);
-	            if (Math.random() < runeRoll) {
-	                const runeItem = generateRune(globalF);
-	                dropItem(m.x, m.y, runeItem);
-	                if (runeItem.runeDef.tier === 3) {
-	                    addLog(`★ 高級ルーン『${runeItem.runeDef.name}』がドロップ！`, '#ff8800');
-	                    sfxLegendary();
-	                }
-	            } else if ((m.isBoss || m.type === 'demonlord') && Math.random() < 0.02 + diffDrop * 0.02) {
-	                // Bosses get a small second roll, but not guaranteed.
-	                dropItem(m.x, m.y, generateRune(globalF));
-	            }
+        // Runes: low chance, scaled a bit with difficulty.
+        const runeChance = (m.isBoss || m.type === 'demonlord') ? 0.05 : m.isUnique ? 0.02 : m.isChampion ? 0.012 : 0.006;
+        const runeRoll = Math.min(0.10, runeChance + diffDrop * 0.02);
+        if (Math.random() < runeRoll) {
+            const runeItem = generateRune(globalF);
+            dropItem(m.x, m.y, runeItem);
+            if (runeItem.runeDef.tier === 3) {
+                addLog(`★ 高級ルーン『${runeItem.runeDef.name}』がドロップ！`, '#ff8800');
+                sfxLegendary();
+            }
+        } else if ((m.isBoss || m.type === 'demonlord') && Math.random() < 0.02 + diffDrop * 0.02) {
+            // Bosses get a small second roll, but not guaranteed.
+            dropItem(m.x, m.y, generateRune(globalF));
+        }
         // Boss defeat with screen shake + white flash
         if (m.isBoss && m.bossKey) {
             G.shakeT = 0.6; G.shakeAmt = 15;
@@ -8387,7 +8439,7 @@ function calculateBuyPrice(item) {
     return calculateSellPrice(item) * 5;
 }
 function calculateSmithCost(item) {
-    const base = { common:100, magic:250, rare:500, legendary:1000, unique:2000, runeword:2500 };
+    const base = { common: 100, magic: 250, rare: 500, legendary: 1000, unique: 2000, runeword: 2500 };
     const b = base[item.rarityKey] || 100;
     const lvl = item.itemLevel || 1;
     return Math.round(b * (1 + (lvl - 1) * 0.15));
@@ -8454,7 +8506,7 @@ class Projectile {
             const _sprSize = Math.max(this.r * 6, 32);
             // Use life as spawn offset for animation desync between projectiles
             const _spawnOff = this.life * 7.3;
-            if (drawOGAProjectile(this.attribute, _dirIdx, G.time, _spawnOff, px - _sprSize/2, py - _sprSize/2, _sprSize, _sprSize)) {
+            if (drawOGAProjectile(this.attribute, _dirIdx, G.time, _spawnOff, px - _sprSize / 2, py - _sprSize / 2, _sprSize, _sprSize)) {
                 // Draw glow behind sprite
                 ctx.save();
                 ctx.globalCompositeOperation = 'lighter';
@@ -8475,7 +8527,7 @@ class Projectile {
                         const _bSz = this.r * 5;
                         ctx.globalAlpha = 0.5;
                         ctx.drawImage(OGA.vfx_ball_set, _bFrame * _bCsz, _ballRow * _bCsz, _bCsz, _bCsz,
-                            px - _bSz/2, py - _bSz/2, _bSz, _bSz);
+                            px - _bSz / 2, py - _bSz / 2, _bSz, _bSz);
                     }
                 }
                 ctx.restore();
@@ -8487,7 +8539,7 @@ class Projectile {
                         ctx.globalAlpha = (i / this.trail.length) * 0.3;
                         ctx.strokeStyle = this.color;
                         ctx.lineWidth = this.r * (i / this.trail.length);
-                        const a0 = worldToScreen(this.trail[i-1].x, this.trail[i-1].y);
+                        const a0 = worldToScreen(this.trail[i - 1].x, this.trail[i - 1].y);
                         const a1 = worldToScreen(this.trail[i].x, this.trail[i].y);
                         ctx.beginPath();
                         ctx.moveTo(a0.x, a0.y);
@@ -8520,7 +8572,7 @@ class Projectile {
                 ctx.globalAlpha = a;
                 ctx.strokeStyle = this.color;
                 ctx.lineWidth = this.r * (i / this.trail.length) * 1.5;
-                const a0 = worldToScreen(this.trail[i-1].x, this.trail[i-1].y);
+                const a0 = worldToScreen(this.trail[i - 1].x, this.trail[i - 1].y);
                 const a1 = worldToScreen(this.trail[i].x, this.trail[i].y);
                 ctx.beginPath();
                 ctx.moveTo(a0.x, a0.y);
@@ -8611,8 +8663,8 @@ function initFloor(opts) {
     if (!opts.skipEntities) {
         // Normal flow: set player at start room, spawn fresh monsters/items
         const r0 = dungeon.rooms[0];
-        player.x = r0.cx * TILE + TILE/2;
-        player.y = r0.cy * TILE + TILE/2;
+        player.x = r0.cx * TILE + TILE / 2;
+        player.y = r0.cy * TILE + TILE / 2;
         player.targetX = player.x;
         player.targetY = player.y;
         player.moving = false;
@@ -8630,10 +8682,10 @@ function initFloor(opts) {
         if (currentArea) {
             // D2-style density control: low/medium/high/boss
             switch (currentArea.density) {
-                case 'low':    count = 10 + G.actFloor * 5; break;
+                case 'low': count = 10 + G.actFloor * 5; break;
                 case 'medium': count = 15 + G.actFloor * 8; break;
-                case 'high':   count = 20 + G.actFloor * 12; break;
-                case 'boss':   count = 5 + G.actFloor * 2; break; // fewer normal monsters on boss floors
+                case 'high': count = 20 + G.actFloor * 12; break;
+                case 'boss': count = 5 + G.actFloor * 2; break; // fewer normal monsters on boss floors
             }
         }
         const types = actDef.monsterTypes;
@@ -8653,7 +8705,7 @@ function initFloor(opts) {
         // Boss on final floor of each ACT
         if (isBossFloor() && actDef.bossType) {
             const bossRoom = dungeon.rooms[dungeon.rooms.length - 2] || dungeon.rooms[dungeon.rooms.length - 1];
-            const bm = new Monster(bossRoom.cx * TILE + TILE/2, bossRoom.cy * TILE + TILE/2,
+            const bm = new Monster(bossRoom.cx * TILE + TILE / 2, bossRoom.cy * TILE + TILE / 2,
                 actDef.monsterTypes[0], G.floor, actDef.bossType);
             monsters.push(bm);
             const bd = BOSS_DEFS[actDef.bossType];
@@ -8662,7 +8714,7 @@ function initFloor(opts) {
 
         // D2-style area name in log
         const areaName = currentArea ? ` [${currentArea.name}]` : '';
-        addLog(`ACT${G.act} ${actDef.name} - 第${G.actFloor}層${areaName}${G.cycle > 0 ? ' (' + (G.cycle+1) + '周目)' : ''}`, '#aaaaff');
+        addLog(`ACT${G.act} ${actDef.name} - 第${G.actFloor}層${areaName}${G.cycle > 0 ? ' (' + (G.cycle + 1) + '周目)' : ''}`, '#aaaaff');
     }
 
     // Switch back to normal RNG after dungeon generation
@@ -8691,15 +8743,15 @@ class TownMap {
         const pw = 16, ph = 12;
         for (let y = py; y < py + ph; y++)
             for (let x = px; x < px + pw; x++) this.set(x, y, 1);
-        this.rooms.push({ x: px, y: py, w: pw, h: ph, cx: px + pw/2, cy: py + ph/2 });
+        this.rooms.push({ x: px, y: py, w: pw, h: ph, cx: px + pw / 2, cy: py + ph / 2 });
 
         // NPC alcoves around plaza
         const alcovePositions = [
             { x: px - 6, y: py + 2 }, { x: px + pw + 1, y: py + 2 },
             { x: px - 6, y: py + ph - 6 }, { x: px + pw + 1, y: py + ph - 6 },
-            { x: px + pw/2 - 2, y: py - 6 },
-            { x: px + pw/2 - 8, y: py + ph + 1 }, { x: px + pw/2 + 4, y: py + ph + 1 },
-            { x: px + pw/2 + 7, y: py - 6 }
+            { x: px + pw / 2 - 2, y: py - 6 },
+            { x: px + pw / 2 - 8, y: py + ph + 1 }, { x: px + pw / 2 + 4, y: py + ph + 1 },
+            { x: px + pw / 2 + 7, y: py - 6 }
         ];
         for (const ap of alcovePositions) {
             for (let y = ap.y; y < ap.y + 5; y++)
@@ -8707,7 +8759,7 @@ class TownMap {
             this.rooms.push({ x: ap.x, y: ap.y, w: 5, h: 5, cx: ap.x + 2, cy: ap.y + 2 });
             // Corridor to plaza
             const cx = ap.x + 2, cy = ap.y + 2;
-            const pcx = px + pw/2, pcy = py + ph/2;
+            const pcx = px + pw / 2, pcy = py + ph / 2;
             let wx = cx, wy = cy;
             while (Math.abs(wx - pcx) > 1 || Math.abs(wy - pcy) > 1) {
                 if (Math.abs(wx - pcx) > Math.abs(wy - pcy)) wx += wx < pcx ? 1 : -1;
@@ -8719,7 +8771,7 @@ class TownMap {
         }
 
         // Stairs (dungeon entrance) at bottom of plaza
-        this.stairsX = px + pw/2;
+        this.stairsX = px + pw / 2;
         this.stairsY = py + ph - 2;
         this.set(this.stairsX, this.stairsY, 2);
     }
@@ -8728,9 +8780,9 @@ class TownMap {
         for (let y = 0; y < MAP_H; y++) {
             for (let x = 0; x < MAP_W; x++) {
                 if (this.get(x, y) !== 0) continue;
-                const isExposed = this.walkable(x, y+1) || this.walkable(x+1, y) || this.walkable(x-1, y) || this.walkable(x, y-1);
+                const isExposed = this.walkable(x, y + 1) || this.walkable(x + 1, y) || this.walkable(x - 1, y) || this.walkable(x, y - 1);
                 if (isExposed && (x * 7 + y * 13) % 19 === 0) {
-                    this.torchPositions.push({ wx: x * TILE + TILE/2, wy: y * TILE + TILE/2 - 4, seed: x * 3 + y * 5 });
+                    this.torchPositions.push({ wx: x * TILE + TILE / 2, wy: y * TILE + TILE / 2 - 4, seed: x * 3 + y * 5 });
                 }
             }
         }
@@ -8739,7 +8791,7 @@ class TownMap {
     get(x, y) { if (x < 0 || x >= MAP_W || y < 0 || y >= MAP_H) return 0; return this.tiles[this.idx(x, y)]; }
     set(x, y, v) { if (x >= 0 && x < MAP_W && y >= 0 && y < MAP_H) this.tiles[this.idx(x, y)] = v; }
     walkable(x, y) { const t = this.get(x, y); return t === 1 || t === 2; }
-    reveal() {} // Town is always explored
+    reveal() { } // Town is always explored
 }
 // Copy Dungeon's draw and reveal methods to TownMap prototype
 TownMap.prototype.draw = Dungeon.prototype.draw;
@@ -8772,8 +8824,8 @@ function enterTown(act) {
 
     // Place player at plaza center
     const r0 = dungeon.rooms[0];
-    player.x = r0.cx * TILE + TILE/2;
-    player.y = r0.cy * TILE + TILE/2;
+    player.x = r0.cx * TILE + TILE / 2;
+    player.y = r0.cy * TILE + TILE / 2;
     player.targetX = player.x;
     player.targetY = player.y;
     player.moving = false;
@@ -8798,8 +8850,8 @@ function enterTown(act) {
         const room = dungeon.rooms[i + 1] || dungeon.rooms[0];
         townNPCs.push({
             ...npcDef,
-            x: room.cx * TILE + TILE/2,
-            y: room.cy * TILE + TILE/2,
+            x: room.cx * TILE + TILE / 2,
+            y: room.cy * TILE + TILE / 2,
             interactRadius: 60
         });
     }
@@ -8877,7 +8929,7 @@ function closeTownUI() {
     G.townUIMode = null;
     G.activeNPC = null;
     G.dialogState = 0;
-    const panels = ['dialogPanel','shopPanel','blacksmithPanel','gamblePanel','stashPanel','waypointPanel','questPanel','uberPanel','mercenaryPanel'];
+    const panels = ['dialogPanel', 'shopPanel', 'blacksmithPanel', 'gamblePanel', 'stashPanel', 'waypointPanel', 'questPanel', 'uberPanel', 'mercenaryPanel'];
     for (const id of panels) {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -8947,7 +8999,7 @@ function renderShopUI() {
     panel.innerHTML = html;
 }
 window.shopTab = 'buy';
-window.buyItem = function(idx) {
+window.buyItem = function (idx) {
     const item = G.shopItems[idx];
     if (!item) return;
     const price = calculateBuyPrice(item);
@@ -8970,7 +9022,7 @@ window.buyItem = function(idx) {
     addLog(`${item.name} を購入 (-${price}G)`, '#88ff88');
     renderShopUI();
 };
-window.sellItem = function(idx) {
+window.sellItem = function (idx) {
     const item = player.inventory[idx];
     if (!item) return;
     if (item.uberKeyId) { addLog('この鍵は売却できない！', '#ff4444'); return; }
@@ -9010,7 +9062,7 @@ function renderGambleUI() {
     html += `<button class="town-btn" onclick="closeTownUI()" style="margin-top:8px">閉じる</button>`;
     panel.innerHTML = html;
 }
-window.gambleItem = function(idx) {
+window.gambleItem = function (idx) {
     const g = GAMBLE_ITEMS[idx];
     if (!g || G.gold < g.cost) {
         addLog('ゴールドが足りない', '#ff4444');
@@ -9137,7 +9189,7 @@ function renderSocketTab() {
             const total = eq.item.sockets;
             const full = filled >= total || eq.item.runeword;
             const socketStr = eq.item.runeword ? `★ ${eq.item.runeword}` :
-                Array.from({length: total}, (_, i) => i < filled ? '🔶' : '◇').join('');
+                Array.from({ length: total }, (_, i) => i < filled ? '🔶' : '◇').join('');
             html += `<div class="shop-item ${full ? 'disabled' : ''}" onclick="selectSocketTarget('${eq.source}','${eq.source === 'equip' ? eq.slot : eq.idx}')" title="${escapeHtml(eq.item.name)}">
                 <span style="font-size:18px">${eq.item.icon}</span>
                 <span style="color:${eq.item.rarity.color};font-size:11px">${escapeHtml(eq.item.name)}</span>
@@ -9162,7 +9214,7 @@ function renderSocketTab() {
         if (!item) { socketTargetSource = null; return renderSocketTab(); }
         const filled = item.socketedRunes ? item.socketedRunes.length : 0;
         const total = item.sockets;
-        const socketStr = Array.from({length: total}, (_, i) => {
+        const socketStr = Array.from({ length: total }, (_, i) => {
             if (i < filled) return `<span style="color:#daa520">${RUNE_DEFS[item.socketedRunes[i].runeId].name}</span>`;
             return '<span style="color:#555">空</span>';
         }).join(' ');
@@ -9188,7 +9240,7 @@ function renderSocketTab() {
     }
     return html;
 }
-window.smithItem = function(source, key) {
+window.smithItem = function (source, key) {
     let item;
     if (source === 'equip') item = player.equipment[key];
     else item = player.inventory[parseInt(key)];
@@ -9226,17 +9278,17 @@ window.smithItem = function(source, key) {
     player.recalcStats();
     renderBlacksmithUI();
 };
-window.switchSmithTab = function(tab) {
+window.switchSmithTab = function (tab) {
     smithTab = tab;
     socketTargetSource = null;
     renderBlacksmithUI();
 };
-window.selectSocketTarget = function(source, key) {
+window.selectSocketTarget = function (source, key) {
     if (source === null) { socketTargetSource = null; }
     else { socketTargetSource = { source, key }; }
     renderBlacksmithUI();
 };
-window.insertRuneUI = function(runeIdx) {
+window.insertRuneUI = function (runeIdx) {
     if (!socketTargetSource) return;
     const item = socketTargetSource.source === 'equip'
         ? player.equipment[socketTargetSource.key]
@@ -9328,7 +9380,7 @@ function renderMercenaryUI() {
     html += `<button class="town-btn" onclick="closeTownUI()" style="margin-top:8px">閉じる</button>`;
     panel.innerHTML = html;
 }
-window.hireMerc = function(typeKey) {
+window.hireMerc = function (typeKey) {
     const cost = getMercHireCost(typeKey);
     if (G.gold < cost) { addLog('ゴールドが足りない', '#ff4444'); return; }
     G.gold -= cost;
@@ -9336,7 +9388,7 @@ window.hireMerc = function(typeKey) {
     addLog(`${mercenary.name}を雇った！`, mercenary.def.color);
     renderMercenaryUI();
 };
-window.reviveMerc = function() {
+window.reviveMerc = function () {
     if (!mercenary) return;
     const cost = getMercReviveCost();
     if (G.gold < cost) { addLog('ゴールドが足りない', '#ff4444'); return; }
@@ -9347,7 +9399,7 @@ window.reviveMerc = function() {
     addLog(`${mercenary.name}が復活した！`, mercenary.def.color);
     renderMercenaryUI();
 };
-window.dismissMerc = function() {
+window.dismissMerc = function () {
     if (!mercenary) return;
     // Return equipment to player inventory
     for (const slot of ['weapon', 'armor']) {
@@ -9363,7 +9415,7 @@ window.dismissMerc = function() {
     mercenary = null;
     renderMercenaryUI();
 };
-window.mercEquip = function(invIdx, slot) {
+window.mercEquip = function (invIdx, slot) {
     if (!mercenary || !mercenary.alive) return;
     const item = player.inventory[invIdx];
     if (!item) return;
@@ -9377,7 +9429,7 @@ window.mercEquip = function(invIdx, slot) {
     addLog(`${escapeHtml(item.name)}を${mercenary.name}に装備させた`, item.rarity.color);
     renderMercenaryUI();
 };
-window.mercUnequip = function(slot) {
+window.mercUnequip = function (slot) {
     if (!mercenary) return;
     const item = mercenary.equipment[slot];
     if (!item) return;
@@ -9447,7 +9499,7 @@ function renderGamblingUI() {
     html += `</div>`;
     panel.innerHTML = html;
 }
-window.gambleBuy = function(idx) {
+window.gambleBuy = function (idx) {
     const item = G.gambleItems[idx];
     if (!item) return;
     const cost = getGambleCost();
@@ -9483,7 +9535,7 @@ window.gambleBuy = function(idx) {
         revealed.name = names[rand(0, names.length - 1)];
     } else {
         const prefixes = ['呪われし', '聖なる', '古代の', '鍛えられし', '朽ちた', '輝く', '血染めの', '影の', '蒼き', '灼熱の'];
-        const prefix = finalRarityKey !== 'common' ? prefixes[rand(0, prefixes.length-1)] + ' ' : '';
+        const prefix = finalRarityKey !== 'common' ? prefixes[rand(0, prefixes.length - 1)] + ' ' : '';
         revealed.name = prefix + typeInfo.name;
     }
     // Affixes
@@ -9503,13 +9555,13 @@ window.gambleBuy = function(idx) {
     addLog(`ギャンブル成功！ ${revealed.name} [${revealed.rarity.name}]`, revealed.rarity.color);
     renderGamblingUI();
 };
-window.gambleRefresh = function() {
+window.gambleRefresh = function () {
     G.gambleItems = generateGambleItems();
     renderGamblingUI();
 };
 
 // D2-style skill reset (quest reward)
-window.resetSkills = function() {
+window.resetSkills = function () {
     if (!player.skillResetAvailable) {
         addLog('スキルリセット権がありません', '#ff4444');
         return;
@@ -9568,12 +9620,12 @@ function renderStashUI() {
     html += `<button class="town-btn" onclick="closeTownUI()" style="margin-top:8px">閉じる</button>`;
     panel.innerHTML = html;
 }
-window.stashDeposit = function(idx) {
+window.stashDeposit = function (idx) {
     if (G.stash.length >= G.maxStash) { addLog('倉庫が一杯', '#ff4444'); return; }
     G.stash.push(player.inventory.splice(idx, 1)[0]);
     renderStashUI();
 };
-window.stashWithdraw = function(idx) {
+window.stashWithdraw = function (idx) {
     if (player.inventory.length >= 20) { addLog('インベントリが一杯', '#ff4444'); return; }
     player.inventory.push(G.stash.splice(idx, 1)[0]);
     renderStashUI();
@@ -9730,8 +9782,8 @@ function enterUberTristram() {
     G.traps = []; G.consecrations = []; G.minions = []; G.spawnTimer = 0;
     // Place player at start
     const startRoom = dungeon.rooms[0];
-    player.x = startRoom.cx * TILE + TILE/2;
-    player.y = startRoom.cy * TILE + TILE/2;
+    player.x = startRoom.cx * TILE + TILE / 2;
+    player.y = startRoom.cy * TILE + TILE / 2;
     player.targetX = player.x; player.targetY = player.y;
     player.moving = false; player.attacking = false;
     // Spawn 3 uber bosses in different rooms
@@ -9742,7 +9794,7 @@ function enterUberTristram() {
         // Use rooms 2, 4, 6 (or last available) for spacing
         const roomIdx = Math.min(2 + i * 2, dungeon.rooms.length - 1);
         const room = dungeon.rooms[roomIdx];
-        const bm = new Monster(room.cx * TILE + TILE/2, room.cy * TILE + TILE/2, 'demon', 99, uKey);
+        const bm = new Monster(room.cx * TILE + TILE / 2, room.cy * TILE + TILE / 2, 'demon', 99, uKey);
         // Override with uber stats
         bm.maxHP = Math.round(uDef.hp * getCycleMult());
         bm.hp = bm.maxHP;
@@ -9761,8 +9813,8 @@ function enterUberTristram() {
     for (let i = 0; i < 15; i++) {
         const room = dungeon.rooms[rand(1, dungeon.rooms.length - 1)];
         const m = new Monster(
-            room.cx * TILE + TILE/2 + randf(-60, 60),
-            room.cy * TILE + TILE/2 + randf(-60, 60),
+            room.cx * TILE + TILE / 2 + randf(-60, 60),
+            room.cy * TILE + TILE / 2 + randf(-60, 60),
             'demon', 99
         );
         m.makeChampion();
@@ -9852,10 +9904,10 @@ function updateStatsPanel() {
         <div class="stat-row"><span class="stat-label">☠ 毒耐性</span><span class="stat-value" style="color:#44cc22">${player.getResistance('poison')}%</span></div>
         <hr style="border-color:#333;margin:6px 0">
         <div style="color:#ccc;font-size:11px;margin-bottom:4px">🗺 探索情報</div>
-        <div class="stat-row"><span class="stat-label">難易度</span><span class="stat-value" style="color:${DIFFICULTY_DEFS[G.difficulty||'normal'].color}">${DIFFICULTY_DEFS[G.difficulty||'normal'].name}</span></div>
-        <div class="stat-row"><span class="stat-label">現在地</span><span class="stat-value" style="color:${G.inUber ? '#ff4400' : '#aa88ff'}">${G.inUber ? 'パンデモニウム' : 'ACT' + G.act + ' ' + (G.inTown ? '町' : '第' + G.actFloor + '層')}${G.cycle > 0 ? ' (' + (G.cycle+1) + '周目)' : ''}</span></div>
+        <div class="stat-row"><span class="stat-label">難易度</span><span class="stat-value" style="color:${DIFFICULTY_DEFS[G.difficulty || 'normal'].color}">${DIFFICULTY_DEFS[G.difficulty || 'normal'].name}</span></div>
+        <div class="stat-row"><span class="stat-label">現在地</span><span class="stat-value" style="color:${G.inUber ? '#ff4400' : '#aa88ff'}">${G.inUber ? 'パンデモニウム' : 'ACT' + G.act + ' ' + (G.inTown ? '町' : '第' + G.actFloor + '層')}${G.cycle > 0 ? ' (' + (G.cycle + 1) + '周目)' : ''}</span></div>
         <div class="stat-row"><span class="stat-label">ゴールド</span><span class="stat-value" style="color:#ffd700">${G.gold}G</span></div>
-        <div class="stat-row"><span class="stat-label">残り敵数</span><span class="stat-value" style="color:#ff6666">${monsters.reduce((n,m)=>n+(m.alive?1:0),0)}</span></div>
+        <div class="stat-row"><span class="stat-label">残り敵数</span><span class="stat-value" style="color:#ff6666">${monsters.reduce((n, m) => n + (m.alive ? 1 : 0), 0)}</span></div>
         <div class="stat-row"><span class="stat-label">装備品</span><span class="stat-value">${player.inventory.length}/${player.maxInv}</span></div>
         <div class="stat-row"><span class="stat-label">ポーション</span><span class="stat-value">${player.potionInv.length}/${player.maxPotionInv}</span></div>
         <div class="stat-row"><span class="stat-label">チャーム</span><span class="stat-value">${player.charmInv.length}/${player.maxCharmInv}</span></div>
@@ -9864,7 +9916,7 @@ function updateStatsPanel() {
 }
 
 let helpActiveTab = 'basics';
-window.setHelpTab = function(tab) { helpActiveTab = tab; renderHelpUI(); };
+window.setHelpTab = function (tab) { helpActiveTab = tab; renderHelpUI(); };
 
 function renderHelpUI() {
     const tabsEl = document.getElementById('helpTabs');
@@ -9896,285 +9948,285 @@ function renderHelpUI() {
 
     switch (helpActiveTab) {
 
-    case 'basics':
-        h += `<div class="help-section-title">基本操作</div>`;
-        h += `<div class="help-sub-title">移動</div>`;
-        h += `<div class="help-row"><span class="help-key">左クリック</span> 地面をクリックして移動</div>`;
-        h += `<div class="help-row"><span class="help-key">←↑→↓</span> 矢印キーでも移動可能</div>`;
-        h += `<div class="help-tip">移動は慣性があります。敵の攻撃を避けながら戦いましょう。</div>`;
+        case 'basics':
+            h += `<div class="help-section-title">基本操作</div>`;
+            h += `<div class="help-sub-title">移動</div>`;
+            h += `<div class="help-row"><span class="help-key">左クリック</span> 地面をクリックして移動</div>`;
+            h += `<div class="help-row"><span class="help-key">←↑→↓</span> 矢印キーでも移動可能</div>`;
+            h += `<div class="help-tip">移動は慣性があります。敵の攻撃を避けながら戦いましょう。</div>`;
 
-        h += `<div class="help-sub-title">攻撃</div>`;
-        h += `<div class="help-row"><span class="help-key">左クリック</span> 敵をクリックして通常攻撃（自動で近づく）</div>`;
-        h += `<div class="help-row"><span class="help-key">A</span> 最も近い敵に自動で攻撃</div>`;
-        h += `<div class="help-tip help-tip-good">Aキーを連打するだけで最寄りの敵を攻撃できます。初心者におすすめ。</div>`;
+            h += `<div class="help-sub-title">攻撃</div>`;
+            h += `<div class="help-row"><span class="help-key">左クリック</span> 敵をクリックして通常攻撃（自動で近づく）</div>`;
+            h += `<div class="help-row"><span class="help-key">A</span> 最も近い敵に自動で攻撃</div>`;
+            h += `<div class="help-tip help-tip-good">Aキーを連打するだけで最寄りの敵を攻撃できます。初心者におすすめ。</div>`;
 
-        h += `<div class="help-sub-title">スキル発動</div>`;
-        h += `<div class="help-row"><span class="help-key">右クリック</span> マウス方向にスキル発動</div>`;
-        h += `<div class="help-row"><span class="help-key">S</span> 選択中スキルを最寄りの敵に発動</div>`;
-        h += `<div class="help-row"><span class="help-key">1</span>〜<span class="help-key">6</span> スキルスロットを選択して即発動</div>`;
-        h += `<div class="help-tip">スキルにはMP消費とクールダウンがあります。画面下部のスキルバーで確認。</div>`;
+            h += `<div class="help-sub-title">スキル発動</div>`;
+            h += `<div class="help-row"><span class="help-key">右クリック</span> マウス方向にスキル発動</div>`;
+            h += `<div class="help-row"><span class="help-key">S</span> 選択中スキルを最寄りの敵に発動</div>`;
+            h += `<div class="help-row"><span class="help-key">1</span>〜<span class="help-key">6</span> スキルスロットを選択して即発動</div>`;
+            h += `<div class="help-tip">スキルにはMP消費とクールダウンがあります。画面下部のスキルバーで確認。</div>`;
 
-        h += `<div class="help-sub-title">アイテム拾得</div>`;
-        h += `<div class="help-row"><span class="help-key">Space</span> 近くのアイテムを拾う / 階段を降りる</div>`;
-        h += `<div class="help-row"><span class="help-key">G</span> 自動拾い ON/OFF</div>`;
-        h += `<div class="help-row"><span class="help-key">P</span> 自動拾いフィルタ切替（レアリティ）</div>`;
-        h += `<div class="help-tip">ポーションは拾うと即座にHP+50回復。装備はインベントリに入ります。</div>`;
+            h += `<div class="help-sub-title">アイテム拾得</div>`;
+            h += `<div class="help-row"><span class="help-key">Space</span> 近くのアイテムを拾う / 階段を降りる</div>`;
+            h += `<div class="help-row"><span class="help-key">G</span> 自動拾い ON/OFF</div>`;
+            h += `<div class="help-row"><span class="help-key">P</span> 自動拾いフィルタ切替（レアリティ）</div>`;
+            h += `<div class="help-tip">ポーションは拾うと即座にHP+50回復。装備はインベントリに入ります。</div>`;
 
-        h += `<div class="help-sub-title">画面・メニュー</div>`;
-        h += `<div class="help-row"><span class="help-key">I</span> インベントリ（装備管理）</div>`;
-        h += `<div class="help-row"><span class="help-key">C</span> キャラクターステータス</div>`;
-        h += `<div class="help-row"><span class="help-key">T</span> スキルツリー</div>`;
-        h += `<div class="help-row"><span class="help-key">R</span> スキルショートカット編集</div>`;
-        h += `<div class="help-row"><span class="help-key">H</span> この手引書</div>`;
-        h += `<div class="help-row"><span class="help-key">O</span> 設定画面</div>`;
-        h += `<div class="help-row"><span class="help-key">Esc</span> 一時停止</div>`;
+            h += `<div class="help-sub-title">画面・メニュー</div>`;
+            h += `<div class="help-row"><span class="help-key">I</span> インベントリ（装備管理）</div>`;
+            h += `<div class="help-row"><span class="help-key">C</span> キャラクターステータス</div>`;
+            h += `<div class="help-row"><span class="help-key">T</span> スキルツリー</div>`;
+            h += `<div class="help-row"><span class="help-key">R</span> スキルショートカット編集</div>`;
+            h += `<div class="help-row"><span class="help-key">H</span> この手引書</div>`;
+            h += `<div class="help-row"><span class="help-key">O</span> 設定画面</div>`;
+            h += `<div class="help-row"><span class="help-key">Esc</span> 一時停止</div>`;
 
-        h += `<div class="help-sub-title">セーブ / ロード</div>`;
-        h += `<div class="help-row"><span class="help-key">F5</span> ゲームをセーブ</div>`;
-        h += `<div class="help-row"><span class="help-key">F8</span> セーブデータをロード</div>`;
-        h += `<div class="help-tip help-tip-warn">ブラウザのローカルストレージに保存されます。キャッシュ削除で消える可能性があります。</div>`;
-        break;
+            h += `<div class="help-sub-title">セーブ / ロード</div>`;
+            h += `<div class="help-row"><span class="help-key">F5</span> ゲームをセーブ</div>`;
+            h += `<div class="help-row"><span class="help-key">F8</span> セーブデータをロード</div>`;
+            h += `<div class="help-tip help-tip-warn">ブラウザのローカルストレージに保存されます。キャッシュ削除で消える可能性があります。</div>`;
+            break;
 
-    case 'combat':
-        h += `<div class="help-section-title">戦闘システム</div>`;
+        case 'combat':
+            h += `<div class="help-section-title">戦闘システム</div>`;
 
-        h += `<div class="help-sub-title">通常攻撃</div>`;
-        h += `<div class="help-row">敵を左クリックまたは<span class="help-key">A</span>キーで通常攻撃</div>`;
-        h += `<div style="color:#aaa;font-size:11px;margin:4px 0">ダメージ = STR(力) × 武器倍率 − 敵の防御力</div>`;
-        h += `<div style="color:#aaa;font-size:11px;margin:4px 0">クリティカル率は DEX(技) に依存</div>`;
+            h += `<div class="help-sub-title">通常攻撃</div>`;
+            h += `<div class="help-row">敵を左クリックまたは<span class="help-key">A</span>キーで通常攻撃</div>`;
+            h += `<div style="color:#aaa;font-size:11px;margin:4px 0">ダメージ = STR(力) × 武器倍率 − 敵の防御力</div>`;
+            h += `<div style="color:#aaa;font-size:11px;margin:4px 0">クリティカル率は DEX(技) に依存</div>`;
 
-        h += `<div class="help-sub-title">スキル攻撃</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">スキルは通常攻撃より高い倍率で強力。レベルアップで倍率が上昇。</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">アクティブスキルはスロット<span class="help-key">1</span>〜<span class="help-key">6</span>に配置して使用。</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">パッシブスキルは習得するだけで常時効果を発揮。スロット不要。</div>`;
-        h += `<div class="help-tip">スキルレベルが上がるとMP消費は微増、クールダウンは減少します。</div>`;
+            h += `<div class="help-sub-title">スキル攻撃</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">スキルは通常攻撃より高い倍率で強力。レベルアップで倍率が上昇。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">アクティブスキルはスロット<span class="help-key">1</span>〜<span class="help-key">6</span>に配置して使用。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">パッシブスキルは習得するだけで常時効果を発揮。スロット不要。</div>`;
+            h += `<div class="help-tip">スキルレベルが上がるとMP消費は微増、クールダウンは減少します。</div>`;
 
-        h += `<div class="help-sub-title">スキルの種類</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:2px 0"><span style="color:#ff8844">近接攻撃</span> ─ バッシュ、ジール等。射程が短いが高倍率</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:2px 0"><span style="color:#ff8844">範囲攻撃</span> ─ ワールウィンド、フロストノヴァ等。周囲を一掃</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:2px 0"><span style="color:#ff8844">遠距離攻撃</span> ─ ファイアアロー等。安全な距離から攻撃</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:2px 0"><span style="color:#4488ff">バフ</span> ─ シャウト等。一定時間ステータスを強化</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:2px 0"><span style="color:#ff4444">デバフ</span> ─ タウント等。敵を弱体化</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:2px 0"><span style="color:#66aaff">パッシブ</span> ─ 剣の極意等。常時発動のステータス上昇</div>`;
+            h += `<div class="help-sub-title">スキルの種類</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:2px 0"><span style="color:#ff8844">近接攻撃</span> ─ バッシュ、ジール等。射程が短いが高倍率</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:2px 0"><span style="color:#ff8844">範囲攻撃</span> ─ ワールウィンド、フロストノヴァ等。周囲を一掃</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:2px 0"><span style="color:#ff8844">遠距離攻撃</span> ─ ファイアアロー等。安全な距離から攻撃</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:2px 0"><span style="color:#4488ff">バフ</span> ─ シャウト等。一定時間ステータスを強化</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:2px 0"><span style="color:#ff4444">デバフ</span> ─ タウント等。敵を弱体化</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:2px 0"><span style="color:#66aaff">パッシブ</span> ─ 剣の極意等。常時発動のステータス上昇</div>`;
 
-        h += `<div class="help-sub-title">回復</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">敵がドロップするポーションでHP回復（+50）。</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">一部スキル（ヒール系）やライフスティール装備でも回復可能。</div>`;
+            h += `<div class="help-sub-title">回復</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">敵がドロップするポーションでHP回復（+50）。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">一部スキル（ヒール系）やライフスティール装備でも回復可能。</div>`;
 
-        h += `<div class="help-sub-title">死亡と復活</div>`;
-        h += `<div class="help-tip help-tip-warn">HPが0になると死亡。クリックまたはSpaceで同じ階の入口から復活します。装備やスキルは失われません。</div>`;
+            h += `<div class="help-sub-title">死亡と復活</div>`;
+            h += `<div class="help-tip help-tip-warn">HPが0になると死亡。クリックまたはSpaceで同じ階の入口から復活します。装備やスキルは失われません。</div>`;
 
-        h += `<div class="help-sub-title">ボスモンスター</div>`;
-        h += `<div style="color:#ff4444;font-size:11px;margin:4px 0">5階ごとにデーモンロードが出現。高HPで強力ですが、倒すと大量のレアアイテムをドロップ。</div>`;
-        break;
+            h += `<div class="help-sub-title">ボスモンスター</div>`;
+            h += `<div style="color:#ff4444;font-size:11px;margin:4px 0">5階ごとにデーモンロードが出現。高HPで強力ですが、倒すと大量のレアアイテムをドロップ。</div>`;
+            break;
 
-    case 'skills':
-        h += `<div class="help-section-title">スキルシステム</div>`;
+        case 'skills':
+            h += `<div class="help-section-title">スキルシステム</div>`;
 
-        h += `<div class="help-sub-title">スキルツリー <span class="help-key">T</span></div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">各クラスは3つのブランチ（系統）を持ち、各ブランチにスキルが配置されています。</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">ツリー表示では依存関係が線で表示されます：</div>`;
-        h += `<div style="color:#b8943d;font-size:11px;margin:2px 0 2px 12px">━ 金色の実線 = 前提条件（上のスキルを先に習得する必要あり）</div>`;
-        h += `<div style="color:#55cc77;font-size:11px;margin:2px 0 2px 12px">╌ 緑色の破線 = シナジー（他スキルのLvでボーナス）</div>`;
-        h += `<div class="help-tip">ツリー上でスキルにホバーすると、関連する線がハイライトされます。</div>`;
+            h += `<div class="help-sub-title">スキルツリー <span class="help-key">T</span></div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">各クラスは3つのブランチ（系統）を持ち、各ブランチにスキルが配置されています。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">ツリー表示では依存関係が線で表示されます：</div>`;
+            h += `<div style="color:#b8943d;font-size:11px;margin:2px 0 2px 12px">━ 金色の実線 = 前提条件（上のスキルを先に習得する必要あり）</div>`;
+            h += `<div style="color:#55cc77;font-size:11px;margin:2px 0 2px 12px">╌ 緑色の破線 = シナジー（他スキルのLvでボーナス）</div>`;
+            h += `<div class="help-tip">ツリー上でスキルにホバーすると、関連する線がハイライトされます。</div>`;
 
-        h += `<div class="help-sub-title">スキルの習得</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">レベルアップ時にスキルポイントを獲得。</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">スキルツリー画面で左クリックして習得（最大Lv.${SKILL_MAX_LEVEL}）。</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">一部のスキルはキャラクターレベルの制限あり（Lv.1/6/12/18/24/30）。</div>`;
+            h += `<div class="help-sub-title">スキルの習得</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">レベルアップ時にスキルポイントを獲得。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">スキルツリー画面で左クリックして習得（最大Lv.${SKILL_MAX_LEVEL}）。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">一部のスキルはキャラクターレベルの制限あり（Lv.1/6/12/18/24/30）。</div>`;
 
-        h += `<div class="help-sub-title">スキルスロット <span class="help-key">R</span></div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">習得したアクティブスキルをスロット1〜6に配置して使用。</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">ツリー画面で右クリック → 空きスロットに自動配置。</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0"><span class="help-key">R</span>キーでスキル編集画面を開き、細かく入替可能。</div>`;
+            h += `<div class="help-sub-title">スキルスロット <span class="help-key">R</span></div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">習得したアクティブスキルをスロット1〜6に配置して使用。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">ツリー画面で右クリック → 空きスロットに自動配置。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0"><span class="help-key">R</span>キーでスキル編集画面を開き、細かく入替可能。</div>`;
 
-        h += `<div class="help-sub-title">シナジー</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">一部のスキルは別のスキルからシナジーボーナスを受けます。</div>`;
-        h += `<div class="help-tip help-tip-good">例：ワールウィンドはダブルスイングとコンセントレイトのLvごとに+8%ダメージ。関連スキルを幅広く育てるのが効果的。</div>`;
+            h += `<div class="help-sub-title">シナジー</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">一部のスキルは別のスキルからシナジーボーナスを受けます。</div>`;
+            h += `<div class="help-tip help-tip-good">例：ワールウィンドはダブルスイングとコンセントレイトのLvごとに+8%ダメージ。関連スキルを幅広く育てるのが効果的。</div>`;
 
-        // Show current skill slots
-        h += `<div class="help-sub-title">現在のスキルスロット</div>`;
-        for (let i = 1; i <= 6; i++) {
-            const sk = player.skills[i];
-            if (sk && sk.id) {
-                const lvl = player.skillLevels[sk.id] || 0;
-                h += `<div style="margin:2px 0;color:#ccc;font-size:11px;display:flex;align-items:center;gap:4px"><span class="help-key">${i}</span> <img src="${getSkillIconDataURL(sk,18)}" width="18" height="18" style="vertical-align:middle"> ${sk.name} Lv.${lvl} <span style="color:#4488ff">${sk.mp}MP</span></div>`;
-            } else {
-                h += `<div style="margin:2px 0;color:#666;font-size:11px"><span class="help-key">${i}</span> 未設定</div>`;
+            // Show current skill slots
+            h += `<div class="help-sub-title">現在のスキルスロット</div>`;
+            for (let i = 1; i <= 6; i++) {
+                const sk = player.skills[i];
+                if (sk && sk.id) {
+                    const lvl = player.skillLevels[sk.id] || 0;
+                    h += `<div style="margin:2px 0;color:#ccc;font-size:11px;display:flex;align-items:center;gap:4px"><span class="help-key">${i}</span> <img src="${getSkillIconDataURL(sk, 18)}" width="18" height="18" style="vertical-align:middle"> ${sk.name} Lv.${lvl} <span style="color:#4488ff">${sk.mp}MP</span></div>`;
+                } else {
+                    h += `<div style="margin:2px 0;color:#666;font-size:11px"><span class="help-key">${i}</span> 未設定</div>`;
+                }
             }
-        }
-        break;
+            break;
 
-    case 'items':
-        h += `<div class="help-section-title">装備・アイテム</div>`;
+        case 'items':
+            h += `<div class="help-section-title">装備・アイテム</div>`;
 
-        h += `<div class="help-sub-title">アイテムの拾得</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">敵を倒すと装備やポーションをドロップ。</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0"><span class="help-key">Space</span>で手動拾得、または<span class="help-key">G</span>で自動拾いON。</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0"><span class="help-key">P</span>で自動拾いフィルタを変更（コモン以上/マジック以上/...）。</div>`;
+            h += `<div class="help-sub-title">アイテムの拾得</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">敵を倒すと装備やポーションをドロップ。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0"><span class="help-key">Space</span>で手動拾得、または<span class="help-key">G</span>で自動拾いON。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0"><span class="help-key">P</span>で自動拾いフィルタを変更（コモン以上/マジック以上/...）。</div>`;
 
-        h += `<div class="help-sub-title">レアリティ</div>`;
-        h += `<div style="margin:6px 0;font-size:12px;line-height:2">`;
-        h += `<span style="color:#ccc;background:#333;padding:2px 8px;border-radius:3px">コモン</span> `;
-        h += `<span style="color:#6688ff;background:#1a1a3e;padding:2px 8px;border-radius:3px">マジック</span> `;
-        h += `<span style="color:#ffdd44;background:#3a2e10;padding:2px 8px;border-radius:3px">レア</span> `;
-        h += `<span style="color:#ff8800;background:#3a1a00;padding:2px 8px;border-radius:3px">レジェンダリー</span> `;
-        h += `<span style="color:#00dd66;background:#0a2a1a;padding:2px 8px;border-radius:3px">ユニーク</span>`;
-        h += `</div>`;
-        h += `<div class="help-tip">高レアリティほど多くのランダムプロパティが付与。深い階層ほど出現確率UP。</div>`;
+            h += `<div class="help-sub-title">レアリティ</div>`;
+            h += `<div style="margin:6px 0;font-size:12px;line-height:2">`;
+            h += `<span style="color:#ccc;background:#333;padding:2px 8px;border-radius:3px">コモン</span> `;
+            h += `<span style="color:#6688ff;background:#1a1a3e;padding:2px 8px;border-radius:3px">マジック</span> `;
+            h += `<span style="color:#ffdd44;background:#3a2e10;padding:2px 8px;border-radius:3px">レア</span> `;
+            h += `<span style="color:#ff8800;background:#3a1a00;padding:2px 8px;border-radius:3px">レジェンダリー</span> `;
+            h += `<span style="color:#00dd66;background:#0a2a1a;padding:2px 8px;border-radius:3px">ユニーク</span>`;
+            h += `</div>`;
+            h += `<div class="help-tip">高レアリティほど多くのランダムプロパティが付与。深い階層ほど出現確率UP。</div>`;
 
-        h += `<div class="help-sub-title">装備スロット</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">武器 / 盾（オフハンド） / 頭 / 体 / リング / アミュレット / 足</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0"><span class="help-key">I</span>でインベントリを開き、アイテムをクリックして装備。</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">装備中のアイテムをクリックすると外してインベントリに戻ります。</div>`;
+            h += `<div class="help-sub-title">装備スロット</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">武器 / 盾（オフハンド） / 頭 / 体 / リング / アミュレット / 足</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0"><span class="help-key">I</span>でインベントリを開き、アイテムをクリックして装備。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">装備中のアイテムをクリックすると外してインベントリに戻ります。</div>`;
 
-        h += `<div class="help-sub-title">ランダムプロパティ</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">装備には攻撃力・防御力のほか、ランダムな追加効果が付くことがあります：</div>`;
-        h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">+STR, +DEX, +VIT, +INT / +クリティカル率 / +攻撃速度 / +ライフスティール / +移動速度 など</div>`;
+            h += `<div class="help-sub-title">ランダムプロパティ</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">装備には攻撃力・防御力のほか、ランダムな追加効果が付くことがあります：</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">+STR, +DEX, +VIT, +INT / +クリティカル率 / +攻撃速度 / +ライフスティール / +移動速度 など</div>`;
 
-        h += `<div class="help-sub-title">ポーション</div>`;
-        h += `<div style="color:#00ff00;font-size:11px;margin:4px 0">赤いポーションを拾うとHP+50即時回復。インベントリには入りません。</div>`;
-        break;
+            h += `<div class="help-sub-title">ポーション</div>`;
+            h += `<div style="color:#00ff00;font-size:11px;margin:4px 0">赤いポーションを拾うとHP+50即時回復。インベントリには入りません。</div>`;
+            break;
 
-    case 'dungeon':
-        h += `<div class="help-section-title">ダンジョン探索</div>`;
+        case 'dungeon':
+            h += `<div class="help-section-title">ダンジョン探索</div>`;
 
-        h += `<div class="help-sub-title">階層構造</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">ダンジョンは地下へ進むほど難易度が上昇。</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">各階はランダム生成され、敵・宝箱・階段が配置されます。</div>`;
+            h += `<div class="help-sub-title">階層構造</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">ダンジョンは地下へ進むほど難易度が上昇。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">各階はランダム生成され、敵・宝箱・階段が配置されます。</div>`;
 
-        h += `<div class="help-sub-title">階段の使い方</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">紫色に光る階段に近づき <span class="help-key">Space</span> または <span class="help-key">E</span> キーで次の階へ。</div>`;
-        h += `<div class="help-tip help-tip-warn">階段付近の敵を倒す必要があります（全滅は不要）。階段の周囲200px以内に敵がいると使用できません。</div>`;
-        h += `<div class="help-tip help-tip-good">階段の近く（300px以内）には新しい敵がスポーンしません。敵を倒しながら近づけば安全に降りられます。</div>`;
+            h += `<div class="help-sub-title">階段の使い方</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">紫色に光る階段に近づき <span class="help-key">Space</span> または <span class="help-key">E</span> キーで次の階へ。</div>`;
+            h += `<div class="help-tip help-tip-warn">階段付近の敵を倒す必要があります（全滅は不要）。階段の周囲200px以内に敵がいると使用できません。</div>`;
+            h += `<div class="help-tip help-tip-good">階段の近く（300px以内）には新しい敵がスポーンしません。敵を倒しながら近づけば安全に降りられます。</div>`;
 
-        h += `<div class="help-sub-title">宝箱</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">宝箱の上に乗ると自動的に開きます。装備やポーションを獲得。</div>`;
+            h += `<div class="help-sub-title">宝箱</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">宝箱の上に乗ると自動的に開きます。装備やポーションを獲得。</div>`;
 
-        h += `<div class="help-sub-title">敵の出現</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">ダンジョン内では一定間隔で敵が追加出現します（最大数あり）。</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">深い階層ではより強力なモンスターが登場：</div>`;
-        h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">1〜2F: スケルトン、ゾンビ</div>`;
-        h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">3〜4F: + インプ</div>`;
-        h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">5〜6F: + ゴースト</div>`;
-        h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">7F〜 : インプ、ゴースト</div>`;
-        h += `<div style="color:#ff4444;font-size:11px;margin:6px 0">5階ごとにボス「デーモンロード」が出現！</div>`;
-        break;
+            h += `<div class="help-sub-title">敵の出現</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">ダンジョン内では一定間隔で敵が追加出現します（最大数あり）。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">深い階層ではより強力なモンスターが登場：</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">1〜2F: スケルトン、ゾンビ</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">3〜4F: + インプ</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">5〜6F: + ゴースト</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">7F〜 : インプ、ゴースト</div>`;
+            h += `<div style="color:#ff4444;font-size:11px;margin:6px 0">5階ごとにボス「デーモンロード」が出現！</div>`;
+            break;
 
-    case 'growth':
-        h += `<div class="help-section-title">クラス・成長システム</div>`;
+        case 'growth':
+            h += `<div class="help-section-title">クラス・成長システム</div>`;
 
-        h += `<div class="help-sub-title">レベルアップ</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">敵を倒してXPを獲得。一定量でレベルアップ。</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">レベルアップ報酬：</div>`;
-        h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">ステータスポイント +5 → <span class="help-key">C</span>画面で STR/DEX/VIT/INT に振り分け</div>`;
-        h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">スキルポイント +1 → <span class="help-key">T</span>画面でスキル習得/強化</div>`;
+            h += `<div class="help-sub-title">レベルアップ</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">敵を倒してXPを獲得。一定量でレベルアップ。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">レベルアップ報酬：</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">ステータスポイント +5 → <span class="help-key">C</span>画面で STR/DEX/VIT/INT に振り分け</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">スキルポイント +1 → <span class="help-key">T</span>画面でスキル習得/強化</div>`;
 
-        h += `<div class="help-sub-title">ステータス</div>`;
-        h += `<div style="color:#ff8844;font-size:11px;margin:2px 0"><b>STR（力）</b> ─ 物理攻撃力に直結</div>`;
-        h += `<div style="color:#44dd44;font-size:11px;margin:2px 0"><b>DEX（技）</b> ─ クリティカル率・命中に影響</div>`;
-        h += `<div style="color:#ff4444;font-size:11px;margin:2px 0"><b>VIT（体力）</b> ─ 最大HPを増加</div>`;
-        h += `<div style="color:#4488ff;font-size:11px;margin:2px 0"><b>INT（知力）</b> ─ 最大MPを増加</div>`;
+            h += `<div class="help-sub-title">ステータス</div>`;
+            h += `<div style="color:#ff8844;font-size:11px;margin:2px 0"><b>STR（力）</b> ─ 物理攻撃力に直結</div>`;
+            h += `<div style="color:#44dd44;font-size:11px;margin:2px 0"><b>DEX（技）</b> ─ クリティカル率・命中に影響</div>`;
+            h += `<div style="color:#ff4444;font-size:11px;margin:2px 0"><b>VIT（体力）</b> ─ 最大HPを増加</div>`;
+            h += `<div style="color:#4488ff;font-size:11px;margin:2px 0"><b>INT（知力）</b> ─ 最大MPを増加</div>`;
 
-        h += `<div class="help-sub-title">クラス昇格（転職）</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">Lv.${PROMOTION_LEVEL} かつ Act1ボス（骸骨王）討伐で上位クラスに昇格可能。</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:4px 0">各基本クラスは2つの上位クラスから選択できます。</div>`;
-        h += `<div class="help-tip">上位クラスは基本クラスのスキルに加え、新しいスキルツリーを獲得。両方のスキルを使用可能。</div>`;
+            h += `<div class="help-sub-title">クラス昇格（転職）</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">Lv.${PROMOTION_LEVEL} かつ Act1ボス（骸骨王）討伐で上位クラスに昇格可能。</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">各基本クラスは2つの上位クラスから選択できます。</div>`;
+            h += `<div class="help-tip">上位クラスは基本クラスのスキルに加え、新しいスキルツリーを獲得。両方のスキルを使用可能。</div>`;
 
-        // Current class info
-        if (G.playerClass && CLASS_DEFS[G.playerClass]) {
-            const cd = CLASS_DEFS[G.playerClass];
-            h += `<div class="help-sub-title">現在のクラス</div>`;
-            h += `<div style="color:#ffd700;font-size:13px;margin:4px 0">${cd.icon} ${cd.name} (${cd.engName})</div>`;
-            if (cd.tier === 1 && cd.baseClass) {
-                const base = CLASS_DEFS[cd.baseClass];
-                h += `<div style="color:#88ff88;font-size:11px">✓ 上位クラス昇格済 (${base.icon} ${base.name} → ${cd.icon} ${cd.name})</div>`;
-            } else if (cd.tier === 0) {
-                const promos = CLASS_PROMOTIONS[G.playerClass] || [];
-                if (promos.length > 0) {
-                    const act1BossDefeated = !!(G.bossesDefeated && G.bossesDefeated.skeleton_king);
-                    const canPromote = (player.level >= PROMOTION_LEVEL) && act1BossDefeated;
-                    const why = !act1BossDefeated ? '骸骨王討伐が必要' : `Lv.${PROMOTION_LEVEL} (あと${PROMOTION_LEVEL - player.level})`;
-                    h += `<div style="color:${canPromote ? '#ffaa44' : '#888'};font-size:11px;margin:4px 0">${canPromote ? '⚡ 昇格可能！' : `昇格条件: ${why}`}</div>`;
-                    h += `<div style="font-size:11px;color:#ccc;margin:4px 0">昇格先：</div>`;
-                    for (const p of promos) {
-                        const pDef = CLASS_DEFS[p.key];
-                        if (pDef) {
-                            h += `<div style="font-size:11px;color:#ffd700;margin:2px 0 2px 12px">${pDef.icon} ${pDef.name} ─ <span style="color:#aaa">${pDef.branches.join(' / ')}</span></div>`;
+            // Current class info
+            if (G.playerClass && CLASS_DEFS[G.playerClass]) {
+                const cd = CLASS_DEFS[G.playerClass];
+                h += `<div class="help-sub-title">現在のクラス</div>`;
+                h += `<div style="color:#ffd700;font-size:13px;margin:4px 0">${cd.icon} ${cd.name} (${cd.engName})</div>`;
+                if (cd.tier === 1 && cd.baseClass) {
+                    const base = CLASS_DEFS[cd.baseClass];
+                    h += `<div style="color:#88ff88;font-size:11px">✓ 上位クラス昇格済 (${base.icon} ${base.name} → ${cd.icon} ${cd.name})</div>`;
+                } else if (cd.tier === 0) {
+                    const promos = CLASS_PROMOTIONS[G.playerClass] || [];
+                    if (promos.length > 0) {
+                        const act1BossDefeated = !!(G.bossesDefeated && G.bossesDefeated.skeleton_king);
+                        const canPromote = (player.level >= PROMOTION_LEVEL) && act1BossDefeated;
+                        const why = !act1BossDefeated ? '骸骨王討伐が必要' : `Lv.${PROMOTION_LEVEL} (あと${PROMOTION_LEVEL - player.level})`;
+                        h += `<div style="color:${canPromote ? '#ffaa44' : '#888'};font-size:11px;margin:4px 0">${canPromote ? '⚡ 昇格可能！' : `昇格条件: ${why}`}</div>`;
+                        h += `<div style="font-size:11px;color:#ccc;margin:4px 0">昇格先：</div>`;
+                        for (const p of promos) {
+                            const pDef = CLASS_DEFS[p.key];
+                            if (pDef) {
+                                h += `<div style="font-size:11px;color:#ffd700;margin:2px 0 2px 12px">${pDef.icon} ${pDef.name} ─ <span style="color:#aaa">${pDef.branches.join(' / ')}</span></div>`;
+                            }
                         }
                     }
                 }
             }
-        }
 
-        h += `<div class="help-sub-title">基本クラス</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:2px 0">⚔ バーバリアン ─ 近接物理。高HP・高火力</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:2px 0">🏹 アマゾン ─ 遠距離・ジャベリン。高DEX</div>`;
-        h += `<div style="color:#ccc;font-size:11px;margin:2px 0">✨ ソーサレス ─ 魔法攻撃。高INT・範囲火力</div>`;
-        break;
+            h += `<div class="help-sub-title">基本クラス</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:2px 0">⚔ バーバリアン ─ 近接物理。高HP・高火力</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:2px 0">🏹 アマゾン ─ 遠距離・ジャベリン。高DEX</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:2px 0">✨ ソーサレス ─ 魔法攻撃。高INT・範囲火力</div>`;
+            break;
 
-    case 'keys':
-        h += `<div class="help-section-title">キーバインド一覧</div>`;
-        const keys = [
-            ['操作', [
-                ['左クリック', '移動 / 敵を攻撃'],
-                ['右クリック', '選択中スキルをマウス方向に発動'],
-                ['←↑→↓', 'キーボード移動'],
-                ['A', '最寄りの敵を自動攻撃'],
-                ['S', '選択中スキルを最寄り敵に発動'],
-                ['1〜6', 'スキルスロット選択＆即発動'],
-                ['Q', 'HP回復薬を使う'],
-                ['W', 'MP回復薬を使う'],
-                ['Space', 'アイテムを拾う / 階段を降りる'],
-            ]],
-            ['メニュー', [
-                ['I', 'インベントリ（装備管理）'],
-                ['C', 'キャラクターステータス'],
-                ['T', 'スキルツリー'],
-                ['R', 'スキルショートカット編集'],
-                ['H', 'この手引書'],
-                ['O', '設定画面'],
-                ['Esc', '一時停止 / メニュー閉じ'],
-            ]],
-            ['ダンジョン', [
-                ['Space', 'アイテム拾い ＆ 階段を降りる'],
-                ['E', '階段を降りる（専用キー）'],
-                ['V', 'タウンポータル（帰還）'],
-                ['TAB', 'オーバーレイマップ表示/非表示'],
-            ]],
-            ['アイテム', [
-                ['G', '自動拾いの ON / OFF'],
-                ['P', '自動拾いフィルタ切替'],
-            ]],
-            ['システム', [
-                ['F5', 'ゲームをセーブ'],
-                ['F8', 'セーブデータをロード'],
-            ]],
-        ];
-        for (const [category, bindings] of keys) {
-            h += `<div class="help-sub-title">${category}</div>`;
-            for (const [key, desc] of bindings) {
-                h += `<div class="help-row"><span class="help-key">${key}</span> ${desc}</div>`;
+        case 'keys':
+            h += `<div class="help-section-title">キーバインド一覧</div>`;
+            const keys = [
+                ['操作', [
+                    ['左クリック', '移動 / 敵を攻撃'],
+                    ['右クリック', '選択中スキルをマウス方向に発動'],
+                    ['←↑→↓', 'キーボード移動'],
+                    ['A', '最寄りの敵を自動攻撃'],
+                    ['S', '選択中スキルを最寄り敵に発動'],
+                    ['1〜6', 'スキルスロット選択＆即発動'],
+                    ['Q', 'HP回復薬を使う'],
+                    ['W', 'MP回復薬を使う'],
+                    ['Space', 'アイテムを拾う / 階段を降りる'],
+                ]],
+                ['メニュー', [
+                    ['I', 'インベントリ（装備管理）'],
+                    ['C', 'キャラクターステータス'],
+                    ['T', 'スキルツリー'],
+                    ['R', 'スキルショートカット編集'],
+                    ['H', 'この手引書'],
+                    ['O', '設定画面'],
+                    ['Esc', '一時停止 / メニュー閉じ'],
+                ]],
+                ['ダンジョン', [
+                    ['Space', 'アイテム拾い ＆ 階段を降りる'],
+                    ['E', '階段を降りる（専用キー）'],
+                    ['V', 'タウンポータル（帰還）'],
+                    ['TAB', 'オーバーレイマップ表示/非表示'],
+                ]],
+                ['アイテム', [
+                    ['G', '自動拾いの ON / OFF'],
+                    ['P', '自動拾いフィルタ切替'],
+                ]],
+                ['システム', [
+                    ['F5', 'ゲームをセーブ'],
+                    ['F8', 'セーブデータをロード'],
+                ]],
+            ];
+            for (const [category, bindings] of keys) {
+                h += `<div class="help-sub-title">${category}</div>`;
+                for (const [key, desc] of bindings) {
+                    h += `<div class="help-row"><span class="help-key">${key}</span> ${desc}</div>`;
+                }
             }
-        }
 
-        h += `<div class="help-sub-title">スキルツリー内操作</div>`;
-        h += `<div class="help-row"><span class="help-key">左クリック</span> スキル習得 (+1)</div>`;
-        h += `<div class="help-row"><span class="help-key">右クリック</span> スロットに配置</div>`;
-        h += `<div class="help-row">ホバー ─ 詳細ツールチップ表示</div>`;
+            h += `<div class="help-sub-title">スキルツリー内操作</div>`;
+            h += `<div class="help-row"><span class="help-key">左クリック</span> スキル習得 (+1)</div>`;
+            h += `<div class="help-row"><span class="help-key">右クリック</span> スロットに配置</div>`;
+            h += `<div class="help-row">ホバー ─ 詳細ツールチップ表示</div>`;
 
-        h += `<div class="help-sub-title">スキル編集画面 (R) 内</div>`;
-        h += `<div class="help-row"><span class="help-key">1〜6</span> スロット選択</div>`;
-        h += `<div class="help-row"><span class="help-key">A</span> 配置モード</div>`;
-        h += `<div class="help-row"><span class="help-key">W</span> 入替モード</div>`;
-        h += `<div class="help-row"><span class="help-key">X</span> スロットからスキルを外す</div>`;
-        break;
+            h += `<div class="help-sub-title">スキル編集画面 (R) 内</div>`;
+            h += `<div class="help-row"><span class="help-key">1〜6</span> スロット選択</div>`;
+            h += `<div class="help-row"><span class="help-key">A</span> 配置モード</div>`;
+            h += `<div class="help-row"><span class="help-key">W</span> 入替モード</div>`;
+            h += `<div class="help-row"><span class="help-key">X</span> スロットからスキルを外す</div>`;
+            break;
     }
 
     contentEl.innerHTML = h;
 }
 
-window.allocStat = function(stat) {
+window.allocStat = function (stat) {
     if (player.statPoints <= 0) return;
     player[stat]++;
     player.statPoints--;
@@ -10308,18 +10360,18 @@ function updateInventoryPanel() {
 }
 
 window._selectedInvIdx = -1;
-window.switchInvTab = function(t) { player.invTab = t; window._selectedInvIdx = -1; updateInventoryPanel(); };
-window.unequipSlot = function(slot) { player.unequipSlot(slot); updateInventoryPanel(); };
-window.selectInvItem = function(i) {
+window.switchInvTab = function (t) { player.invTab = t; window._selectedInvIdx = -1; updateInventoryPanel(); };
+window.unequipSlot = function (slot) { player.unequipSlot(slot); updateInventoryPanel(); };
+window.selectInvItem = function (i) {
     window._selectedInvIdx = (window._selectedInvIdx === i) ? -1 : i;
     updateInventoryPanel();
 };
-window.equipInvItem = function(i) {
+window.equipInvItem = function (i) {
     window._selectedInvIdx = -1;
     player.equipItem(i);
     updateInventoryPanel();
 };
-window.showInvContextMenu = function(e, i) {
+window.showInvContextMenu = function (e, i) {
     e.preventDefault();
     closeInvContextMenu();
     const item = player.inventory[i];
@@ -10347,11 +10399,11 @@ window.showInvContextMenu = function(e, i) {
     document.body.appendChild(menu);
     setTimeout(() => document.addEventListener('click', closeInvContextMenu, { once: true }), 0);
 };
-window.closeInvContextMenu = function() {
+window.closeInvContextMenu = function () {
     const m = document.getElementById('inv-context-menu');
     if (m) m.remove();
 };
-window.confirmDropInvItem = function(i) {
+window.confirmDropInvItem = function (i) {
     closeInvContextMenu();
     const item = player.inventory[i];
     if (item) {
@@ -10363,8 +10415,8 @@ window.confirmDropInvItem = function(i) {
     }
 };
 
-window.sortInventory = function(mode) {
-    const rarityOrder = ['common','magic','rare','legendary','unique','runeword'];
+window.sortInventory = function (mode) {
+    const rarityOrder = ['common', 'magic', 'rare', 'legendary', 'unique', 'runeword'];
     if (mode === 'rarity') {
         player.inventory.sort((a, b) => rarityOrder.indexOf(b.rarityKey) - rarityOrder.indexOf(a.rarityKey));
     } else if (mode === 'type') {
@@ -10377,7 +10429,7 @@ window.sortInventory = function(mode) {
 };
 
 // Potion tab tooltip & context menu
-window.showPotionTooltip = function(e, i) {
+window.showPotionTooltip = function (e, i) {
     const item = player.potionInv[i];
     if (!item) return;
     const tt = DOM.tooltip;
@@ -10386,7 +10438,7 @@ window.showPotionTooltip = function(e, i) {
     tt.style.left = (e.clientX + 15) + 'px';
     tt.style.top = (e.clientY - 10) + 'px';
 };
-window.showPotionContextMenu = function(e, i) {
+window.showPotionContextMenu = function (e, i) {
     e.preventDefault();
     closeInvContextMenu();
     const item = player.potionInv[i];
@@ -10394,10 +10446,10 @@ window.showPotionContextMenu = function(e, i) {
     const menu = document.createElement('div');
     menu.className = 'inv-context-menu';
     menu.id = 'inv-context-menu';
-    let menuHTML = `<div style="color:#ffd700;font-size:11px;padding:4px 14px;cursor:default">${escapeHtml(item.name)}${(item.qty||1)>1?' x'+item.qty:''}</div>`;
+    let menuHTML = `<div style="color:#ffd700;font-size:11px;padding:4px 14px;cursor:default">${escapeHtml(item.name)}${(item.qty || 1) > 1 ? ' x' + item.qty : ''}</div>`;
     const sellPrice = calculateSellPrice(item);
-    menuHTML += `<div onclick="sellPotionItem(${i})" style="color:#ffd700">売却 (+${sellPrice * (item.qty||1)}G)</div>`;
-    if ((item.qty||1) > 1) menuHTML += `<div onclick="dropOnePotionTab(${i})">1つ捨てる</div>`;
+    menuHTML += `<div onclick="sellPotionItem(${i})" style="color:#ffd700">売却 (+${sellPrice * (item.qty || 1)}G)</div>`;
+    if ((item.qty || 1) > 1) menuHTML += `<div onclick="dropOnePotionTab(${i})">1つ捨てる</div>`;
     menuHTML += `<div onclick="dropPotionItem(${i})">全て捨てる</div>`;
     menuHTML += `<div onclick="closeInvContextMenu()">キャンセル</div>`;
     menu.innerHTML = menuHTML;
@@ -10405,7 +10457,7 @@ window.showPotionContextMenu = function(e, i) {
     document.body.appendChild(menu);
     setTimeout(() => document.addEventListener('click', closeInvContextMenu, { once: true }), 0);
 };
-window.sellPotionItem = function(i) {
+window.sellPotionItem = function (i) {
     closeInvContextMenu();
     const item = player.potionInv[i];
     if (!item) return;
@@ -10415,7 +10467,7 @@ window.sellPotionItem = function(i) {
     player.potionInv.splice(i, 1);
     updateInventoryPanel();
 };
-window.dropOnePotionTab = function(i) {
+window.dropOnePotionTab = function (i) {
     closeInvContextMenu();
     const item = player.potionInv[i];
     if (!item || !isPotion(item)) return;
@@ -10425,7 +10477,7 @@ window.dropOnePotionTab = function(i) {
     addLog(`${item.name} を1つ捨てた`, '#888');
     updateInventoryPanel();
 };
-window.dropPotionItem = function(i) {
+window.dropPotionItem = function (i) {
     closeInvContextMenu();
     const item = player.potionInv[i];
     if (!item) return;
@@ -10435,7 +10487,7 @@ window.dropPotionItem = function(i) {
     updateInventoryPanel();
 };
 // Charm tab tooltip & context menu
-window.showCharmTooltip = function(e, i) {
+window.showCharmTooltip = function (e, i) {
     const item = player.charmInv[i];
     if (!item) return;
     const tt = DOM.tooltip;
@@ -10444,7 +10496,7 @@ window.showCharmTooltip = function(e, i) {
     tt.style.left = (e.clientX + 15) + 'px';
     tt.style.top = (e.clientY - 10) + 'px';
 };
-window.showCharmContextMenu = function(e, i) {
+window.showCharmContextMenu = function (e, i) {
     e.preventDefault();
     closeInvContextMenu();
     const item = player.charmInv[i];
@@ -10462,7 +10514,7 @@ window.showCharmContextMenu = function(e, i) {
     document.body.appendChild(menu);
     setTimeout(() => document.addEventListener('click', closeInvContextMenu, { once: true }), 0);
 };
-window.sellCharmItem = function(i) {
+window.sellCharmItem = function (i) {
     closeInvContextMenu();
     const item = player.charmInv[i];
     if (!item) return;
@@ -10472,7 +10524,7 @@ window.sellCharmItem = function(i) {
     player.recalcStats();
     updateInventoryPanel();
 };
-window.dropCharmItem = function(i) {
+window.dropCharmItem = function (i) {
     closeInvContextMenu();
     const item = player.charmInv[i];
     if (!item) return;
@@ -10483,7 +10535,7 @@ window.dropCharmItem = function(i) {
     updateInventoryPanel();
 };
 
-window.dropOnePotionInv = function(i) {
+window.dropOnePotionInv = function (i) {
     closeInvContextMenu();
     const item = player.inventory[i];
     if (!item || !isPotion(item)) return;
@@ -10495,7 +10547,7 @@ window.dropOnePotionInv = function(i) {
     window._selectedInvIdx = -1;
     updateInventoryPanel();
 };
-window.sellInvItem = function(i) {
+window.sellInvItem = function (i) {
     closeInvContextMenu();
     const item = player.inventory[i];
     if (!item || item.uberKeyId) return;
@@ -10512,7 +10564,7 @@ function compareItems(newItem, equippedItem) {
     const avgDmg = (it) => it && it.baseDmg ? (it.baseDmg[0] + it.baseDmg[1]) / 2 : 0;
     const dmgDiff = avgDmg(newItem) - avgDmg(equippedItem);
     const defDiff = (newItem.baseDef || 0) - (equippedItem ? equippedItem.baseDef || 0 : 0);
-    const statKeys = ['str','dex','vit','int','dmgPct','hp','mp','lifesteal','atkSpd','def','critChance','moveSpd'];
+    const statKeys = ['str', 'dex', 'vit', 'int', 'dmgPct', 'hp', 'mp', 'lifesteal', 'atkSpd', 'def', 'critChance', 'moveSpd'];
     const sumStats = (it) => {
         const m = {};
         if (it) for (const a of it.affixes) m[a.stat] = (m[a.stat] || 0) + a.value;
@@ -10662,7 +10714,7 @@ function buildTooltipHTML(item, showComparison) {
         }
     }
     if (cmp) {
-        const statNames = {str:'筋力',dex:'敏捷',vit:'体力',int:'知力',dmgPct:'% ダメージ',hp:'HP',mp:'MP',lifesteal:'% ライフスティール',atkSpd:'% 攻撃速度',def:'防御',critChance:'% クリティカル率',critDmg:'% クリティカルダメージ',moveSpd:'% 移動速度',fireRes:'% 火炎耐性',coldRes:'% 冷気耐性',lightRes:'% 雷耐性',poisonRes:'% 毒耐性',allRes:'% 全耐性',blockChance:'% ブロック率',magicFind:'% MF',skillBonus:' 全スキル'};
+        const statNames = { str: '筋力', dex: '敏捷', vit: '体力', int: '知力', dmgPct: '% ダメージ', hp: 'HP', mp: 'MP', lifesteal: '% ライフスティール', atkSpd: '% 攻撃速度', def: '防御', critChance: '% クリティカル率', critDmg: '% クリティカルダメージ', moveSpd: '% 移動速度', fireRes: '% 火炎耐性', coldRes: '% 冷気耐性', lightRes: '% 雷耐性', poisonRes: '% 毒耐性', allRes: '% 全耐性', blockChance: '% ブロック率', magicFind: '% MF', skillBonus: ' 全スキル' };
         const diffs = Object.entries(cmp.affixDiffs);
         if (diffs.length > 0) {
             html += `<div style="border-top:1px solid #555;margin:4px 0;padding-top:4px">`;
@@ -10686,8 +10738,8 @@ function effectDesc(sk) {
     // Handle passive skills
     if (sk.skillType === 'passive' && sk.passiveEffect) {
         const pe = sk.passiveEffect;
-        const statNames = {critChance:'クリティカル率',damagePercent:'ダメージ',defensePercent:'防御力',attackSpeed:'攻撃速度',moveSpeed:'移動速度',manaRegen:'マナ回復',maxHP:'最大HP',maxMP:'最大MP',lifeSteal:'ライフスティール',dodgeChance:'回避率'};
-        return `パッシブ: ${statNames[pe.stat]||pe.stat} +${pe.baseBonus}/Lv (Lv20で+${(pe.baseBonus + pe.perLevel * 19).toFixed(0)})`;
+        const statNames = { critChance: 'クリティカル率', damagePercent: 'ダメージ', defensePercent: '防御力', attackSpeed: '攻撃速度', moveSpeed: '移動速度', manaRegen: 'マナ回復', maxHP: '最大HP', maxMP: '最大MP', lifeSteal: 'ライフスティール', dodgeChance: '回避率' };
+        return `パッシブ: ${statNames[pe.stat] || pe.stat} +${pe.baseBonus}/Lv (Lv20で+${(pe.baseBonus + pe.perLevel * 19).toFixed(0)})`;
     }
     const range = (arr) => Array.isArray(arr) ? `${arr[0]}-${arr[arr.length - 1]}` : (typeof arr === 'number' ? `${arr}` : '');
     const mult = (arr) => Array.isArray(arr) ? `x${arr[0]}〜x${arr[arr.length - 1]}` : (typeof arr === 'number' ? `x${arr}` : '');
@@ -10737,7 +10789,7 @@ function buildSkillTooltipHTML(sk, slot) {
     const isPassive = sk.skillType === 'passive';
     const nameColor = isPassive ? '#66aaff' : '#ffd700';
     const typeLabel = isPassive ? '◆パッシブ' : '';
-    const name = `<img src="${getSkillIconDataURL(sk,20)}" width="20" height="20" style="vertical-align:middle"> ${sk.name || ''}`.trim();
+    const name = `<img src="${getSkillIconDataURL(sk, 20)}" width="20" height="20" style="vertical-align:middle"> ${sk.name || ''}`.trim();
     const lvl = player.skillLevels[sk.id] || 0;
 
     // Show scaled MP/CD for current level
@@ -10754,11 +10806,11 @@ function buildSkillTooltipHTML(sk, slot) {
     let passiveInfo = '';
     if (isPassive && sk.passiveEffect) {
         const pe = sk.passiveEffect;
-        const statNames = {critChance:'クリティカル率',damagePercent:'ダメージ%',defensePercent:'防御力%',attackSpeed:'攻撃速度',moveSpeed:'移動速度',manaRegen:'マナ回復/秒',maxHP:'最大HP',maxMP:'最大MP',lifeSteal:'ライフスティール%',dodgeChance:'回避率%'};
+        const statNames = { critChance: 'クリティカル率', damagePercent: 'ダメージ%', defensePercent: '防御力%', attackSpeed: '攻撃速度', moveSpeed: '移動速度', manaRegen: 'マナ回復/秒', maxHP: '最大HP', maxMP: '最大MP', lifeSteal: 'ライフスティール%', dodgeChance: '回避率%' };
         const curVal = lvl > 0 ? (pe.baseBonus + pe.perLevel * (lvl - 1)).toFixed(1) : pe.baseBonus.toFixed(1);
         const nextVal = lvl < SKILL_MAX_LEVEL ? (pe.baseBonus + pe.perLevel * lvl).toFixed(1) : '-';
         passiveInfo = `<div style="color:#88ccff;margin-top:4px;font-size:10px">
-            ${statNames[pe.stat]||pe.stat}: +${curVal}${lvl < SKILL_MAX_LEVEL ? ` → 次: +${nextVal}` : ' (最大)'}
+            ${statNames[pe.stat] || pe.stat}: +${curVal}${lvl < SKILL_MAX_LEVEL ? ` → 次: +${nextVal}` : ' (最大)'}
             <br>Lv毎: +${pe.perLevel}
         </div>`;
     }
@@ -10770,10 +10822,10 @@ function buildSkillTooltipHTML(sk, slot) {
         synergyInfo = '<div style="color:#aaffaa;margin-top:4px;font-size:10px;border-top:1px solid #333;padding-top:3px">シナジー:</div>';
         for (const syn of sk.synergies) {
             const fromLvl = player.skillLevels[syn.from] || 0;
-            const fromName = allAvail.find(s=>s.id===syn.from)?.name || syn.from;
+            const fromName = allAvail.find(s => s.id === syn.from)?.name || syn.from;
             const curBonus = Math.round(fromLvl * syn.bonus * 100);
-            const typeNames = {damage:'ダメージ',duration:'持続',range:'範囲',freeze:'凍結',heal:'回復'};
-            synergyInfo += `<div style="color:#aaffaa;font-size:9px">+${Math.round(syn.bonus*100)}% ${typeNames[syn.type]||syn.type}/${fromName}のポイント (現在: +${curBonus}%)</div>`;
+            const typeNames = { damage: 'ダメージ', duration: '持続', range: '範囲', freeze: '凍結', heal: '回復' };
+            synergyInfo += `<div style="color:#aaffaa;font-size:9px">+${Math.round(syn.bonus * 100)}% ${typeNames[syn.type] || syn.type}/${fromName}のポイント (現在: +${curBonus}%)</div>`;
         }
     }
 
@@ -10787,7 +10839,7 @@ function buildSkillTooltipHTML(sk, slot) {
         ${passiveInfo}${synergyInfo}${reqLevelInfo}`;
 }
 
-window.showInvTooltip = function(e, i) {
+window.showInvTooltip = function (e, i) {
     const item = player.inventory[i];
     if (!item) return;
     const tt = DOM.tooltip;
@@ -10796,7 +10848,7 @@ window.showInvTooltip = function(e, i) {
     tt.style.left = (e.clientX + 15) + 'px';
     tt.style.top = (e.clientY - 10) + 'px';
 };
-window.showStashTooltip = function(e, i) {
+window.showStashTooltip = function (e, i) {
     const item = G.stash[i];
     if (!item) return;
     const tt = DOM.tooltip;
@@ -10805,7 +10857,7 @@ window.showStashTooltip = function(e, i) {
     tt.style.left = (e.clientX + 15) + 'px';
     tt.style.top = (e.clientY - 10) + 'px';
 };
-window.showEquipTooltip = function(e, slot) {
+window.showEquipTooltip = function (e, slot) {
     const item = player.equipment[slot];
     if (!item) return;
     const tt = DOM.tooltip;
@@ -10814,7 +10866,7 @@ window.showEquipTooltip = function(e, slot) {
     tt.style.left = (e.clientX + 15) + 'px';
     tt.style.top = (e.clientY - 10) + 'px';
 };
-window.showSkillTooltip = function(e, skillId) {
+window.showSkillTooltip = function (e, skillId) {
     const allAvail = getAllAvailableSkills();
     const sk = allAvail.find(s => s.id === skillId);
     if (!sk) return;
@@ -10824,9 +10876,9 @@ window.showSkillTooltip = function(e, skillId) {
     tt.style.left = (e.clientX + 15) + 'px';
     tt.style.top = (e.clientY - 10) + 'px';
 };
-window.hideTooltip = function() { DOM.tooltip.style.display = 'none'; };
+window.hideTooltip = function () { DOM.tooltip.style.display = 'none'; };
 
-window.toggleSkillTreeView = function() {
+window.toggleSkillTreeView = function () {
     skillTreeViewMode = skillTreeViewMode === 'tree' ? 'list' : 'tree';
     updateSkillTreeUI();
 };
@@ -10853,11 +10905,11 @@ function updateSkillTreeUI() {
     if (treeSwapFromSlot) {
         html += `<div style="text-align:center;margin-bottom:10px">
             <span style="color:#888;font-size:11px">入替先 (ショートカット側):</span>
-            ${[1,2,3,4,5,6].map(n => {
-                const sk = player.skills[n];
-                const label = sk ? `${n}:<img src="${getSkillIconDataURL(sk,18)}" width="18" height="18" style="vertical-align:middle"> ${sk.name || ''}` : `${n}:空`;
-                return `<button class="toggle-btn" style="margin-left:4px" onclick="treeSwapTo(${n})">${label}</button>`;
-            }).join('')}
+            ${[1, 2, 3, 4, 5, 6].map(n => {
+            const sk = player.skills[n];
+            const label = sk ? `${n}:<img src="${getSkillIconDataURL(sk, 18)}" width="18" height="18" style="vertical-align:middle"> ${sk.name || ''}` : `${n}:空`;
+            return `<button class="toggle-btn" style="margin-left:4px" onclick="treeSwapTo(${n})">${label}</button>`;
+        }).join('')}
         </div>`;
     }
 
@@ -10914,7 +10966,7 @@ function renderBranchesList(cDef, label) {
             let prereqDisplay = '';
             if (sk.prereq) {
                 const prereqs = Array.isArray(sk.prereq) ? sk.prereq : [sk.prereq];
-                const names = prereqs.map(pid => allAvail.find(s=>s.id===pid)?.name || pid).join(', ');
+                const names = prereqs.map(pid => allAvail.find(s => s.id === pid)?.name || pid).join(', ');
                 prereqDisplay = '<div style="color:#885;font-size:9px">必要: ' + names + '</div>';
             }
 
@@ -10928,17 +10980,17 @@ function renderBranchesList(cDef, label) {
             if (isPassive && sk.passiveEffect && lvl > 0) {
                 const pe = sk.passiveEffect;
                 const curVal = (pe.baseBonus + pe.perLevel * (lvl - 1)).toFixed(1);
-                const statNames = {critChance:'クリティカル率',damagePercent:'ダメージ',defensePercent:'防御力',attackSpeed:'攻撃速度',moveSpeed:'移動速度',manaRegen:'マナ回復',maxHP:'最大HP',maxMP:'最大MP',lifeSteal:'ライフスティール',dodgeChance:'回避率'};
-                passiveInfo = `<div style="color:#88ccff;font-size:9px">効果: ${statNames[pe.stat]||pe.stat} +${curVal}</div>`;
+                const statNames = { critChance: 'クリティカル率', damagePercent: 'ダメージ', defensePercent: '防御力', attackSpeed: '攻撃速度', moveSpeed: '移動速度', manaRegen: 'マナ回復', maxHP: '最大HP', maxMP: '最大MP', lifeSteal: 'ライフスティール', dodgeChance: '回避率' };
+                passiveInfo = `<div style="color:#88ccff;font-size:9px">効果: ${statNames[pe.stat] || pe.stat} +${curVal}</div>`;
             }
 
             let synergyInfo = '';
             if (sk.synergies && sk.synergies.length > 0) {
                 const synParts = sk.synergies.map(syn => {
                     const fromLvl = player.skillLevels[syn.from] || 0;
-                    const fromName = allAvail.find(s=>s.id===syn.from)?.name || syn.from;
+                    const fromName = allAvail.find(s => s.id === syn.from)?.name || syn.from;
                     const curBonus = Math.round(fromLvl * syn.bonus * 100);
-                    return `+${Math.round(syn.bonus*100)}%/${fromName} (現在:+${curBonus}%)`;
+                    return `+${Math.round(syn.bonus * 100)}%/${fromName} (現在:+${curBonus}%)`;
                 });
                 synergyInfo = `<div style="color:#aaffaa;font-size:8px;margin-top:2px">シナジー: ${synParts.join(', ')}</div>`;
             }
@@ -10948,7 +11000,7 @@ function renderBranchesList(cDef, label) {
             const mpCdHtml = isPassive ? '' : `<div style="color:#4488ff;font-size:9px;margin-top:2px">${mpDisplay} ${cdDisplay}</div>`;
 
             h += '<div class="skill-node ' + stateClass + '" onmouseenter="showSkillTooltip(event,\'' + sk.id + '\')" onmouseleave="hideTooltip()">' +
-                '<div class="sn-icon">' + (isPassive ? '◆' : '') + '<img src="' + getSkillIconDataURL(sk,20) + '" width="20" height="20">' + '</div>' +
+                '<div class="sn-icon">' + (isPassive ? '◆' : '') + '<img src="' + getSkillIconDataURL(sk, 20) + '" width="20" height="20">' + '</div>' +
                 '<div class="sn-name">' + sk.name + '</div>' +
                 '<div class="sn-level">Lv.' + lvl + '/' + maxLvl + '</div>' +
                 progressBar +
@@ -11024,7 +11076,7 @@ function renderBranchesTree(cDef, label) {
                 h += `<div class="skill-node-tree ${stateClass}" data-skill-id="${sk.id}" data-prereqs="${prereqIds}" data-synergy-from="${synergyFromIds}" data-tree-id="${treeId}"` +
                     ` onmouseenter="onTreeNodeHover(event,'${sk.id}','${treeId}')" onmouseleave="onTreeNodeLeave('${treeId}')"` +
                     ` onclick="onTreeNodeClick(event,'${sk.id}')" oncontextmenu="onTreeNodeRightClick(event,'${sk.id}')">` +
-                    `<div class="snt-icon">${isPassive ? '◆' : ''}<img src="${getSkillIconDataURL(sk,28)}" width="28" height="28"></div>` +
+                    `<div class="snt-icon">${isPassive ? '◆' : ''}<img src="${getSkillIconDataURL(sk, 28)}" width="28" height="28"></div>` +
                     `<div class="snt-name">${sk.name}</div>` +
                     `<div class="snt-level">Lv.${lvl}/${maxLvl}</div>` +
                     `<div class="snt-progress"><div class="snt-progress-bar ${barClass}" style="width:${pct}%"></div></div>` +
@@ -11167,7 +11219,7 @@ function drawSkillTreeConnections() {
 }
 
 // ===== Hover Highlight =====
-window.onTreeNodeHover = function(e, skillId, treeId) {
+window.onTreeNodeHover = function (e, skillId, treeId) {
     showSkillTooltip(e, skillId);
     const container = document.getElementById(treeId);
     if (!container) return;
@@ -11218,7 +11270,7 @@ window.onTreeNodeHover = function(e, skillId, treeId) {
     });
 };
 
-window.onTreeNodeLeave = function(treeId) {
+window.onTreeNodeLeave = function (treeId) {
     hideTooltip();
     const container = document.getElementById(treeId);
     if (!container) return;
@@ -11234,12 +11286,12 @@ window.onTreeNodeLeave = function(treeId) {
 };
 
 // ===== Tree Node Click Handlers =====
-window.onTreeNodeClick = function(e, skillId) {
+window.onTreeNodeClick = function (e, skillId) {
     e.preventDefault();
     learnSkill(skillId);
 };
 
-window.onTreeNodeRightClick = function(e, skillId) {
+window.onTreeNodeRightClick = function (e, skillId) {
     e.preventDefault();
     quickAssignSkill(skillId);
 };
@@ -11253,7 +11305,7 @@ function checkPrereqs(sk) {
     return (player.skillLevels[sk.prereq] || 0) >= 1;
 }
 
-window.learnSkill = function(skillId) {
+window.learnSkill = function (skillId) {
     if (player.skillPoints <= 0) return;
     const allAvail = getAllAvailableSkills();
     const sk = allAvail.find(s => s.id === skillId);
@@ -11316,7 +11368,7 @@ function renderSettingsUI() {
         const meta = getSaveMeta(i);
         const active = G.saveSlot === i;
         const info = meta
-            ? `Lv.${meta.level} / ${meta.act ? 'ACT' + meta.act : 'B' + meta.floor + 'F'}${meta.cycle ? ' (' + (meta.cycle+1) + '周目)' : ''} / ${meta.className}`
+            ? `Lv.${meta.level} / ${meta.act ? 'ACT' + meta.act : 'B' + meta.floor + 'F'}${meta.cycle ? ' (' + (meta.cycle + 1) + '周目)' : ''} / ${meta.className}`
             : '空';
         const time = meta && meta.timestamp
             ? new Date(meta.timestamp).toLocaleString('ja-JP')
@@ -11333,7 +11385,7 @@ function renderSettingsUI() {
     DOM.settingsContent.innerHTML = html;
 }
 
-window.toggleSetting = function(key) {
+window.toggleSetting = function (key) {
     if (!(key in SETTINGS)) return;
     if (key === 'sound') {
         setSoundEnabled(!SETTINGS.sound);
@@ -11343,19 +11395,19 @@ window.toggleSetting = function(key) {
     }
     renderSettingsUI();
 };
-window.toggleAutoPickup = function() {
+window.toggleAutoPickup = function () {
     G.autoPickup = !G.autoPickup;
     addLog(G.autoPickup ? '自動拾い: ON' : '自動拾い: OFF', '#ffdd44');
     renderSettingsUI();
 };
 function getPickupFilterLabel() {
-    const names = ['ノーマル以上','マジック以上','レア以上','レジェンダリー以上'];
-    const rarities = ['normal','magic','rare','legendary'];
+    const names = ['ノーマル以上', 'マジック以上', 'レア以上', 'レジェンダリー以上'];
+    const rarities = ['normal', 'magic', 'rare', 'legendary'];
     const idx = rarities.indexOf(G.autoPickupRarity);
     return names[idx] || names[0];
 }
-window.cyclePickupFilter = function() {
-    const rarities = ['normal','magic','rare','legendary'];
+window.cyclePickupFilter = function () {
+    const rarities = ['normal', 'magic', 'rare', 'legendary'];
     const idx = rarities.indexOf(G.autoPickupRarity);
     const next = (idx + 1) % rarities.length;
     G.autoPickupRarity = rarities[next];
@@ -11512,7 +11564,7 @@ canvas.addEventListener('mousedown', e => {
 window.addEventListener('keydown', e => {
     keysDown[e.key.toLowerCase()] = true;
     if (e.code) keysDown[e.code] = true;
-    if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault();
+    if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(e.key.toLowerCase())) e.preventDefault();
 
     // --- Title screen keyboard navigation ---
     if (!G.started) {
@@ -11937,8 +11989,8 @@ function showDifficultySelect() {
     html += `<div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">`;
     for (const [key, def] of Object.entries(DIFFICULTY_DEFS)) {
         const desc = key === 'normal' ? '初心者向け。標準的な難易度。' :
-                     key === 'nightmare' ? '敵が強化。報酬も増加。耐性-20。' :
-                     '最高難度。敵が極めて強い。耐性-50。';
+            key === 'nightmare' ? '敵が強化。報酬も増加。耐性-20。' :
+                '最高難度。敵が極めて強い。耐性-50。';
         html += `<div onclick="window.selectDifficulty('${key}')" style="cursor:pointer;padding:16px 24px;border:2px solid ${def.color};border-radius:8px;background:rgba(0,0,0,0.7);min-width:140px;transition:all 0.2s" onmouseover="this.style.boxShadow='0 0 20px ${def.color}40';this.style.transform='translateY(-3px)'" onmouseout="this.style.boxShadow='none';this.style.transform='none'">
             <div style="color:${def.color};font-size:16px;font-weight:bold;margin-bottom:6px">${def.name}</div>
             <div style="color:#aaa;font-size:11px">${desc}</div>
@@ -11950,7 +12002,7 @@ function showDifficultySelect() {
     DOM.classSelect.style.display = 'block';
 }
 
-window.selectDifficulty = function(diff) {
+window.selectDifficulty = function (diff) {
     G.difficulty = diff;
     // Restore class select DOM
     if (_classSelectOriginalHTML) {
@@ -11972,7 +12024,7 @@ DOM.titleStartText.addEventListener('click', (e) => {
     }
 });
 
-window.selectClass = function(cls) {
+window.selectClass = function (cls) {
     G.playerClass = cls;
     const classDef = CLASS_DEFS[cls];
     player.className = classDef.name;
@@ -12101,7 +12153,7 @@ function drawLighting() {
     const visibleTorches = [];
     for (const t of dungeon.torchPositions) {
         const dx = t.wx - player.x, dy = t.wy - player.y;
-        const d = Math.sqrt(dx*dx + dy*dy);
+        const d = Math.sqrt(dx * dx + dy * dy);
         if (d > torchMaxDist) continue;
         const tsp = worldToScreen(t.wx, t.wy);
         if (tsp.x < -160 || tsp.x > W + 160 || tsp.y < -160 || tsp.y > H + 160) continue;
@@ -12191,7 +12243,7 @@ function drawLighting() {
             ctx.globalAlpha = 1;
         }
         const redA = flashA * 0.5;
-        const dmgVig = ctx.createRadialGradient(W/2, H/2, W*0.05, W/2, H/2, W*0.55);
+        const dmgVig = ctx.createRadialGradient(W / 2, H / 2, W * 0.05, W / 2, H / 2, W * 0.55);
         dmgVig.addColorStop(0, `rgba(120,0,0,0)`);
         dmgVig.addColorStop(0.4, `rgba(160,0,0,${redA * 0.3})`);
         dmgVig.addColorStop(0.7, `rgba(200,10,0,${redA * 0.6})`);
@@ -12202,7 +12254,7 @@ function drawLighting() {
 }
 
 function drawGroundItems() {
-    const TYPE_SPR = {sword:'iSword',axe:'iAxe',staff:'iStaff',shield:'iShield',helmet:'iHelmet',armor:'iArmor',ring:'iRing',amulet:'iAmulet',boots:'iBoots',potion:'iPotion',hp1:'iPotion',hp2:'iPotion',hp3:'iPotion',hp4:'iPotion',hp5:'iPotion',mp1:'iPotion',mp2:'iPotion',mp3:'iPotion',rejuv:'iPotion',fullrejuv:'iPotion',manaPotion:'iPotion',smallCharm:'iRing',mediumCharm:'iRing',grandCharm:'iRing'};
+    const TYPE_SPR = { sword: 'iSword', axe: 'iAxe', staff: 'iStaff', shield: 'iShield', helmet: 'iHelmet', armor: 'iArmor', ring: 'iRing', amulet: 'iAmulet', boots: 'iBoots', potion: 'iPotion', hp1: 'iPotion', hp2: 'iPotion', hp3: 'iPotion', hp4: 'iPotion', hp5: 'iPotion', mp1: 'iPotion', mp2: 'iPotion', mp3: 'iPotion', rejuv: 'iPotion', fullrejuv: 'iPotion', manaPotion: 'iPotion', smallCharm: 'iRing', mediumCharm: 'iRing', grandCharm: 'iRing' };
     const beamRarities = { rare: true, legendary: true, unique: true, runeword: true };
     for (const gi of groundItems) {
         gi.bobT += 0.02;
@@ -12367,73 +12419,73 @@ function drawGlobeFrame(cx, cy, r) {
 
 // Canvas-drawn skill icon shapes (pixel-art style, replaces emoji)
 // Draws icon centered at origin (caller must translate). eff = effect string, size = icon diameter.
-	    function _drawSkillIconShape(ctx, eff, size) {
-	        const half = size / 2;
-	        // --- Specific effect matches first ---
-	        if (eff === 'chain_lightning') {
-        ctx.strokeStyle = '#ffdd44'; ctx.lineWidth = Math.max(1.5, size/10); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+function _drawSkillIconShape(ctx, eff, size) {
+    const half = size / 2;
+    // --- Specific effect matches first ---
+    if (eff === 'chain_lightning') {
+        ctx.strokeStyle = '#ffdd44'; ctx.lineWidth = Math.max(1.5, size / 10); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
         ctx.beginPath();
-        ctx.moveTo(-half*0.2, -half*0.8);
-        ctx.lineTo(half*0.15, -half*0.2);
-        ctx.lineTo(-half*0.1, -half*0.05);
-        ctx.lineTo(half*0.25, half*0.7);
+        ctx.moveTo(-half * 0.2, -half * 0.8);
+        ctx.lineTo(half * 0.15, -half * 0.2);
+        ctx.lineTo(-half * 0.1, -half * 0.05);
+        ctx.lineTo(half * 0.25, half * 0.7);
         ctx.stroke();
-        ctx.strokeStyle = '#fff8cc'; ctx.lineWidth = Math.max(0.8, size/18);
+        ctx.strokeStyle = '#fff8cc'; ctx.lineWidth = Math.max(0.8, size / 18);
         ctx.beginPath();
-        ctx.moveTo(-half*0.15, -half*0.7);
-        ctx.lineTo(half*0.1, -half*0.15);
-        ctx.lineTo(-half*0.05, 0);
-        ctx.lineTo(half*0.2, half*0.6);
+        ctx.moveTo(-half * 0.15, -half * 0.7);
+        ctx.lineTo(half * 0.1, -half * 0.15);
+        ctx.lineTo(-half * 0.05, 0);
+        ctx.lineTo(half * 0.2, half * 0.6);
         ctx.stroke();
     } else if (eff === 'frost_nova') {
-        ctx.strokeStyle = '#88ddff'; ctx.lineWidth = Math.max(1.2, size/12);
-        ctx.beginPath(); ctx.arc(0, 0, half*0.45, 0, Math.PI*2); ctx.stroke();
+        ctx.strokeStyle = '#88ddff'; ctx.lineWidth = Math.max(1.2, size / 12);
+        ctx.beginPath(); ctx.arc(0, 0, half * 0.45, 0, Math.PI * 2); ctx.stroke();
         for (let a = 0; a < 8; a++) {
             const ang = a * Math.PI / 4;
             ctx.beginPath();
-            ctx.moveTo(Math.cos(ang)*half*0.45, Math.sin(ang)*half*0.45);
-            ctx.lineTo(Math.cos(ang)*half*0.85, Math.sin(ang)*half*0.85);
+            ctx.moveTo(Math.cos(ang) * half * 0.45, Math.sin(ang) * half * 0.45);
+            ctx.lineTo(Math.cos(ang) * half * 0.85, Math.sin(ang) * half * 0.85);
             ctx.stroke();
         }
-        ctx.fillStyle = '#ccf0ff'; ctx.beginPath(); ctx.arc(0, 0, half*0.15, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#ccf0ff'; ctx.beginPath(); ctx.arc(0, 0, half * 0.15, 0, Math.PI * 2); ctx.fill();
     } else if (eff === 'frozen_orb') {
-        const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, half*0.4);
+        const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, half * 0.4);
         grad.addColorStop(0, '#ddeeff'); grad.addColorStop(1, '#66aacc');
         ctx.fillStyle = grad;
-        ctx.beginPath(); ctx.arc(0, 0, half*0.4, 0, Math.PI*2); ctx.fill();
-        ctx.strokeStyle = '#aaeeff'; ctx.lineWidth = Math.max(1, size/14);
+        ctx.beginPath(); ctx.arc(0, 0, half * 0.4, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#aaeeff'; ctx.lineWidth = Math.max(1, size / 14);
         for (let a = 0; a < 6; a++) {
-            const ang = a * Math.PI / 3 + Math.PI/6;
+            const ang = a * Math.PI / 3 + Math.PI / 6;
             ctx.beginPath();
-            ctx.moveTo(Math.cos(ang)*half*0.4, Math.sin(ang)*half*0.4);
-            ctx.lineTo(Math.cos(ang)*half*0.8, Math.sin(ang)*half*0.8);
+            ctx.moveTo(Math.cos(ang) * half * 0.4, Math.sin(ang) * half * 0.4);
+            ctx.lineTo(Math.cos(ang) * half * 0.8, Math.sin(ang) * half * 0.8);
             ctx.stroke();
             ctx.fillStyle = '#ccf0ff';
-            ctx.beginPath(); ctx.arc(Math.cos(ang)*half*0.8, Math.sin(ang)*half*0.8, Math.max(1,size/20), 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(Math.cos(ang) * half * 0.8, Math.sin(ang) * half * 0.8, Math.max(1, size / 20), 0, Math.PI * 2); ctx.fill();
         }
     } else if (eff === 'consecrate') {
-        ctx.strokeStyle = '#ff8844'; ctx.lineWidth = Math.max(1.5, size/10);
-        ctx.beginPath(); ctx.arc(0, 0, half*0.65, 0, Math.PI*2); ctx.stroke();
+        ctx.strokeStyle = '#ff8844'; ctx.lineWidth = Math.max(1.5, size / 10);
+        ctx.beginPath(); ctx.arc(0, 0, half * 0.65, 0, Math.PI * 2); ctx.stroke();
         ctx.fillStyle = 'rgba(255,136,68,0.25)';
-        ctx.beginPath(); ctx.arc(0, 0, half*0.6, 0, Math.PI*2); ctx.fill();
-        ctx.strokeStyle = '#ffaa66'; ctx.lineWidth = Math.max(1, size/14);
-        ctx.beginPath(); ctx.moveTo(0, -half*0.35); ctx.lineTo(0, half*0.35); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(-half*0.35, 0); ctx.lineTo(half*0.35, 0); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 0, half * 0.6, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#ffaa66'; ctx.lineWidth = Math.max(1, size / 14);
+        ctx.beginPath(); ctx.moveTo(0, -half * 0.35); ctx.lineTo(0, half * 0.35); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-half * 0.35, 0); ctx.lineTo(half * 0.35, 0); ctx.stroke();
     } else if (eff === 'meteor') {
         ctx.fillStyle = '#ff6622';
-        ctx.beginPath(); ctx.arc(half*0.1, half*0.15, half*0.35, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(half * 0.1, half * 0.15, half * 0.35, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#ffcc44';
-        ctx.beginPath(); ctx.arc(half*0.05, half*0.1, half*0.18, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(half * 0.05, half * 0.1, half * 0.18, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = 'rgba(255,100,30,0.5)';
         ctx.beginPath();
-        ctx.moveTo(-half*0.15, -half*0.05);
-        ctx.lineTo(-half*0.6, -half*0.7);
-        ctx.lineTo(-half*0.2, -half*0.5);
-        ctx.lineTo(-half*0.35, -half*0.8);
-        ctx.lineTo(half*0.05, -half*0.2);
+        ctx.moveTo(-half * 0.15, -half * 0.05);
+        ctx.lineTo(-half * 0.6, -half * 0.7);
+        ctx.lineTo(-half * 0.2, -half * 0.5);
+        ctx.lineTo(-half * 0.35, -half * 0.8);
+        ctx.lineTo(half * 0.05, -half * 0.2);
         ctx.closePath(); ctx.fill();
     } else if (eff === 'teleport') {
-        ctx.strokeStyle = '#66aaff'; ctx.lineWidth = Math.max(1.5, size/10); ctx.lineCap = 'round';
+        ctx.strokeStyle = '#66aaff'; ctx.lineWidth = Math.max(1.5, size / 10); ctx.lineCap = 'round';
         for (let i = 0; i < 2; i++) {
             ctx.beginPath();
             const startAng = i * Math.PI;
@@ -12445,267 +12497,267 @@ function drawGlobeFrame(cx, cy, r) {
             }
             ctx.stroke();
         }
-        ctx.fillStyle = '#aaccff'; ctx.beginPath(); ctx.arc(0, 0, half*0.12, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#aaccff'; ctx.beginPath(); ctx.arc(0, 0, half * 0.12, 0, Math.PI * 2); ctx.fill();
     } else if (eff === 'mana_shield') {
-        ctx.strokeStyle = '#4488ff'; ctx.lineWidth = Math.max(1.5, size/10);
+        ctx.strokeStyle = '#4488ff'; ctx.lineWidth = Math.max(1.5, size / 10);
         ctx.beginPath();
         for (let a = 0; a < 6; a++) {
-            const ang = a * Math.PI / 3 - Math.PI/6;
+            const ang = a * Math.PI / 3 - Math.PI / 6;
             const px = Math.cos(ang) * half * 0.65, py = Math.sin(ang) * half * 0.65;
             a === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
         }
         ctx.closePath(); ctx.stroke();
         ctx.fillStyle = 'rgba(68,136,255,0.15)'; ctx.fill();
         ctx.fillStyle = 'rgba(100,170,255,0.3)';
-        ctx.beginPath(); ctx.arc(0, 0, half*0.25, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(0, 0, half * 0.25, 0, Math.PI * 2); ctx.fill();
     } else if (eff === 'holy_burst') {
         ctx.fillStyle = '#ffdd88';
-        ctx.fillRect(-half*0.12, -half*0.7, half*0.24, half*1.4);
-        ctx.fillRect(-half*0.7, -half*0.12, half*1.4, half*0.24);
+        ctx.fillRect(-half * 0.12, -half * 0.7, half * 0.24, half * 1.4);
+        ctx.fillRect(-half * 0.7, -half * 0.12, half * 1.4, half * 0.24);
         ctx.fillStyle = '#fff8dd';
-        ctx.beginPath(); ctx.arc(0, 0, half*0.2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(0, 0, half * 0.2, 0, Math.PI * 2); ctx.fill();
     } else if (eff === 'multi_shot') {
-        ctx.strokeStyle = '#ccaa66'; ctx.lineWidth = Math.max(1.2, size/12); ctx.lineCap = 'round';
+        ctx.strokeStyle = '#ccaa66'; ctx.lineWidth = Math.max(1.2, size / 12); ctx.lineCap = 'round';
         const angles = [-0.35, 0, 0.35];
         for (const da of angles) {
-            const ang = -Math.PI/2 + da;
+            const ang = -Math.PI / 2 + da;
             ctx.beginPath();
-            ctx.moveTo(0, half*0.3);
-            ctx.lineTo(Math.cos(ang)*half*0.75, Math.sin(ang)*half*0.75 + half*0.1);
+            ctx.moveTo(0, half * 0.3);
+            ctx.lineTo(Math.cos(ang) * half * 0.75, Math.sin(ang) * half * 0.75 + half * 0.1);
             ctx.stroke();
             ctx.fillStyle = '#aaaaaa';
-            const tx = Math.cos(ang)*half*0.75, ty = Math.sin(ang)*half*0.75 + half*0.1;
-            ctx.beginPath(); ctx.arc(tx, ty, Math.max(1.2, size/16), 0, Math.PI*2); ctx.fill();
+            const tx = Math.cos(ang) * half * 0.75, ty = Math.sin(ang) * half * 0.75 + half * 0.1;
+            ctx.beginPath(); ctx.arc(tx, ty, Math.max(1.2, size / 16), 0, Math.PI * 2); ctx.fill();
         }
     } else if (eff === 'arrow_rain') {
-        ctx.strokeStyle = '#ccaa66'; ctx.lineWidth = Math.max(1, size/14); ctx.lineCap = 'round';
-        const arrows = [[-half*0.4, -half*0.3], [0, -half*0.6], [half*0.35, -half*0.15], [-half*0.15, half*0.1], [half*0.15, half*0.3]];
+        ctx.strokeStyle = '#ccaa66'; ctx.lineWidth = Math.max(1, size / 14); ctx.lineCap = 'round';
+        const arrows = [[-half * 0.4, -half * 0.3], [0, -half * 0.6], [half * 0.35, -half * 0.15], [-half * 0.15, half * 0.1], [half * 0.15, half * 0.3]];
         for (const [ax, ay] of arrows) {
-            ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax + half*0.08, ay + half*0.35); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax + half * 0.08, ay + half * 0.35); ctx.stroke();
             ctx.fillStyle = '#aaaaaa';
             ctx.beginPath();
-            ctx.moveTo(ax + half*0.08, ay + half*0.35);
-            ctx.lineTo(ax + half*0.15, ay + half*0.25);
-            ctx.lineTo(ax, ay + half*0.25);
+            ctx.moveTo(ax + half * 0.08, ay + half * 0.35);
+            ctx.lineTo(ax + half * 0.15, ay + half * 0.25);
+            ctx.lineTo(ax, ay + half * 0.25);
             ctx.fill();
         }
     } else if (eff === 'debuff_defense') {
         ctx.fillStyle = '#ff6644';
-        ctx.beginPath(); ctx.moveTo(0, -half*0.7);
-        ctx.lineTo(half*0.55, -half*0.35); ctx.lineTo(half*0.45, half*0.4);
-        ctx.lineTo(0, half*0.7); ctx.lineTo(-half*0.45, half*0.4);
-        ctx.lineTo(-half*0.55, -half*0.35); ctx.closePath(); ctx.fill();
-        ctx.strokeStyle = '#220000'; ctx.lineWidth = Math.max(1.2, size/12);
+        ctx.beginPath(); ctx.moveTo(0, -half * 0.7);
+        ctx.lineTo(half * 0.55, -half * 0.35); ctx.lineTo(half * 0.45, half * 0.4);
+        ctx.lineTo(0, half * 0.7); ctx.lineTo(-half * 0.45, half * 0.4);
+        ctx.lineTo(-half * 0.55, -half * 0.35); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#220000'; ctx.lineWidth = Math.max(1.2, size / 12);
         ctx.beginPath();
-        ctx.moveTo(-half*0.05, -half*0.5);
-        ctx.lineTo(half*0.1, -half*0.1);
-        ctx.lineTo(-half*0.1, half*0.2);
-        ctx.lineTo(half*0.05, half*0.5);
+        ctx.moveTo(-half * 0.05, -half * 0.5);
+        ctx.lineTo(half * 0.1, -half * 0.1);
+        ctx.lineTo(-half * 0.1, half * 0.2);
+        ctx.lineTo(half * 0.05, half * 0.5);
         ctx.stroke();
     } else if (eff === 'summon_minion') {
         ctx.fillStyle = '#88aacc';
         ctx.beginPath();
-        ctx.moveTo(0, -half*0.7);
-        ctx.quadraticCurveTo(half*0.5, -half*0.6, half*0.45, -half*0.1);
-        ctx.lineTo(half*0.45, half*0.4);
-        ctx.lineTo(half*0.25, half*0.25); ctx.lineTo(half*0.1, half*0.45);
-        ctx.lineTo(-half*0.1, half*0.25); ctx.lineTo(-half*0.25, half*0.45);
-        ctx.lineTo(-half*0.45, half*0.3);
-        ctx.lineTo(-half*0.45, -half*0.1);
-        ctx.quadraticCurveTo(-half*0.5, -half*0.6, 0, -half*0.7);
+        ctx.moveTo(0, -half * 0.7);
+        ctx.quadraticCurveTo(half * 0.5, -half * 0.6, half * 0.45, -half * 0.1);
+        ctx.lineTo(half * 0.45, half * 0.4);
+        ctx.lineTo(half * 0.25, half * 0.25); ctx.lineTo(half * 0.1, half * 0.45);
+        ctx.lineTo(-half * 0.1, half * 0.25); ctx.lineTo(-half * 0.25, half * 0.45);
+        ctx.lineTo(-half * 0.45, half * 0.3);
+        ctx.lineTo(-half * 0.45, -half * 0.1);
+        ctx.quadraticCurveTo(-half * 0.5, -half * 0.6, 0, -half * 0.7);
         ctx.fill();
         ctx.fillStyle = '#ccddee';
-        ctx.beginPath(); ctx.arc(-half*0.15, -half*0.25, half*0.08, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(half*0.15, -half*0.25, half*0.08, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-half * 0.15, -half * 0.25, half * 0.08, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(half * 0.15, -half * 0.25, half * 0.08, 0, Math.PI * 2); ctx.fill();
     } else if (eff === 'self_heal_pct') {
         ctx.fillStyle = '#44cc44';
-        ctx.fillRect(-half*0.15, -half*0.6, half*0.3, half*1.2);
-        ctx.fillRect(-half*0.6, -half*0.15, half*1.2, half*0.3);
+        ctx.fillRect(-half * 0.15, -half * 0.6, half * 0.3, half * 1.2);
+        ctx.fillRect(-half * 0.6, -half * 0.15, half * 1.2, half * 0.3);
         ctx.fillStyle = '#88ee88';
-        ctx.fillRect(-half*0.08, -half*0.5, half*0.16, half*1.0);
-        ctx.fillRect(-half*0.5, -half*0.08, half*1.0, half*0.16);
+        ctx.fillRect(-half * 0.08, -half * 0.5, half * 0.16, half * 1.0);
+        ctx.fillRect(-half * 0.5, -half * 0.08, half * 1.0, half * 0.16);
     } else if (eff === 'buff_frenzy') {
-        ctx.strokeStyle = '#ff4444'; ctx.lineWidth = Math.max(1.5, size/10); ctx.lineCap = 'round';
-        const xs = [-half*0.3, 0, half*0.3];
+        ctx.strokeStyle = '#ff4444'; ctx.lineWidth = Math.max(1.5, size / 10); ctx.lineCap = 'round';
+        const xs = [-half * 0.3, 0, half * 0.3];
         for (const bx of xs) {
-            ctx.beginPath(); ctx.moveTo(bx, half*0.5); ctx.lineTo(bx, -half*0.3); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(bx, half * 0.5); ctx.lineTo(bx, -half * 0.3); ctx.stroke();
             ctx.fillStyle = '#ff4444';
             ctx.beginPath();
-            ctx.moveTo(bx, -half*0.65);
-            ctx.lineTo(bx - half*0.12, -half*0.3);
-            ctx.lineTo(bx + half*0.12, -half*0.3);
+            ctx.moveTo(bx, -half * 0.65);
+            ctx.lineTo(bx - half * 0.12, -half * 0.3);
+            ctx.lineTo(bx + half * 0.12, -half * 0.3);
             ctx.fill();
         }
     } else if (eff === 'buff_berserk') {
         ctx.fillStyle = '#ff6644';
         ctx.beginPath();
-        ctx.moveTo(0, -half*0.8);
-        ctx.quadraticCurveTo(half*0.6, -half*0.4, half*0.4, half*0.1);
-        ctx.quadraticCurveTo(half*0.5, half*0.5, half*0.15, half*0.6);
-        ctx.lineTo(0, half*0.3); ctx.lineTo(-half*0.15, half*0.6);
-        ctx.quadraticCurveTo(-half*0.5, half*0.5, -half*0.4, half*0.1);
-        ctx.quadraticCurveTo(-half*0.6, -half*0.4, 0, -half*0.8);
+        ctx.moveTo(0, -half * 0.8);
+        ctx.quadraticCurveTo(half * 0.6, -half * 0.4, half * 0.4, half * 0.1);
+        ctx.quadraticCurveTo(half * 0.5, half * 0.5, half * 0.15, half * 0.6);
+        ctx.lineTo(0, half * 0.3); ctx.lineTo(-half * 0.15, half * 0.6);
+        ctx.quadraticCurveTo(-half * 0.5, half * 0.5, -half * 0.4, half * 0.1);
+        ctx.quadraticCurveTo(-half * 0.6, -half * 0.4, 0, -half * 0.8);
         ctx.fill();
         ctx.fillStyle = '#ffaa44';
         ctx.beginPath();
-        ctx.moveTo(0, -half*0.4);
-        ctx.quadraticCurveTo(half*0.25, -half*0.1, half*0.15, half*0.2);
-        ctx.lineTo(-half*0.15, half*0.2);
-        ctx.quadraticCurveTo(-half*0.25, -half*0.1, 0, -half*0.4);
+        ctx.moveTo(0, -half * 0.4);
+        ctx.quadraticCurveTo(half * 0.25, -half * 0.1, half * 0.15, half * 0.2);
+        ctx.lineTo(-half * 0.15, half * 0.2);
+        ctx.quadraticCurveTo(-half * 0.25, -half * 0.1, 0, -half * 0.4);
         ctx.fill();
     } else if (eff === 'buff_atkspd') {
-        ctx.strokeStyle = '#ffaa44'; ctx.lineWidth = Math.max(1.5, size/10); ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(-half*0.6, -half*0.4); ctx.lineTo(half*0.4, -half*0.4); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(-half*0.5, 0); ctx.lineTo(half*0.6, 0); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(-half*0.6, half*0.4); ctx.lineTo(half*0.4, half*0.4); ctx.stroke();
+        ctx.strokeStyle = '#ffaa44'; ctx.lineWidth = Math.max(1.5, size / 10); ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(-half * 0.6, -half * 0.4); ctx.lineTo(half * 0.4, -half * 0.4); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-half * 0.5, 0); ctx.lineTo(half * 0.6, 0); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-half * 0.6, half * 0.4); ctx.lineTo(half * 0.4, half * 0.4); ctx.stroke();
         ctx.fillStyle = '#ffaa44';
         ctx.beginPath();
-        ctx.moveTo(half*0.7, 0);
-        ctx.lineTo(half*0.4, -half*0.15);
-        ctx.lineTo(half*0.4, half*0.15);
+        ctx.moveTo(half * 0.7, 0);
+        ctx.lineTo(half * 0.4, -half * 0.15);
+        ctx.lineTo(half * 0.4, half * 0.15);
         ctx.fill();
     } else if (eff === 'buff_crit') {
-        ctx.strokeStyle = '#ffdd44'; ctx.lineWidth = Math.max(1.2, size/12);
-        ctx.beginPath(); ctx.arc(0, 0, half*0.45, 0, Math.PI*2); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0, -half*0.7); ctx.lineTo(0, half*0.7); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(-half*0.7, 0); ctx.lineTo(half*0.7, 0); ctx.stroke();
+        ctx.strokeStyle = '#ffdd44'; ctx.lineWidth = Math.max(1.2, size / 12);
+        ctx.beginPath(); ctx.arc(0, 0, half * 0.45, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, -half * 0.7); ctx.lineTo(0, half * 0.7); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-half * 0.7, 0); ctx.lineTo(half * 0.7, 0); ctx.stroke();
         ctx.fillStyle = '#ffdd44';
-        ctx.beginPath(); ctx.arc(0, 0, half*0.12, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(0, 0, half * 0.12, 0, Math.PI * 2); ctx.fill();
     } else if (eff === 'buff_dodge') {
-        ctx.strokeStyle = '#88ccff'; ctx.lineWidth = Math.max(1.2, size/12); ctx.lineCap = 'round';
+        ctx.strokeStyle = '#88ccff'; ctx.lineWidth = Math.max(1.2, size / 12); ctx.lineCap = 'round';
         ctx.beginPath();
-        ctx.moveTo(-half*0.6, -half*0.3);
-        ctx.quadraticCurveTo(0, -half*0.5, half*0.5, -half*0.15);
+        ctx.moveTo(-half * 0.6, -half * 0.3);
+        ctx.quadraticCurveTo(0, -half * 0.5, half * 0.5, -half * 0.15);
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(-half*0.5, half*0.05);
-        ctx.quadraticCurveTo(half*0.1, -half*0.15, half*0.6, half*0.1);
+        ctx.moveTo(-half * 0.5, half * 0.05);
+        ctx.quadraticCurveTo(half * 0.1, -half * 0.15, half * 0.6, half * 0.1);
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(-half*0.4, half*0.4);
-        ctx.quadraticCurveTo(half*0.2, half*0.2, half*0.5, half*0.45);
+        ctx.moveTo(-half * 0.4, half * 0.4);
+        ctx.quadraticCurveTo(half * 0.2, half * 0.2, half * 0.5, half * 0.45);
         ctx.stroke();
     } else if (eff === 'buff_speed') {
-        ctx.strokeStyle = '#aaddff'; ctx.lineWidth = Math.max(1.2, size/12); ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.arc(-half*0.15, -half*0.25, half*0.3, -Math.PI*0.8, Math.PI*0.3); ctx.stroke();
-        ctx.beginPath(); ctx.arc(half*0.15, half*0.15, half*0.25, -Math.PI*0.5, Math.PI*0.6); ctx.stroke();
-        ctx.beginPath(); ctx.arc(-half*0.3, half*0.3, half*0.15, -Math.PI*0.3, Math.PI*0.7); ctx.stroke();
+        ctx.strokeStyle = '#aaddff'; ctx.lineWidth = Math.max(1.2, size / 12); ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.arc(-half * 0.15, -half * 0.25, half * 0.3, -Math.PI * 0.8, Math.PI * 0.3); ctx.stroke();
+        ctx.beginPath(); ctx.arc(half * 0.15, half * 0.15, half * 0.25, -Math.PI * 0.5, Math.PI * 0.6); ctx.stroke();
+        ctx.beginPath(); ctx.arc(-half * 0.3, half * 0.3, half * 0.15, -Math.PI * 0.3, Math.PI * 0.7); ctx.stroke();
     } else if (eff === 'buff_counter') {
-        ctx.strokeStyle = '#cc6644'; ctx.lineWidth = Math.max(1.2, size/12);
-        ctx.beginPath(); ctx.arc(0, 0, half*0.4, 0, Math.PI*2); ctx.stroke();
+        ctx.strokeStyle = '#cc6644'; ctx.lineWidth = Math.max(1.2, size / 12);
+        ctx.beginPath(); ctx.arc(0, 0, half * 0.4, 0, Math.PI * 2); ctx.stroke();
         for (let a = 0; a < 8; a++) {
             const ang = a * Math.PI / 4;
-            const ix = Math.cos(ang)*half*0.4, iy = Math.sin(ang)*half*0.4;
-            const ox = Math.cos(ang)*half*0.75, oy = Math.sin(ang)*half*0.75;
+            const ix = Math.cos(ang) * half * 0.4, iy = Math.sin(ang) * half * 0.4;
+            const ox = Math.cos(ang) * half * 0.75, oy = Math.sin(ang) * half * 0.75;
             ctx.fillStyle = '#cc6644';
             ctx.beginPath();
             ctx.moveTo(ox, oy);
-            ctx.lineTo(ix + Math.cos(ang+0.5)*half*0.12, iy + Math.sin(ang+0.5)*half*0.12);
-            ctx.lineTo(ix + Math.cos(ang-0.5)*half*0.12, iy + Math.sin(ang-0.5)*half*0.12);
+            ctx.lineTo(ix + Math.cos(ang + 0.5) * half * 0.12, iy + Math.sin(ang + 0.5) * half * 0.12);
+            ctx.lineTo(ix + Math.cos(ang - 0.5) * half * 0.12, iy + Math.sin(ang - 0.5) * half * 0.12);
             ctx.fill();
         }
     } else if (eff === 'buff_poison') {
         ctx.fillStyle = '#44cc44';
-        const drops = [[0, -half*0.3], [-half*0.3, half*0.15], [half*0.3, half*0.15]];
+        const drops = [[0, -half * 0.3], [-half * 0.3, half * 0.15], [half * 0.3, half * 0.15]];
         for (const [dx, dy] of drops) {
             ctx.beginPath();
-            ctx.moveTo(dx, dy - half*0.25);
-            ctx.quadraticCurveTo(dx + half*0.18, dy, dx, dy + half*0.15);
-            ctx.quadraticCurveTo(dx - half*0.18, dy, dx, dy - half*0.25);
+            ctx.moveTo(dx, dy - half * 0.25);
+            ctx.quadraticCurveTo(dx + half * 0.18, dy, dx, dy + half * 0.15);
+            ctx.quadraticCurveTo(dx - half * 0.18, dy, dx, dy - half * 0.25);
             ctx.fill();
         }
     } else if (eff === 'shadow_strike') {
         ctx.fillStyle = '#8866bb';
         ctx.beginPath();
-        ctx.moveTo(half*0.5, -half*0.7);
-        ctx.lineTo(half*0.65, -half*0.5);
-        ctx.lineTo(-half*0.4, half*0.6);
-        ctx.lineTo(-half*0.55, half*0.45);
+        ctx.moveTo(half * 0.5, -half * 0.7);
+        ctx.lineTo(half * 0.65, -half * 0.5);
+        ctx.lineTo(-half * 0.4, half * 0.6);
+        ctx.lineTo(-half * 0.55, half * 0.45);
         ctx.closePath(); ctx.fill();
         ctx.fillStyle = 'rgba(80,40,120,0.4)';
         ctx.beginPath();
-        ctx.moveTo(-half*0.55, half*0.45);
-        ctx.quadraticCurveTo(-half*0.7, half*0.7, -half*0.3, half*0.7);
-        ctx.lineTo(-half*0.4, half*0.6);
+        ctx.moveTo(-half * 0.55, half * 0.45);
+        ctx.quadraticCurveTo(-half * 0.7, half * 0.7, -half * 0.3, half * 0.7);
+        ctx.lineTo(-half * 0.4, half * 0.6);
         ctx.closePath(); ctx.fill();
     } else if (eff === 'smoke_screen') {
         ctx.fillStyle = 'rgba(136,136,136,0.6)';
-        ctx.beginPath(); ctx.arc(-half*0.2, -half*0.1, half*0.3, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(half*0.2, 0, half*0.35, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(-half*0.05, half*0.25, half*0.25, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-half * 0.2, -half * 0.1, half * 0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(half * 0.2, 0, half * 0.35, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-half * 0.05, half * 0.25, half * 0.25, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = 'rgba(170,170,170,0.4)';
-        ctx.beginPath(); ctx.arc(0, -half*0.15, half*0.2, 0, Math.PI*2); ctx.fill();
-	        } else if (eff === 'place_trap') {
-	            ctx.strokeStyle = '#cc8844'; ctx.lineWidth = Math.max(1.2, size/12);
-	            ctx.beginPath(); ctx.arc(0, 0, half*0.3, 0, Math.PI*2); ctx.stroke();
-	            for (let a = 0; a < 8; a++) {
-	                const ang = a * Math.PI / 4;
-	                const ix = Math.cos(ang)*half*0.3, iy = Math.sin(ang)*half*0.3;
-	                const ox = Math.cos(ang)*half*0.55, oy = Math.sin(ang)*half*0.55;
-	                ctx.beginPath(); ctx.moveTo(ix, iy); ctx.lineTo(ox, oy); ctx.stroke();
-	            }
-	            ctx.fillStyle = '#cc8844';
-	            ctx.beginPath(); ctx.arc(0, 0, half*0.12, 0, Math.PI*2); ctx.fill();
-	        } else if (eff.startsWith('arrow_') || eff.startsWith('bolt_')) {
-	            // Element-tinted projectiles (icons should match the actual skill element even if effect routing is generic).
-	            const parts = eff.split('_');
-	            const kind = parts[0] || 'arrow';
-	            const elem = parts[1] || 'physical';
-	            const pal = {
-	                fire: { main: '#ff6622', hi: '#ffcc44' },
-	                cold: { main: '#88ddff', hi: '#ccf0ff' },
-	                ice: { main: '#88ddff', hi: '#ccf0ff' },
-	                lightning: { main: '#ffdd44', hi: '#fff8cc' },
-	                poison: { main: '#44cc44', hi: '#aaffaa' },
-	                magic: { main: '#bb88ff', hi: '#e6d0ff' },
-	                arcane: { main: '#bb88ff', hi: '#e6d0ff' },
-	                physical: { main: '#ccaa66', hi: '#aaaaaa' }
-	            }[elem] || { main: '#ccaa66', hi: '#aaaaaa' };
+        ctx.beginPath(); ctx.arc(0, -half * 0.15, half * 0.2, 0, Math.PI * 2); ctx.fill();
+    } else if (eff === 'place_trap') {
+        ctx.strokeStyle = '#cc8844'; ctx.lineWidth = Math.max(1.2, size / 12);
+        ctx.beginPath(); ctx.arc(0, 0, half * 0.3, 0, Math.PI * 2); ctx.stroke();
+        for (let a = 0; a < 8; a++) {
+            const ang = a * Math.PI / 4;
+            const ix = Math.cos(ang) * half * 0.3, iy = Math.sin(ang) * half * 0.3;
+            const ox = Math.cos(ang) * half * 0.55, oy = Math.sin(ang) * half * 0.55;
+            ctx.beginPath(); ctx.moveTo(ix, iy); ctx.lineTo(ox, oy); ctx.stroke();
+        }
+        ctx.fillStyle = '#cc8844';
+        ctx.beginPath(); ctx.arc(0, 0, half * 0.12, 0, Math.PI * 2); ctx.fill();
+    } else if (eff.startsWith('arrow_') || eff.startsWith('bolt_')) {
+        // Element-tinted projectiles (icons should match the actual skill element even if effect routing is generic).
+        const parts = eff.split('_');
+        const kind = parts[0] || 'arrow';
+        const elem = parts[1] || 'physical';
+        const pal = {
+            fire: { main: '#ff6622', hi: '#ffcc44' },
+            cold: { main: '#88ddff', hi: '#ccf0ff' },
+            ice: { main: '#88ddff', hi: '#ccf0ff' },
+            lightning: { main: '#ffdd44', hi: '#fff8cc' },
+            poison: { main: '#44cc44', hi: '#aaffaa' },
+            magic: { main: '#bb88ff', hi: '#e6d0ff' },
+            arcane: { main: '#bb88ff', hi: '#e6d0ff' },
+            physical: { main: '#ccaa66', hi: '#aaaaaa' }
+        }[elem] || { main: '#ccaa66', hi: '#aaaaaa' };
 
-	            if (kind === 'bolt') {
-	                // Bolt: orb + streak.
-	                ctx.strokeStyle = pal.main; ctx.lineWidth = Math.max(1.5, size/10); ctx.lineCap = 'round';
-	                ctx.beginPath();
-	                ctx.moveTo(-half*0.6, half*0.4);
-	                ctx.lineTo(half*0.5, -half*0.5);
-	                ctx.stroke();
-	                ctx.fillStyle = pal.main;
-	                ctx.beginPath(); ctx.arc(half*0.25, -half*0.25, half*0.22, 0, Math.PI*2); ctx.fill();
-	                ctx.fillStyle = pal.hi;
-	                ctx.beginPath(); ctx.arc(half*0.2, -half*0.3, half*0.11, 0, Math.PI*2); ctx.fill();
-	            } else {
-	                // Arrow: shaft + head.
-	                ctx.strokeStyle = pal.main; ctx.lineWidth = Math.max(1.6, size/10); ctx.lineCap = 'round';
-	                ctx.beginPath();
-	                ctx.moveTo(-half*0.55, half*0.35);
-	                ctx.lineTo(half*0.45, -half*0.45);
-	                ctx.stroke();
-	                ctx.fillStyle = pal.hi;
-	                ctx.beginPath();
-	                ctx.moveTo(half*0.45, -half*0.45);
-	                ctx.lineTo(half*0.72, -half*0.18);
-	                ctx.lineTo(half*0.25, -half*0.18);
-	                ctx.fill();
-	                // tiny fletching
-	                ctx.fillStyle = 'rgba(255,255,255,0.15)';
-	                ctx.beginPath();
-	                ctx.moveTo(-half*0.55, half*0.35);
-	                ctx.lineTo(-half*0.75, half*0.25);
-	                ctx.lineTo(-half*0.6, half*0.1);
-	                ctx.fill();
-	            }
-	        // --- Generic includes-based matches ---
-	        } else if (eff.includes('fire') || eff.includes('pyro')) {
-	            ctx.fillStyle = '#ff6622';
-	            ctx.beginPath();
-	            ctx.moveTo(0, -half); ctx.quadraticCurveTo(half*0.7, -half*0.3, half*0.5, half*0.4);
-        ctx.lineTo(0, half*0.1); ctx.lineTo(-half*0.5, half*0.4);
-        ctx.quadraticCurveTo(-half*0.7, -half*0.3, 0, -half); ctx.fill();
+        if (kind === 'bolt') {
+            // Bolt: orb + streak.
+            ctx.strokeStyle = pal.main; ctx.lineWidth = Math.max(1.5, size / 10); ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(-half * 0.6, half * 0.4);
+            ctx.lineTo(half * 0.5, -half * 0.5);
+            ctx.stroke();
+            ctx.fillStyle = pal.main;
+            ctx.beginPath(); ctx.arc(half * 0.25, -half * 0.25, half * 0.22, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = pal.hi;
+            ctx.beginPath(); ctx.arc(half * 0.2, -half * 0.3, half * 0.11, 0, Math.PI * 2); ctx.fill();
+        } else {
+            // Arrow: shaft + head.
+            ctx.strokeStyle = pal.main; ctx.lineWidth = Math.max(1.6, size / 10); ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(-half * 0.55, half * 0.35);
+            ctx.lineTo(half * 0.45, -half * 0.45);
+            ctx.stroke();
+            ctx.fillStyle = pal.hi;
+            ctx.beginPath();
+            ctx.moveTo(half * 0.45, -half * 0.45);
+            ctx.lineTo(half * 0.72, -half * 0.18);
+            ctx.lineTo(half * 0.25, -half * 0.18);
+            ctx.fill();
+            // tiny fletching
+            ctx.fillStyle = 'rgba(255,255,255,0.15)';
+            ctx.beginPath();
+            ctx.moveTo(-half * 0.55, half * 0.35);
+            ctx.lineTo(-half * 0.75, half * 0.25);
+            ctx.lineTo(-half * 0.6, half * 0.1);
+            ctx.fill();
+        }
+        // --- Generic includes-based matches ---
+    } else if (eff.includes('fire') || eff.includes('pyro')) {
+        ctx.fillStyle = '#ff6622';
+        ctx.beginPath();
+        ctx.moveTo(0, -half); ctx.quadraticCurveTo(half * 0.7, -half * 0.3, half * 0.5, half * 0.4);
+        ctx.lineTo(0, half * 0.1); ctx.lineTo(-half * 0.5, half * 0.4);
+        ctx.quadraticCurveTo(-half * 0.7, -half * 0.3, 0, -half); ctx.fill();
         ctx.fillStyle = '#ffcc44';
         ctx.beginPath();
-        ctx.moveTo(0, -half*0.3); ctx.quadraticCurveTo(half*0.3, 0, half*0.2, half*0.3);
-        ctx.lineTo(-half*0.2, half*0.3);
-        ctx.quadraticCurveTo(-half*0.3, 0, 0, -half*0.3); ctx.fill();
+        ctx.moveTo(0, -half * 0.3); ctx.quadraticCurveTo(half * 0.3, 0, half * 0.2, half * 0.3);
+        ctx.lineTo(-half * 0.2, half * 0.3);
+        ctx.quadraticCurveTo(-half * 0.3, 0, 0, -half * 0.3); ctx.fill();
     } else if (eff.includes('cold') || eff.includes('freeze') || eff.includes('ice') || eff.includes('blizzard')) {
         ctx.strokeStyle = '#88ddff'; ctx.lineWidth = 2;
         for (let a = 0; a < 6; a++) {
@@ -12716,10 +12768,10 @@ function drawGlobeFrame(cx, cy, r) {
         ctx.fillStyle = '#ccf0ff'; ctx.beginPath(); ctx.arc(0, 0, 2, 0, Math.PI * 2); ctx.fill();
     } else if (eff.includes('melee') || eff.includes('bash') || eff.includes('execute')) {
         ctx.strokeStyle = '#cccccc'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(-half*0.6, half*0.6); ctx.lineTo(half*0.5, -half*0.5); ctx.stroke();
-        ctx.fillStyle = '#aaa'; ctx.beginPath(); ctx.moveTo(half*0.3, -half*0.7);
-        ctx.lineTo(half*0.6, -half*0.4); ctx.lineTo(half*0.5, -half*0.5); ctx.fill();
-        ctx.fillStyle = '#886633'; ctx.fillRect(-half*0.7, half*0.4, half*0.4, half*0.3);
+        ctx.beginPath(); ctx.moveTo(-half * 0.6, half * 0.6); ctx.lineTo(half * 0.5, -half * 0.5); ctx.stroke();
+        ctx.fillStyle = '#aaa'; ctx.beginPath(); ctx.moveTo(half * 0.3, -half * 0.7);
+        ctx.lineTo(half * 0.6, -half * 0.4); ctx.lineTo(half * 0.5, -half * 0.5); ctx.fill();
+        ctx.fillStyle = '#886633'; ctx.fillRect(-half * 0.7, half * 0.4, half * 0.4, half * 0.3);
     } else if (eff.includes('whirlwind')) {
         ctx.strokeStyle = '#aaddff'; ctx.lineWidth = 2;
         for (let a = 0; a < 3; a++) {
@@ -12728,21 +12780,21 @@ function drawGlobeFrame(cx, cy, r) {
         }
     } else if (eff.includes('projectile') || eff.includes('shot') || eff.includes('arrow')) {
         ctx.strokeStyle = '#ccaa66'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(-half*0.6, half*0.3); ctx.lineTo(half*0.5, -half*0.5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-half * 0.6, half * 0.3); ctx.lineTo(half * 0.5, -half * 0.5); ctx.stroke();
         ctx.fillStyle = '#aaaaaa';
-        ctx.beginPath(); ctx.moveTo(half*0.5, -half*0.5);
-        ctx.lineTo(half*0.7, -half*0.2); ctx.lineTo(half*0.2, -half*0.2); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(half * 0.5, -half * 0.5);
+        ctx.lineTo(half * 0.7, -half * 0.2); ctx.lineTo(half * 0.2, -half * 0.2); ctx.fill();
     } else if (eff.includes('buff') || eff.includes('battle_orders') || eff.includes('heal')) {
         ctx.fillStyle = '#66aa44';
-        ctx.beginPath(); ctx.moveTo(0, -half*0.7);
-        ctx.lineTo(half*0.6, -half*0.3); ctx.lineTo(half*0.5, half*0.4);
-        ctx.lineTo(0, half*0.7); ctx.lineTo(-half*0.5, half*0.4);
-        ctx.lineTo(-half*0.6, -half*0.3); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(0, -half * 0.7);
+        ctx.lineTo(half * 0.6, -half * 0.3); ctx.lineTo(half * 0.5, half * 0.4);
+        ctx.lineTo(0, half * 0.7); ctx.lineTo(-half * 0.5, half * 0.4);
+        ctx.lineTo(-half * 0.6, -half * 0.3); ctx.closePath(); ctx.fill();
         ctx.strokeStyle = '#88cc66'; ctx.lineWidth = 1; ctx.stroke();
     } else if (eff.includes('stun') || eff.includes('ground_slam')) {
         ctx.fillStyle = '#ffdd44';
         for (let a = 0; a < 5; a++) {
-            const ang = a * Math.PI * 2 / 5 - Math.PI/2;
+            const ang = a * Math.PI * 2 / 5 - Math.PI / 2;
             ctx.beginPath(); ctx.moveTo(0, 0);
             ctx.lineTo(Math.cos(ang) * half * 0.8, Math.sin(ang) * half * 0.8);
             ctx.lineTo(Math.cos(ang + 0.3) * half * 0.3, Math.sin(ang + 0.3) * half * 0.3);
@@ -12750,11 +12802,11 @@ function drawGlobeFrame(cx, cy, r) {
         }
     } else if (eff.includes('charge') || eff.includes('leap')) {
         ctx.strokeStyle = '#ffaa44'; ctx.lineWidth = 2; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(-half*0.5, half*0.4);
-        ctx.quadraticCurveTo(0, -half*0.8, half*0.5, half*0.4); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-half * 0.5, half * 0.4);
+        ctx.quadraticCurveTo(0, -half * 0.8, half * 0.5, half * 0.4); ctx.stroke();
         ctx.fillStyle = '#ffaa44';
-        ctx.beginPath(); ctx.moveTo(half*0.3, half*0.1); ctx.lineTo(half*0.7, half*0.5);
-        ctx.lineTo(half*0.3, half*0.6); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(half * 0.3, half * 0.1); ctx.lineTo(half * 0.7, half * 0.5);
+        ctx.lineTo(half * 0.3, half * 0.6); ctx.fill();
     } else if (eff === '_passive') {
         ctx.strokeStyle = '#8888cc'; ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.arc(0, 0, half * 0.6, 0, Math.PI * 2); ctx.stroke();
@@ -12765,48 +12817,48 @@ function drawGlobeFrame(cx, cy, r) {
         // Default: diamond shape
         ctx.fillStyle = '#aaaaaa';
         ctx.beginPath();
-        ctx.moveTo(0, -half*0.6);
-        ctx.lineTo(half*0.45, 0);
-        ctx.lineTo(0, half*0.6);
-        ctx.lineTo(-half*0.45, 0);
+        ctx.moveTo(0, -half * 0.6);
+        ctx.lineTo(half * 0.45, 0);
+        ctx.lineTo(0, half * 0.6);
+        ctx.lineTo(-half * 0.45, 0);
         ctx.closePath(); ctx.fill();
         ctx.strokeStyle = '#888888'; ctx.lineWidth = 1; ctx.stroke();
     }
-	    }
+}
 
-	    // data URL cache for skill icons used in HTML panels
-		    const _skillIconDataURLCache = {};
-		    let _skillIconEffById = {};
-		    function getSkillIconDataURL(sk, size) {
-		        const eff = sk.iconEff || (sk.id ? _skillIconEffById[sk.id] : undefined) || sk.effect || (sk.skillType === 'passive' ? '_passive' : '_default');
-		        const key = eff + '_' + size;
-		        if (_skillIconDataURLCache[key]) return _skillIconDataURLCache[key];
-		        const cvs = document.createElement('canvas');
-		        cvs.width = size; cvs.height = size;
+// data URL cache for skill icons used in HTML panels
+const _skillIconDataURLCache = {};
+let _skillIconEffById = {};
+function getSkillIconDataURL(sk, size) {
+    const eff = sk.iconEff || (sk.id ? _skillIconEffById[sk.id] : undefined) || sk.effect || (sk.skillType === 'passive' ? '_passive' : '_default');
+    const key = eff + '_' + size;
+    if (_skillIconDataURLCache[key]) return _skillIconDataURLCache[key];
+    const cvs = document.createElement('canvas');
+    cvs.width = size; cvs.height = size;
     const c = cvs.getContext('2d');
     c.translate(size / 2, size / 2);
     _drawSkillIconShape(c, eff, size);
     _skillIconDataURLCache[key] = cvs.toDataURL();
     return _skillIconDataURLCache[key];
 }
-		    function preRenderSkillIcons() {
-		        if (!G.playerClass || !CLASS_DEFS[G.playerClass]) return;
-		        const skills = getAllAvailableSkills();
-		        if (!skills || skills.length === 0) return;
-		        // Cache id -> iconEff to keep UI icons correct even if slot objects were serialized without iconEff.
-		        _skillIconEffById = {};
-		        for (const sk of skills) {
-		            if (sk && sk.id && sk.iconEff) _skillIconEffById[sk.id] = sk.iconEff;
-		        }
-		        const sizes = [18, 20, 28, 40];
-		        const effs = new Set();
-		        for (const sk of skills) {
-		            effs.add(sk.iconEff || sk.effect || (sk.skillType === 'passive' ? '_passive' : '_default'));
-		        }
-	        for (const eff of effs) {
-	            for (const sz of sizes) {
-	                const key = eff + '_' + sz;
-	                if (_skillIconDataURLCache[key]) continue;
+function preRenderSkillIcons() {
+    if (!G.playerClass || !CLASS_DEFS[G.playerClass]) return;
+    const skills = getAllAvailableSkills();
+    if (!skills || skills.length === 0) return;
+    // Cache id -> iconEff to keep UI icons correct even if slot objects were serialized without iconEff.
+    _skillIconEffById = {};
+    for (const sk of skills) {
+        if (sk && sk.id && sk.iconEff) _skillIconEffById[sk.id] = sk.iconEff;
+    }
+    const sizes = [18, 20, 28, 40];
+    const effs = new Set();
+    for (const sk of skills) {
+        effs.add(sk.iconEff || sk.effect || (sk.skillType === 'passive' ? '_passive' : '_default'));
+    }
+    for (const eff of effs) {
+        for (const sz of sizes) {
+            const key = eff + '_' + sz;
+            if (_skillIconDataURLCache[key]) continue;
             const cvs = document.createElement('canvas');
             cvs.width = sz; cvs.height = sz;
             const c = cvs.getContext('2d');
@@ -12822,12 +12874,12 @@ function _drawWaypointIcon(ctx, cx, cy, size) {
     ctx.save();
     ctx.translate(cx, cy);
     const half = size / 2;
-    const glow = ctx.createRadialGradient(0, 0, half*0.2, 0, 0, half*0.9);
+    const glow = ctx.createRadialGradient(0, 0, half * 0.2, 0, 0, half * 0.9);
     glow.addColorStop(0, 'rgba(100,170,255,0.5)');
     glow.addColorStop(1, 'rgba(100,170,255,0)');
     ctx.fillStyle = glow;
-    ctx.beginPath(); ctx.arc(0, 0, half*0.9, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = '#66aaff'; ctx.lineWidth = Math.max(2, size/10); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(0, 0, half * 0.9, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#66aaff'; ctx.lineWidth = Math.max(2, size / 10); ctx.lineCap = 'round';
     for (let i = 0; i < 3; i++) {
         ctx.beginPath();
         const startAng = i * Math.PI * 2 / 3;
@@ -12840,7 +12892,7 @@ function _drawWaypointIcon(ctx, cx, cy, size) {
         ctx.stroke();
     }
     ctx.fillStyle = '#ccddff';
-    ctx.beginPath(); ctx.arc(0, 0, half*0.12, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, half * 0.12, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
 }
 function getWaypointIconDataURL(size) {
@@ -12849,18 +12901,18 @@ function getWaypointIconDataURL(size) {
     const cvs = document.createElement('canvas');
     cvs.width = size; cvs.height = size;
     const c = cvs.getContext('2d');
-    _drawWaypointIcon(c, size/2, size/2, size);
+    _drawWaypointIcon(c, size / 2, size / 2, size);
     _skillIconDataURLCache[key] = cvs.toDataURL();
     return _skillIconDataURLCache[key];
 }
 
-	    // Canvas-drawn skill icon (uses _drawSkillIconShape, no emoji fallback)
-	    function _drawSkillIcon(ctx, sk, cx, cy, size) {
-	        const eff = sk.iconEff || sk.effect || (sk.skillType === 'passive' ? '_passive' : '_default');
-	        ctx.save();
-	        ctx.translate(cx, cy);
-	        _drawSkillIconShape(ctx, eff, size);
-	        ctx.restore();
+// Canvas-drawn skill icon (uses _drawSkillIconShape, no emoji fallback)
+function _drawSkillIcon(ctx, sk, cx, cy, size) {
+    const eff = sk.iconEff || sk.effect || (sk.skillType === 'passive' ? '_passive' : '_default');
+    ctx.save();
+    ctx.translate(cx, cy);
+    _drawSkillIconShape(ctx, eff, size);
+    ctx.restore();
 }
 
 // CanvasRenderingContext2D.roundRect is not supported everywhere; provide a fallback path helper.
@@ -13384,9 +13436,9 @@ function drawHUD() {
     ctx.font = `10px ${FONT_UI}`;
     ctx.fillStyle = '#aaa';
     if (!G.inTown) {
-        ctx.fillText(`第${G.actFloor}層/${actDef.floors}${G.cycle > 0 ? ' (' + (G.cycle+1) + '周目)' : ''}`, W - 15, 170);
+        ctx.fillText(`第${G.actFloor}層/${actDef.floors}${G.cycle > 0 ? ' (' + (G.cycle + 1) + '周目)' : ''}`, W - 15, 170);
     } else {
-        ctx.fillText(`${G.cycle > 0 ? (G.cycle+1) + '周目' : '拠点'}`, W - 15, 170);
+        ctx.fillText(`${G.cycle > 0 ? (G.cycle + 1) + '周目' : '拠点'}`, W - 15, 170);
     }
     ctx.fillStyle = '#ffd700';
     ctx.fillText(`💰 ${G.gold}G`, W - 15, 185);
@@ -13729,16 +13781,16 @@ function saveGame(slot = G.saveSlot) {
         }
         saveData.player.potionInv = player.potionInv.map(it => serializeItem(it));
         saveData.player.charmInv = player.charmInv.map(it => serializeItem(it));
-	            saveData.player.skills = {};
-	            for (let i = 1; i <= 6; i++) {
-	                const sk = player.skills[i];
-	                if (sk) { // 空スロット対応
-	                    saveData.player.skills[i] = {
-	                        id: sk.id, name: sk.name, icon: sk.icon, effect: sk.effect, iconEff: sk.iconEff,
-	                        mp: sk.mp, maxCD: sk.maxCD, desc: sk.desc
-	                    };
-	                }
-	            }
+        saveData.player.skills = {};
+        for (let i = 1; i <= 6; i++) {
+            const sk = player.skills[i];
+            if (sk) { // 空スロット対応
+                saveData.player.skills[i] = {
+                    id: sk.id, name: sk.name, icon: sk.icon, effect: sk.effect, iconEff: sk.iconEff,
+                    mp: sk.mp, maxCD: sk.maxCD, desc: sk.desc
+                };
+            }
+        }
         // Save only alive monsters (dead ones stay dead on load, skip if in town)
         saveData.monsters = G.inTown ? [] : monsters.filter(m => m.alive).map(m => ({
             x: m.x, y: m.y, type: m.type,
@@ -13983,21 +14035,21 @@ function loadGame(slot = G.saveSlot) {
 
         // Restore skills with proper maxCD lookup (using new scaled formulas)
         player.skills = {}; // 他のセーブファイルのスキル汚染を防ぐ
-	            if (p.skills) {
-	                const allSkills = getAllAvailableSkills();
-	                for (let i = 1; i <= 6; i++) {
-	                    if (p.skills[i]) {
-	                        const skillDef = allSkills.find(sk => sk.id === p.skills[i].id);
-	                        if (skillDef && skillDef.skillType === 'passive') continue; // Don't restore passive skills to slots
-	                        const slvl = player.skillLevels[p.skills[i].id] || 1;
-	                        const maxCD = skillDef ? getSkillCooldown(skillDef, slvl) : (p.skills[i].maxCD || 0);
-	                        const mp = skillDef ? getSkillMPCost(skillDef, slvl) : (p.skills[i].mp || 0);
-	                        const effect = p.skills[i].effect || (skillDef ? skillDef.effect : undefined);
-	                        const iconEff = p.skills[i].iconEff || (skillDef ? skillDef.iconEff : undefined);
-	                        player.skills[i] = { ...p.skills[i], cooldown: 0, maxCD: maxCD, mp: mp, effect: effect, iconEff: iconEff };
-	                    }
-	                }
-	            }
+        if (p.skills) {
+            const allSkills = getAllAvailableSkills();
+            for (let i = 1; i <= 6; i++) {
+                if (p.skills[i]) {
+                    const skillDef = allSkills.find(sk => sk.id === p.skills[i].id);
+                    if (skillDef && skillDef.skillType === 'passive') continue; // Don't restore passive skills to slots
+                    const slvl = player.skillLevels[p.skills[i].id] || 1;
+                    const maxCD = skillDef ? getSkillCooldown(skillDef, slvl) : (p.skills[i].maxCD || 0);
+                    const mp = skillDef ? getSkillMPCost(skillDef, slvl) : (p.skills[i].mp || 0);
+                    const effect = p.skills[i].effect || (skillDef ? skillDef.effect : undefined);
+                    const iconEff = p.skills[i].iconEff || (skillDef ? skillDef.iconEff : undefined);
+                    player.skills[i] = { ...p.skills[i], cooldown: 0, maxCD: maxCD, mp: mp, effect: effect, iconEff: iconEff };
+                }
+            }
+        }
         // Recalculate passives on load
         recalcPassives();
         // セーブデータにskillsがない場合も空のまま
@@ -14042,7 +14094,7 @@ function tryUseStairs(showBlocked) {
     if (!dungeon) return false;
     const ptx = Math.floor(player.x / TILE), pty = Math.floor(player.y / TILE);
     const onTile = dungeon.get(ptx, pty) === 2;
-    const sd = dist(player.x, player.y, dungeon.stairsX * TILE + TILE/2, dungeon.stairsY * TILE + TILE/2);
+    const sd = dist(player.x, player.y, dungeon.stairsX * TILE + TILE / 2, dungeon.stairsY * TILE + TILE / 2);
     const nearStairs = sd < 45;
     if (!onTile && !nearStairs) return false;
 
@@ -14067,8 +14119,8 @@ function tryUseStairs(showBlocked) {
     }
 
     // Dungeon: check for nearby enemies
-    const stairCX = dungeon.stairsX * TILE + TILE/2;
-    const stairCY = dungeon.stairsY * TILE + TILE/2;
+    const stairCX = dungeon.stairsX * TILE + TILE / 2;
+    const stairCY = dungeon.stairsY * TILE + TILE / 2;
     const nearbyEnemies = monsters.filter(m => m.alive && dist(m.x, m.y, stairCX, stairCY) < 200);
     if (nearbyEnemies.length > 0) {
         if (showBlocked) addLog(`階段付近に敵が${nearbyEnemies.length}体いる...`, '#ff4444');
@@ -14218,8 +14270,8 @@ function gameLoop(timestamp) {
                     const spawnCount = Math.min(3 + Math.floor(G.actFloor / 2), maxMonsters - aliveCount);
                     const actDef = getCurrentActDef();
                     const types = actDef.monsterTypes;
-                    const stairCX = dungeon.stairsX * TILE + TILE/2;
-                    const stairCY = dungeon.stairsY * TILE + TILE/2;
+                    const stairCX = dungeon.stairsX * TILE + TILE / 2;
+                    const stairCY = dungeon.stairsY * TILE + TILE / 2;
                     for (let i = 0; i < spawnCount; i++) {
                         const room = dungeon.rooms[rand(1, dungeon.rooms.length - 1)];
                         const mx = room.x * TILE + rand(TILE, (room.w - 1) * TILE);
@@ -14249,24 +14301,24 @@ function gameLoop(timestamp) {
         p.update(dt);
         if (p.life <= 0) { projectiles[i] = projectiles[projectiles.length - 1]; projectiles.pop(); continue; }
 
-            // Frozen Orb shard emission
-            if (p.frozen_orb) {
-                p.shardTimer = (p.shardTimer || 0) + dt;
-                if (p.shardTimer >= 0.15) {
-                    p.shardTimer = 0;
-                    const numShards = p.shardCount || 6;
-                    for (let si = 0; si < numShards; si++) {
-                        const sa = (Math.PI * 2 / numShards) * si + G.time * 3;
-                        const sx = p.x + Math.cos(sa) * 15;
-                        const sy = p.y + Math.sin(sa) * 15;
-                        const tx = p.x + Math.cos(sa) * 200;
-                        const ty = p.y + Math.sin(sa) * 200;
-                        const shard = new Projectile(sx, sy, tx, ty, p.shardDmg || 10, '#aaddff', 300, 4, 'ice');
-                        shard.life = 0.4;
-                        projectiles.push(shard);
-                    }
+        // Frozen Orb shard emission
+        if (p.frozen_orb) {
+            p.shardTimer = (p.shardTimer || 0) + dt;
+            if (p.shardTimer >= 0.15) {
+                p.shardTimer = 0;
+                const numShards = p.shardCount || 6;
+                for (let si = 0; si < numShards; si++) {
+                    const sa = (Math.PI * 2 / numShards) * si + G.time * 3;
+                    const sx = p.x + Math.cos(sa) * 15;
+                    const sy = p.y + Math.sin(sa) * 15;
+                    const tx = p.x + Math.cos(sa) * 200;
+                    const ty = p.y + Math.sin(sa) * 200;
+                    const shard = new Projectile(sx, sy, tx, ty, p.shardDmg || 10, '#aaddff', 300, 4, 'ice');
+                    shard.life = 0.4;
+                    projectiles.push(shard);
                 }
             }
+        }
 
         // Check monster collision
         for (const m of monsters) {
@@ -14324,7 +14376,7 @@ function gameLoop(timestamp) {
         if (floatingTexts[i].life <= 0) { floatingTexts[i] = floatingTexts[floatingTexts.length - 1]; floatingTexts.pop(); }
     }
 
-            // Update summoned minions
+    // Update summoned minions
     if (canUpdate && G.minions) {
         for (let mi = G.minions.length - 1; mi >= 0; mi--) {
             const mn = G.minions[mi];
@@ -14360,9 +14412,9 @@ function gameLoop(timestamp) {
         }
     }
 
-// Auto pickup
+    // Auto pickup
     if (canUpdate && G.autoPickup) {
-        const rarityOrder = ['normal','common','magic','rare','legendary','unique','runeword'];
+        const rarityOrder = ['normal', 'common', 'magic', 'rare', 'legendary', 'unique', 'runeword'];
         const minRarity = rarityOrder.indexOf(G.autoPickupRarity);
         for (const gi of groundItems) {
             if (dist(player.x, player.y, gi.x, gi.y) < 60) {
@@ -14508,7 +14560,7 @@ function gameLoop(timestamp) {
             // 1) Hi-res FLARE sprite (same system as player)
             if (npc.hiresClass && hiresSpritesLoaded) {
                 // Deterministic direction from NPC id (variety instead of all facing south)
-                const dirHash = npc.id.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
+                const dirHash = npc.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
                 const npcDir = dirHash % 8;
                 // Animation per role: blacksmith hammers, quest/uber channels, others idle
                 let npcAnim = 'stance';
@@ -14528,7 +14580,7 @@ function gameLoop(timestamp) {
                 ctx.fill();
                 // Draw hi-res animated sprite
                 const hiDy = ny + bob + groundYOffset() - npcHiSize * 0.75;
-                if (drawHiResSpr(npc.hiresClass, npcAnim, npcDir, G.time * npcTimeScale, nx - npcHiSize/2, hiDy, npcHiSize, npcHiSize)) {
+                if (drawHiResSpr(npc.hiresClass, npcAnim, npcDir, G.time * npcTimeScale, nx - npcHiSize / 2, hiDy, npcHiSize, npcHiSize)) {
                     npcDrawn = true;
                 }
             }
@@ -14539,7 +14591,7 @@ function gameLoop(timestamp) {
             }
             // 3) ATLAS sprite fallback
             if (!npcDrawn && npc.sprite && ATLAS[npc.sprite]) {
-                if (drawSpr(npc.sprite, nx - npcSprSize/2, ny - npcSprSize + 4 + bob, npcSprSize, npcSprSize, false, true)) {
+                if (drawSpr(npc.sprite, nx - npcSprSize / 2, ny - npcSprSize + 4 + bob, npcSprSize, npcSprSize, false, true)) {
                     npcDrawn = true;
                 }
             }
@@ -14553,7 +14605,7 @@ function gameLoop(timestamp) {
             }
             // NPC name label (positioned above sprite)
             const nameY = npcDrawn && npc.hiresClass && hiresSpritesLoaded
-                ? ny + bob + TILE/2 - npcHiSize * 0.75 - 4
+                ? ny + bob + TILE / 2 - npcHiSize * 0.75 - 4
                 : ny - npcSprSize + 2;
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.font = `bold 11px ${FONT_UI}`;
@@ -14573,8 +14625,8 @@ function gameLoop(timestamp) {
         const pr = G.portalReturn;
         // Portal position: near player spawn (plaza center offset)
         const r0 = dungeon.rooms[0];
-        const portalWX = r0.cx * TILE + TILE/2 + 60;
-        const portalWY = r0.cy * TILE + TILE/2;
+        const portalWX = r0.cx * TILE + TILE / 2 + 60;
+        const portalWY = r0.cy * TILE + TILE / 2;
         G._portalScreenX = portalWX; G._portalScreenY = portalWY; // for interaction check
         const psp = worldToScreen(portalWX, portalWY);
         const ppx = psp.x, ppy = psp.y;
@@ -14720,29 +14772,29 @@ function gameLoop(timestamp) {
         ctx.restore();
         // Progress bar
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        ctx.fillRect(W/2 - 80, H/2 + 60, 160, 14);
+        ctx.fillRect(W / 2 - 80, H / 2 + 60, 160, 14);
         ctx.fillStyle = '#4488ff';
-        ctx.fillRect(W/2 - 78, H/2 + 62, 156 * prog, 10);
+        ctx.fillRect(W / 2 - 78, H / 2 + 62, 156 * prog, 10);
         ctx.font = `bold 14px ${FONT_UI}`;
         ctx.textAlign = 'center';
         ctx.fillStyle = '#aaccff';
-        ctx.fillText('帰還中...', W/2, H/2 + 55);
+        ctx.fillText('帰還中...', W / 2, H / 2 + 55);
     }
 
     // ACT transition overlay
     if (G.actTransitionTimer > 0) {
         const alpha = G.actTransitionTimer > 2.5 ? (3 - G.actTransitionTimer) * 2 :
-                      G.actTransitionTimer < 0.5 ? G.actTransitionTimer * 2 : 1;
+            G.actTransitionTimer < 0.5 ? G.actTransitionTimer * 2 : 1;
         ctx.fillStyle = `rgba(0,0,0,${alpha * 0.85})`;
         ctx.fillRect(0, 0, W, H);
         ctx.globalAlpha = alpha;
         ctx.font = `bold 36px ${FONT_TITLE}`;
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillStyle = '#ffd700';
-        ctx.fillText(G.actTransitionText || '', W/2, H/2 - 20);
+        ctx.fillText(G.actTransitionText || '', W / 2, H / 2 - 20);
         ctx.font = `18px ${FONT_UI}`;
         ctx.fillStyle = '#aaa';
-        ctx.fillText(G.actTransitionText2 || '', W/2, H/2 + 20);
+        ctx.fillText(G.actTransitionText2 || '', W / 2, H / 2 + 20);
         ctx.globalAlpha = 1;
     }
 
@@ -14808,19 +14860,19 @@ canvas.addEventListener('mousemove', e => {
 
     // Check ground items
     if (!found) {
-    for (const gi of groundItems) {
-        if (dist(wx, wy, gi.x, gi.y) < 25) {
-            tt.innerHTML = buildTooltipHTML(gi.item, true);
-            tt.style.display = 'block';
-            tt.style.left = (e.clientX + 15) + 'px';
-            tt.style.top = (e.clientY - 10) + 'px';
-            found = true;
-            break;
+        for (const gi of groundItems) {
+            if (dist(wx, wy, gi.x, gi.y) < 25) {
+                tt.innerHTML = buildTooltipHTML(gi.item, true);
+                tt.style.display = 'block';
+                tt.style.left = (e.clientX + 15) + 'px';
+                tt.style.top = (e.clientY - 10) + 'px';
+                found = true;
+                break;
+            }
         }
-    }
-    if (!found && !e.target.closest('.ui-panel')) {
-        tt.style.display = 'none';
-    }
+        if (!found && !e.target.closest('.ui-panel')) {
+            tt.style.display = 'none';
+        }
     } // close if(!found) for ground items
 });
 
