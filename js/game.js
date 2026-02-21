@@ -7431,7 +7431,7 @@ class Monster {
             ctx.globalAlpha *= alphaFlash;
             // FLARE sprites: feet at ~75% of cell. Align with shadow position
             const _mFeetY = this.r * mScale * 0.5 + 3;
-            _drewOGA = drawOGACreature(this.type, _dirIdx, G.time, sx - _drawSize / 2, sy + _mFeetY - _drawSize * 0.90, _drawSize, _drawSize);
+            _drewOGA = drawOGACreature(this.type, _dirIdx, G.time, sx - _drawSize / 2, sy + _mFeetY - _drawSize * 0.68, _drawSize, _drawSize);
             ctx.globalAlpha = _prevAlpha;
         }
         if (!_drewOGA) {
