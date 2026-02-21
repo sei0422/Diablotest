@@ -1,0 +1,998 @@
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-0: #040201;
+            --bg-1: #0d0603;
+            --bg-2: #140a06;
+            --panel-bg: rgba(18,10,5,0.95);
+            --panel-bg-strong: rgba(12,6,2,0.98);
+            --panel-border: #8b6b3d;
+            --panel-border-soft: #5a4a3a;
+            --accent: #e5b35a;
+            --accent-strong: #ffd270;
+            --accent-dim: #aa8855;
+            --text: #e8d7b8;
+            --muted: #9b8a6f;
+            --danger: #d24b4b;
+            --good: #40d97b;
+            --ui-glow: rgba(229,179,90,0.35);
+            --font-title: "Cinzel", "IM Fell English", "Garamond", serif;
+            --font-ui: "Spectral", "Garamond", "Georgia", serif;
+            --font-mono: "Fira Mono", "Consolas", monospace;
+            --font-emoji: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif;
+        }
+        body {
+            font-family: var(--font-ui);
+            background: radial-gradient(1200px 800px at 50% 20%, #1b0c08 0%, var(--bg-1) 45%, var(--bg-0) 100%);
+            color: var(--text);
+            overflow: hidden;
+            user-select: none;
+            cursor: default;
+            position: relative;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255,120,60,0.05), transparent 40%),
+                radial-gradient(circle at 80% 30%, rgba(120,80,40,0.06), transparent 45%),
+                repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 6px);
+            pointer-events: none;
+            opacity: 0.45;
+            z-index: 0;
+        }
+        canvas { display: block; position: relative; z-index: 1; }
+        #titleScreen {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background:
+                linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.85)),
+                url("asset/2D Pixel Dungeon Asset Pack/Dungeon_Tileset_at.png");
+            background-size: cover;
+            background-position: center;
+            image-rendering: pixelated;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            cursor: pointer;
+        }
+        #titleScreen::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 30%, rgba(255,120,60,0.08), transparent 55%);
+            pointer-events: none;
+        }
+        #titleScreen h1 {
+            font-size: 64px;
+            color: #ff5a2a;
+            text-shadow: 0 0 30px #ff4400, 0 0 60px #ff2200, 0 0 90px #7a0000;
+            letter-spacing: 8px;
+            margin-bottom: 20px;
+            animation: flicker 3s infinite;
+            font-family: var(--font-title);
+        }
+        #titleScreen h2 {
+            font-size: 18px;
+            color: var(--accent-dim);
+            letter-spacing: 4px;
+            margin-bottom: 60px;
+        }
+        #titleScreen .start-text {
+            font-size: 22px;
+            color: var(--accent);
+            animation: pulse 2s infinite;
+            letter-spacing: 6px;
+        }
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.9; }
+            75% { opacity: 1; }
+            80% { opacity: 0.85; }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        .promo-card {
+            position: relative;
+            display: inline-block;
+            width: 45%;
+            margin: 8px 2%;
+            padding: 15px;
+            background: rgba(30,20,10,0.9); /* フォールバック */
+            border: 2px solid var(--panel-border-soft);
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+            vertical-align: top;
+            isolation: isolate;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7);
+        }
+        .promo-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            border-radius: inherit;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_2.png") repeat;
+            background-size: 20px 20px;
+            image-rendering: pixelated;
+            opacity: 0.22;
+            transition: filter 0.2s;
+            pointer-events: none;
+        }
+        .promo-card:hover {
+            border-color: var(--accent-strong);
+            box-shadow: 0 0 20px var(--ui-glow);
+            transform: translateY(-3px);
+        }
+        .promo-card:hover::before {
+            filter: brightness(1.2);
+        }
+        .emoji-font { font-family: var(--font-emoji); }
+        .skill-slot-pick {
+            width: 48px; height: 48px;
+            background: rgba(30,25,20,0.9);
+            border: 2px solid var(--panel-border-soft);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .skill-slot-pick.selected {
+            border-color: var(--accent-strong);
+            box-shadow: 0 0 10px var(--ui-glow);
+        }
+        .skill-slot-pick.swap-from {
+            border-color: #66ccff;
+            box-shadow: 0 0 10px rgba(102,204,255,0.7);
+        }
+        .skill-pick-item {
+            width: 70px;
+            padding: 6px 4px;
+            background: rgba(40,30,20,0.9);
+            border: 1px solid var(--panel-border-soft);
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .skill-pick-item:hover:not(.locked) {
+            border-color: var(--accent-strong);
+            background: rgba(60,40,20,0.9);
+        }
+        .skill-pick-item.locked {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .close-btn {
+            position: relative;
+            background: rgba(101, 67, 33, 0.95); /* フォールバック背景 */
+            color: var(--accent-strong);
+            border: 1px solid var(--panel-border);
+            padding: 8px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 13px;
+            isolation: isolate;
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.1s;
+        }
+        .close-btn::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            border-radius: inherit;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_2.png") repeat;
+            background-size: 16px 16px;
+            image-rendering: pixelated;
+            opacity: 0.5;
+            transition: filter 0.2s, opacity 0.2s;
+            pointer-events: none;
+        }
+        .close-btn:hover {
+            border-color: var(--accent-strong);
+            box-shadow: 0 0 15px rgba(229, 179, 90, 0.4);
+            transform: translateY(-1px);
+        }
+        .close-btn:hover::before {
+            filter: brightness(1.25);
+            opacity: 0.6;
+        }
+        .close-btn:active {
+            transform: translateY(0);
+        }
+        .close-btn:active::before {
+            filter: brightness(0.85);
+        }
+        .ui-panel {
+            position: absolute;
+            background: linear-gradient(180deg, var(--panel-bg), rgba(10,5,2,0.95)); /* フォールバック */
+            border: 2px solid var(--panel-border);
+            border-image: linear-gradient(180deg, var(--accent), #8b6914, #654321) 1;
+            color: var(--accent);
+            font-size: 13px;
+            padding: 15px;
+            display: none;
+            z-index: 100;
+            max-height: 85vh;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            box-shadow: 0 0 20px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.5);
+            isolation: isolate;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7);
+        }
+        .ui-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_1.png") repeat;
+            background-size: 32px 32px;
+            image-rendering: pixelated;
+            opacity: 0.10;
+            pointer-events: none;
+        }
+        #statsPanel { top: 60px; left: 10px; width: 280px; }
+        #inventoryPanel { top: 60px; right: 10px; width: 320px; }
+        .town-panel {
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 380px; max-height: 70vh;
+            z-index: 500;
+        }
+        .town-btn {
+            background: linear-gradient(180deg, #2a2018, #1a1008);
+            border: 1px solid #8b6b3d;
+            color: #e5b35a;
+            padding: 6px 12px;
+            font-family: var(--font-ui);
+            font-size: 12px;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: all 0.15s;
+        }
+        .town-btn:hover { background: linear-gradient(180deg, #3a3020, #2a2018); border-color: #ffd700; color: #ffd700; }
+        .town-btn.active { background: linear-gradient(180deg, #4a3a20, #3a2a10); border-color: #ffd700; color: #ffd700; }
+        .town-btn.disabled, .town-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .shop-grid {
+            display: flex; flex-wrap: wrap; gap: 4px; max-height: 300px; overflow-y: auto;
+            padding: 4px;
+        }
+        .shop-item {
+            display: flex; flex-direction: column; align-items: center;
+            background: rgba(20,15,8,0.8); border: 1px solid #5a4a3a;
+            padding: 4px 6px; width: 80px; cursor: pointer;
+            transition: all 0.15s;
+        }
+        .shop-item:hover { border-color: #ffd700; background: rgba(40,30,15,0.9); }
+        .shop-item.disabled { opacity: 0.4; cursor: not-allowed; }
+        .quest-item {
+            padding: 6px 8px; margin: 4px 0;
+            background: rgba(20,15,8,0.6); border: 1px solid #3a3020;
+            cursor: pointer; transition: all 0.15s;
+        }
+        .quest-item:hover { border-color: #ffd700; }
+        .quest-item.complete { border-color: #ffd700; }
+        .quest-item.locked { cursor: default; opacity: 0.5; }
+        .panel-header {
+            font-size: 16px;
+            border-bottom: 1px solid var(--panel-border);
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            text-align: center;
+            color: var(--accent-strong);
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255,215,0,0.3);
+            font-family: var(--font-title);
+        }
+        .stat-row {
+            margin: 6px 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 5px;
+        }
+        .stat-row:hover { background: rgba(139,115,85,0.2); }
+        .stat-label { color: #aaa; }
+        .stat-value { color: #ffd700; font-weight: bold; }
+        .stat-btn {
+            position: relative;
+            background: rgba(101, 67, 33, 0.9); /* フォールバック */
+            color: #ffd700;
+            border: 1px solid #8b7355;
+            cursor: pointer;
+            padding: 1px 8px;
+            font-size: 12px;
+            margin-left: 5px;
+            isolation: isolate;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .stat-btn::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_2.png") repeat;
+            background-size: 16px 16px;
+            image-rendering: pixelated;
+            opacity: 0.5;
+            transition: filter 0.2s;
+            pointer-events: none;
+        }
+        .stat-btn:hover {
+            border-color: var(--accent-strong);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+        }
+        .stat-btn:hover::before {
+            filter: brightness(1.25);
+        }
+        .equip-slots {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            margin: 10px 0;
+        }
+        .equip-slot {
+            height: 50px;
+            background: rgba(40,30,20,0.8);
+            border: 1px solid #555;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            color: #888;
+            cursor: pointer;
+            position: relative;
+        }
+        .equip-slot:hover { border-color: #daa520; }
+        .equip-slot.filled { border-color: #8b7355; }
+        .equip-slot .slot-label { font-size: 8px; color: #555; margin-top: 2px; }
+        .inv-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 3px;
+            margin: 10px 0;
+        }
+        .inv-cell {
+            height: 42px;
+            background: rgba(40,30,20,0.6);
+            border: 1px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            position: relative;
+        }
+        .inv-cell:hover { border-color: #daa520; background: rgba(80,60,30,0.5); }
+        .inv-cell.selected { border-color: #ffd700; background: rgba(100,80,20,0.6); box-shadow: 0 0 6px #ffd70066; }
+        .inv-context-menu { position:fixed; background:rgba(20,15,10,0.95); border:1px solid #8b6914; padding:4px 0; z-index:10001; min-width:100px; font-size:12px; }
+        .inv-context-menu div { padding:5px 14px; color:#ddd; cursor:pointer; }
+        .inv-context-menu div:hover { background:rgba(138,105,20,0.4); color:#fff; }
+        #tooltip {
+            position: absolute;
+            background: linear-gradient(180deg, rgba(12,8,4,0.98), rgba(4,2,0,0.99));
+            border: 2px solid #8b6914;
+            border-image: linear-gradient(180deg, #c4a44a, #654321) 1;
+            color: var(--accent);
+            padding: 10px 12px;
+            font-size: 12px;
+            display: none;
+            z-index: 300;
+            min-width: 180px;
+            max-width: 240px;
+            font-family: var(--font-mono);
+            box-shadow: 0 0 20px rgba(0,0,0,0.95), inset 0 0 30px rgba(0,0,0,0.3);
+            pointer-events: none;
+        }
+        .tt-name { font-weight: bold; font-size: 14px; margin-bottom: 5px; }
+        .tt-type { color: #888; font-size: 11px; margin-bottom: 6px; }
+        .tt-affix { color: #4488ff; margin: 3px 0; font-size: 11px; }
+        .tt-rarity { font-size: 10px; margin-top: 6px; font-style: italic; }
+        .tt-equip { color: #00cc00; font-size: 10px; margin-top: 4px; }
+        #logPanel {
+            position: absolute;
+            bottom: 90px;
+            left: 10px;
+            width: 350px;
+            max-height: 150px;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 50;
+        }
+        .log-msg {
+            font-size: 12px;
+            padding: 2px 0;
+            opacity: 0.9;
+            text-shadow: 0 0 3px #000, 1px 1px 2px #000;
+        }
+        .log-msg.fade { opacity: 0.4; }
+        #levelUpNotice {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            color: #ffd700;
+            text-shadow: 0 0 30px #ffd700, 0 0 60px #ff8c00;
+            display: none;
+            z-index: 200;
+            letter-spacing: 4px;
+            pointer-events: none;
+        }
+        #deathScreen {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(80,0,0,0.7);
+            display: none;
+            z-index: 500;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        #deathScreen h1 { font-size: 72px; color: #ff0000; text-shadow: 0 0 30px #ff0000; margin-bottom: 20px; font-family: var(--font-title); }
+        #deathScreen p { font-size: 20px; color: #cc8888; }
+        #controls-help {
+            display: none;
+        }
+        /* Tutorial tabs */
+        .help-tab {
+            padding: 5px 12px;
+            font-size: 11px;
+            color: #999;
+            background: rgba(30,20,10,0.6);
+            border: 1px solid #5a4a3a;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .help-tab:hover { color: #daa520; border-color: #8b7355; }
+        .help-tab.active {
+            color: #ffd700;
+            background: rgba(60,40,15,0.8);
+            border-color: #daa520;
+            font-weight: bold;
+        }
+        .help-section-title {
+            color: #ffd700;
+            font-size: 15px;
+            font-weight: bold;
+            margin: 6px 0 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #5a4a3a;
+            letter-spacing: 2px;
+        }
+        .help-sub-title {
+            color: #daa520;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 12px 0 4px;
+        }
+        .help-key {
+            display: inline-block;
+            color: #ffd700;
+            background: rgba(60,40,10,0.7);
+            border: 1px solid #8b7355;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+            min-width: 18px;
+            text-align: center;
+            margin-right: 4px;
+        }
+        .help-row {
+            margin: 3px 0;
+            color: #ccc;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+        .help-row-label { flex-shrink: 0; min-width: 100px; }
+        .help-tip {
+            color: #aaa;
+            font-size: 11px;
+            padding: 6px 10px;
+            margin: 6px 0;
+            border-left: 3px solid #8b6b3d;
+            background: rgba(40,30,15,0.5);
+        }
+        .help-tip-warn {
+            border-left-color: #cc6633;
+            color: #ffaa66;
+        }
+        .help-tip-good {
+            border-left-color: #44aa66;
+            color: #88ddaa;
+        }
+        .class-card {
+            position: relative;
+            width: 260px;
+            background: linear-gradient(180deg, rgba(30,20,10,0.95), rgba(15,10,5,0.95)); /* フォールバック */
+            border: 2px solid #5a4a3a;
+            padding: 20px;
+            cursor: pointer;
+            text-align: center;
+            transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+            isolation: isolate;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7);
+        }
+        .class-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_2.png") repeat;
+            background-size: 24px 24px;
+            image-rendering: pixelated;
+            opacity: 0.2;
+            transition: filter 0.3s, opacity 0.3s;
+            pointer-events: none;
+        }
+        .class-card:hover {
+            border-color: #daa520;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 25px rgba(218,165,32,0.3);
+        }
+        .class-card:hover::before {
+            filter: brightness(1.3);
+            opacity: 0.4;
+        }
+        .class-icon { font-size: 48px; margin-bottom: 10px; font-family: var(--font-emoji); }
+        .class-name { font-size: 24px; color: #daa520; font-weight: bold; letter-spacing: 4px; font-family: var(--font-title); }
+        .class-eng { font-size: 11px; color: #886633; letter-spacing: 3px; margin-bottom: 12px; }
+        .class-desc { font-size: 12px; color: #999; line-height: 1.6; margin-bottom: 12px; min-height: 60px; }
+        .class-stats { font-size: 11px; color: #aa8844; letter-spacing: 1px; }
+        #skillTreePanel {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 960px;
+            max-width: 95vw;
+            max-height: 85vh;
+            overflow-y: auto;
+            background: linear-gradient(180deg, rgba(20,10,5,0.97), rgba(10,5,2,0.97)); /* フォールバック */
+            border: 2px solid #8b7355;
+            border-image: linear-gradient(180deg, #daa520, #8b6914, #654321) 1;
+            color: #daa520;
+            font-size: 13px;
+            padding: 20px;
+            display: none;
+            z-index: 150;
+            box-shadow: 0 0 30px rgba(0,0,0,0.9), inset 0 0 30px rgba(0,0,0,0.5);
+            isolation: isolate;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7);
+        }
+        #skillTreePanel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_1.png") repeat;
+            background-size: 32px 32px;
+            image-rendering: pixelated;
+            opacity: 0.12;
+            pointer-events: none;
+        }
+        .skill-branch { margin-bottom: 15px; }
+        .skill-branch-title { color: #ffd700; font-size: 14px; font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #5a4a3a; padding-bottom: 4px; }
+        .skill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px; }
+        .skill-level-gate { color: #ff8844; font-size: 11px; margin: 8px 0 4px; padding: 2px 8px; border-left: 2px solid #ff8844; }
+        .skill-node {
+            display: flex; flex-direction: column;
+            background: rgba(30,20,10,0.8);
+            border: 1px solid #5a4a3a;
+            padding: 8px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .skill-node:hover { border-color: #daa520; }
+        .skill-node.unlocked { border-color: #8b7355; }
+        .skill-node.maxed { border-color: #ffd700; box-shadow: 0 0 6px rgba(255,215,0,0.3); }
+        .skill-node.locked { opacity: 0.5; cursor: default; }
+        .skill-node.passive { border-color: #4488cc; background: rgba(20,30,50,0.8); }
+        .skill-node.passive.unlocked { border-color: #66aaff; }
+        .skill-node.passive.maxed { border-color: #88ccff; box-shadow: 0 0 6px rgba(100,180,255,0.3); }
+        .skill-node .sn-icon { display: flex; align-items: center; justify-content: center; gap: 2px; min-height: 20px; }
+        .skill-node .sn-name { color: #daa520; font-size: 12px; font-weight: bold; }
+        .skill-node.passive .sn-name { color: #66aaff; }
+        .skill-node .sn-level { color: #888; font-size: 10px; }
+        .skill-node .sn-desc { color: #777; font-size: 10px; margin-top: 4px; }
+        .skill-progress { width: 100%; height: 6px; background: #333; border-radius: 3px; margin-top: 3px; overflow: hidden; }
+        .skill-progress-bar { height: 100%; border-radius: 3px; transition: width 0.3s; }
+        .skill-progress-bar.active { background: linear-gradient(90deg, #8b6b3d, #ffd700); }
+        .skill-progress-bar.passive { background: linear-gradient(90deg, #3366aa, #88ccff); }
+        .skill-node .sn-btn {
+            position: relative;
+            background: rgba(74, 50, 16, 0.9); /* フォールバック */
+            color: #daa520;
+            border: 1px solid #8b7355;
+            padding: 2px 8px;
+            font-size: 10px;
+            cursor: pointer;
+            margin-top: 4px;
+            isolation: isolate;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .skill-node .sn-btn::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_2.png") repeat;
+            background-size: 16px 16px;
+            image-rendering: pixelated;
+            opacity: 0.5;
+            transition: filter 0.2s;
+            pointer-events: none;
+        }
+        .skill-node .sn-btn:hover {
+            border-color: #daa520;
+            box-shadow: 0 0 8px rgba(218, 165, 32, 0.4);
+        }
+        .skill-node .sn-btn:hover::before {
+            filter: brightness(1.25);
+        }
+        /* === Skill Tree View (Diablo 2 Style) === */
+        .skill-tree-branches {
+            position: relative;
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            min-height: 200px;
+            padding: 8px 0;
+        }
+        .skill-tree-branches svg.skill-tree-svg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            filter: drop-shadow(0 0 2px rgba(139,107,61,0.6));
+        }
+        /* Prerequisite: thick golden glow line */
+        .skill-tree-svg .prereq-line {
+            stroke: #b8943d;
+            stroke-width: 3;
+            fill: none;
+            filter: drop-shadow(0 0 3px rgba(184,148,61,0.5));
+            transition: stroke 0.2s, stroke-width 0.2s, opacity 0.2s;
+        }
+        /* Glow layer behind prereq line */
+        .skill-tree-svg .prereq-line-glow {
+            stroke: rgba(218,165,32,0.25);
+            stroke-width: 8;
+            fill: none;
+            transition: stroke 0.2s, stroke-width 0.2s, opacity 0.2s;
+        }
+        /* Synergy: bright green dashed */
+        .skill-tree-svg .synergy-line {
+            stroke: #55cc77;
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 8 5;
+            filter: drop-shadow(0 0 2px rgba(85,204,119,0.4));
+            transition: stroke 0.2s, stroke-width 0.2s, opacity 0.2s;
+        }
+        .skill-tree-svg .synergy-arrow {
+            fill: #55cc77;
+            filter: drop-shadow(0 0 2px rgba(85,204,119,0.5));
+            transition: fill 0.2s, opacity 0.2s;
+        }
+        /* Dimmed state on hover */
+        .skill-tree-svg.dimmed .prereq-line,
+        .skill-tree-svg.dimmed .prereq-line-glow,
+        .skill-tree-svg.dimmed .synergy-line { opacity: 0.1; }
+        .skill-tree-svg.dimmed .synergy-arrow { opacity: 0.1; }
+        .skill-tree-svg.dimmed .prereq-line.highlight {
+            opacity: 1; stroke: #ffd700; stroke-width: 4;
+            filter: drop-shadow(0 0 6px rgba(255,215,0,0.8));
+        }
+        .skill-tree-svg.dimmed .prereq-line-glow.highlight {
+            opacity: 1; stroke: rgba(255,215,0,0.35); stroke-width: 12;
+        }
+        .skill-tree-svg.dimmed .synergy-line.highlight {
+            opacity: 1; stroke: #88ffaa; stroke-width: 3;
+            filter: drop-shadow(0 0 6px rgba(136,255,170,0.7));
+        }
+        .skill-tree-svg.dimmed .synergy-arrow.highlight {
+            opacity: 1; fill: #88ffaa;
+            filter: drop-shadow(0 0 4px rgba(136,255,170,0.7));
+        }
+        /* Branch columns */
+        .skill-branch-col {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2;
+            position: relative;
+            border-right: 1px solid rgba(90,74,58,0.4);
+            padding: 0 6px;
+        }
+        .skill-branch-col:last-child { border-right: none; }
+        .skill-branch-col-title {
+            color: #ffd700;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #5a4a3a;
+            width: 100%;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(255,215,0,0.4);
+        }
+        /* Tier rows */
+        .skill-tier-row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 16px;
+            min-height: 90px;
+            align-items: flex-start;
+        }
+        .skill-tier-label {
+            color: #cc8833;
+            font-size: 10px;
+            text-align: center;
+            margin-bottom: 4px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        /* Skill nodes - larger, icon-focused like D2 */
+        .skill-node-tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 88px;
+            background: radial-gradient(ellipse at center, rgba(40,28,14,0.95), rgba(20,12,6,0.95));
+            border: 2px solid #5a4a3a;
+            border-radius: 4px;
+            padding: 6px 4px 5px;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s, transform 0.15s;
+            z-index: 2;
+            position: relative;
+        }
+        .skill-node-tree:hover {
+            border-color: #daa520;
+            box-shadow: 0 0 12px rgba(218,165,32,0.5), inset 0 0 8px rgba(218,165,32,0.15);
+            transform: scale(1.05);
+        }
+        .skill-node-tree.unlocked {
+            border-color: #a08050;
+            background: radial-gradient(ellipse at center, rgba(50,35,18,0.95), rgba(25,16,8,0.95));
+        }
+        .skill-node-tree.maxed {
+            border-color: #ffd700;
+            box-shadow: 0 0 10px rgba(255,215,0,0.4), inset 0 0 6px rgba(255,215,0,0.1);
+            background: radial-gradient(ellipse at center, rgba(60,45,15,0.95), rgba(30,20,8,0.95));
+        }
+        .skill-node-tree.locked { opacity: 0.4; cursor: default; }
+        .skill-node-tree.locked:hover { transform: none; box-shadow: none; border-color: #5a4a3a; }
+        .skill-node-tree.passive {
+            border-color: #4488cc;
+            background: radial-gradient(ellipse at center, rgba(20,30,55,0.95), rgba(10,16,35,0.95));
+        }
+        .skill-node-tree.passive.unlocked {
+            border-color: #66aaff;
+            background: radial-gradient(ellipse at center, rgba(25,38,65,0.95), rgba(14,22,45,0.95));
+        }
+        .skill-node-tree.passive.maxed {
+            border-color: #88ccff;
+            box-shadow: 0 0 10px rgba(100,180,255,0.4), inset 0 0 6px rgba(100,180,255,0.1);
+        }
+        .skill-node-tree.highlight-node {
+            border-color: #fff;
+            box-shadow: 0 0 16px rgba(255,255,255,0.6), inset 0 0 8px rgba(255,255,255,0.1);
+            transform: scale(1.08);
+        }
+        .skill-node-tree.dim-node { opacity: 0.2; }
+        .skill-node-tree .snt-icon { display: flex; align-items: center; justify-content: center; gap: 2px; min-height: 28px; }
+        .skill-node-tree .snt-name {
+            color: #daa520;
+            font-size: 10px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.15;
+            margin-top: 3px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+        .skill-node-tree.passive .snt-name { color: #77bbff; }
+        .skill-node-tree .snt-level {
+            color: #999;
+            font-size: 9px;
+            margin-top: 1px;
+        }
+        .skill-node-tree.unlocked .snt-level { color: #cca855; }
+        .skill-node-tree.maxed .snt-level { color: #ffd700; font-weight: bold; }
+        .skill-node-tree .snt-progress {
+            width: 90%;
+            height: 3px;
+            background: rgba(50,50,50,0.8);
+            border-radius: 2px;
+            margin-top: 3px;
+            overflow: hidden;
+        }
+        .skill-node-tree .snt-progress-bar { height: 100%; border-radius: 2px; transition: width 0.3s; }
+        .skill-node-tree .snt-progress-bar.active { background: linear-gradient(90deg, #8b6b3d, #ffd700); }
+        .skill-node-tree .snt-progress-bar.passive { background: linear-gradient(90deg, #3366aa, #88ccff); }
+        #pauseOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.65);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1400;
+            text-align: center;
+            backdrop-filter: blur(2px);
+        }
+        #pauseOverlay .pause-card {
+            background: linear-gradient(180deg, rgba(25,12,6,0.98), rgba(12,6,2,0.98));
+            border: 2px solid var(--panel-border);
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            min-width: 320px;
+        }
+        #pauseOverlay .pause-title {
+            font-family: var(--font-title);
+            font-size: 32px;
+            letter-spacing: 6px;
+            color: var(--accent-strong);
+            margin-bottom: 8px;
+        }
+        #pauseOverlay .pause-sub {
+            font-size: 12px;
+            color: var(--muted);
+            letter-spacing: 2px;
+        }
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 4px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            gap: 10px;
+        }
+        .setting-row:last-child { border-bottom: none; }
+        .setting-label { color: var(--text); font-size: 12px; }
+        .setting-actions { display: flex; gap: 6px; align-items: center; }
+        .toggle-btn {
+            position: relative;
+            background: rgba(58, 39, 22, 0.9); /* フォールバック */
+            color: var(--accent-strong);
+            border: 1px solid var(--panel-border);
+            padding: 4px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+            cursor: pointer;
+            isolation: isolate;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .toggle-btn::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            border-radius: inherit;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_2.png") repeat;
+            background-size: 16px 16px;
+            image-rendering: pixelated;
+            opacity: 0.5;
+            transition: filter 0.2s, opacity 0.2s;
+            pointer-events: none;
+        }
+        .toggle-btn:hover {
+            border-color: var(--accent-strong);
+            box-shadow: 0 0 10px rgba(229, 179, 90, 0.3);
+        }
+        .toggle-btn:hover::before {
+            filter: brightness(1.2);
+        }
+        .toggle-btn.off {
+            color: #b68a5d;
+            opacity: 0.8;
+        }
+        .toggle-btn.off::before {
+            opacity: 0.3; /* オフ時はテクスチャを薄く */
+        }
+        #titleSaveMenu {
+            margin-top: 20px;
+            padding: 12px 16px;
+            border: 1px solid #5a4a3a;
+            border-radius: 6px;
+            background: linear-gradient(180deg, rgba(25,15,6,0.8), rgba(12,6,2,0.8));
+            box-shadow: 0 0 20px rgba(0,0,0,0.35);
+        }
+        .title-save-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(90,74,58,0.4);
+        }
+        .title-save-row:last-child { border-bottom: none; }
+        .title-save-info {
+            font-size: 11px;
+            color: #b08a60;
+        }
+        .title-save-actions {
+            display: flex;
+            gap: 6px;
+        }
+        #promotionOverlay,
+        #skillSelectOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85); /* フォールバック */
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+        #skillSelectOverlay {
+            z-index: 1500;
+            background: rgba(0, 0, 0, 0.8);
+        }
+        #promotionOverlay::before,
+        #skillSelectOverlay::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_3.png") repeat;
+            background-size: 48px 48px;
+            image-rendering: pixelated;
+            opacity: 0.08;
+            pointer-events: none;
+        }
+        #promotionContent,
+        #skillSelectContent {
+            position: relative;
+            background: linear-gradient(180deg, rgba(30,15,5,0.98), rgba(15,8,2,0.98)); /* フォールバック */
+            border: 2px solid #daa520;
+            padding: 25px;
+            max-width: 600px;
+            width: 90%;
+            border-radius: 6px;
+            box-shadow: 0 0 40px rgba(218,165,32,0.3);
+            isolation: isolate;
+        }
+        #skillSelectContent {
+            background: linear-gradient(180deg, rgba(20,12,5,0.98), rgba(10,6,2,0.98));
+            border-color: #8b7355;
+            padding: 20px;
+            max-width: 500px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        #promotionContent::before,
+        #skillSelectContent::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            border-radius: inherit;
+            background: url("asset/2D Pixel Dungeon Asset Pack/interface/square_up_down_1.png") repeat;
+            background-size: 32px 32px;
+            image-rendering: pixelated;
+            opacity: 0.15;
+            pointer-events: none;
+        }
