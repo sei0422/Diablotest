@@ -1268,6 +1268,7 @@ const G = {
     time: 0,
     dead: false,
     gameCleared: false,
+    gameCleared: false,
     paused: false,
     autoPickup: false,
     autoPickupRarity: 'magic',
@@ -11613,7 +11614,7 @@ window.addEventListener('keydown', e => {
     }
 
     // --- Game Clear keyboard ---
-    if (DOM.gameClearScreen && DOM.gameClearScreen.style.display === 'flex') {
+    if (G.gameCleared) {
         if (e.key === 'Enter' || e.code === 'Space') {
             e.preventDefault();
             location.reload();
