@@ -1243,6 +1243,7 @@ const DOM = {
     logPanel: document.getElementById('logPanel'),
     levelUpNotice: document.getElementById('levelUpNotice'),
     deathScreen: document.getElementById('deathScreen'),
+    gameClearScreen: document.getElementById('gameClearScreen'),
     helpOverlay: document.getElementById('helpOverlay'),
     skillTreePanel: document.getElementById('skillTreePanel'),
     skillTreeContent: document.getElementById('skillTreeContent'),
@@ -8274,6 +8275,14 @@ function monsterTakeDmg(m, dmg, isCrit, element) {
             checkQuestProgress('boss_killed', m.bossKey);
             // Promotion gating uses boss defeat; trigger the check here too (otherwise you'd need another level-up).
             checkPromotion();
+            if (m.bossKey === 'skeleton_king') {
+                setTimeout(() => {
+                    if (DOM.gameClearScreen) {
+                        DOM.gameClearScreen.style.display = 'flex';
+                        setPaused(true);
+                    }
+                }, 1500);
+            }
             // Uber key drop from Act bosses on Nightmare/Hell
             if (G.difficulty !== 'normal') {
                 const keyChance = G.difficulty === 'hell' ? 0.33 : 0.10;
@@ -11599,31 +11608,22 @@ window.addEventListener('keydown', e => {
         return; // Don't process game keys when on title
     }
 
+    // --- Game Clear keyboard ---
+    if (DOM.gameClearScreen && DOM.gameClearScreen.style.display === 'flex') {
+        if (e.key === 'Enter' || e.code === 'Space') {
+            e.preventDefault();
+            location.reload();
+            return;
+        }
+        return;
+    }
+
     // --- Death screen keyboard ---
     if (G.dead) {
         if (e.key === 'Enter' || e.code === 'Space') {
             e.preventDefault();
-            initAudio();
-            G.dead = false;
-            setPaused(false);
-            // Reset buff timers on death
-            player.berserkT = 0; player.shieldT = 0; player.manaShieldT = 0;
-            player.dodgeT = 0; player.counterT = 0; player.stealthT = 0;
-            player.critBuffT = 0; player.auraT = 0; player.speedBuffT = 0;
-            player.poisonBuffT = 0; player.atkSpdBuffT = 0; player.lifestealBuffT = 0;
-            player.undyingT = 0; player.freezeT = 0; player.meteorT = 0;
-            if (player.battleOrdersHP > 0) {
-                player.maxHP -= player.battleOrdersHP;
-                player.maxMP -= player.battleOrdersMP;
-            }
-            player.battleOrdersT = 0; player.battleOrdersHP = 0; player.battleOrdersMP = 0;
-            player.recalcStats();
-            player.hp = player.maxHP;
-            player.mp = player.maxMP;
-            DOM.deathScreen.style.display = 'none';
-            enterTown(G.act);
-            addLog('町で復活した...', '#ffaaaa');
-            return; // 復活処理後は即座にreturn
+            location.reload();
+            return;
         }
         // 死亡時もRキーでスキル編集を許可
         if (e.code === 'KeyR' || e.key === 'r' || e.key === 'R') {
@@ -12062,28 +12062,13 @@ window.selectClass = function (cls) {
 };
 
 DOM.deathScreen.addEventListener('click', () => {
-    initAudio();
-    G.dead = false;
-    setPaused(false);
-    // Reset buff timers on death
-    player.berserkT = 0; player.shieldT = 0; player.manaShieldT = 0;
-    player.dodgeT = 0; player.counterT = 0; player.stealthT = 0;
-    player.critBuffT = 0; player.auraT = 0; player.speedBuffT = 0;
-    player.poisonBuffT = 0; player.atkSpdBuffT = 0; player.lifestealBuffT = 0;
-    player.undyingT = 0; player.freezeT = 0; player.meteorT = 0;
-    if (player.battleOrdersHP > 0) {
-        player.maxHP -= player.battleOrdersHP;
-        player.maxMP -= player.battleOrdersMP;
-    }
-    player.battleOrdersT = 0; player.battleOrdersHP = 0; player.battleOrdersMP = 0;
-    player.recalcStats();
-    // Revive in current ACT's town
-    player.hp = player.maxHP;
-    player.mp = player.maxMP;
-    DOM.deathScreen.style.display = 'none';
-    enterTown(G.act);
-    addLog('町で復活した...', '#ffaaaa');
+    location.reload();
 });
+if (DOM.gameClearScreen) {
+    DOM.gameClearScreen.addEventListener('click', () => {
+        location.reload();
+    });
+}
 if (DOM.skillEditBtn) {
     DOM.skillEditBtn.addEventListener('click', () => {
         if (skillSelectOpen) closeSkillSelect();
