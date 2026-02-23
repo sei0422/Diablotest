@@ -1267,6 +1267,7 @@ const G = {
     shakeT: 0, shakeAmt: 0, dmgFlashT: 0,
     time: 0,
     dead: false,
+    gameCleared: false,
     paused: false,
     autoPickup: false,
     autoPickupRarity: 'magic',
@@ -8275,13 +8276,16 @@ function monsterTakeDmg(m, dmg, isCrit, element) {
             checkQuestProgress('boss_killed', m.bossKey);
             // Promotion gating uses boss defeat; trigger the check here too (otherwise you'd need another level-up).
             checkPromotion();
+            // Demo MVP: ACT1 boss = game clear
             if (m.bossKey === 'skeleton_king') {
+                const CLEAR_DELAY_MS = 1500; // wait for death animation and particles
                 setTimeout(() => {
+                    G.gameCleared = true;
                     if (DOM.gameClearScreen) {
                         DOM.gameClearScreen.style.display = 'flex';
                         setPaused(true);
                     }
-                }, 1500);
+                }, CLEAR_DELAY_MS);
             }
             // Uber key drop from Act bosses on Nightmare/Hell
             if (G.difficulty !== 'normal') {
