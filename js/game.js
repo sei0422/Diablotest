@@ -1440,9 +1440,9 @@ const ACT_DEFS = {
         monsterTypes: ['skeleton', 'zombie'], bossType: 'skeleton_king', bossFloor: 5,
         townName: '修道院の村', townBG: '#1a140e',
         areas: [
-            { name: '聖堂入口', floors: [1, 2], density: 'low' },
-            { name: '地下墓地', floors: [3, 4], density: 'medium' },
-            { name: '骸骨王の間', floors: [5], density: 'boss' }
+            { name: '聖堂入口', floors: [1, 2], density: 'low', monsters: ['zombie', 'skeleton'] },
+            { name: '地下墓地', floors: [3, 4], density: 'medium', monsters: ['skeleton', 'skelArcher', 'ghoul'] },
+            { name: '骸骨王の間', floors: [5], density: 'boss', monsters: ['deathKnight', 'skelArcher'] }
         ],
         monsterPool: { common: ['skeleton', 'zombie'], elite: [], boss: ['skeleton_king'] }
     },
@@ -1454,9 +1454,9 @@ const ACT_DEFS = {
         monsterTypes: ['mummy', 'scarab', 'sand_golem'], bossType: 'sand_worm', bossFloor: 5,
         townName: '砂漠のオアシス', townBG: '#1e1a10',
         areas: [
-            { name: '砂漠の門', floors: [1, 2], density: 'low' },
-            { name: '古代墓地', floors: [3, 4], density: 'medium' },
-            { name: '砂虫の巣', floors: [5], density: 'boss' }
+            { name: '砂漠の門', floors: [1, 2], density: 'low', monsters: ['scarab', 'mummy'] },
+            { name: '古代墓地', floors: [3, 4], density: 'medium', monsters: ['mummy', 'sand_golem', 'banshee'] },
+            { name: '砂虫の巣', floors: [5], density: 'boss', monsters: ['sand_golem', 'scarab'] }
         ],
         monsterPool: { common: ['mummy', 'scarab', 'sand_golem'], elite: [], boss: ['sand_worm'] }
     },
@@ -1468,9 +1468,9 @@ const ACT_DEFS = {
         monsterTypes: ['treeant', 'poison_spider', 'jungle_shaman'], bossType: 'archmage', bossFloor: 5,
         townName: 'クラスト港', townBG: '#0e1a0e',
         areas: [
-            { name: '密林の入口', floors: [1, 2], density: 'low' },
-            { name: '蜘蛛の洞窟', floors: [3, 4], density: 'medium' },
-            { name: '大魔導師の間', floors: [5], density: 'boss' }
+            { name: '密林の入口', floors: [1, 2], density: 'low', monsters: ['treeant', 'goblin'] },
+            { name: '蜘蛛の洞窟', floors: [3, 4], density: 'medium', monsters: ['poison_spider', 'slime', 'jungle_shaman'] },
+            { name: '大魔導師の間', floors: [5], density: 'boss', monsters: ['jungle_shaman', 'treeant'] }
         ],
         monsterPool: { common: ['treeant', 'poison_spider', 'jungle_shaman'], elite: [], boss: ['archmage'] }
     },
@@ -1482,9 +1482,9 @@ const ACT_DEFS = {
         monsterTypes: ['demon', 'hellhound', 'imp'], bossType: 'demon_lord', bossFloor: 3,
         townName: '要塞', townBG: '#1a0808',
         areas: [
-            { name: '地獄の門', floors: [1], density: 'medium' },
-            { name: '炎獄', floors: [2], density: 'high' },
-            { name: '魔王の間', floors: [3], density: 'boss' }
+            { name: '地獄の門', floors: [1], density: 'medium', monsters: ['imp', 'hellhound'] },
+            { name: '炎獄', floors: [2], density: 'high', monsters: ['demon', 'wraith', 'hellhound'] },
+            { name: '魔王の間', floors: [3], density: 'boss', monsters: ['demon', 'demonlord'] }
         ],
         monsterPool: { common: ['demon', 'hellhound', 'imp'], elite: [], boss: ['demon_lord'] }
     },
@@ -1496,9 +1496,9 @@ const ACT_DEFS = {
         monsterTypes: ['frost_zombie', 'ice_wraith', 'yeti'], bossType: 'ice_queen', bossFloor: 5,
         townName: 'ハログス', townBG: '#0a1020',
         areas: [
-            { name: '氷の入口', floors: [1, 2], density: 'low' },
-            { name: '凍てつく洞窟', floors: [3, 4], density: 'medium' },
-            { name: '氷の女王の間', floors: [5], density: 'boss' }
+            { name: '氷の入口', floors: [1, 2], density: 'low', monsters: ['frost_zombie', 'ice_wraith'] },
+            { name: '凍てつく洞窟', floors: [3, 4], density: 'medium', monsters: ['yeti', 'werewolf', 'ice_wraith'] },
+            { name: '氷の女王の間', floors: [5], density: 'boss', monsters: ['yeti', 'frost_zombie'] }
         ],
         monsterPool: { common: ['frost_zombie', 'ice_wraith', 'yeti'], elite: [], boss: ['ice_queen'] }
     }
@@ -7300,7 +7300,21 @@ const MONSTER_DEFS = {
     // ACT5 monsters
     frost_zombie: { name: 'フロストゾンビ', r: 14, hp: 140, dmg: 28, spd: 50, xp: 100, color: '#5588aa', loot: 0.45, icon: '🧟', defense: 120 },
     ice_wraith: { name: 'アイスレイス', r: 11, hp: 65, dmg: 24, spd: 110, xp: 110, color: '#88bbdd', loot: 0.5, icon: '👻', defense: 120, ranged: true, projSpd: 220, projColor: '#88ddff', preferredRange: 160, projCd: 1.6, element: 'cold' },
-    yeti: { name: 'イエティ', r: 20, hp: 220, dmg: 35, spd: 60, xp: 140, color: '#aaccdd', loot: 0.55, icon: '🦍', defense: 120 }
+    yeti: { name: 'イエティ', r: 20, hp: 220, dmg: 35, spd: 60, xp: 140, color: '#aaccdd', loot: 0.55, icon: '🦍', defense: 120 },
+    // --- Area-specific monsters (use existing sprites) ---
+    // ACT1 additions
+    skelArcher: { name: 'スケルトンアーチャー', r: 11, hp: 32, dmg: 10, spd: 55, xp: 30, color: '#8a7a5a', loot: 0.42, icon: '🏹', defense: 8, ranged: true, projSpd: 190, projColor: '#ccbb88', preferredRange: 160, projCd: 1.8 },
+    deathKnight: { name: 'デスナイト', r: 15, hp: 90, dmg: 18, spd: 50, xp: 50, color: '#5a4a3a', loot: 0.55, icon: '⚔️', defense: 30 },
+    ghoul: { name: 'グール', r: 13, hp: 55, dmg: 15, spd: 70, xp: 40, color: '#4a5530', loot: 0.48, icon: '🧟', defense: 8 },
+    // ACT2 additions
+    banshee: { name: 'バンシー', r: 11, hp: 45, dmg: 16, spd: 90, xp: 55, color: '#7766aa', loot: 0.50, icon: '👻', defense: 20, ranged: true, projSpd: 170, projColor: '#aa88ff', preferredRange: 140, projCd: 2.0, element: 'arcane' },
+    // ACT3 additions
+    goblin: { name: 'ゴブリン', r: 9, hp: 35, dmg: 14, spd: 120, xp: 45, color: '#558833', loot: 0.50, icon: '👺', defense: 35 },
+    slime: { name: 'スライム', r: 16, hp: 90, dmg: 12, spd: 35, xp: 40, color: '#44aa66', loot: 0.40, icon: '🟢', defense: 60 },
+    // ACT4 additions
+    wraith: { name: 'レイス', r: 12, hp: 85, dmg: 20, spd: 100, xp: 140, color: '#664488', loot: 0.50, icon: '👻', defense: 60 },
+    // ACT5 additions
+    werewolf: { name: 'ウェアウルフ', r: 14, hp: 160, dmg: 30, spd: 120, xp: 130, color: '#6a5040', loot: 0.50, icon: '🐺', defense: 100 }
 };
 
 // Champion/Unique monster affix system (D2-style)
@@ -8949,7 +8963,8 @@ function initFloor(opts) {
                 case 'boss': count = 5 + G.actFloor * 2; break; // fewer normal monsters on boss floors
             }
         }
-        const types = actDef.monsterTypes;
+        // Use area-specific monsters if defined, fallback to ACT-wide monsterTypes
+        const types = (currentArea && currentArea.monsters) ? currentArea.monsters : actDef.monsterTypes;
 
         for (let i = 0; i < count; i++) {
             const room = dungeon.rooms[rand(1, dungeon.rooms.length - 1)];
@@ -14515,7 +14530,8 @@ function gameLoop(timestamp) {
                 if (aliveCount < maxMonsters && dungeon && dungeon.rooms.length > 1) {
                     const spawnCount = Math.min(3 + Math.floor(G.actFloor / 2), maxMonsters - aliveCount);
                     const actDef = getCurrentActDef();
-                    const types = actDef.monsterTypes;
+                    const respawnArea = getCurrentArea(G.act, G.actFloor);
+                    const types = (respawnArea && respawnArea.monsters) ? respawnArea.monsters : actDef.monsterTypes;
                     const stairCX = dungeon.stairsX * TILE + TILE / 2;
                     const stairCY = dungeon.stairsY * TILE + TILE / 2;
                     for (let i = 0; i < spawnCount; i++) {
