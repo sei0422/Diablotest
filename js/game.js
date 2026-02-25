@@ -174,7 +174,7 @@ const OGA_CREATURE_MAP = {
     zombie: 'zombie', frost_zombie: 'zombie', ghoul: 'zombie',
     imp: 'goblin', goblin: 'goblin',
     lich: 'magician', magician: 'magician',
-    minotaur: 'minotaur', ogre: 'ogre', sand_golem: 'ogre',
+    minotaur: 'minotaur', ogre: 'ogre', sand_golem: 'ogre', yeti: 'ogre',
     slime: 'slime', poison_spider: 'slime',
     werewolf: 'werewolf', hellhound: 'werewolf',
     banshee: 'elemental', wraith: 'elemental', ice_wraith: 'elemental',
@@ -1277,7 +1277,10 @@ const MONSTER_DRAW_SCALES = {
     skeleton: 1.5, zombie: 1.6, imp: 1.3, ghost: 1.4, demonlord: 2.0,
     mummy: 1.5, scarab: 1.2, sand_golem: 1.7, treeant: 1.8,
     poison_spider: 1.2, jungle_shaman: 1.4, demon: 1.6, hellhound: 1.4,
-    frost_zombie: 1.6, ice_wraith: 1.4, yeti: 1.8
+    frost_zombie: 1.6, ice_wraith: 1.4, yeti: 1.8,
+    skelArcher: 1.4, deathKnight: 1.6, ghoul: 1.5,
+    banshee: 1.4, goblin: 1.2, slime: 1.5,
+    wraith: 1.4, werewolf: 1.6
 };
 let W = window.innerWidth, H = window.innerHeight;
 
@@ -1336,7 +1339,6 @@ const G = {
     shakeT: 0, shakeAmt: 0, dmgFlashT: 0,
     time: 0,
     dead: false,
-    gameCleared: false,
     gameCleared: false,
     paused: false,
     autoPickup: false,
@@ -7267,7 +7269,16 @@ const MONSTER_IMMUNITIES = {
     // ACT5: ice = cold resistant
     frost_zombie: { hell: { cold: 100 }, nightmare: { cold: 50 } },
     ice_wraith: { hell: { cold: 100, lightning: 75 }, nightmare: { cold: 50 } },
-    yeti: { hell: { cold: 100 }, nightmare: { cold: 50 } }
+    yeti: { hell: { cold: 100 }, nightmare: { cold: 50 } },
+    // Area-specific monsters
+    skelArcher: { hell: { cold: 100 }, nightmare: { cold: 50 } },
+    deathKnight: { hell: { cold: 100, poison: 75 }, nightmare: { cold: 50 } },
+    ghoul: { hell: { cold: 100, poison: 75 }, nightmare: { cold: 50 } },
+    banshee: { hell: { cold: 100 }, nightmare: { cold: 50 } },
+    goblin: { hell: { poison: 100 }, nightmare: { poison: 50 } },
+    slime: { hell: { poison: 100, lightning: 75 }, nightmare: { poison: 50 } },
+    wraith: { hell: { fire: 100 }, nightmare: { fire: 50 } },
+    werewolf: { hell: { cold: 100 }, nightmare: { cold: 50 } }
 };
 const IMMUNITY_ICONS = { fire: '🔥', cold: '❄', lightning: '⚡', poison: '☠' };
 const IMMUNITY_COLORS = { fire: '#ff4400', cold: '#44aaff', lightning: '#ffdd00', poison: '#44cc00' };
@@ -7285,7 +7296,7 @@ const MONSTER_DEFS = {
     zombie: { name: 'ゾンビ', r: 14, hp: 70, dmg: 12, spd: 40, xp: 35, color: '#3a4a25', loot: 0.45, icon: '🧟', defense: 10 },
     imp: { name: 'インプ', r: 10, hp: 30, dmg: 15, spd: 100, xp: 45, color: '#8a2a2a', loot: 0.5, icon: '👹', defense: 10, ranged: true, projSpd: 200, projColor: '#ff4422', preferredRange: 150, projCd: 1.8, element: 'fire' },
     ghost: { name: 'ゴースト', r: 11, hp: 25, dmg: 10, spd: 110, xp: 55, color: '#555588', loot: 0.55, icon: '👻', defense: 10 },
-    demonlord: { name: 'デーモンロード', r: 22, hp: 300, dmg: 30, spd: 70, xp: 300, color: '#8a1515', loot: 1.0, icon: '👿', defense: 10 },
+    demonlord: { name: 'デーモンロード', r: 22, hp: 300, dmg: 30, spd: 70, xp: 300, color: '#8a1515', loot: 1.0, icon: '👿', defense: 90 },
     // ACT2 monsters
     mummy: { name: 'マミー', r: 14, hp: 80, dmg: 14, spd: 45, xp: 40, color: '#a89060', loot: 0.45, icon: '🧟', defense: 25 },
     scarab: { name: 'スカラベ', r: 9, hp: 35, dmg: 18, spd: 120, xp: 50, color: '#44662a', loot: 0.4, icon: '🪲', defense: 25 },
@@ -7304,7 +7315,7 @@ const MONSTER_DEFS = {
     // --- Area-specific monsters (use existing sprites) ---
     // ACT1 additions
     skelArcher: { name: 'スケルトンアーチャー', r: 11, hp: 32, dmg: 10, spd: 55, xp: 30, color: '#8a7a5a', loot: 0.42, icon: '🏹', defense: 8, ranged: true, projSpd: 190, projColor: '#ccbb88', preferredRange: 160, projCd: 1.8 },
-    deathKnight: { name: 'デスナイト', r: 15, hp: 90, dmg: 18, spd: 50, xp: 50, color: '#5a4a3a', loot: 0.55, icon: '⚔️', defense: 30 },
+    deathKnight: { name: 'デスナイト', r: 15, hp: 90, dmg: 18, spd: 50, xp: 50, color: '#5a4a3a', loot: 0.55, icon: '⚔️', defense: 18 },
     ghoul: { name: 'グール', r: 13, hp: 55, dmg: 15, spd: 70, xp: 40, color: '#4a5530', loot: 0.48, icon: '🧟', defense: 8 },
     // ACT2 additions
     banshee: { name: 'バンシー', r: 11, hp: 45, dmg: 16, spd: 90, xp: 55, color: '#7766aa', loot: 0.50, icon: '👻', defense: 20, ranged: true, projSpd: 170, projColor: '#aa88ff', preferredRange: 140, projCd: 2.0, element: 'arcane' },
@@ -7312,9 +7323,9 @@ const MONSTER_DEFS = {
     goblin: { name: 'ゴブリン', r: 9, hp: 35, dmg: 14, spd: 120, xp: 45, color: '#558833', loot: 0.50, icon: '👺', defense: 35 },
     slime: { name: 'スライム', r: 16, hp: 90, dmg: 12, spd: 35, xp: 40, color: '#44aa66', loot: 0.40, icon: '🟢', defense: 60 },
     // ACT4 additions
-    wraith: { name: 'レイス', r: 12, hp: 85, dmg: 20, spd: 100, xp: 140, color: '#664488', loot: 0.50, icon: '👻', defense: 60 },
+    wraith: { name: 'レイス', r: 12, hp: 85, dmg: 20, spd: 100, xp: 140, color: '#664488', loot: 0.50, icon: '👻', defense: 75 },
     // ACT5 additions
-    werewolf: { name: 'ウェアウルフ', r: 14, hp: 160, dmg: 30, spd: 120, xp: 130, color: '#6a5040', loot: 0.50, icon: '🐺', defense: 100 }
+    werewolf: { name: 'ウェアウルフ', r: 14, hp: 160, dmg: 30, spd: 120, xp: 130, color: '#6a5040', loot: 0.50, icon: '🐺', defense: 115 }
 };
 
 // Champion/Unique monster affix system (D2-style)
@@ -7376,7 +7387,7 @@ class Monster {
         this.alive = true;
         this.deathT = 0;
         this.atkCD = 0;
-        this.phase = type === 'ghost' || type === 'ice_wraith';
+        this.phase = type === 'ghost' || type === 'ice_wraith' || type === 'wraith' || type === 'banshee';
         this.phaseAlpha = 1;
         this.hitFlash = 0;
         this.knockbackX = 0;
