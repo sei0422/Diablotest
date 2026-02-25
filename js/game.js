@@ -8538,8 +8538,8 @@ function monsterTakeDmg(m, dmg, isCrit, element) {
             checkQuestProgress('boss_killed', m.bossKey);
             // Promotion gating uses boss defeat; trigger the check here too (otherwise you'd need another level-up).
             checkPromotion();
-            // Demo MVP: ACT1 boss = game clear
-            if (m.bossKey === 'skeleton_king') {
+            // Game clear on ACT5 boss (ice_queen) defeat
+            if (m.bossKey === 'ice_queen') {
                 const CLEAR_DELAY_MS = 1500; // wait for death animation and particles
                 setTimeout(() => {
                     G.gameCleared = true;
@@ -10382,11 +10382,11 @@ function renderHelpUI() {
             h += `<div class="help-sub-title">敵の出現</div>`;
             h += `<div style="color:#ccc;font-size:11px;margin:4px 0">ダンジョン内では一定間隔で敵が追加出現します（最大数あり）。</div>`;
             h += `<div style="color:#ccc;font-size:11px;margin:4px 0">深い階層ではより強力なモンスターが登場：</div>`;
-            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">1〜2F: スケルトン、ゾンビ</div>`;
-            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">3〜4F: + インプ</div>`;
-            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">5〜6F: + ゴースト</div>`;
-            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">7F〜 : インプ、ゴースト</div>`;
-            h += `<div style="color:#ff4444;font-size:11px;margin:6px 0">5階ごとにボス「デーモンロード」が出現！</div>`;
+            h += `<div style="color:#ccc;font-size:11px;margin:4px 0">各ACTのエリアごとに異なるモンスターが出現します。</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">序盤エリア: 弱い敵が少数</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">中盤エリア: 新種追加、密度増加</div>`;
+            h += `<div style="color:#aaa;font-size:10px;margin:2px 0 2px 12px">最終エリア: 精鋭＋ACTボス</div>`;
+            h += `<div style="color:#ff4444;font-size:11px;margin:6px 0">各ACT最終階にボスが出現！全5ACTクリアでゲームクリア</div>`;
             break;
 
         case 'growth':
