@@ -237,6 +237,7 @@ function loadOGASprites() {
         icon_essence: 'asset/opengameart/rpg_item_icons/Basic RPG Item Free/Essence_03.png',
         // Props
         props_1x1: 'asset/opengameart/props/props_1x1.png',
+        props_2x2: 'asset/opengameart/props/props_2x2.png',
         // Animated Coins (256x32 each = 8 frames of 32x32)
         coin_gold: 'asset/opengameart/coins/coin_gold.png',
         coin_silver: 'asset/opengameart/coins/coin_silver.png',
@@ -279,6 +280,15 @@ function loadOGASprites() {
         spell_skull_smoke_purple: 'asset/opengameart/spell_anims/skull_smoke_purple.png',
         spell_arrows_green: 'asset/opengameart/spell_anims/arrows_green.png',
         spell_arrows_yellow: 'asset/opengameart/spell_anims/arrows_yellow.png',
+        // --- Phase 1: Unused spell_anims integration ---
+        spell_cauterize: 'asset/opengameart/spell_anims/cauterize.png',
+        spell_smoke: 'asset/opengameart/spell_anims/smoke.png',
+        spell_smoke_glow: 'asset/opengameart/spell_anims/smoke_glow.png',
+        spell_wings: 'asset/opengameart/spell_anims/wings.png',
+        spell_flash01: 'asset/opengameart/spell_anims/flash01.png',
+        spell_flash02: 'asset/opengameart/spell_anims/flash02.png',
+        spell_flash03: 'asset/opengameart/spell_anims/flash03.png',
+        spell_flash04: 'asset/opengameart/spell_anims/flash04.png',
         vfx_impact_air: 'asset/opengameart/vfx/rpg_vfx_pack/16_frames/vfx_sequence_x16_air.png',
         vfx_impact_water: 'asset/opengameart/vfx/rpg_vfx_pack/16_frames/vfx_sequence_x16_impact_water_1.png',
         vfx_impact_divine: 'asset/opengameart/vfx/rpg_vfx_pack/16_frames/vfx_sequence_x16_impact_divine_1.png',
@@ -340,6 +350,35 @@ function loadOGASprites() {
         ui_hpbar_b1: 'asset/opengameart/dark_fantasy_ui/Dark Fantasy UI Pack (CC-BY 4.0 - Of Far Different Nature)/OFDN UI Pack - Health Bar B1.png',
         ui_hpbar_b2: 'asset/opengameart/dark_fantasy_ui/Dark Fantasy UI Pack (CC-BY 4.0 - Of Far Different Nature)/OFDN UI Pack - Health Bar B2.png',
         ui_inventory_a: 'asset/opengameart/dark_fantasy_ui/Dark Fantasy UI Pack (CC-BY 4.0 - Of Far Different Nature)/OFDN UI Pack - Inventory A.png',
+        // --- Phase 3: Dungeon Tileset UI Icons ---
+        ui_dt_button: 'asset/opengameart/dungeon_tileset/UI/Button.png',
+        ui_dt_coin: 'asset/opengameart/dungeon_tileset/UI/Icon-coin.png',
+        ui_dt_sword: 'asset/opengameart/dungeon_tileset/UI/Icon-sword.png',
+        ui_dt_sword2: 'asset/opengameart/dungeon_tileset/UI/Icon-sword2.png',
+        ui_dt_axe: 'asset/opengameart/dungeon_tileset/UI/Icon-axe.png',
+        ui_dt_potion: 'asset/opengameart/dungeon_tileset/UI/Icon-potion.png',
+        ui_dt_potionmana: 'asset/opengameart/dungeon_tileset/UI/Icon-potionmana.png',
+        ui_dt_gear: 'asset/opengameart/dungeon_tileset/UI/Icon-gear.png',
+        ui_dt_sandglass: 'asset/opengameart/dungeon_tileset/UI/Icon-sandglass.png',
+        ui_dt_shot: 'asset/opengameart/dungeon_tileset/UI/Icon-shot.png',
+        ui_dt_attention: 'asset/opengameart/dungeon_tileset/UI/Icon-attention.png',
+        ui_dt_arrow_left: 'asset/opengameart/dungeon_tileset/UI/Arrow-left.png',
+        ui_dt_arrow_right: 'asset/opengameart/dungeon_tileset/UI/Arrow-right.png',
+        ui_dt_arrow_up: 'asset/opengameart/dungeon_tileset/UI/Arrow-up.png',
+        // --- Hand-drawn dungeon tiles (floor, wall, props) ---
+        dt_tile1: 'asset/opengameart/dungeon_tileset/Tiles/tile1.png',
+        dt_tile2: 'asset/opengameart/dungeon_tileset/Tiles/tile2.png',
+        dt_tile3: 'asset/opengameart/dungeon_tileset/Tiles/tile3.png',
+        dt_tile4: 'asset/opengameart/dungeon_tileset/Tiles/tile4.png',
+        dt_tile5: 'asset/opengameart/dungeon_tileset/Tiles/tile5.png',
+        dt_tile6: 'asset/opengameart/dungeon_tileset/Tiles/tile6.png',
+        dt_tile7: 'asset/opengameart/dungeon_tileset/Tiles/tile7.png',
+        dt_chest1: 'asset/opengameart/dungeon_tileset/Tiles/chest1.png',
+        dt_chest1_open: 'asset/opengameart/dungeon_tileset/Tiles/chest1-open.png',
+        dt_crate1: 'asset/opengameart/dungeon_tileset/Tiles/crate1.png',
+        dt_crate2: 'asset/opengameart/dungeon_tileset/Tiles/crate2.png',
+        dt_crate3: 'asset/opengameart/dungeon_tileset/Tiles/crate3.png',
+        dt_door: 'asset/opengameart/dungeon_tileset/Tiles/tiledoor.png',
     };
     let loaded = 0;
     const total = Object.keys(assets).length;
@@ -578,31 +617,36 @@ const DUNGEON_PROP_PROFILES = {
         common: ['kenney_barrel', 'kenney_barrels', 'kenney_barrels_stacked', 'kenney_crate', 'kenney_crates'],
         support: ['kenney_chair', 'kenney_woodpile'],
         feature: ['kenney_table_short', 'kenney_table_round'],
-        commonMod: 173, supportMod: 389, featureMod: 557
+        special: ['campfire', 'cooking_pot'],
+        commonMod: 89, supportMod: 197, featureMod: 283, specialMod: 997
     },
     desert: {
         common: ['kenney_crate', 'kenney_crates', 'kenney_woodpile', 'kenney_barrel'],
         support: ['kenney_chair'],
         feature: ['kenney_table_short'],
-        commonMod: 161, supportMod: 347, featureMod: 521
+        special: ['campfire'],
+        commonMod: 83, supportMod: 179, featureMod: 263, specialMod: 1013
     },
     jungle: {
         common: ['kenney_woodpile', 'kenney_crate', 'kenney_barrel', 'kenney_barrels'],
         support: ['kenney_chair', 'kenney_barrels_stacked'],
         feature: ['kenney_table_round', 'kenney_table_short'],
-        commonMod: 157, supportMod: 331, featureMod: 503
+        special: ['campfire', 'cooking_pot'],
+        commonMod: 79, supportMod: 167, featureMod: 251, specialMod: 991
     },
     hell: {
         common: ['kenney_barrel', 'kenney_barrels_stacked', 'kenney_crate'],
         support: ['kenney_crates'],
         feature: ['kenney_table_short'],
-        commonMod: 211, supportMod: 419, featureMod: 677
+        special: ['campfire'],
+        commonMod: 107, supportMod: 211, featureMod: 337, specialMod: 1009
     },
     ice: {
         common: ['kenney_crate', 'kenney_crates', 'kenney_barrel'],
         support: ['kenney_chair', 'kenney_barrels'],
         feature: ['kenney_table_round'],
-        commonMod: 181, supportMod: 373, featureMod: 601
+        special: ['campfire'],
+        commonMod: 97, supportMod: 191, featureMod: 307, specialMod: 1021
     }
 };
 
@@ -612,6 +656,25 @@ const DUNGEON_PROP_SCALE = {
     kenney_table_short: 1.08,
     kenney_chair: 0.96
 };
+
+// Props from props_2x2.png (2048x1280, 256px cells, 8 cols × 5 rows)
+// Row 3 = campfire variants (8 angles), Row 4 = cooking pots (8 angles)
+const PROPS_2X2_CELL = 256;
+const PROPS_2X2_COLS = 8;
+function drawProps2x2(row, col, tileSx, tileSy, scale = 1) {
+    const img = OGA['props_2x2'];
+    if (!img) return false;
+    const drawW = Math.round(TILE * scale * 1.5);
+    const drawH = Math.round(drawW * (PROPS_2X2_CELL / PROPS_2X2_CELL));
+    const dx = tileSx + (TILE - drawW) / 2;
+    const dy = tileSy + TILE - drawH;
+    ctx.fillStyle = 'rgba(0,0,0,0.10)';
+    ctx.beginPath();
+    ctx.ellipse(tileSx + TILE / 2, tileSy + TILE - 3, drawW * 0.25, Math.max(2, drawW * 0.06), 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.drawImage(img, col * PROPS_2X2_CELL, row * PROPS_2X2_CELL, PROPS_2X2_CELL, PROPS_2X2_CELL, dx, dy, drawW, drawH);
+    return true;
+}
 
 function pickDungeonPropForTheme(theme, h, allowFeature) {
     const profile = DUNGEON_PROP_PROFILES[theme] || DUNGEON_PROP_PROFILES.cathedral;
@@ -626,6 +689,12 @@ function pickDungeonPropForTheme(theme, h, allowFeature) {
     if (allowFeature && h % profile.featureMod === 0) {
         const key = profile.feature[h % profile.feature.length];
         return { key, scale: DUNGEON_PROP_SCALE[key] || 1 };
+    }
+    // Special props (campfire, cooking_pot) from props_2x2 sheet
+    if (profile.special && profile.specialMod && allowFeature && h % profile.specialMod === 0) {
+        const specialKey = profile.special[h % profile.special.length];
+        if (specialKey === 'campfire') return { key: '__campfire__', scale: 1, props2x2Row: 3, props2x2Col: h % PROPS_2X2_COLS };
+        if (specialKey === 'cooking_pot') return { key: '__cooking_pot__', scale: 1, props2x2Row: 4, props2x2Col: h % PROPS_2X2_COLS };
     }
     return null;
 }
@@ -1365,8 +1434,8 @@ renderTitleSaveMenu();
 const ACT_DEFS = {
     1: {
         name: '地下聖堂', nameEn: 'Cathedral', floors: 5, tileTheme: 'cathedral',
-        floorColors: { base: [24, 22, 20], wall: '#3d3228', mortar: '#1e1610' },
-        wallColors: { primary: '#44382c', secondary: '#403428', tertiary: '#3e3226' },
+        floorColors: { base: [30, 26, 20], wall: '#3d3228', mortar: '#1e1610' },
+        wallColors: { primary: '#4a3c2e', secondary: '#443628', tertiary: '#3e3226' },
         lightTint: { warm: 'rgba(255,160,64,', cold: 'rgba(0,0,5,' },
         monsterTypes: ['skeleton', 'zombie'], bossType: 'skeleton_king', bossFloor: 5,
         townName: '修道院の村', townBG: '#1a140e',
@@ -2124,7 +2193,7 @@ class AmbientParticle {
     alive() { return this.life > 0; }
 }
 function updateAmbientParticles(dt) {
-    const target = SETTINGS.reducedParticles ? 12 : 45;
+    const target = SETTINGS.reducedParticles ? 20 : 75;
     while (ambientParticles.length < target) ambientParticles.push(new AmbientParticle());
     while (ambientParticles.length > target) ambientParticles.pop();
     for (let i = ambientParticles.length - 1; i >= 0; i--) {
@@ -2138,7 +2207,7 @@ function drawGroundFog(cx, cy) {
     if (G.inTown) return;
     ctx.save();
     ctx.globalAlpha = 1;
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 18; i++) {
         const phase = G.time * 0.3 + i * 1.7;
         const fwx = player.x + Math.sin(phase * 0.7 + i * 2.1) * 200;
         const fwy = player.y + Math.cos(phase * 0.5 + i * 1.3) * 150;
@@ -2219,6 +2288,15 @@ const SPELL_ANIM_MAP = {
     skull_dark: { key: 'spell_skull_smoke_purple', cols: 19, cellW: 192, cellH: 512, frames: 19, duration: 0.6 },
     arrows_poison: { key: 'spell_arrows_green', cols: 4, cellW: 256, cellH: 256, frames: 24, duration: 0.5 },
     arrows_lightning: { key: 'spell_arrows_yellow', cols: 4, cellW: 256, cellH: 256, frames: 24, duration: 0.5 },
+    // --- Phase 1: New VFX from unused spell_anims ---
+    cauterize: { key: 'spell_cauterize', cols: 6, cellW: 512, cellH: 512, frames: 36, duration: 0.7 },
+    smoke_dark: { key: 'spell_smoke', cols: 8, cellW: 512, cellH: 512, frames: 88, duration: 1.0 },
+    smoke_glow: { key: 'spell_smoke_glow', cols: 8, cellW: 512, cellH: 512, frames: 88, duration: 1.0 },
+    buff_wings: { key: 'spell_wings', cols: 9, cellW: 256, cellH: 256, frames: 108, duration: 1.2 },
+    crit_flash: { key: 'spell_flash01', cols: 5, cellW: 64, cellH: 64, frames: 10, duration: 0.25 },
+    crit_flash2: { key: 'spell_flash02', cols: 5, cellW: 64, cellH: 64, frames: 10, duration: 0.25 },
+    crit_flash3: { key: 'spell_flash03', cols: 5, cellW: 64, cellH: 64, frames: 10, duration: 0.25 },
+    crit_flash4: { key: 'spell_flash04', cols: 5, cellW: 64, cellH: 64, frames: 10, duration: 0.25 },
 };
 function spawnWorldEffect(wx, wy, type, scale) {
     if (!type || !SPELL_ANIM_MAP[type]) return;
@@ -2282,24 +2360,73 @@ function generateTileTextures(theme) {
         tctx.putImageData(id, 0, 0);
     }
 
-    // --- FLOOR TILES (9 variants — seamless, no borders) ---
-    // Codex advice: no strokeRect borders, no bevels, low noise,
-    // no per-variant identity marks. Differences = subtle color only.
+    // --- FLOOR TILES (9 variants — hand-drawn tile texture based) ---
+    // Use dungeon_tileset hand-drawn tiles as source textures for floor
+    // Key tiles: dt_tile2 (smooth slab), dt_tile3 (smooth slab variant),
+    //            dt_tile5 (smooth slab), dt_tile6 (cracked slab)
+    const dtFloorSources = ['dt_tile2', 'dt_tile3', 'dt_tile5', 'dt_tile6', 'dt_tile1'];
     for (let v = 0; v < 9; v++) {
         const c = document.createElement('canvas');
         c.width = TILE; c.height = TILE;
         const tc = c.getContext('2d');
 
-        // Base color from theme (subtle variation per variant)
-        const darkF = 0.8;
-        const baseR = Math.round((themeColors.base[0] + v * 1) * darkF);
-        const baseG = Math.round((themeColors.base[1] + v * 1) * darkF);
-        const baseB = Math.round((themeColors.base[2] + v * 0.5) * darkF);
-        tc.fillStyle = `rgb(${baseR},${baseG},${baseB})`;
-        tc.fillRect(0, 0, TILE, TILE);
+        // Try to use hand-drawn tile image as base
+        const srcKey = dtFloorSources[v % dtFloorSources.length];
+        const srcImg = OGA[srcKey];
+        if (srcImg && srcImg.width > 0) {
+            // Extract the top face of the isometric tile
+            // The top face is roughly the upper 55% of the image, centered
+            const srcW = srcImg.width;
+            const srcH = srcImg.height;
+            // Crop: take the center region (where the stone surface is)
+            const cropX = Math.floor(srcW * 0.1);
+            const cropY = Math.floor(srcH * 0.05);
+            const cropW = Math.floor(srcW * 0.8);
+            const cropH = Math.floor(srcH * 0.55);
 
-        // Very light stone grain noise (low intensity = less visible seams)
-        addNoise(tc, TILE, TILE, 5, 1, 0.85, 0.7);
+            // Draw hand-drawn texture scaled to TILE size
+            tc.drawImage(srcImg, cropX, cropY, cropW, cropH, 0, 0, TILE, TILE);
+
+            // Apply theme color tint (multiply blend — warmer, more uniform)
+            const darkF = 0.8;
+            const baseR = Math.round((themeColors.base[0] + v * 0.5) * darkF);
+            const baseG = Math.round((themeColors.base[1] + v * 0.4) * darkF);
+            const baseB = Math.round((themeColors.base[2] + v * 0.3) * darkF);
+            tc.globalCompositeOperation = 'multiply';
+            tc.fillStyle = `rgb(${Math.min(baseR + 120, 255)},${Math.min(baseG + 110, 255)},${Math.min(baseB + 95, 255)})`;
+            tc.fillRect(0, 0, TILE, TILE);
+            tc.globalCompositeOperation = 'source-over';
+
+            // Darken slightly for dungeon feel
+            tc.fillStyle = 'rgba(0,0,0,0.10)';
+            tc.fillRect(0, 0, TILE, TILE);
+        } else {
+            // Fallback: procedural generation if images not loaded
+            const darkF = 0.8;
+            const baseR = Math.round((themeColors.base[0] + v * 1.5) * darkF);
+            const baseG = Math.round((themeColors.base[1] + v * 1.2) * darkF);
+            const baseB = Math.round((themeColors.base[2] + v * 0.8) * darkF);
+            tc.fillStyle = `rgb(${baseR},${baseG},${baseB})`;
+            tc.fillRect(0, 0, TILE, TILE);
+            addNoise(tc, TILE, TILE, 20, 1, 0.85, 0.7);
+        }
+
+        // Subtle mortar seam (always add — complements both hand-drawn and procedural)
+        const halfT = Math.floor(TILE / 2);
+        const mortarOff = v % 2 === 0 ? 0 : Math.floor(TILE / 4);
+        tc.strokeStyle = `rgba(0,0,0,${0.10 + v * 0.008})`;
+        tc.lineWidth = 0.5;
+        tc.beginPath(); tc.moveTo(0, halfT); tc.lineTo(TILE, halfT); tc.stroke();
+        tc.beginPath(); tc.moveTo(halfT + mortarOff, 0); tc.lineTo(halfT + mortarOff, halfT); tc.stroke();
+        tc.beginPath(); tc.moveTo(mortarOff, halfT); tc.lineTo(mortarOff, TILE); tc.stroke();
+
+        // Edge darkening
+        tc.fillStyle = 'rgba(0,0,0,0.06)';
+        tc.fillRect(0, 0, TILE, 1);
+        tc.fillRect(0, 0, 1, TILE);
+        tc.fillStyle = 'rgba(0,0,0,0.04)';
+        tc.fillRect(0, TILE - 1, TILE, 1);
+        tc.fillRect(TILE - 1, 0, 1, TILE);
 
         TILE_TEXTURES['floor_' + v] = c;
     }
@@ -2347,27 +2474,64 @@ function generateTileTextures(theme) {
     wc.fillStyle = 'rgba(255,240,200,0.03)';
     wc.fillRect(0, 2, TILE, 1);
 
-    // ACT-specific wall accents
+    // ACT-specific wall accents (D2-style environmental decay)
     if (theme === 'jungle') {
-        // Moss creep on bottom
-        wc.fillStyle = 'rgba(30,60,20,0.12)';
-        wc.fillRect(0, TILE - 6, TILE, 6);
+        // Heavy moss creep on bottom 30%
+        const mossG = wc.createLinearGradient(0, TILE * 0.7, 0, TILE);
+        mossG.addColorStop(0, 'rgba(30,60,20,0)');
+        mossG.addColorStop(0.4, 'rgba(30,60,20,0.12)');
+        mossG.addColorStop(1, 'rgba(20,50,15,0.20)');
+        wc.fillStyle = mossG;
+        wc.fillRect(0, Math.floor(TILE * 0.7), TILE, Math.ceil(TILE * 0.3));
+        // Vine tendrils
+        wc.strokeStyle = 'rgba(40,80,25,0.15)';
+        wc.lineWidth = 1;
+        wc.beginPath(); wc.moveTo(TILE * 0.2, TILE); wc.quadraticCurveTo(TILE * 0.3, TILE * 0.5, TILE * 0.15, TILE * 0.3); wc.stroke();
     } else if (theme === 'hell') {
-        // Warm glow seam at mortar lines
-        wc.fillStyle = 'rgba(200,60,0,0.06)';
+        // Warm glow seam at mortar lines (brighter)
+        wc.fillStyle = 'rgba(200,60,0,0.10)';
         wc.fillRect(0, thirdH - 1, TILE, 3);
         wc.fillRect(0, thirdH * 2 - 1, TILE, 3);
+        // Ember glow at base
+        const hellG = wc.createLinearGradient(0, TILE - 8, 0, TILE);
+        hellG.addColorStop(0, 'rgba(200,60,0,0)');
+        hellG.addColorStop(1, 'rgba(200,60,0,0.08)');
+        wc.fillStyle = hellG;
+        wc.fillRect(0, TILE - 8, TILE, 8);
     } else if (theme === 'ice') {
-        // Frost rime on top edge
-        wc.fillStyle = 'rgba(180,210,240,0.08)';
-        wc.fillRect(0, 0, TILE, 4);
+        // Frost rime on top + bottom
+        wc.fillStyle = 'rgba(180,210,240,0.12)';
+        wc.fillRect(0, 0, TILE, 5);
+        wc.fillStyle = 'rgba(160,200,240,0.06)';
+        wc.fillRect(0, TILE - 3, TILE, 3);
     } else if (theme === 'desert') {
         // Sand dust accumulation at bottom
-        wc.fillStyle = 'rgba(80,65,40,0.1)';
-        wc.fillRect(0, TILE - 4, TILE, 4);
+        const sandG = wc.createLinearGradient(0, TILE - 8, 0, TILE);
+        sandG.addColorStop(0, 'rgba(80,65,40,0)');
+        sandG.addColorStop(1, 'rgba(80,65,40,0.15)');
+        wc.fillStyle = sandG;
+        wc.fillRect(0, TILE - 8, TILE, 8);
+    } else {
+        // Cathedral: moss on bottom
+        const cathG = wc.createLinearGradient(0, TILE * 0.8, 0, TILE);
+        cathG.addColorStop(0, 'rgba(25,40,20,0)');
+        cathG.addColorStop(1, 'rgba(25,40,20,0.10)');
+        wc.fillStyle = cathG;
+        wc.fillRect(0, Math.floor(TILE * 0.8), TILE, Math.ceil(TILE * 0.2));
     }
-    // Stone grain
-    addNoise(wc, TILE, TILE, 12, 1, 0.85, 0.65);
+
+    // Diagonal crack across a brick face
+    wc.strokeStyle = 'rgba(0,0,0,0.18)';
+    wc.lineWidth = 0.5;
+    wc.beginPath(); wc.moveTo(TILE * 0.6, thirdH + 2); wc.lineTo(TILE * 0.85, thirdH * 2 - 2); wc.stroke();
+
+    // Vertical drip stain from mortar
+    wc.strokeStyle = 'rgba(0,0,0,0.08)';
+    wc.lineWidth = 1.5;
+    wc.beginPath(); wc.moveTo(TILE * 0.4, 0); wc.lineTo(TILE * 0.42, thirdH * 0.8); wc.stroke();
+
+    // Stone grain (increased from 12 to 18)
+    addNoise(wc, TILE, TILE, 18, 1, 0.85, 0.65);
 
     TILE_TEXTURES['wall'] = wallC;
 
@@ -2437,25 +2601,86 @@ function generateTileTextures(theme) {
     addNoise(fc, TILE, 14, 10, 0.7, 0.6, 0.5);
     TILE_TEXTURES['wall_face'] = faceC;
 
-    // --- BLOOD SPLATTER variants ---
+    // --- BLOOD SPLATTER variants (D2-style: more visible, larger) ---
     for (let v = 0; v < 3; v++) {
         const bc = document.createElement('canvas');
         bc.width = TILE; bc.height = TILE;
         const btc = bc.getContext('2d');
         btc.clearRect(0, 0, TILE, TILE);
-        // Random blood drops
-        const drops = 3 + v * 2;
+        // Main blood drops (bigger, more opaque)
+        const drops = 4 + v * 3;
         for (let d = 0; d < drops; d++) {
-            const bx = 5 + Math.random() * (TILE - 10);
-            const by = 5 + Math.random() * (TILE - 10);
-            const br = 1 + Math.random() * (3 + v);
-            btc.fillStyle = `rgba(${60 + v * 15},${8 + v * 3},${5 + v * 2},${0.15 + Math.random() * 0.15})`;
+            const bx = 4 + Math.random() * (TILE - 8);
+            const by = 4 + Math.random() * (TILE - 8);
+            const br = 2 + Math.random() * (4 + v * 2);
+            btc.fillStyle = `rgba(${80 + v * 10},${8 + v * 3},${5 + v * 2},${0.30 + Math.random() * 0.15})`;
             btc.beginPath();
-            btc.ellipse(bx, by, br, br * (0.6 + Math.random() * 0.8), Math.random() * Math.PI, 0, Math.PI * 2);
+            btc.ellipse(bx, by, br, br * (0.5 + Math.random() * 0.8), Math.random() * Math.PI, 0, Math.PI * 2);
             btc.fill();
+        }
+        // Blood streaks (drag marks)
+        if (v >= 1) {
+            btc.strokeStyle = `rgba(${70 + v * 15},10,5,${0.12 + v * 0.04})`;
+            btc.lineWidth = 1 + v * 0.5;
+            btc.beginPath();
+            btc.moveTo(TILE * 0.3, TILE * 0.5);
+            btc.quadraticCurveTo(TILE * 0.5, TILE * 0.6, TILE * 0.7, TILE * 0.55);
+            btc.stroke();
         }
         TILE_TEXTURES['blood_' + v] = bc;
     }
+
+    // --- SCORCH MARK overlay ---
+    const scorchC = document.createElement('canvas');
+    scorchC.width = TILE; scorchC.height = TILE;
+    const scorchCtx = scorchC.getContext('2d');
+    scorchCtx.clearRect(0, 0, TILE, TILE);
+    const scorchG = scorchCtx.createRadialGradient(TILE / 2, TILE / 2, 0, TILE / 2, TILE / 2, TILE * 0.4);
+    scorchG.addColorStop(0, 'rgba(15,10,5,0.25)');
+    scorchG.addColorStop(0.4, 'rgba(20,12,5,0.15)');
+    scorchG.addColorStop(0.7, 'rgba(25,15,8,0.06)');
+    scorchG.addColorStop(1, 'rgba(0,0,0,0)');
+    scorchCtx.fillStyle = scorchG;
+    scorchCtx.beginPath(); scorchCtx.arc(TILE / 2, TILE / 2, TILE * 0.4, 0, Math.PI * 2); scorchCtx.fill();
+    TILE_TEXTURES['scorch'] = scorchC;
+
+    // --- BONE DEBRIS overlay ---
+    const boneC = document.createElement('canvas');
+    boneC.width = TILE; boneC.height = TILE;
+    const boneCtx = boneC.getContext('2d');
+    boneCtx.clearRect(0, 0, TILE, TILE);
+    boneCtx.fillStyle = 'rgba(180,170,150,0.20)';
+    // Small bone fragments
+    for (let bn = 0; bn < 4; bn++) {
+        const bx = 8 + Math.random() * (TILE - 16);
+        const by = 8 + Math.random() * (TILE - 16);
+        boneCtx.save();
+        boneCtx.translate(bx, by);
+        boneCtx.rotate(Math.random() * Math.PI);
+        boneCtx.fillRect(-3, -1, 6, 2); // bone fragment
+        boneCtx.restore();
+    }
+    // Skull (tiny circle)
+    boneCtx.fillStyle = 'rgba(160,150,130,0.15)';
+    boneCtx.beginPath(); boneCtx.arc(TILE * 0.6, TILE * 0.4, 3, 0, Math.PI * 2); boneCtx.fill();
+    TILE_TEXTURES['bones'] = boneC;
+
+    // --- FLOOR GRIME overlay (general dirt/wear) ---
+    const grimeC = document.createElement('canvas');
+    grimeC.width = TILE; grimeC.height = TILE;
+    const grimeCtx = grimeC.getContext('2d');
+    grimeCtx.clearRect(0, 0, TILE, TILE);
+    for (let gi = 0; gi < 3; gi++) {
+        const gx = Math.random() * TILE;
+        const gy = Math.random() * TILE;
+        const gr = 5 + Math.random() * 10;
+        const gg = grimeCtx.createRadialGradient(gx, gy, 0, gx, gy, gr);
+        gg.addColorStop(0, 'rgba(0,0,0,0.08)');
+        gg.addColorStop(1, 'rgba(0,0,0,0)');
+        grimeCtx.fillStyle = gg;
+        grimeCtx.fillRect(gx - gr, gy - gr, gr * 2, gr * 2);
+    }
+    TILE_TEXTURES['grime'] = grimeC;
 
     // --- FLOOR SHADOW (cast from wall above) ---
     const shadowTopC = document.createElement('canvas');
@@ -2998,20 +3223,34 @@ class Dungeon {
                     // Breaks the 40px repetition cadence without adding per-tile detail
                     const zoneX = Math.floor(x / 4), zoneY = Math.floor(y / 4);
                     const zoneHash = ((zoneX * 1597334677 + zoneY * 3812015801) >>> 0) % 100;
-                    if (zoneHash < 30) {
+                    if (zoneHash < 35) {
                         // Darker patch (worn stone / dampness)
-                        ctx.fillStyle = 'rgba(0,0,0,0.04)';
+                        ctx.fillStyle = 'rgba(0,0,0,0.06)';
                         ctx.fillRect(sx, sy, TILE, TILE);
-                    } else if (zoneHash < 50) {
+                    } else if (zoneHash < 55) {
                         // Warmer patch (torch-lit area)
-                        ctx.fillStyle = 'rgba(40,25,10,0.03)';
+                        ctx.fillStyle = 'rgba(40,25,10,0.04)';
                         ctx.fillRect(sx, sy, TILE, TILE);
                     }
 
-                    // Blood splatters (rare, pre-rendered texture)
-                    const bloodHash = (x * 17 + y * 31) % 53;
-                    if (bloodHash < 2) {
-                        ctx.drawImage(TILE_TEXTURES['blood_' + (bloodHash % 3)], sx, sy);
+                    // D2-style ground overlays (hash-based placement)
+                    const groundHash = ((x * 2971215073 + y * 433494437) >>> 0) % 1000;
+
+                    // Blood splatters (more frequent — ~5% of floor tiles)
+                    if (groundHash < 50) {
+                        ctx.drawImage(TILE_TEXTURES['blood_' + (groundHash % 3)], sx, sy);
+                    }
+                    // Scorch marks (3% tiles near walls)
+                    else if (groundHash < 80 && (this.get(x, y - 1) === 0 || this.get(x - 1, y) === 0 || this.get(x + 1, y) === 0)) {
+                        ctx.drawImage(TILE_TEXTURES['scorch'], sx, sy);
+                    }
+                    // Bone debris (2%)
+                    else if (groundHash >= 80 && groundHash < 100) {
+                        ctx.drawImage(TILE_TEXTURES['bones'], sx, sy);
+                    }
+                    // General grime (8%)
+                    else if (groundHash >= 100 && groundHash < 180) {
+                        ctx.drawImage(TILE_TEXTURES['grime'], sx, sy);
                     }
 
                     // Wall shadows
@@ -3038,7 +3277,11 @@ class Dungeon {
                             ctx.fillStyle = glow;
                             ctx.fillRect(sx - glowRadius / 2, sy - glowRadius / 2, glowRadius * 1.5, glowRadius * 1.5);
                         }
-                        drawKenneyDungeonProp(prop.key, sx, sy, prop.scale);
+                        if (prop.props2x2Row != null) {
+                            drawProps2x2(prop.props2x2Row, prop.props2x2Col, sx, sy, prop.scale);
+                        } else {
+                            drawKenneyDungeonProp(prop.key, sx, sy, prop.scale);
+                        }
                     }
 
                 } else if (t === 2) {
@@ -5861,6 +6104,7 @@ const player = {
                 player.hp = Math.min(player.maxHP, player.hp + healAmt);
                 addFloatingText(player.x, player.y - 20, '+' + healAmt + ' HP', '#00ff00');
                 emitParticles(player.x, player.y, '#00ff00', 12, 50, 0.5, 3, -40, 'holy', lvl);
+                spawnWorldEffect(player.x, player.y, 'cauterize', 0.8);
                 sfxHeal();
                 addLog(`HP回復 (+${healAmt})`, '#00ff00');
                 break;
@@ -8164,11 +8408,14 @@ function monsterTakeDmg(m, dmg, isCrit, element) {
             1 + Math.random() * 1.5, 0
         ));
     }
-    // Critical hit: micro screen shake + edge flash
+    // Critical hit: micro screen shake + edge flash + VFX
     if (isCrit) {
         G.shakeT = Math.max(G.shakeT || 0, 0.08);
         G.shakeAmt = Math.max(G.shakeAmt || 0, 4);
         G.flashT = 0.06; G.flashAlpha = 0.15; G.flashColor = '#ffff44';
+        // Spawn random crit flash VFX at hit location
+        const critTypes = ['crit_flash', 'crit_flash2', 'crit_flash3', 'crit_flash4'];
+        spawnWorldEffect(m.x, m.y, critTypes[Math.floor(Math.random() * critTypes.length)], 1.8);
     }
     // Directional blood splatter (from player angle)
     const bloodCount = isCrit ? 12 : 6;
@@ -12217,9 +12464,9 @@ function drawLighting() {
     ctx.globalAlpha = 1;
     ctx.restore();
 
-    // STEP 7: Subtle warm color grade (D2 amber tone)
-    ctx.globalAlpha = 0.06;
-    ctx.fillStyle = '#331800';
+    // STEP 7: D2 warm amber color grade (stronger)
+    ctx.globalAlpha = 0.10;
+    ctx.fillStyle = '#3a1a00';
     ctx.fillRect(0, 0, W, H);
     ctx.globalAlpha = 1;
 
@@ -13431,7 +13678,16 @@ function drawHUD() {
         ctx.fillText(`${G.cycle > 0 ? (G.cycle + 1) + '周目' : '拠点'}`, W - 15, 170);
     }
     ctx.fillStyle = '#ffd700';
-    ctx.fillText(`💰 ${G.gold}G`, W - 15, 185);
+    // Gold display with hand-drawn coin icon
+    const coinIcon = OGA['ui_dt_coin'];
+    if (coinIcon) {
+        const coinSz = 14;
+        const goldTextW = ctx.measureText(`${G.gold}G`).width;
+        ctx.drawImage(coinIcon, W - 15 - goldTextW - coinSz - 4, 176, coinSz, coinSz);
+        ctx.fillText(`${G.gold}G`, W - 15, 185);
+    } else {
+        ctx.fillText(`💰 ${G.gold}G`, W - 15, 185);
+    }
 
     // Quest tracker (top-left, below shortcuts)
     G._questTrackerH = 0;
@@ -14324,7 +14580,10 @@ function gameLoop(timestamp) {
                 else if (p.attribute === 'ice' || p.attribute === 'cold') spawnWorldEffect(p.x, p.y, 'cold', 0.7);
                 else if (p.attribute === 'lightning') spawnWorldEffect(p.x, p.y, 'lightning', 0.8);
                 else if (p.attribute === 'poison') spawnWorldEffect(p.x, p.y, 'poison', 0.7);
-                else if (p.attribute === 'dark' || p.attribute === 'arcane') spawnWorldEffect(p.x, p.y, 'dark', 0.8);
+                else if (p.attribute === 'dark' || p.attribute === 'arcane') {
+                    spawnWorldEffect(p.x, p.y, 'dark', 0.8);
+                    if (Math.random() < 0.3) spawnWorldEffect(p.x, p.y, 'smoke_dark', 0.5);
+                }
                 projectiles[i] = projectiles[projectiles.length - 1]; projectiles.pop();
                 break;
             }
