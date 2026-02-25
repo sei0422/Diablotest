@@ -11666,6 +11666,8 @@ function renderSettingsUI() {
                 <button class="toggle-btn ${active ? '' : 'off'}" onclick="setSaveSlot(${i})">選択</button>
                 <button class="toggle-btn" onclick="saveGame(${i})">セーブ</button>
                 <button class="toggle-btn" onclick="loadGame(${i})">ロード</button>
+                <button class="toggle-btn" onclick="exportSave(${i})" title="JSONファイルとしてダウンロード">📥</button>
+                <button class="toggle-btn" onclick="importSave(${i})" title="JSONファイルから復元">📤</button>
             </div>
         </div>`;
     }
@@ -14113,6 +14115,60 @@ function saveGame(slot = G.saveSlot) {
         return false;
     }
 }
+
+// ========== EXPORT / IMPORT ==========
+window.exportSave = function (slot) {
+    const raw = localStorage.getItem(getSaveKey(slot));
+    if (!raw) { addLog('エクスポートするセーブデータがありません', '#ff4444'); return; }
+    try {
+        const data = JSON.parse(raw);
+        const meta = getSaveMeta(slot);
+        const name = meta ? `Lv${meta.level}_ACT${meta.act || 1}_${meta.className}` : `slot${slot}`;
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `diablo_save_${name}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        addLog(`スロット${slot}をエクスポートしました`, '#00ff88');
+    } catch (e) {
+        addLog('エクスポート失敗: ' + e.message, '#ff4444');
+    }
+};
+
+window.importSave = function (slot) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+            try {
+                const data = JSON.parse(ev.target.result);
+                if (!data || typeof data !== 'object' || !data.player || !data.version) {
+                    addLog('無効なセーブファイルです', '#ff4444');
+                    return;
+                }
+                if (data.version < 2) {
+                    addLog('古すぎるセーブデータです', '#ff4444');
+                    return;
+                }
+                localStorage.setItem(getSaveKey(slot), JSON.stringify(data));
+                addLog(`スロット${slot}にインポートしました`, '#00ff88');
+                renderSettingsUI();
+            } catch (err) {
+                addLog('インポート失敗: ' + err.message, '#ff4444');
+            }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+};
 
 function loadGame(slot = G.saveSlot) {
     try {
